@@ -1696,21 +1696,36 @@
     syncBoard();
     const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && !inDrawer(n) && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
     const colW = Math.min(NW + 30, (W - 36) / Math.max(1, cols.length));
+    // pinned notes stay where they are; the strips go round them
+    const pinned = notes.filter(n => n.pin && !inDrawer(n) && n.mode !== "trash").map(n => {
+      const c = Math.abs(Math.cos(n.a)), sn = Math.abs(Math.sin(n.a));
+      const ex = c * HW + sn * hh(n) + 8, ey = sn * HW + c * hh(n) + 8;
+      return { l: n.x - ex, r: n.x + ex, t: n.y - ey, b: n.y + ey };
+    });
     let i = 0;
     cols.forEach((list, c) => {
-      const gap = Math.min(FH + 10, (H - 40 - FH) / Math.max(1, list.length - 1));
-      list.forEach((n, j) => {
+      const cx = W - 18 - (cols.length - c) * colW + colW / 2;
+      let y = 22;
+      list.forEach(n => {
+        for (let guard = 0; guard < 20; guard++) {
+          const hit = pinned.find(p => p.l < cx + HW && p.r > cx - HW && p.t < y + FH && p.b > y);
+          if (!hit) break;
+          y = hit.b + 6;
+        }
+        const ty = Math.min(y, H - FH - 6) + FH / 2;
+        y += FH + 10;
         setTimeout(() => {
           if (n.mode === "trash" || n.mode === "drag" || n.pin) return;
           setFold(n, true);
           front(n);
           n.mode = "place";
-          n.t = { x: W - 18 - (cols.length - c) * colW + colW / 2, y: 22 + FH / 2 + j * gap, a: 0, s: 1 };
+          n.t = { x: cx, y: ty, a: 0, s: 1 };
           n.liftT = .5;
         }, i++ * 40);
       });
     });
   }
+
 
   /* ───────── interactions ───────── */
   let act = null;           // current gesture
