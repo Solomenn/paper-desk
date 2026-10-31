@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纸桌 · 手账</title>
+<style>
+  :root {
+    --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --paper2: #f3eee2; --accent: #4f7a5a; --stamp: #b5523b;
+    --line: rgba(96, 88, 72, .16);
+    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
+    --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
+    --hand: "LXGW WenKai", "霞鹜文楷", "Klee One", "KaiTi", "STKaiti", serif;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+    --pw: 400px; --ph: 540px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--sans); color: var(--ink); user-select: none; -webkit-user-select: none;
+    background:
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, .08) 0 2px, transparent 2px 9px, rgba(255, 222, 180, .035) 9px 10px, transparent 10px 17px),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, .06) 0 1px, transparent 1px 43px, rgba(255, 222, 180, .03) 43px 45px, transparent 45px 97px),
+      radial-gradient(120% 90% at 15% 0%, rgba(255, 210, 150, .16), transparent 60%),
+      linear-gradient(180deg, #6e4c34, #533826);
+  }
+  .ibtn { position: fixed; left: 24px; top: 22px; z-index: 50; width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(251, 248, 239, .9); color: var(--muted); font-size: 16px; box-shadow: 0 4px 12px rgba(30, 18, 6, .35);
+    display: grid; place-items: center; text-decoration: none; transition: color .2s, transform .2s var(--ease); }
+  .ibtn:hover { color: var(--accent); transform: translateY(-2px); }
+
+  /* ───────── the bookshelf ───────── */
+  #shelf { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 46px; transition: opacity .5s, filter .5s; }
+  #shelf.dim { opacity: .35; filter: blur(2px); pointer-events: none; }
+  .row { position: relative; display: flex; align-items: flex-end; gap: 3px; padding: 0 34px; min-width: 520px; height: 300px; }
+  /* the plank the books stand on, and the back of the case */
+  .row::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; bottom: 0; z-index: -1; border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.22) 30%, rgba(0,0,0,.3)); box-shadow: inset 0 10px 20px rgba(0,0,0,.35); }
+  .row::after { content: ""; position: absolute; left: -12px; right: -12px; bottom: -22px; height: 22px; border-radius: 3px;
+    background: linear-gradient(180deg, #a77e58, #8a6243 40%, #6d4b33);
+    box-shadow: 0 16px 24px -8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,230,190,.35); }
+  .spine { position: relative; flex: none; cursor: pointer; border-radius: 3px 3px 1px 1px; transform-origin: 50% 100%;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.28), rgba(255,255,255,.12) 18%, rgba(255,255,255,0) 40%, rgba(0,0,0,.12) 80%, rgba(0,0,0,.3)),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 4px),
+      var(--bc);
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.35), 2px 0 3px rgba(0,0,0,.25);
+    transition: transform .28s var(--ease); }
+  .spine:hover { transform: translateY(-12px) rotate(-1deg); }
+  .spine.gone { visibility: hidden; }
+  .spine .band { position: absolute; left: 0; right: 0; height: 3px; background: rgba(214, 186, 120, .65); }
+  .spine .band.t { top: 22px; } .spine .band.b { bottom: 30px; }
+  .spine .lbl { position: absolute; left: 0; right: 0; top: 40px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font: 700 17px/1 var(--serif); color: rgba(250, 240, 220, .92); text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+  .spine .yr { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font: 9.5px var(--mono); color: rgba(250, 240, 220, .7); letter-spacing: .05em; }
+  .spine.empty { filter: saturate(.55) brightness(.9); }
+  .spine.now::after { content: ""; position: absolute; right: 7px; top: -1px; width: 7px; height: 26px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
+
+  /* ───────── a book flying out of the shelf (a small 3D box: spine in front, cover on its right side) ───────── */
+  #fly { position: fixed; inset: 0; z-index: 30; pointer-events: none; perspective: 1700px; display: none; }
+  #fly.on { display: block; }
+  .fb { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+  .fb > div { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
+  .fb .sp { left: 0; width: 100%; }
+  .fb .cv { border-radius: 2px 6px 6px 2px; }
+
+  /* ───────── the open book ───────── */
+  #reader { position: fixed; inset: 0; z-index: 20; display: none; }
+  #reader.on { display: block; }
+  #wrap { position: absolute; left: 50%; top: 50%; width: calc(var(--pw) * 2); height: var(--ph); transform: translate(-50%, -50%) scale(var(--k, 1)); touch-action: none; }
+  #book { position: relative; width: 100%; height: 100%; perspective: calc(var(--pw) * 6.5); transition: transform .7s var(--ease); }
+  #book.closed { transform: translateX(calc(var(--pw) / -2)); }
+  .block { position: absolute; top: 0; height: 100%; width: var(--pw); background: var(--paper2); pointer-events: none; transition: opacity .3s; }
+  .block.l { right: 50%; border-radius: 2px 0 0 2px; box-shadow: -3px 0 0 #ebe4d4, -5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
+  .block.r { left: 50%; border-radius: 0 2px 2px 0; box-shadow: 3px 0 0 #ebe4d4, 5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
+  #book.closed .block.l { opacity: 0; }
+  .side { position: absolute; top: 0; width: var(--pw); height: var(--ph); overflow: hidden; background: var(--paper); }
+  .side.l { left: 0; } .side.r { left: var(--pw); }
+  .side.blank { visibility: hidden; }
+  .side::after { content: ""; position: absolute; top: 0; bottom: 0; width: 9%; pointer-events: none; z-index: 5; }
+  .side.l::after { right: 0; background: linear-gradient(270deg, rgba(40,32,20,.14), rgba(40,32,20,.04) 30%, transparent); }
+  .side.r::after { left: 0; background: linear-gradient(90deg, rgba(40,32,20,.14), rgba(40,32,20,.04) 30%, transparent); }
+  .side.cover::after { display: none; }
+  /* the turning leaf: a chain of thin strips (CSS strip turner after paper-flipbook, MIT) */
+  .turner, .strip { position: absolute; top: 0; height: var(--ph); transform-origin: 0 50%; transform-style: preserve-3d; }
+  .turner { left: var(--pw); z-index: 10; }
+  .sface { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper); }
+  .sface.back { transform: rotateY(180deg); }
+  .clip { position: absolute; top: 0; width: var(--pw); height: var(--ph); }
+  .shade { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  #cast { position: absolute; top: 0; height: 100%; pointer-events: none; z-index: 9; display: none; }
+
+  /* ───────── pages ───────── */
+  .pg { position: absolute; inset: 0; background: var(--paper); }
+  .pg::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .pno { position: absolute; bottom: 16px; font: 10.5px var(--mono); color: var(--faint); letter-spacing: .15em; }
+  .pg.odd .pno { left: 28px; } .pg.even .pno { right: 28px; }
+  /* the cover: cloth over board, with a paper label */
+  .pg.cover { background:
+      linear-gradient(90deg, rgba(0,0,0,.3) 0 14px, rgba(255,255,255,.08) 14px 16px, transparent 16px),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,.04) 0 2px, transparent 2px 4px), var(--bc);
+    border-radius: 0 6px 6px 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+  .pg.cover::before { display: none; }
+  .plate { position: absolute; left: 62px; right: 46px; top: 120px; padding: 30px 20px 26px; background: #f6eedd; text-align: center; border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.18), inset 0 0 0 5px #f6eedd, inset 0 0 0 6px rgba(0,0,0,.14), 0 2px 4px rgba(0,0,0,.25); }
+  .plate .y { font: 12px var(--mono); letter-spacing: .4em; color: #8d6b55; }
+  .plate .m { font: 700 52px var(--serif); letter-spacing: .15em; color: #4a2c1e; margin: 12px 0 10px; }
+  .plate .s { font-size: 12px; letter-spacing: .5em; color: #8d6b55; margin-right: -.5em; }
+  .pg.cover .ribbon { position: absolute; right: 60px; bottom: -8px; width: 11px; height: 70px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); }
+  .pg.end { background: #e9dfca; }
+  .pg.end::after { content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, rgba(79,122,90,.06) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, rgba(79,122,90,.06) 0 2px, transparent 2px 14px); }
+
+  /* the month at a glance */
+  .cal { position: absolute; inset: 44px 34px 50px; display: flex; flex-direction: column; }
+  .cal h2 { margin: 0 0 22px; font: 700 28px var(--serif); letter-spacing: .1em; }
+  .cal h2 small { font: 13px var(--mono); color: var(--faint); letter-spacing: .1em; margin-left: 10px; font-weight: 400; }
+  .cal .wd, .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal .wd span { text-align: center; font-size: 11.5px; color: var(--faint); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .cal .grid { grid-auto-rows: 1fr; flex: 1; margin-top: 6px; }
+  .cal .d { position: relative; padding: 6px 0 0 7px; font: 13px var(--mono); color: var(--muted); border-radius: 6px; }
+  .cal .d.has { color: var(--ink); cursor: pointer; }
+  .cal .d.has:hover { background: rgba(79,122,90,.08); }
+  .cal .d.today { color: var(--accent); font-weight: 700; }
+  .cal .marks { position: absolute; left: 7px; top: 27px; display: flex; gap: 3px; align-items: center; }
+  .cal .marks i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .cal .marks i.p { border-radius: 1px; background: var(--stamp); transform: rotate(-8deg); }
+  .cal .marks i.m { width: 9px; height: 2px; border-radius: 1px; background: var(--muted); }
+  .cal .marks i.n { border-radius: 1px; background: #e7cf78; }
+
+  /* a day */
+  .day { position: absolute; inset: 34px 32px 44px; display: flex; flex-direction: column; }
+  .dh { display: flex; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 12px; flex: none; }
+  .dh b { font: 700 34px var(--serif); }
+  .dh span { font-size: 13px; color: var(--muted); letter-spacing: .12em; }
+  .ticks { list-style: none; margin: 0 0 8px; padding: 0; flex: none; max-height: 168px; overflow: hidden; }
+  .ticks li { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; padding: 2.5px 0; }
+  .ticks li.sub { padding-left: 22px; font-size: 12.5px; }
+  .ticks li i { flex: none; width: 14px; height: 14px; margin-top: 3px; border-radius: 3px; border: 1.3px solid #cfc8b8; position: relative; }
+  .ticks li.done i { background: var(--accent); border-color: var(--accent); }
+  .ticks li.done i::after { content: ""; position: absolute; left: 3.5px; top: .5px; width: 3.5px; height: 7.5px; border: solid var(--paper); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .ticks li.done span { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.45); }
+  .projs { flex: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .ps { display: flex; align-items: center; gap: 10px; font: 600 13.5px var(--serif); }
+  .ps .st { flex: none; width: 24px; height: 28px; transform: rotate(-6deg); background: radial-gradient(circle, transparent 1.3px, #fffdf6 1.7px) -2px -2px / 4px 4px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.2)); position: relative; }
+  .ps .st::after { content: "成"; position: absolute; inset: 3px; border: 1px solid var(--stamp); background: #f2dccb; color: var(--stamp); font: 700 10px/16px var(--serif); text-align: center; }
+  .ps.go .st::after { content: "始"; border-color: var(--accent); background: #dfe8dc; color: var(--accent); }
+  .ps small { font: 11px var(--mono); color: var(--faint); font-weight: 400; }
+  .stk { flex: none; display: flex; gap: 12px; padding: 4px 2px 10px; }
+  .stk .sn { width: 96px; height: 96px; padding: 10px 9px; font: 11.5px/1.45 var(--hand); color: rgba(46,40,30,.85); overflow: hidden; white-space: pre-wrap; word-break: break-word;
+    background: var(--c); box-shadow: 0 2px 3px rgba(70,52,28,.2); }
+  .stk .sn::first-line { font-weight: 700; }
+  .mumble { flex: 1; min-height: 60px; width: 100%; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
+    font: 15px/27px var(--hand); color: var(--ink); background: repeating-linear-gradient(transparent 0 26px, rgba(96, 88, 72, .2) 26px 27px); background-attachment: local; }
+  .mumble::placeholder { color: #cfc6b4; }
+  .emptyday { color: var(--faint); font-size: 13px; letter-spacing: .1em; margin: 6px 0 12px; }
+
+  #pager { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 25; font: 12px var(--mono); color: rgba(250,240,220,.6); letter-spacing: .2em; display: none; }
+  #reader.on ~ #pager { display: block; }
+</style>
+</head>
+<body>
+<a class="ibtn" id="back" href="./" title="回到桌子">←</a>
+
+<div id="shelf"></div>
+<div id="fly"></div>
+
+<div id="reader">
+  <div id="wrap">
+    <div class="block l"></div>
+    <div class="block r"></div>
+    <div id="book" class="closed">
+      <div class="side l" id="pl"></div>
+      <div class="side r" id="pr"></div>
+      <div id="cast"></div>
+    </div>
+  </div>
+</div>
+<div id="pager"></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const PW = 400, PH = 540, K = 14;
+  const CN = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
+  const WD = "日一二三四五六";
+  const COLORS = ["#3f5a73", "#8d4a34", "#4f7a5a", "#a07a3a", "#6b5b7a", "#4e6f6e", "#9a5b4a", "#4e6b45", "#7a4f3a", "#456070", "#8a6a34", "#5b4a6e"];
+  const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
+
+  /* ───────── everything the desk keeps, sorted into days ───────── */
+  const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+  const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  const TODAY = dayKey(Date.now());
+  const memos = get("paper-desk.todaymemo.v1") || {};
+  const days = new Map();
+  const D = k => { if (!days.has(k)) days.set(k, { ticks: [], projs: [], notes: [] }); return days.get(k); };
+  (get("paper-desk.today.v1") || []).forEach(i => {
+    if (!i || !i.text || !i.text.trim()) return;
+    if (i.done && i.doneAt) D(dayKey(i.doneAt)).ticks.push(i);
+    else D(TODAY).ticks.push(i);
+  });
+  const pd = get("paper-desk.desk-tasks.v1") || {};
+  (pd.done || []).forEach(t => { if (t.doneAt) D(dayKey(t.doneAt)).projs.push({ t, kind: "done" }); if (t.startedAt && dayKey(t.startedAt) !== dayKey(t.doneAt)) D(dayKey(t.startedAt)).projs.push({ t, kind: "go" }); });
+  (pd.projects || []).forEach(t => { if (t.startedAt) D(dayKey(t.startedAt)).projs.push({ t, kind: "go" }); });
+  (get("paper-desk.memos.v1") || []).forEach(n => { if (n && n.text && n.text.trim()) D(dayKey(n.createdAt || Date.now())).notes.push(n); });
+  Object.keys(memos).forEach(k => { if ((memos[k] || "").trim()) D(k); });
+  D(TODAY);
+  const hasContent = k => { const d = days.get(k); return !!d && (d.ticks.length || d.projs.length || d.notes.length || (memos[k] || "").trim()); };
+
+  // one book per month: every month of this year so far, plus any earlier month with something in it
+  const now = new Date();
+  const months = new Map();
+  for (let m = 0; m <= now.getMonth(); m++) months.set(`${now.getFullYear()}-${m + 1}`, { y: now.getFullYear(), m: m + 1 });
+  [...days.keys()].forEach(k => { const [y, m] = k.split("-").map(Number); months.set(`${y}-${m}`, { y, m }); });
+  const books = [...months.values()].sort((a, b) => a.y - b.y || a.m - b.m).map(b => {
+    const keys = [...days.keys()].filter(k => k.startsWith(`${b.y}-${b.m}-`) && (hasContent(k) || k === TODAY))
+      .sort((a, c) => +a.split("-")[2] - +c.split("-")[2]);
+    return Object.assign(b, { keys, color: COLORS[(b.m - 1) % 12], now: b.y === now.getFullYear() && b.m === now.getMonth() + 1 });
+  });
+
+  /* ───────── the shelf ───────── */
+  const shelf = $("#shelf");
+  const hash = s => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+  function renderShelf() {
+    shelf.innerHTML = "";
+    const perRow = Math.max(6, Math.floor((innerWidth - 160) / 64));
+    for (let i = 0; i < books.length; i += perRow) {
+      const row = el("div", "row");
+      books.slice(i, i + perRow).forEach(b => {
+        const n = b.keys.filter(hasContent).length, h = hash(b.y + "-" + b.m);
+        const sp = el("div", "spine" + (n ? "" : " empty") + (b.now ? " now" : ""));
+        sp.style.setProperty("--bc", b.color);
+        sp.style.width = (40 + Math.min(26, n * 2.2)) + "px";
+        sp.style.height = (232 + h % 40) + "px";
+        sp.innerHTML = `<i class="band t"></i><i class="band b"></i><span class="lbl">${[...(CN[b.m - 1] + "月")].map(c => `<b>${c}</b>`).join("")}</span><span class="yr">${b.y}</span>`;
+        sp.title = `${b.y} 年 ${b.m} 月 · ${n} 天`;
+        sp.addEventListener("click", () => openBook(b, sp));
+        b.spine = sp;
+        row.appendChild(sp);
+      });
+      shelf.appendChild(row);
+    }
+  }
+
+  /* ───────── the book's pages ───────── */
+  let B = null, pages = [], cur = 0, nLeaves = 0;
+  const md = k => { const [, m, d] = k.split("-").map(Number); return { m, d }; };
+  function buildPages(b) {
+    pages = [{ kind: "cover" }, { kind: "end" }, { kind: "cal" }];
+    b.keys.forEach(k => pages.push({ kind: "day", k }));
+    if (pages.length % 2) pages.push({ kind: "end" });
+    nLeaves = pages.length / 2;
+  }
+  function page(i) {
+    const P = pages[i], pg = el("div", "pg " + (i % 2 ? "odd" : "even"));
+    if (!P) return null;
+    if (P.kind === "cover") {
+      pg.classList.add("cover"); pg.style.setProperty("--bc", B.color);
+      pg.innerHTML = `<div class="plate"><div class="y">${B.y}</div><div class="m">${CN[B.m - 1]}月</div><div class="s">手 账</div></div><div class="ribbon"></div>`;
+      return pg;
+    }
+    if (P.kind === "end") { pg.classList.add("end"); return pg; }
+    if (P.kind === "cal") {
+      const first = new Date(B.y, B.m - 1, 1), n = new Date(B.y, B.m, 0).getDate();
+      const cal = el("div", "cal");
+      cal.innerHTML = `<h2>${CN[B.m - 1]}月<small>${B.y}</small></h2><div class="wd">${[..."一二三四五六日"].map(w => `<span>${w}</span>`).join("")}</div><div class="grid"></div>`;
+      const grid = $(".grid", cal);
+      for (let i = 0; i < (first.getDay() + 6) % 7; i++) grid.appendChild(el("span"));
+      for (let d = 1; d <= n; d++) {
+        const k = `${B.y}-${B.m}-${d}`, c = el("div", "d"), x = days.get(k);
+        c.textContent = d;
+        if (k === TODAY) c.classList.add("today");
+        if (B.keys.includes(k)) {
+          c.classList.add("has"); c.dataset.goto = 3 + B.keys.indexOf(k);
+          const m = el("div", "marks");
+          if (x && x.ticks.some(t => t.done)) m.appendChild(el("i"));
+          if (x && x.projs.some(p => p.kind === "done")) m.appendChild(el("i", "p"));
+          if (x && x.notes.length) m.appendChild(el("i", "n"));
+          if ((memos[k] || "").trim()) m.appendChild(el("i", "m"));
+          c.appendChild(m);
+        }
+        grid.appendChild(c);
+      }
+      pg.appendChild(cal);
+      return pg;
+    }
+    // a day
+    const k = P.k, x = days.get(k) || { ticks: [], projs: [], notes: [] }, { m, d } = md(k);
+    const wd = WD[new Date(B.y, m - 1, d).getDay()];
+    const day = el("div", "day");
+    day.innerHTML = `<div class="dh"><b>${d}</b><span>${CN[m - 1]}月 · 周${wd}${k === TODAY ? " · 今天" : ""}</span></div>`;
+    if (x.ticks.length) {
+      const ul = el("ul", "ticks");
+      x.ticks.forEach(t => { const li = el("li", (t.done ? "done" : "") + (t.sub ? " sub" : "")); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = t.text; ul.appendChild(li); });
+      day.appendChild(ul);
+    }
+    if (x.projs.length) {
+      const box = el("div", "projs");
+      x.projs.forEach(({ t, kind }) => {
+        const r = el("div", "ps" + (kind === "go" ? " go" : "")); r.innerHTML = `<i class="st"></i><span></span><small></small>`;
+        r.children[1].textContent = t.title || "项目";
+        r.children[2].textContent = kind === "done" ? (t.sessions ? `${t.sessions} 次 · ${t.focus || 0}′` : "") : "开始";
+        box.appendChild(r);
+      });
+      day.appendChild(box);
+    }
+    if (x.notes.length) {
+      const box = el("div", "stk");
+      x.notes.slice(0, 3).forEach((n, i) => {
+        const s = el("div", "sn"); s.textContent = n.text; s.style.setProperty("--c", CAT_C[n.cat] || CAT_C.work);
+        s.style.transform = `rotate(${[-2.5, 1.8, -1][i]}deg)`; box.appendChild(s);
+      });
+      day.appendChild(box);
+    }
+    if (!x.ticks.length && !x.projs.length && !x.notes.length) day.insertAdjacentHTML("beforeend", `<div class="emptyday">还没有记录</div>`);
+    const ta = el("textarea", "mumble"); ta.dataset.k = k; ta.value = memos[k] || ""; ta.placeholder = "碎碎念…"; ta.spellcheck = false;
+    day.appendChild(ta);
+    pg.appendChild(day);
+    const no = el("div", "pno"); no.textContent = String(i - 2).padStart(2, "0"); pg.appendChild(no);
+    return pg;
+  }
+  // writing in the book is writing on the back of today's card (same store, same day)
+  document.addEventListener("input", e => {
+    const ta = e.target; if (!ta.classList || !ta.classList.contains("mumble")) return;
+    memos[ta.dataset.k] = ta.value;
+    try { localStorage.setItem("paper-desk.todaymemo.v1", JSON.stringify(memos)); } catch {}
+  });
+
+  /* ───────── the strip turner ───────── */
+  const pl = $("#pl"), pr = $("#pr"), book = $("#book"), cast = $("#cast");
+  function setSide(side, i) {
+    const pg = page(i);
+    side.replaceChildren(...(pg ? [pg] : []));
+    side.classList.toggle("blank", !pg);
+    side.classList.toggle("cover", !!pg && pg.classList.contains("cover"));
+  }
+  function show(l, r) { setSide(pl, l); setSide(pr, r); }
+  function settle() {
+    show(2 * cur - 1, 2 * cur);
+    book.classList.toggle("closed", cur === 0);
+    $("#pager").textContent = cur === 0 ? "" : `${cur} / ${nLeaves}`;
+  }
+  function buildTurner(front, back) {
+    const sw = PW / K;
+    const root = el("div", "turner");
+    let parent = root; const strips = [];
+    for (let k = 0; k < K; k++) {
+      const st = k === 0 ? root : el("div", "strip");
+      st.style.width = sw + "px";
+      if (k > 0) { st.style.left = sw + "px"; parent.appendChild(st); }
+      const ff = el("div", "sface front"); ff.style.width = (sw + .75) + "px";
+      const fc = el("div", "clip"); fc.style.left = (-k * sw) + "px"; const fp = page(front); if (fp) fc.appendChild(fp); ff.appendChild(fc);
+      const fsh = el("div", "shade"); ff.appendChild(fsh);
+      const bf = el("div", "sface back"); bf.style.width = (sw + .75) + "px"; bf.style.left = "-.75px";
+      const bc = el("div", "clip"); bc.style.left = (-(PW - (k + 1) * sw)) + "px"; const bp = page(back); if (bp) bc.appendChild(bp); bf.appendChild(bc);
+      const bsh = el("div", "shade"); bf.appendChild(bsh);
+      st.append(ff, bf);
+      strips.push({ el: st, fsh, bsh, ff, bf });
+      parent = st;
+    }
+    book.appendChild(root);
+    return { root, strips };
+  }
+  function pose(T, theta, dir, lift = 0) {
+    const stiff = T.cover ? .15 : 1;  // the cover is board: it barely bends
+    const bend = (30 * Math.sin(Math.PI * theta / 180) + lift) * stiff;
+    const ang = [];
+    for (let k = 0; k < K; k++) { const t = k / (K - 1); ang.push(clamp(theta + dir * bend * t * t, 0, 180)); }
+    let prev = 0;
+    ang.forEach((a, k) => {
+      const rel = a - prev; prev = a;
+      T.strips[k].el.style.transform = `rotateY(${-rel}deg)`;
+      T.strips[k].ff.style.visibility = a < 90 ? "" : "hidden";
+      T.strips[k].bf.style.visibility = a < 90 ? "hidden" : "";
+    });
+    const shadeF = a => .30 * (1 - Math.cos(a * Math.PI / 180)) / 2;
+    const shadeB = a => .24 * (1 + Math.cos(a * Math.PI / 180)) / 2;
+    ang.forEach((a, k) => {
+      const a0 = ang[k - 1] ?? a + (a - (ang[k + 1] ?? a)), a1 = ang[k + 1] ?? a;
+      const s0 = (a0 + a) / 2, s1 = (a + a1) / 2;
+      const spec = Math.max(0, Math.sin((a1 - a0) * Math.PI / 90)) * .10;
+      T.strips[k].fsh.style.background = `linear-gradient(90deg, rgba(20,18,12,${shadeF(s0).toFixed(3)}), rgba(20,18,12,${shadeF(s1).toFixed(3)})), linear-gradient(90deg, transparent 40%, rgba(255,255,255,${spec.toFixed(3)}))`;
+      T.strips[k].bsh.style.background = `linear-gradient(270deg, rgba(20,18,12,${shadeB(s0).toFixed(3)}), rgba(20,18,12,${shadeB(s1).toFixed(3)}))`;
+    });
+    const edge = ang.reduce((acc, a) => acc + (PW / K) * Math.cos(a * Math.PI / 180), 0);
+    const strength = (.28 * Math.max(Math.sin(theta * Math.PI / 180), lift / 60)).toFixed(3);
+    cast.style.display = "block";
+    if (edge >= 0) { cast.style.left = (PW + edge) + "px"; cast.style.width = Math.max(0, PW - edge) + "px"; cast.style.background = `linear-gradient(90deg, rgba(20,18,12,${strength}), rgba(20,18,12,0) 72px)`; }
+    else { cast.style.left = "0px"; cast.style.width = Math.max(0, PW + edge) + "px"; cast.style.background = `linear-gradient(270deg, rgba(20,18,12,${strength}), rgba(20,18,12,0) 72px)`; }
+  }
+  let T = null, busy = false;
+  function begin(dir) {
+    if (dir > 0 && cur >= nLeaves) return null;
+    if (dir < 0 && cur <= 0) return null;
+    if (dir > 0) { show(2 * cur - 1, 2 * cur + 2); T = buildTurner(2 * cur, 2 * cur + 1); T.cover = cur === 0; }
+    else { show(2 * cur - 3, 2 * cur); T = buildTurner(2 * cur - 2, 2 * cur - 1); T.cover = cur === 1; }
+    if (T.cover) book.classList.remove("closed");
+    T.dir = dir; T.theta = dir > 0 ? 0 : 180;
+    pose(T, T.theta, dir);
+    return T;
+  }
+  function end(done) {
+    if (!T) return;
+    T.root.remove(); cast.style.display = "none";
+    if (done) cur += T.dir;
+    T = null; settle();
+  }
+  function animate(from, to, ms) {
+    return new Promise(res => {
+      const t0 = performance.now();
+      const step = now => {
+        const t = clamp((now - t0) / ms, 0, 1);
+        T.theta = from + (to - from) * ease(t);
+        pose(T, T.theta, T.dir);
+        if (t < 1) requestAnimationFrame(step); else res();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  async function turn(dir, ms = 760) {
+    if (busy) return false;
+    if (T) end(false);
+    if (!begin(dir)) return false;
+    busy = true;
+    await animate(T.theta, dir > 0 ? 180 : 0, reduced ? 1 : ms);
+    end(true); busy = false;
+    return true;
+  }
+  async function gotoPage(i) {
+    const target = Math.ceil(i / 2);   // page i is on spread ⌈i/2⌉
+    while (cur !== target) if (!(await turn(target > cur ? 1 : -1, 300))) break;
+  }
+
+  /* pointer: drag a page by its edge, click a margin, click a day in the calendar */
+  const toBook = (x, y) => { const r = $("#wrap").getBoundingClientRect(), k = r.width / (PW * 2); return { x: (x - r.left) / k, y: (y - r.top) / k }; };
+  let drag = null;
+  book.addEventListener("pointerdown", e => {
+    if (busy || e.button !== 0 || e.target.closest("textarea")) return;
+    const p = toBook(e.clientX, e.clientY);
+    drag = { dir: p.x > PW ? 1 : -1, sx: e.clientX, sy: e.clientY, moved: false, target: e.target, lastTh: 0, lastT: performance.now(), vel: 0 };
+    book.setPointerCapture(e.pointerId);
+  });
+  book.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const p = toBook(e.clientX, e.clientY);
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+      drag.moved = true;
+      if (!begin(drag.dir)) { drag = null; return; }
+    }
+    const th = Math.acos(clamp((p.x - PW) / PW, -1, 1)) * 180 / Math.PI;
+    const now = performance.now();
+    drag.vel = drag.vel * .6 + ((th - drag.lastTh) / Math.max(1, now - drag.lastT) * 1000) * .4;
+    drag.lastTh = th; drag.lastT = now;
+    T.theta = th; pose(T, th, T.dir);
+  });
+  book.addEventListener("pointerup", async () => {
+    const d = drag; drag = null;
+    if (!d) return;
+    if (!d.moved) {
+      const g = d.target.closest("[data-goto]");
+      if (g) { gotoPage(+g.dataset.goto); return; }
+      if (cur === 0) { turn(1); return; }
+      turn(d.dir); return;
+    }
+    if (!T) return;
+    const proj = T.theta + d.vel * .25;
+    const done = T.dir > 0 ? proj > 90 : proj < 90;
+    const to = (T.dir > 0) === done ? 180 : 0;
+    busy = true;
+    await animate(T.theta, to, reduced ? 1 : 140 + Math.abs(to - T.theta) * 3.2);
+    end(done); busy = false;
+  });
+
+  /* ───────── taking a book off the shelf, and putting it back ───────── */
+  const fly = $("#fly"), reader = $("#reader");
+  function fit() {
+    const k = Math.min((innerWidth - 90) / (PW * 2 + 32), (innerHeight - 110) / (PH + 28), 1.25);
+    $("#wrap").style.setProperty("--k", Math.max(.4, k).toFixed(3));
+  }
+  // a little box: the spine faces you, the front cover is its right-hand side
+  function flyBox(b, sr) {
+    const D = sr.width, H = sr.height, Wc = H * PW / PH;
+    const box = el("div", "fb");
+    box.style.width = D + "px"; box.style.height = H + "px";
+    const sp = b.spine.cloneNode(true); sp.className = "sp spine"; sp.style.cssText = b.spine.style.cssText + `;transform:translateZ(${Wc / 2}px);position:absolute;left:0;top:0;width:${D}px;height:${H}px`;
+    const cv = el("div", "cv pg cover"); cv.style.setProperty("--bc", b.color);
+    cv.style.cssText += `;width:${Wc}px;left:${(D - Wc) / 2}px;transform:rotateY(90deg) translateZ(${D / 2}px)`;
+    const inner = el("div"); inner.style.cssText = `position:absolute;left:0;top:0;width:${PW}px;height:${PH}px;transform:scale(${H / PH});transform-origin:0 0`;
+    inner.innerHTML = `<div class="plate"><div class="y">${b.y}</div><div class="m">${CN[b.m - 1]}月</div><div class="s">手 账</div></div>`;
+    cv.appendChild(inner);
+    box.append(sp, cv);
+    box.style.left = sr.left + "px"; box.style.top = sr.top + "px";
+    return { box, D, H, Wc };
+  }
+  function coverRect() {
+    // where the closed book's cover sits on screen
+    const w = $("#wrap").getBoundingClientRect(), k = w.width / (PW * 2);
+    return { left: w.left + PW / 2 * k, top: w.top, width: PW * k, height: PH * k };
+  }
+  async function openBook(b, sp) {
+    if (B) return;
+    B = b; buildPages(b); cur = 0; settle(); fit();
+    const sr = sp.getBoundingClientRect();
+    reader.classList.add("on"); reader.style.visibility = "hidden";
+    const cr = coverRect();
+    const { box, H } = flyBox(b, sr);
+    fly.replaceChildren(box); fly.classList.add("on");
+    sp.classList.add("gone");
+    shelf.classList.add("dim");
+    const dx = cr.left + cr.width / 2 - (sr.left + sr.width / 2), dy = cr.top + cr.height / 2 - (sr.top + sr.height / 2), s = cr.height / H;
+    const a = box.animate([
+      { transform: "translate(0,0) rotateY(0deg) rotateZ(0deg) scale(1)" },
+      { transform: "translate(0,-34px) rotateY(0deg) rotateZ(-4deg) scale(1)", offset: .22 },
+      { transform: `translate(${dx * .45}px,${dy * .45 - 60}px) rotateY(-50deg) rotateZ(-2deg) scale(${1 + (s - 1) * .5})`, offset: .6 },
+      { transform: `translate(${dx}px,${dy}px) rotateY(-90deg) rotateZ(0deg) scale(${s})` },
+    ], { duration: reduced ? 1 : 1100, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" });
+    await a.finished;
+    reader.style.visibility = ""; fly.classList.remove("on"); fly.replaceChildren();
+    $("#back").title = "放回书架";
+    setTimeout(async () => { await turn(1, 900); if (b.now) gotoPage(3 + b.keys.indexOf(TODAY)); }, 180);
+  }
+  async function closeBook() {
+    if (!B || busy) return;
+    while (cur > 0) if (!(await turn(-1, cur === 1 ? 700 : 260))) break;
+    await new Promise(r => setTimeout(r, 300));
+    const b = B, sr = b.spine.getBoundingClientRect(), cr = coverRect();
+    const { box, H } = flyBox(b, sr);
+    const dx = cr.left + cr.width / 2 - (sr.left + sr.width / 2), dy = cr.top + cr.height / 2 - (sr.top + sr.height / 2), s = cr.height / H;
+    fly.replaceChildren(box); fly.classList.add("on");
+    reader.classList.remove("on");
+    shelf.classList.remove("dim");
+    const a = box.animate([
+      { transform: `translate(${dx}px,${dy}px) rotateY(-90deg) scale(${s})` },
+      { transform: `translate(${dx * .45}px,${dy * .45 - 60}px) rotateY(-45deg) scale(${1 + (s - 1) * .5})`, offset: .45 },
+      { transform: "translate(0,-30px) rotateY(0deg) rotateZ(-3deg) scale(1)", offset: .8 },
+      { transform: "translate(0,0) rotateY(0deg) scale(1)" },
+    ], { duration: reduced ? 1 : 950, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" });
+    await a.finished;
+    b.spine.classList.remove("gone"); fly.classList.remove("on"); fly.replaceChildren();
+    B = null; $("#back").title = "回到桌子";
+  }
+  $("#back").addEventListener("click", e => { if (B) { e.preventDefault(); closeBook(); } });
+  reader.addEventListener("pointerdown", e => { if (e.target === reader && !busy) closeBook(); });
+  addEventListener("keydown", e => {
+    if (!B || (document.activeElement && document.activeElement.tagName === "TEXTAREA")) return;
+    if (e.key === "Escape") closeBook();
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); turn(1); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); if (cur > 1) turn(-1); }
+  });
+  addEventListener("resize", () => { fit(); if (!B) renderShelf(); });
+
+  fit(); renderShelf();
+  // open straight to a month when asked (#2026-10)
+  const want = location.hash.slice(1);
+  if (want) { const b = books.find(x => `${x.y}-${x.m}` === want); if (b) setTimeout(() => openBook(b, b.spine), 300); }
+})();
+</script>
+</body>
+</html>

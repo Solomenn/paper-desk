@@ -170,6 +170,9 @@
   .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
     color: var(--muted); font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s; }
   .tb:hover { background: rgba(96, 88, 72, .07); color: var(--accent); }
+  .tbook { width: 22px; height: 28px; border-radius: 2px 4px 4px 2px; display: block; transition: transform .2s var(--ease);
+    background: linear-gradient(90deg, rgba(0,0,0,.25) 0 4px, transparent 4px), #4f7a5a; box-shadow: 1px 1px 0 #efe6d4, 2px 2px 0 #ddd2bc, 0 3px 6px rgba(40,24,8,.25); }
+  .tb:hover .tbook { transform: translateY(-2px) rotate(-4deg); }
   .tsep { width: 1px; height: 28px; margin: 0 6px; background: rgba(96, 88, 72, .16); }
   .tcard { width: 28px; height: 34px; background: #fff; border-radius: 3px; padding: 4px 4px 0; display: block; text-align: left;
     box-shadow: 0 0 0 .5px rgba(80,60,30,.22), 0 2px 4px rgba(70,52,28,.18); transition: transform .2s var(--ease); }
@@ -483,6 +486,7 @@
   <span class="tb dish" title="拖一颗图钉"><span class="pin"></span></span>
   <span class="tsep"></span>
   <button class="tb" id="tidy" title="便签全部收进右边（T）">⇥</button>
+  <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
   <a class="tb" href="receipt.html" title="今日小票">⎙</a>
   <span class="zoomer"><button id="zoomOut" title="缩小">−</button><span id="zoomPct" title="回到 100%">100%</span><button id="zoomIn" title="放大">+</button></span>
   <button class="tb" id="helpBtn" title="怎么用">?</button>
@@ -1314,7 +1318,7 @@
   function makeNote(o) {
     const n = Object.assign({
       id: uid(), cat: "work", text: "", x: W / 2, y: H / 2, a: 0, w: 0, vx: 0, vy: 0,
-      s: 1, sT: 1, lift: 0, liftT: 0, pin: null, docked: false, dockedAt: 0, mode: "rest", z: ++zTop,
+      s: 1, sT: 1, lift: 0, liftT: 0, pin: null, docked: false, dockedAt: 0, mode: "rest", z: ++zTop, createdAt: Date.now(),
     }, o);
     const el = document.createElement("div");
     el.className = "note";
@@ -1905,7 +1909,7 @@
       const data = notes.filter(n => n.mode !== "trash").map(n => ({
         id: n.id, cat: n.cat, text: n.el.classList.contains("editing") ? n.textEl.innerText : n.text,
         x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin,
-        docked: inDrawer(n), dockedAt: n.dockedAt, z: n.z, task: n.task,
+        docked: inDrawer(n), dockedAt: n.dockedAt, z: n.z, createdAt: n.createdAt,
       }));
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
     }, 300);
