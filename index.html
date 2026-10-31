@@ -1508,9 +1508,22 @@
   function setFold(n, v) {
     if (!!n.folded === v) return;
     endEdit(n);
+    const top0 = n.y - hh(n), bot0 = n.y + hh(n);
     n.folded = v;
     n.el.classList.toggle("folded", v);
     fitHeight(n);
+    front(n);
+    // the strips below it in the same column make room (and close up again when it folds)
+    const d = (n.y + hh(n)) - bot0;
+    if (Math.abs(d) > 1) {
+      for (const m of notes) {
+        if (m === n || m.pin || (m.mode !== "rest" && m.mode !== "place")) continue;
+        if (Math.abs(m.x - n.x) > HW * .9 || m.y - hh(m) < bot0 - 6 || m.y - hh(m) < top0) continue;
+        m.mode = "place";
+        m.t = { x: m.x, y: Math.min(H - hh(m) - 6, m.y + d), a: m.a, s: 1 };
+        m.liftT = .2;
+      }
+    }
     // unfolded near the bottom: it slides up so the whole sheet shows
     if (!v && n.mode === "rest" && !n.pin && n.y + hh(n) > H - 8) { n.mode = "place"; n.t = { x: n.x, y: H - hh(n) - 12, a: n.a, s: 1 }; n.liftT = .3; }
     save();
@@ -1876,7 +1889,6 @@
       makeNote(d);
     });
     keepIn();
-    if (wasDesk && !fresh) setTimeout(tidy, 300);
     save();
   }
   function demo() {
