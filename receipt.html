@@ -179,6 +179,8 @@
     background:rgba(251,248,239,.85);color:#8b867a;text-decoration:none;font-size:16px;box-shadow:0 2px 6px rgba(70,52,28,.16);transition:color .2s,transform .2s}
   .back:hover{color:#b5523b;transform:translateY(-2px)}
 </style>
+<link rel="stylesheet" href="room.css">
+<script src="room.js"></script>
 </head>
 <body>
 <a class="back" href="./" title="回到桌子">←</a>
@@ -261,8 +263,8 @@
      画布常量
      ============================================================ */
   const W = 1206;
-  const SANS = '"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif';
-  const MONO = '"SF Mono","Cascadia Mono",Consolas,"Courier New",monospace';
+  const SANS = '"LXGW WenKai","霞鹜文楷","KaiTi","STKaiti",serif';
+  const MONO = SANS;
 
   const INK = '#241e17';
   const INK2 = '#3a3124';
@@ -1493,11 +1495,17 @@
     if (ev.key === 'p' || ev.key === 'P') printAndSave();
   });
 
-  layout();
-  drawFrame();
-  requestAnimationFrame(loop);
-
-  setTimeout(() => { startPrint(); }, 420);
+  // the receipt is drawn on a canvas: wait (a little) for the handwriting face before printing
+  const fontsIn = Promise.race([
+    Promise.all(['400 26px "LXGW WenKai"', '700 38px "LXGW WenKai"'].map(f => document.fonts.load(f))),
+    new Promise(r => setTimeout(r, 2500)),
+  ]).catch(() => {});
+  fontsIn.then(() => {
+    layout();
+    drawFrame();
+    requestAnimationFrame(loop);
+    setTimeout(() => { startPrint(); }, 420);
+  });
 })();
 </script>
 </body>

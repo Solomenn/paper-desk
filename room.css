@@ -1,0 +1,27 @@
+@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css");
+@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css");
+/* Shared by the album, the journal and the receipt: sasshi's morning room behind the page, and the sticky notes'
+   handwriting (霞鹜文楷) for every word. (index.html carries the same room inline.) */
+:root {
+  --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
+  --serif: var(--hand); --sans: var(--hand); --mono: var(--hand);
+}
+html { background: #e3e8eb; }
+html body { background: transparent !important; }
+html body::before { display: none !important; }
+body, body * { font-family: var(--hand) !important; }
+.desk { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #e3e8eb; contain: strict; }
+.desk > svg, .desk > .falloff, .desk > .tooth { position: absolute; inset: 0; width: 100%; height: 100%; }
+.desk .fl { position: absolute; inset: -50%; background-repeat: repeat; }
+.fl-a { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .42; transform: rotate(30deg); }
+.fl-b { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='560' height='560'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.007 0.028' numOctaves='4' seed='13' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 560px; opacity: .38; transform: rotate(-38deg); }
+.fl-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 .45  0 0 0 0 .5  0 0 0 0 .53  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .10; transform: rotate(-50deg); }
+.fl-s { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.004 0.045' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -9 0 0 0 1.25'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .16; transform: rotate(-64deg); }
+.falloff { background: radial-gradient(150% 130% at 96% 0%, transparent 42%, rgb(196 207 217 / .36) 100%); mix-blend-mode: multiply; }
+.sun, .lift { opacity: var(--day, 1); transition: opacity 1.6s ease-out; }
+.sun { mix-blend-mode: multiply; }
+.lift { mix-blend-mode: color-dodge; }
+.tooth { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); background-size: 240px; mix-blend-mode: multiply; opacity: .07; }
+/* the shadow falls over everything on the desk, as the 3D engine casts it over the book */
+.cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; mix-blend-mode: multiply; opacity: calc(.2 * var(--day, 1)); transition: opacity 1.6s ease-out; }
+@media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
