@@ -284,19 +284,38 @@
   .flipc .face.b, .flipc.back .face.f { display: none; }
   .flipc.back .face.b { display: block; }
   /* the back is a postcard: lines to write on, a stamp box, a postmark that is also the timer */
-  .post .pc { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 12px 16px 0 20px; position: relative; z-index: 1; }
+  .post .pc { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 20px 16px 0 22px; position: relative; z-index: 1; }
+  .pl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pl .ttl { flex: none; margin-bottom: 8px; }
   .memo { flex: 1; min-width: 0; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
     font: 15px/28px var(--hand); color: var(--ink); background: repeating-linear-gradient(transparent 0 27px, rgba(96, 88, 72, .2) 27px 28px); background-attachment: local; }
-  .pcr { flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 26px; padding-top: 4px; }
+  .pcr { flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
   .sbox { width: 80px; height: 94px; border: 1.5px dashed rgba(139, 134, 122, .4); border-radius: 3px; position: relative; flex: none; }
   .post .stamp { left: -4px; top: -4px; right: auto; bottom: auto; }
-  .post .postmark { right: 52px; top: 118px; bottom: auto; width: 84px; height: 84px; }
+  .post .postmark { right: 54px; top: 64px; bottom: auto; width: 84px; height: 84px; }
   .dial.pm { width: 92px; height: 92px; flex: none;
     background: radial-gradient(circle, var(--paper) 0 60%, transparent 61%), repeating-conic-gradient(from -1deg, rgba(139,134,122,.45) 0 2deg, transparent 2deg 30deg); }
   .dial.pm::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; border: 1.5px solid rgba(74, 74, 90, .28); pointer-events: none; }
   .dial.pm .disc { inset: 8px; }
   .dial.pm .hub { inset: 27px; font-size: 11.5px; }
-  .meta { margin-left: auto; font: 11px var(--mono); color: var(--faint); letter-spacing: .06em; }
+  .meta { font: 11px var(--mono); color: var(--faint); letter-spacing: .06em; padding-left: 2px; }
+  .post .foot { padding: 10px 22px 16px; }
+
+  /* turning a card over: a corner lifts when you come near; drag it (or click it) and the card turns in 3D,
+     catching the light, then settles flat again so the text stays crisp */
+  .curl { position: absolute; right: 0; bottom: 0; width: 0; height: 0; z-index: 6; cursor: grab; border-bottom-right-radius: 10px;
+    background: linear-gradient(135deg, transparent 0 calc(50% - 1px), rgba(60, 40, 15, .22) 50%, #e6dcc7 53%, #f7f1e4 100%);
+    filter: drop-shadow(-2px -2px 3px rgba(60, 40, 15, .18)); transition: width .25s var(--ease), height .25s var(--ease); }
+  .flipc:hover .curl { width: 26px; height: 26px; }
+  .flipc .curl:hover { width: 42px; height: 42px; }
+  .flipc.f3d .curl, .flipc.peek .curl { display: none; }
+  .flipc.f3d { perspective: 1500px; }
+  .flipc.f3d .flipper { transform-style: preserve-3d; will-change: transform; }
+  .flipc.f3d .face { display: block !important; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flipc.f3d .face.b { transform: rotateY(180deg); }
+  .flipc .sheetc::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
+    background: linear-gradient(105deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 70%), rgba(40, 26, 10, var(--shade, 0));
+    background-size: 300% 100%, auto; background-position: var(--gx, 0%) 0, 0 0; opacity: var(--gloss, 0); }
 
   .projc .goal { resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px; overflow: hidden;
     font: 15.5px/1.6 var(--serif); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
@@ -305,7 +324,6 @@
   .foot { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 20px 16px; position: relative; z-index: 1; }
   .fbtn { border: 0; background: none; color: var(--faint); font: 13px var(--sans); cursor: pointer; padding: 4px 6px; border-radius: 6px; letter-spacing: .06em; }
   .fbtn:hover { color: var(--accent); background: rgba(79,122,90,.06); }
-  .fbtn.turn { font-size: 17px; }
   .stampBtn { margin-left: auto; border: 1px solid var(--stamp); color: var(--stamp); background: rgba(181,82,59,.05); font: 13px var(--sans); letter-spacing: .1em;
     padding: 6px 14px; border-radius: 999px; cursor: pointer; display: none; animation: pop .4s var(--ease); }
   .stampBtn:hover { background: var(--stamp); color: var(--paper); }
@@ -392,12 +410,11 @@
       <div class="head"><span class="ttl"></span><span class="pn"></span></div>
       <div class="bar"><i></i></div>
       <div class="body"><ul class="chk"></ul></div>
-      <div class="foot"><button class="fbtn turn" title="翻到背面（F）">↻</button></div>
+      <i class="curl" title="翻面"></i>
     </div></div>
     <div class="face b"><div class="sheetc post">
-      <div class="head"><span class="ttl"></span></div>
-      <div class="pc"><textarea class="memo" spellcheck="false"></textarea></div>
-      <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button></div>
+      <div class="pc"><div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div></div>
+      <i class="curl" title="翻面"></i>
     </div></div>
   </div>
 </div>
@@ -410,18 +427,19 @@
         <textarea class="goal" data-k="goal" rows="1" placeholder="目标"></textarea>
         <ul class="chk"></ul>
       </div>
-      <div class="foot"><button class="fbtn turn" title="翻到背面（F）">↻</button><button class="fbtn toss" title="扔掉">✕</button><button class="stampBtn">盖章</button></div>
+      <div class="foot"><button class="fbtn toss" title="扔掉">✕</button><button class="stampBtn">盖章</button></div>
+      <i class="curl" title="翻面"></i>
     </div></div>
     <div class="face b"><div class="sheetc post">
-      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
       <div class="pc">
-        <textarea class="memo" spellcheck="false"></textarea>
+        <div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div>
         <div class="pcr">
           <div class="sbox"><div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div></div>
           <div class="dial pm" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div>
         </div>
       </div>
-      <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button><span class="meta"></span></div>
+      <div class="foot"><span class="meta"></span></div>
+      <i class="curl" title="翻面"></i>
       <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
         <g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
           <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
@@ -456,7 +474,7 @@
 
 <div id="help">
   <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除<br>
-  <b>项目</b> ↻ 翻到计时；勾完点「盖章」收进卡册<br>
+  <b>翻面</b> 拖卡片右下角翘起的折角（或点它）；背面写随手记、计时；勾完点「盖章」<br>
   <b>便签</b> 从工具栏拖出；拖图钉按上去就固定，拖走图钉才能再动<br>
   <b>收起</b> 卡片和便签拖到屏幕右边；悬停卡签偷看，点一下拿回<br>
   <b>扔掉</b> 拖着便签时下方出现圆圈，拖进去<br>
@@ -725,7 +743,7 @@
       if (e.button !== 0) return;
       if (el.classList.contains("peek")) { untuck(); e.preventDefault(); return; }
       if (el.classList.contains("fly")) return;
-      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .turn, .toss")) return;
+      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .toss, .curl")) return;
       const p0 = { ...o.pos() }, sx = e.clientX, sy = e.clientY;
       let moved = false;
       el.setPointerCapture(e.pointerId);
@@ -841,19 +859,74 @@
   const flippers = [];
   function Flip(el) {
     const flipper = $(".flipper", el);
-    let flipping = false;
-    function flip(toBack) {
-      const back = el.classList.contains("back");
-      if (toBack === undefined) toBack = !back;
-      if (toBack === back || flipping) return;
-      if (reduced) { el.classList.toggle("back", toBack); return; }
-      flipping = true;
-      flipper.animate([{ transform: "scaleX(1)" }, { transform: "scaleX(0.02)" }], { duration: 150, easing: "cubic-bezier(.5,0,.9,.6)" }).onfinish = () => {
-        el.classList.toggle("back", toBack);
-        flipper.animate([{ transform: "scaleX(0.02)" }, { transform: "scaleX(1)" }], { duration: 220, easing: "cubic-bezier(.2,.7,.3,1)" }).onfinish = () => { flipping = false; };
-      };
+    let th = 0, v = 0, target = 0, tilt = 0, raf = 0;
+    const isBack = () => el.classList.contains("f3d") ? Math.abs(Math.round(target / 180)) % 2 === 1 : el.classList.contains("back");
+    function pose() {
+      const s = Math.abs(Math.sin(th * Math.PI / 180));
+      flipper.style.transform = `translateZ(${s * 48}px) rotateX(${tilt}deg) rotateY(${th}deg)`;
+      el.style.setProperty("--gloss", s.toFixed(3));
+      el.style.setProperty("--shade", (s * .12).toFixed(3));
+      el.style.setProperty("--gx", (((th % 180) + 180) % 180 / 180 * 100).toFixed(1) + "%");
     }
-    $$(".turn", el).forEach(b => b.addEventListener("click", () => flip()));
+    function begin() {
+      if (el.classList.contains("f3d")) return;
+      th = target = el.classList.contains("back") ? 180 : 0; v = 0; tilt = 0;
+      el.classList.add("f3d"); pose();
+    }
+    // at rest the card is flat again: no 3D transform left on it
+    function settle() {
+      cancelAnimationFrame(raf); raf = 0;
+      const back = Math.abs(Math.round(target / 180)) % 2 === 1;
+      el.classList.remove("f3d"); el.classList.toggle("back", back);
+      flipper.style.transform = ""; el.style.removeProperty("--gloss"); el.style.removeProperty("--shade");
+    }
+    function run() {
+      let last = performance.now();
+      cancelAnimationFrame(raf);
+      const step = now => {
+        const dt = Math.min(.032, (now - last) / 1000); last = now;
+        v += (150 * (target - th) - 15 * v) * dt; th += v * dt;
+        tilt *= Math.exp(-dt * 7);
+        pose();
+        if (Math.abs(target - th) < .4 && Math.abs(v) < 8) { settle(); return; }
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    function flip(toBack) {
+      const back = isBack();
+      if (toBack === undefined) toBack = !back;
+      if (toBack === back) return;
+      if (reduced) { el.classList.toggle("back", toBack); return; }
+      begin();
+      target += 180; v = 260; run();
+    }
+    // grab the corner and pull it across: the card turns with your hand
+    $$(".curl", el).forEach(c => c.addEventListener("pointerdown", e => {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      begin(); cancelAnimationFrame(raf);
+      const th0 = Math.round(th / 180) * 180, sx = e.clientX, sy = e.clientY, w = el.offsetWidth * Z;
+      let moved = false, lx = sx, lt = performance.now(), vel = 0;
+      c.setPointerCapture(e.pointerId);
+      const mv = ev => {
+        if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 4) return;
+        moved = true;
+        const now = performance.now();
+        th = th0 + Math.max(-200, Math.min(200, -(ev.clientX - sx) / w * 190));
+        vel = vel * .6 + (-(ev.clientX - lx) / w * 190 / Math.max(1, now - lt) * 1000) * .4;
+        lx = ev.clientX; lt = now;
+        tilt = Math.max(-12, Math.min(12, -(ev.clientY - sy) * .08));
+        pose();
+      };
+      const up = () => {
+        c.removeEventListener("pointermove", mv); c.removeEventListener("pointerup", up);
+        if (!moved) { target = th0 + 180; v = 260; run(); return; }
+        target = Math.max(th0 - 180, Math.min(th0 + 180, Math.round((th + vel * .22) / 180) * 180));
+        v = vel; run();
+      };
+      c.addEventListener("pointermove", mv); c.addEventListener("pointerup", up);
+    }));
     flippers.push({ el, flip });
     return flip;
   }
@@ -882,7 +955,7 @@
     }
     const md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`; };
     function renderMeta() {
-      $(".meta", el).textContent = `${md(p.startedAt)} 起` + (p.sessions ? ` · ${p.sessions} 次 · ${p.focus || 0}′` : "");
+      $(".meta", el).textContent = `始于 ${md(p.startedAt)} · 专注 ${p.sessions || 0} 次 · ${p.focus || 0}′`;
     }
     if (!p.startedAt) p.startedAt = Date.now();
     const memo = $(".memo", el);
@@ -992,7 +1065,7 @@
             $("#done").classList.add("gulp"); setTimeout(() => $("#done").classList.remove("gulp"), 500);
           }, 600);
         }, 1400);
-      }, el.classList.contains("back") ? 50 : 420);
+      }, el.classList.contains("back") ? 50 : 950);
     });
     $(".toss", el).addEventListener("click", () => {
       const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
