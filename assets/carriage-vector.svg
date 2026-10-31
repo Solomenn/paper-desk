@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 914" role="img" aria-label="雪国线复古卧铺列车车厢内部">
+<defs>
+  <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#29221e"/><stop offset=".38" stop-color="#403027"/><stop offset="1" stop-color="#211914"/></linearGradient>
+  <linearGradient id="ceiling" x2="0" y2="1"><stop stop-color="#171411"/><stop offset=".7" stop-color="#30241c"/><stop offset="1" stop-color="#4b3525"/></linearGradient>
+  <linearGradient id="wood" x2="1" y2=".15"><stop stop-color="#24170f"/><stop offset=".18" stop-color="#65452c"/><stop offset=".34" stop-color="#3a2619"/><stop offset=".55" stop-color="#785334"/><stop offset=".72" stop-color="#3b271a"/><stop offset="1" stop-color="#21160f"/></linearGradient>
+  <linearGradient id="woodLight" x2="0" y2="1"><stop stop-color="#a77b4c"/><stop offset=".15" stop-color="#6c492d"/><stop offset=".55" stop-color="#38251a"/><stop offset="1" stop-color="#1c130e"/></linearGradient>
+  <linearGradient id="brass" x2="1" y2="1"><stop stop-color="#f0d69a"/><stop offset=".22" stop-color="#9c713a"/><stop offset=".48" stop-color="#f4d99b"/><stop offset=".72" stop-color="#775027"/><stop offset="1" stop-color="#d8b775"/></linearGradient>
+  <linearGradient id="velvet" x2="1" y2=".15"><stop stop-color="#1b2525"/><stop offset=".22" stop-color="#40504a"/><stop offset=".48" stop-color="#263a35"/><stop offset=".72" stop-color="#526057"/><stop offset="1" stop-color="#1b2927"/></linearGradient>
+  <linearGradient id="velvetSeat" x2="0" y2="1"><stop stop-color="#536158"/><stop offset=".22" stop-color="#34443d"/><stop offset=".65" stop-color="#1d2d29"/><stop offset="1" stop-color="#111c1a"/></linearGradient>
+  <linearGradient id="leather" x2="1" y2="1"><stop stop-color="#8b6240"/><stop offset=".25" stop-color="#513522"/><stop offset=".55" stop-color="#765035"/><stop offset="1" stop-color="#2d1d14"/></linearGradient>
+  <radialGradient id="lamp" cx=".5" cy=".2" r=".8"><stop stop-color="#fff0c3" stop-opacity=".95"/><stop offset=".3" stop-color="#f5c77d" stop-opacity=".55"/><stop offset="1" stop-color="#e6a34e" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vignette"><stop offset=".55" stop-color="#080706" stop-opacity="0"/><stop offset="1" stop-color="#080706" stop-opacity=".68"/></radialGradient>
+  <pattern id="grain" width="140" height="80" patternUnits="userSpaceOnUse"><path d="M0 12 C30 7 48 17 78 11 S120 9 140 13 M0 38 C35 32 55 43 90 37 S120 36 140 39 M0 66 C28 60 60 70 90 65 S120 63 140 67" fill="none" stroke="#d7aa70" stroke-opacity=".08" stroke-width="1.2"/><path d="M18 0v80M104 0v80" stroke="#090604" stroke-opacity=".14"/></pattern>
+  <pattern id="damask" width="54" height="64" patternUnits="userSpaceOnUse"><path d="M27 4 C39 14 42 23 27 32 C12 23 15 14 27 4Z M27 32 C42 42 39 52 27 61 C15 52 12 42 27 32Z" fill="none" stroke="#b89a6b" stroke-opacity=".2" stroke-width="1.2"/><path d="M27 12v40M8 32h38" stroke="#d1b17b" stroke-opacity=".08"/></pattern>
+  <pattern id="upholstery" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M0 0L22 22M22 0L0 22" stroke="#b9c2b4" stroke-opacity=".09" stroke-width=".7"/><circle cx="11" cy="11" r="1.1" fill="#d2c9a9" fill-opacity=".22"/></pattern>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+  <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="15"/></filter>
+  <linearGradient id="glassDark" x2="0" y2="1"><stop stop-color="#0b1721"/><stop offset="1" stop-color="#17242a"/></linearGradient>
+  <g id="rosette"><circle r="13" fill="#4c3421" stroke="url(#brass)" stroke-width="2"/><circle r="8" fill="none" stroke="#d8b979" stroke-width="1"/><path d="M0-6L2-2 6 0 2 2 0 6-2 2-6 0-2-2Z" fill="#d9bd82"/></g>
+  <g id="sconce">
+    <ellipse cx="0" cy="55" rx="58" ry="78" fill="url(#lamp)" opacity=".42" filter="url(#soft)"/>
+    <path d="M-18 10h36v18h-36z" fill="url(#brass)" stroke="#21170f" stroke-width="2"/>
+    <path d="M0 27v19M-17 46Q0 32 17 46" fill="none" stroke="url(#brass)" stroke-width="5"/>
+    <path d="M-30 50Q-29 25 0 20Q29 25 30 50L20 84Q0 96-20 84Z" fill="#e9c98b" fill-opacity=".82" stroke="url(#brass)" stroke-width="3"/>
+    <path d="M-23 55Q0 40 23 55L17 78Q0 86-17 78Z" fill="#fff0c6" opacity=".48"/>
+    <path d="M-28 48Q0 34 28 48M-20 84Q0 94 20 84" fill="none" stroke="#f2d69c" stroke-width="2"/>
+    <circle cy="101" r="4" fill="url(#brass)"/>
+  </g>
+</defs>
+<!-- cabin shell -->
+<rect width="1600" height="914" fill="url(#wall)"/>
+<path d="M0 0H1600V130Q1320 92 1080 112Q800 136 520 112Q260 90 0 130Z" fill="url(#ceiling)"/>
+<path d="M0 110Q300 74 520 103Q800 132 1080 103Q1320 76 1600 110" fill="none" stroke="#9b7045" stroke-width="7" opacity=".65"/>
+<path d="M0 124Q300 88 520 117Q800 146 1080 117Q1320 90 1600 124" fill="none" stroke="#d2ac72" stroke-width="1.6" opacity=".45"/>
+<rect y="128" width="1600" height="660" fill="url(#wood)"/>
+<rect y="128" width="1600" height="660" fill="url(#grain)" opacity=".7"/>
+<!-- wall panel architecture -->
+<g fill="none" stroke="#120d09">
+ <path d="M36 146V760M1564 146V760" stroke-width="12" opacity=".5"/>
+ <path d="M54 150V760M1546 150V760" stroke="#b18a58" stroke-width="2" opacity=".65"/>
+ <path d="M70 160H590V740H70Z M1210 160H1530V740H1210Z" stroke="#1a100a" stroke-width="14"/>
+ <path d="M82 172H578V728H82Z M1222 172H1518V728H1222Z" stroke="url(#brass)" stroke-width="2.5" opacity=".8"/>
+ <path d="M95 188H565V712H95Z M1235 188H1505V712H1235Z" stroke="#b88a53" stroke-width="1" opacity=".35"/>
+</g>
+<g fill="url(#damask)" opacity=".55"><rect x="95" y="188" width="470" height="524"/><rect x="1235" y="188" width="270" height="524"/></g>
+<!-- central window surround -->
+<path d="M610 84Q895 38 1188 84L1205 590Q900 620 592 590Z" fill="#17100c" stroke="#100b08" stroke-width="18"/>
+<path d="M624 96Q895 56 1174 96L1187 578Q900 604 610 578Z" fill="url(#woodLight)" stroke="url(#brass)" stroke-width="7"/>
+<path d="M640 111Q895 77 1158 111L1170 562Q900 586 628 562Z" fill="none" stroke="#d0a66b" stroke-width="2" opacity=".7"/>
+<!-- window opening sits beneath the live snowy scene -->
+<path d="M660 120Q895 91 1140 120L1142 548Q900 570 654 548Z" fill="url(#glassDark)" stroke="#24180f" stroke-width="8"/>
+<!-- upper carved valance -->
+<path d="M600 111Q895 26 1200 111L1185 148Q895 75 615 148Z" fill="url(#wood)" stroke="url(#brass)" stroke-width="3"/>
+<path d="M626 119Q895 51 1174 119" fill="none" stroke="#e0bd80" stroke-width="2" opacity=".8"/>
+<path d="M650 128Q895 70 1150 128" fill="none" stroke="#130c08" stroke-width="2"/>
+<g fill="none" stroke="#c6a16b" stroke-width="2" opacity=".8"><path d="M680 110q18-22 36 0t36 0t36 0t36 0t36 0t36 0t36 0t36 0t36 0t36 0t36 0"/><path d="M710 128q15-12 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0"/></g>
+<g fill="url(#brass)"><circle cx="635" cy="145" r="5"/><circle cx="1165" cy="145" r="5"/><use href="#rosette" x="895" y="92"/></g>
+<!-- side curtains, pleated and restrained -->
+<path d="M624 114Q585 180 610 330Q592 460 625 566Q665 550 679 500Q658 386 682 270Q673 165 700 113Z" fill="#182321" stroke="#a78350" stroke-width="3"/>
+<path d="M624 126Q644 210 628 318Q644 425 637 548M646 122Q660 218 647 326Q662 432 657 540M670 118Q681 210 665 318Q679 423 672 520" fill="none" stroke="#8d9a83" stroke-opacity=".32" stroke-width="4"/>
+<path d="M1166 114Q1205 180 1180 330Q1198 460 1165 566Q1125 550 1111 500Q1132 386 1108 270Q1117 165 1090 113Z" fill="#182321" stroke="#a78350" stroke-width="3"/>
+<path d="M1166 126Q1146 210 1162 318Q1146 425 1153 548M1144 122Q1130 218 1143 326Q1128 432 1133 540M1120 118Q1109 210 1125 318Q1111 423 1118 520" fill="none" stroke="#8d9a83" stroke-opacity=".32" stroke-width="4"/>
+<path d="M620 545Q650 565 682 538L676 566Q650 584 623 567ZM1118 538Q1150 565 1180 545L1177 567Q1150 584 1124 566Z" fill="#27352f" stroke="url(#brass)" stroke-width="2"/>
+<!-- decorative side sconces and wall fixtures -->
+<g transform="translate(300 270)"><use href="#sconce"/></g>
+<g transform="translate(1320 270) scale(.9)"><use href="#sconce"/></g>
+<g fill="url(#brass)" stroke="#21150d" stroke-width="2">
+ <path d="M250 390h100v8H250zM270 398v12h60v-12" />
+ <path d="M1260 390h100v8h-100zM1280 398v12h60v-12"/>
+</g>
+<!-- small framed railway prints -->
+<g transform="translate(160 470)">
+ <rect width="190" height="142" rx="2" fill="#17100b" stroke="url(#brass)" stroke-width="5"/>
+ <rect x="9" y="9" width="172" height="124" fill="#b7a27c"/>
+ <rect x="16" y="16" width="158" height="110" fill="#25343a"/>
+ <path d="M16 96L57 56L82 79L113 40L174 97V126H16Z" fill="#d9d1bd"/>
+ <path d="M16 103L57 67L82 88L113 50L174 104" fill="none" stroke="#e9e2d1" stroke-width="3"/>
+ <path d="M16 106H174" stroke="#c3b99e" stroke-width="2"/>
+ <text x="95" y="119" text-anchor="middle" fill="#f0e5c8" font-size="9" letter-spacing="2">YUKIGUNI LINE</text>
+</g>
+<g transform="translate(1260 475)">
+ <rect width="160" height="132" fill="#1a120c" stroke="url(#brass)" stroke-width="5"/>
+ <rect x="9" y="9" width="142" height="114" fill="#25323a"/>
+ <circle cx="110" cy="34" r="17" fill="#e8dcb6" opacity=".9"/>
+ <path d="M9 96L40 57L65 79L88 51L151 95V123H9Z" fill="#c4c9c3"/>
+ <path d="M9 102L40 68L65 89L88 61L151 101" fill="none" stroke="#f1ead9" stroke-width="2"/>
+</g>
+<!-- brass rails and panel mouldings -->
+<g fill="none" stroke="url(#brass)">
+ <path d="M80 645H575M1225 645H1520" stroke-width="5"/>
+ <path d="M80 654H575M1225 654H1520" stroke-width="1.4" opacity=".8"/>
+ <path d="M90 680H565M1235 680H1510" stroke-width="2" opacity=".65"/>
+ <path d="M105 700H550M1250 700H1495" stroke-width="1" opacity=".5"/>
+</g>
+<!-- floor and baseboard -->
+<path d="M0 770Q800 742 1600 770V914H0Z" fill="#17110d"/>
+<path d="M0 770Q800 742 1600 770L1600 794Q800 766 0 794Z" fill="url(#woodLight)" stroke="#a57c4b" stroke-width="3"/>
+<path d="M0 804Q800 780 1600 804" fill="none" stroke="#c39a62" stroke-width="1.4" opacity=".5"/>
+<path d="M0 824L1600 824M0 870L1600 870" stroke="#8d6742" stroke-width="2" opacity=".2"/>
+<path d="M120 914L480 790M460 914L680 786M820 914L850 780M1160 914L1050 784M1510 914L1180 790" stroke="#b28b5b" stroke-opacity=".12" stroke-width="2"/>
+<!-- foreground table, deliberately low and narrow so the window remains dominant -->
+<ellipse cx="900" cy="760" rx="270" ry="44" fill="#050403" opacity=".7" filter="url(#shadow)"/>
+<path d="M766 696L1034 696L1008 827L792 827Z" fill="url(#woodLight)" stroke="#1a1009" stroke-width="9"/>
+<path d="M760 680Q900 653 1040 680L1032 715Q900 739 768 715Z" fill="url(#wood)" stroke="#120b07" stroke-width="7"/>
+<path d="M770 683Q900 661 1030 683L1026 704Q900 727 774 704Z" fill="none" stroke="url(#brass)" stroke-width="2.5"/>
+<path d="M786 694Q900 676 1014 694" fill="none" stroke="#d3ae76" stroke-opacity=".45" stroke-width="1.5"/>
+<path d="M804 715L796 817M996 715L1004 817" stroke="#a77a48" stroke-width="4" opacity=".5"/>
+<g fill="none" stroke="#c49a61" opacity=".65"><path d="M824 707q76 12 152 0"/><path d="M820 716q80 13 160 0"/></g>
+<!-- subtle seat backs at the lower edges, not oversized -->
+<g>
+ <path d="M-40 720Q-5 628 95 620Q200 602 276 660L305 914H-40Z" fill="url(#velvetSeat)" stroke="#100f0c" stroke-width="12"/>
+ <path d="M-8 724Q18 652 100 646Q184 631 247 682L265 914H-8Z" fill="url(#upholstery)" opacity=".65"/>
+ <path d="M12 720Q38 672 104 666Q171 655 222 698" fill="none" stroke="#8d9b87" stroke-opacity=".5" stroke-width="3"/>
+ <path d="M30 747Q118 716 218 750M36 780Q120 751 225 785M42 816Q125 790 231 824" fill="none" stroke="#0d1b18" stroke-width="2" opacity=".6"/>
+ <path d="M-20 720Q20 634 105 628Q190 619 270 675" fill="none" stroke="url(#brass)" stroke-width="5"/>
+ <path d="M-8 735Q25 655 106 650Q184 642 250 690" fill="none" stroke="#8d9a83" stroke-width="1.5" opacity=".7"/>
+ <path d="M1325 914L1340 660Q1415 602 1510 620Q1600 638 1640 720V914Z" fill="url(#velvetSeat)" stroke="#100f0c" stroke-width="12"/>
+ <path d="M1355 914L1370 682Q1430 631 1506 646Q1580 660 1610 724V914Z" fill="url(#upholstery)" opacity=".65"/>
+ <path d="M1380 698Q1440 655 1505 666Q1568 677 1590 730" fill="none" stroke="#8d9b87" stroke-opacity=".5" stroke-width="3"/>
+ <path d="M1378 750Q1470 716 1570 747M1374 786Q1470 752 1568 783M1370 824Q1465 790 1565 820" fill="none" stroke="#0d1b18" stroke-width="2" opacity=".6"/>
+ <path d="M1335 675Q1410 619 1510 628Q1595 640 1630 720" fill="none" stroke="url(#brass)" stroke-width="5"/>
+</g>
+<!-- armrest caps and upholstery piping -->
+<g fill="url(#woodLight)" stroke="url(#brass)" stroke-width="2"><path d="M0 750Q100 700 250 750L260 772Q115 730 0 780Z"/><path d="M1340 750Q1490 700 1600 750V780Q1485 730 1340 772Z"/></g>
+<!-- warm pools from the lamps, kept subtle -->
+<ellipse cx="300" cy="385" rx="250" ry="270" fill="url(#lamp)" opacity=".11"/>
+<ellipse cx="1320" cy="385" rx="230" ry="260" fill="url(#lamp)" opacity=".1"/>
+<rect width="1600" height="914" fill="url(#vignette)"/>
+</svg>
