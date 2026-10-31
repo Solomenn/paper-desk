@@ -587,6 +587,15 @@
     background: rgba(54, 66, 78, .35); box-shadow: 0 1px 0 rgba(255, 255, 255, .6); transition: background .2s, transform .2s; }
   #trayHandle:hover::after { background: #2f4f73; transform: scaleX(1.2); }
   body.trayOn #trayHandle::after { opacity: 0; }
+
+  /* narrower cards: one line each for the title, the goal and the next step; the rest is an ellipsis */
+  .lane[data-col=doing] .cards { flex-direction: row; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 22px 16px; }
+  .pcard.inl { width: auto; min-width: 0; flex: 1 1 260px; max-width: 340px; }
+  .pcard.inl .tin { width: 0; }
+  .mini { width: 100%; max-width: 250px; }
+  .mini b, .mini p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; -webkit-line-clamp: unset; }
+  .mini .mstep span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .mini .mstep { min-width: 0; }
 </style>
 </head>
 <body>
@@ -1246,6 +1255,7 @@
     const f = filled(p), k = f.filter(c => c.done).length;
     $("b", el).textContent = p.title || "未命名";
     if (p.goal) $("p", el).textContent = p.goal; else $("p", el).remove();
+    el.title = [p.title, p.goal].filter(Boolean).join("\n");
     if (f.length) { $(".bar i", el).style.width = (k / f.length * 100) + "%"; $(".cnt", el).textContent = `${k}/${f.length}`; }
     else $(".mrow", el).style.display = "none";
     // the steps: folded, just the next one; opened, all of them, tickable right here on the board
@@ -1263,7 +1273,7 @@
       li.className = "mstep" + (c.done ? " done" : "") + (c.sub ? " sub" : "");
       li.dataset.i = i;
       li.innerHTML = '<i class="mb"></i><span></span>';
-      li.lastChild.textContent = c.t;
+      li.lastChild.textContent = c.t; li.title = c.t;
       ul.appendChild(li);
     });
     else ul.remove();
