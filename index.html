@@ -303,11 +303,8 @@
 
   /* turning a card over: a corner lifts when you come near; drag it (or click it) and the card turns in 3D,
      catching the light, then settles flat again so the text stays crisp */
-  .curl { position: absolute; right: 0; bottom: 0; width: 0; height: 0; z-index: 6; cursor: grab; border-bottom-right-radius: 10px;
-    background: linear-gradient(135deg, transparent 0 calc(50% - 1px), rgba(60, 40, 15, .22) 50%, #e6dcc7 53%, #f7f1e4 100%);
-    filter: drop-shadow(-2px -2px 3px rgba(60, 40, 15, .18)); transition: width .25s var(--ease), height .25s var(--ease); }
-  .flipc:hover .curl { width: 26px; height: 26px; }
-  .flipc .curl:hover { width: 42px; height: 42px; }
+  /* an invisible corner: the pointer turns into a hand; click or drag it to turn the card */
+  .curl { position: absolute; right: 0; bottom: 0; width: 40px; height: 40px; z-index: 6; cursor: pointer; }
   .flipc.f3d .curl, .flipc.peek .curl { display: none; }
   .flipc.f3d { perspective: 1500px; }
   .flipc.f3d .flipper { transform-style: preserve-3d; will-change: transform; }
@@ -474,7 +471,7 @@
 
 <div id="help">
   <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除<br>
-  <b>翻面</b> 拖卡片右下角翘起的折角（或点它）；背面写随手记、计时；勾完点「盖章」<br>
+  <b>翻面</b> 鼠标移到卡片右下角变成小手，点一下或拖动；背面写随手记、计时；勾完点「盖章」<br>
   <b>便签</b> 从工具栏拖出；拖图钉按上去就固定，拖走图钉才能再动<br>
   <b>收起</b> 卡片和便签拖到屏幕右边；悬停卡签偷看，点一下拿回<br>
   <b>扔掉</b> 拖着便签时下方出现圆圈，拖进去<br>
