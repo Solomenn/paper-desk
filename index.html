@@ -6,6 +6,7 @@
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
+<script src="scene.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
@@ -19,6 +20,7 @@
     --line: rgba(54, 66, 78, .14);
     --ease: cubic-bezier(.22, 1, .36, 1);
     --calw: 300px; --gap: 22px; --trayh: 74px; --toph: 50px;
+    --sidew: clamp(220px, 22vw, 330px);
     --wood: #9a6e45;
   }
   * { box-sizing: border-box; }
@@ -48,7 +50,7 @@
   #todayCard .sheetc > .body > .chk { margin: 0 -22px; padding: 2px 22px 40px; }
 
   /* ───────── right: one board fills the space, slide to the next ───────── */
-  #stage { position: fixed; left: var(--gap); right: var(--gap); top: calc(var(--toph) + 4px); transition: left .4s var(--ease); bottom: var(--gap); overflow: hidden; z-index: 5; }
+  #stage { position: fixed; left: var(--gap); right: calc(var(--sidew) + 4px); top: calc(var(--toph) + 4px); transition: left .4s var(--ease); bottom: var(--gap); overflow: hidden; z-index: 5; }
   #pages { position: absolute; inset: 0; display: flex; width: 200%; transition: transform .65s var(--ease); }
   .page { width: 50%; height: 100%; position: relative; padding: 0 2px; }
   .frame { position: absolute; inset: 0; border-radius: 6px; padding: 14px;
@@ -451,6 +453,7 @@
 
   @media (max-width: 900px) { :root { --calw: 240px; --gap: 14px; } .lanes { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
   @media (prefers-reduced-motion: reduce) { #pages { transition: none; } }
+  @media (max-width: 1000px) { :root { --sidew: 18px; } #side { display: none; } }
 
   /* ═════════ the corkboard is just the desk now: the notes lie in the morning light; the projects keep their chalkboard ═════════ */
   #detail { background: rgba(227, 232, 235, .55); }
