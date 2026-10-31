@@ -3,6 +3,9 @@
 /* Shared by the album, the journal and the receipt: sasshi's morning room behind the page, and the sticky notes'
    handwriting (霞鹜文楷) for every word. (index.html carries the same room inline.) */
 :root {
+  /* the desk's inks and paper: sumi, ainezu, usuzumi, gofun */
+  --ink: #2a323a; --muted: #4f5d69; --faint: #8e9aa4; --paper: #f8f9f7; --paper2: #eef2f4; --desk: #e3e8eb;
+  --line: rgba(54, 66, 78, .14);
   --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
   --serif: var(--hand); --sans: var(--hand); --mono: var(--hand);
 }
