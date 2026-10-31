@@ -20,6 +20,7 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.head.insertAdjacentHTML("beforeend", `<style>
   body.car3d #room, body.car3d .cast, body.car3d #side { display: none !important; }
   #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+  html:not([data-theme="day"]) #car3d { filter: saturate(1.18) contrast(1.04); }
   #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 100% at 62% 42%, transparent 55%, rgba(8, 6, 4, .55) 100%); }
   /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
   #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
@@ -264,7 +265,7 @@ const moon = new THREE.DirectionalLight(0x9db6dd, .5); moon.position.set(-6, 10,
 const ceilLight = new THREE.RectAreaLight(0xffd9a0, 1.6, 5, .5); ceilLight.position.set(-.6, 2.3, 1.4); ceilLight.lookAt(-.6, 0, .4); scene.add(ceilLight);
 const winLight = new THREE.RectAreaLight(0x8fb0e0, 2, 1, 1); scene.add(winLight);
 const sconce = new THREE.SpotLight(0xffd6a8, 6, 4, .55, .9, 1.6); scene.add(sconce); scene.add(sconce.target);
-const wallLamp = new THREE.PointLight(0xffcf9c, 3, 3.2, 1.8); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
+const wallLamp = new THREE.PointLight(0xffaa5e, 3, 3.6, 1.7); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
 
 /* ───────── fit the window to the strip right of the boards ───────── */
 function layout() {
@@ -298,7 +299,7 @@ function applyTheme() {
   moon.intensity = n ? .9 : 2.2; moon.color.set(n ? 0x7d9ccc : 0xfff6e8);
   ceilLight.intensity = n ? .18 : .5; ceilLight.color.set(n ? 0xffc890 : 0xf2f6ff);
   winLight.intensity = n ? .9 : 16; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
-  sconce.intensity = n ? 3 : 0; wallLamp.intensity = n ? 3.2 : 0; M.globe.emissiveIntensity = n ? 1.6 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
+  sconce.intensity = n ? 5 : 0; sconce.color.set(0xffbe80); wallLamp.intensity = n ? 4.8 : 0; M.globe.emissiveIntensity = n ? 1.9 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
   renderer.toneMappingExposure = n ? .95 : 1.35;
   trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xd6e2ee)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
   bloom.strength = n ? .5 : .18; bloom.threshold = n ? .82 : .95; bloom.radius = n ? .7 : .9;
