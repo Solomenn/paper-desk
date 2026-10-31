@@ -45,7 +45,7 @@
   @media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
 
   /* ───────── left: today's tear-off calendar ───────── */
-  #cal { position: fixed; left: var(--gap); top: calc(var(--toph) + 4px); bottom: var(--gap); width: var(--calw); z-index: 40500;
+  #cal { position: fixed; right: calc(var(--gap) + 14px); top: calc(var(--toph) + 4px); bottom: var(--gap); width: var(--calw); z-index: 40500;
     transition: opacity .25s, transform .35s var(--ease); }
   body:not(.calOpen) #cal { opacity: 0; transform: translateY(-16px) scale(.98); pointer-events: none; }
   #cal .rings { position: absolute; left: 18px; right: 18px; top: -6px; height: 20px; z-index: 8; pointer-events: none;
@@ -522,10 +522,9 @@
   .mini.open { transform: none; }
 
   /* ═════════ along the top: today's calendar as a small tab, and a cord of reminders across every page ═════════ */
-  body.calPinned #stage, body.calPinned #tray { left: calc(var(--gap) * 2 + var(--calw)); }
   #top { position: fixed; left: var(--gap); right: calc(var(--gap) + 14px); top: 0; height: var(--toph); z-index: 41000; display: flex; align-items: flex-start; gap: 16px; pointer-events: none; }
   #top > * { pointer-events: auto; }
-  #calTab { flex: none; height: 42px; padding: 8px 14px 0 12px; border: 0; border-radius: 0 0 9px 9px; cursor: pointer; touch-action: none;
+  #calTab { order: 2; flex: none; height: 42px; padding: 8px 14px 0 12px; border: 0; border-radius: 0 0 9px 9px; cursor: pointer; touch-action: none;
     display: flex; align-items: baseline; gap: 8px; background: var(--paper); color: var(--ink); font-family: var(--hand);
     box-shadow: 0 0 0 .5px rgba(21, 35, 58, .14), 0 10px 18px -12px rgba(21, 35, 58, .45); transition: height .25s var(--ease); }
   #calTab:hover { height: 46px; }
@@ -672,7 +671,7 @@
 
 <div id="help">
   <b>翻页</b> 按 1 / 2，或触控板左右滑<br>
-  <b>今日</b> 左上角点开，往下拉或按图钉固定；C 开合<br>
+  <b>今日</b> 右上角点开，往下拉或按图钉固定；C 开合<br>
   <b>提醒</b> 便签、项目卡、今天的事拖到最上面的绳子上；点它打开 / 打勾，右键放回<br>
   <b>今日</b> 点方框打勾，回车下一条，Tab 变子任务；右下角翻到背面写碎碎念<br>
   <b>项目</b> 卡片在三列之间拖；点开看详情，勾完盖章收进卡册<br>
@@ -784,10 +783,8 @@
   let calPinned = !!load(CALKEY, false);
   function setCal(open, pinned) {
     if (pinned !== undefined) { calPinned = pinned; store(CALKEY, calPinned); }
-    const was = document.body.classList.contains("calPinned");
     document.body.classList.toggle("calPinned", calPinned);
     document.body.classList.toggle("calOpen", !!open || calPinned);
-    if (was !== calPinned) { clearTimeout(setCal.t); setCal.t = setTimeout(() => dispatchEvent(new Event("resize")), 430); }
   }
   setCal(false);
   $("#calTab").addEventListener("pointerdown", e => {
