@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css">
+<script src="room.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
@@ -14,11 +15,7 @@
     --faint: #8e9aa4;
     --paper: #f9f8f4;
     --accent: #4f7a5a; --stamp: #b5523b;
-    /* one face everywhere: the handwriting on the sticky notes (霞鹜文楷), loaded from jsDelivr so every machine sees the same */
-    --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
-    --serif: var(--hand);
-    --sans: var(--hand);
-    --mono: var(--hand);
+    /* faces come from room.css: print (Noto Serif / Sans SC) for the desk's own words, 霞鹜文楷 for what you write */
     --line: rgba(54, 66, 78, .14);
     --ease: cubic-bezier(.22, 1, .36, 1);
     --calw: 300px; --gap: 22px; --trayh: 74px; --toph: 50px;
@@ -26,24 +23,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; }
-  /* the room, copied from sasshi (src/app/Room.tsx + app.css): 朝霧 paper with washi fibres, the corner away from the window
-     in shade, one patch of low sun from the top right with its glow, paper tooth; the window bar and a twig cast over it all */
-  body { font-family: var(--sans); color: var(--ink); background: #e3e8eb; user-select: none; -webkit-user-select: none; touch-action: none; }
-  .desk { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #e3e8eb; contain: strict; }
-  .desk > svg, .desk > .falloff, .desk > .tooth { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .desk .fl { position: absolute; inset: -50%; background-repeat: repeat; }
-  .fl-a { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .42; transform: rotate(30deg); }
-  .fl-b { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='560' height='560'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.007 0.028' numOctaves='4' seed='13' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 560px; opacity: .38; transform: rotate(-38deg); }
-  .fl-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 .45  0 0 0 0 .5  0 0 0 0 .53  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .10; transform: rotate(-50deg); }
-  .fl-s { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.004 0.045' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -9 0 0 0 1.25'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .16; transform: rotate(-64deg); }
-  .falloff { background: radial-gradient(150% 130% at 96% 0%, transparent 42%, rgb(196 207 217 / .36) 100%); mix-blend-mode: multiply; }
-  .sun, .lift { opacity: var(--day, 1); transition: opacity 1.6s ease-out; }
-  .sun { mix-blend-mode: multiply; }
-  .lift { mix-blend-mode: color-dodge; }
-  .tooth { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); background-size: 240px; mix-blend-mode: multiply; opacity: .07; }
-  /* the shadow falls over everything on the desk, as the 3D engine casts it over the book */
-  .cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; mix-blend-mode: multiply; opacity: calc(.2 * var(--day, 1)); transition: opacity 1.6s ease-out; }
-  @media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
+  body { font-family: var(--sans); color: var(--ink); user-select: none; -webkit-user-select: none; touch-action: none; }
 
   /* ───────── left: today's tear-off calendar ───────── */
   #cal { position: fixed; right: calc(var(--gap) + 14px); top: calc(var(--toph) + 4px); bottom: var(--gap); width: var(--calw); z-index: 40500;
@@ -100,8 +80,8 @@
   .mini:hover { transform: rotate(0deg) translateY(-2px); box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 16px 24px -12px rgba(0,0,0,.7); }
   .mini::before { content: ""; position: absolute; left: 50%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #fff8 0 15%, var(--mg, #c9573f) 45%, color-mix(in srgb, var(--mg, #c9573f) 60%, #000) 100%); box-shadow: 1px 2px 3px rgba(0,0,0,.4); }
-  .mini b { display: block; font: 700 15px/1.4 var(--serif); color: var(--ink); }
-  .mini p { margin: 4px 0 0; font: 12.5px/1.55 var(--serif); color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mini b { display: block; font: 700 15px/1.4 var(--hand); color: var(--ink); }
+  .mini p { margin: 4px 0 0; font: 12.5px/1.55 var(--hand); color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .mini .mrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
   .mini .mrow .bar { flex: 1; }
   .mini .mrow span { font: 11.5px var(--mono); color: var(--accent); }
@@ -208,7 +188,7 @@
   .pcard.moving .sheetc, .pcard.moving .face { box-shadow: 0 0 0 .5px rgba(21, 35, 58, .14), 0 30px 50px -18px rgba(21, 35, 58, .5); }
   .head { flex: none; display: flex; align-items: center; gap: 10px; padding: 13px 18px 11px; border-bottom: 1px solid var(--line); cursor: grab; position: relative; z-index: 1; }
   .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(79,122,90,.45); border-radius: 999px; letter-spacing: .08em; }
-  .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 16px/1.35 var(--serif); color: var(--ink); cursor: text; }
+  .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 16px/1.35 var(--hand); color: var(--ink); cursor: text; }
   .tin::placeholder { color: #d4cdbd; }
   .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 6px; }
   .prog { flex: none; display: flex; align-items: baseline; gap: 12px; }
@@ -225,7 +205,7 @@
   .chk li.done .box::after { content: ""; position: absolute; left: 5.5px; top: 1.5px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
   .chk li.new .box { border-style: dashed; opacity: .6; cursor: default; }
   .chk textarea { flex: 1; min-width: 0; resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px;
-    font: 14px/1.5 var(--sans); color: var(--ink); overflow: hidden; height: 27px; transition: background .15s; }
+    font: 14px/1.5 var(--hand); color: var(--ink); overflow: hidden; height: 27px; transition: background .15s; }
   .chk textarea:hover { background: rgba(96, 88, 72, .05); }
   .chk textarea:focus { background: rgba(79, 122, 90, .06); }
   .chk textarea::placeholder { color: #c9c1b0; }
@@ -267,7 +247,7 @@
   .pcard { width: 290px; }
   .flipc .face.f > .sheetc { position: relative; inset: auto; min-height: 168px; max-height: min(72vh, 620px); }
   .projc .face.f > .sheetc { min-height: 220px; }
-  .ttl { flex: 1; min-width: 0; font: 700 16px/1.35 var(--serif); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 2px 0; }
+  .ttl { flex: 1; min-width: 0; font: 700 16px/1.35 var(--hand); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 2px 0; }
   .pn { flex: none; font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; }
   .sheetc > .bar { flex: none; margin: 0 18px; position: relative; z-index: 1; }
   .sheetc > .body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 18px 0; position: relative; z-index: 1; }
@@ -313,7 +293,7 @@
     background-size: 300% 100%, auto; background-position: var(--gx, 0%) 0, 0 0; opacity: var(--gloss, 0); }
 
   .projc .goal { resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px; overflow: hidden;
-    font: 15.5px/1.6 var(--serif); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
+    font: 15.5px/1.6 var(--hand); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
   .projc .goal:hover { background: rgba(96, 88, 72, .05); } .projc .goal:focus { background: rgba(79, 122, 90, .06); }
   .projc .goal::placeholder { color: #d4cdbd; }
   .foot { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 18px 14px; position: relative; z-index: 1; }
@@ -515,9 +495,9 @@
   /* notes on their way to or from the drawer ride above everything, in board units */
   #fly { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 49000; }
   /* steps on the board: the next one under the title; open the card to see and tick them all */
-  .mini .mnext { margin-top: 8px; font-size: 12.5px; color: #4f5d69; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .mnext { margin-top: 8px; font: 12.5px var(--hand); color: #4f5d69; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini .msteps { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px dashed rgba(54, 66, 78, .18); }
-  .mini .mstep { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font-size: 13px; line-height: 1.45; color: var(--ink); cursor: pointer; }
+  .mini .mstep { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font: 13px var(--hand); line-height: 1.45; color: var(--ink); cursor: pointer; }
   .mini .mstep.sub { padding-left: 20px; font-size: 12.5px; }
   .mini .mstep .mb { flex: none; width: 14px; height: 14px; margin-top: 2px; border: 1.5px solid #c2cbd2; border-radius: 3px; position: relative; transition: .15s; }
   .mini .mstep:hover .mb { border-color: var(--accent); }
@@ -556,9 +536,9 @@
     background: repeating-linear-gradient(90deg, #9b8a6c 0 5px, #b9a888 5px 9px); box-shadow: 0 2px 2px rgba(21, 35, 58, .15); }
   #bar.hot { background: rgba(47, 79, 115, .07); }
   #bar.hot::before { background: #2f4f73; }
-  #bar .hint { position: relative; margin-top: 6px; font-size: 12.5px; color: var(--faint); letter-spacing: .06em; white-space: nowrap; }
+  #bar .hint { position: relative; margin-top: 6px; font-size: 12.5px; color: var(--on-wall2); letter-spacing: .06em; white-space: nowrap; }
   #bar:not(.empty) .hint { display: none; }
-  .chip { position: relative; flex: none; max-width: 190px; height: 27px; margin-top: 2px; padding: 5px 11px 0; font-size: 13px; line-height: 1.3; color: var(--ink);
+  .chip { position: relative; flex: none; max-width: 190px; height: 27px; margin-top: 2px; padding: 5px 11px 0; font: 13px var(--hand); line-height: 1.3; color: var(--ink);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #fbfaf6; cursor: pointer; transform-origin: 50% 0; transform: rotate(var(--r, 0deg));
     box-shadow: 0 0 0 .5px rgba(21, 35, 58, .1), 0 6px 10px -6px rgba(21, 35, 58, .45); transition: transform .2s var(--ease); }
   .chip:hover { transform: rotate(0deg) translateY(2px); }
@@ -635,7 +615,7 @@
   .pcard.inl .head .pn { position: absolute; right: 16px; bottom: 14px; width: auto; margin: 0; font-size: 12.5px; letter-spacing: .02em; z-index: 2; }
   .pcard.inl .sheetc > .bar { order: 5; margin: 10px 62px 18px 16px; height: 3px; }
   .pcard.inl .sheetc > .body { padding: 4px 16px 0; }
-  .pcard.inl .goal { font-size: 13px; line-height: 1.6; color: #4f5d69; padding: 2px 4px 8px; margin: 0 -4px 8px; border-radius: 0; border-bottom: 1px dashed rgba(54,66,78,.18); height: auto; }
+  .pcard.inl .goal { font: 13px var(--hand); line-height: 1.6; color: #4f5d69; padding: 2px 4px 8px; margin: 0 -4px 8px; border-radius: 0; border-bottom: 1px dashed rgba(54,66,78,.18); height: auto; }
   .pcard.inl .chk li { padding: 1px 0; gap: 8px; }
   .pcard.inl .chk .box { width: 15px; height: 15px; margin-top: 5px; border-radius: 3px; border-width: 1.5px; }
   .pcard.inl .chk li.done .box::after { left: 4px; top: 1px; width: 4px; height: 8px; }
@@ -650,7 +630,6 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalky" x="-5%" y="-25%" width="110%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="d"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
-<div class="desk" id="room" aria-hidden="true"><i class="fl fl-a"></i><i class="fl fl-b"></i><i class="fl fl-c"></i><i class="fl fl-s"></i><i class="falloff"></i></div>
 
 <header id="top">
   <button id="calTab" title="今日（点开 / 往下拉固定）"><b class="d"></b><span class="w"></span><span class="pn"></span><i class="chev"></i></button>
@@ -1689,54 +1668,6 @@
   });
   renderClock();
 
-  /* ───────── the room (sasshi, src/app/Room.tsx + layout.ts lightOf): geometry from the 1440 × 900 reference, scaled ───────── */
-  (function room() {
-    const REF = { w: 1440, h: 900, patch: [[560, -60], [1520, -60], [1520, 690], [1240, 960], [300, 960]], bars: [[910, -60, 730, 960, 16]], twig: [560, -14, 1] };
-    const LEAVES = [[842, 62, -8, .8], [772, 118, -38, 1.05], [706, 186, 24, 1.1], [650, 246, -58, .95], [590, 322, 14, 1.15], [536, 408, -70, 1],
-      [486, 494, 20, 1.1], [430, 590, -46, .9], [380, 676, 30, .85], [612, 268, 150, .7], [724, 150, 140, .75]];
-    const TWIG = "M905 20 C 770 110, 650 200, 530 380 S 390 630, 320 880";
-    const LEAF = "M0 0 C 22 -17, 64 -19, 92 0 C 64 17, 22 15, 0 0 Z";
-    const desk = $("#room");
-    const pts = p => p.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-    const twig = leaf => `<path d="${TWIG}" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>` +
-      LEAVES.map(([x, y, r, k]) => `<use href="#${leaf}" transform="translate(${x} ${y}) rotate(${r}) scale(${k})"/>`).join("");
-    let cast = null;
-    function paint() {
-      const W = innerWidth, H = innerHeight, sx = W / REF.w, sy = H / REF.h, k = Math.sqrt(sx * sy);
-      const small = W < 900;
-      const blur = small ? { patch: 9, bar: 5, umbra: 1.1, penumbra: 5 } : { patch: 16, bar: 10, umbra: 2.2, penumbra: 12 };
-      const patch = pts(REF.patch.map(([x, y]) => [x * sx, y * sy]));
-      const bars = REF.bars.map(([x1, y1, x2, y2, w]) => `<line x1="${x1 * sx}" y1="${y1 * sy}" x2="${x2 * sx}" y2="${y2 * sy}" stroke="#22344a" stroke-width="${w * Math.min(1.25, k)}"/>`).join("");
-      const tw = `translate(${(REF.twig[0] * sx).toFixed(1)} ${(REF.twig[1] * sy).toFixed(1)}) scale(${(REF.twig[2] * k).toFixed(3)})`;
-      const vb = `viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"`;
-      $$(":scope > svg", desk).forEach(e => e.remove());
-      const add = html => { desk.insertAdjacentHTML("beforeend", html); };
-      add(`<svg class="sun" ${vb}><defs><filter id="room-sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter>
-        <linearGradient id="room-sg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="rgb(250 251 252)"/><stop offset="${small ? 0 : .17}" stop-color="rgb(248 250 251)"/>
-        <stop offset="${small ? .2 : .3}" stop-color="rgb(240 243 246)"/><stop offset="1" stop-color="rgb(238 242 245)"/></linearGradient></defs>
-        <rect x="-10" y="-10" width="${W + 20}" height="${H + 20}" fill="url(#room-sg)"/><polygon points="${patch}" fill="#fff" filter="url(#room-sb)"/></svg>`);
-      add(`<svg class="lift" ${vb}><defs><filter id="room-lb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter></defs>
-        <polygon points="${patch}" fill="rgb(19 20 21)" filter="url(#room-lb)"/></svg>`);
-      const old = desk.querySelector(".tooth"); if (old) old.remove();
-      desk.insertAdjacentHTML("beforeend", '<i class="tooth"></i>');
-      if (cast) cast.remove();
-      document.body.insertAdjacentHTML("beforeend", `<svg class="cast" ${vb} aria-hidden="true"><defs>
-        <filter id="room-pb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter>
-        <filter id="room-bb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.bar}"/></filter>
-        <filter id="room-um"><feGaussianBlur stdDeviation="${blur.umbra}"/></filter>
-        <filter id="room-pe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${blur.penumbra}"/></filter>
-        <path id="room-leaf" d="${LEAF}"/>
-        <mask id="room-m" maskUnits="userSpaceOnUse" x="-200" y="-200" width="${W + 400}" height="${H + 400}"><polygon points="${patch}" fill="#fff" filter="url(#room-pb)"/></mask></defs>
-        <g mask="url(#room-m)" color="#22344a" fill="#22344a"><g filter="url(#room-bb)" opacity=".9">${bars}</g>
-        <g transform="${tw}"><g filter="url(#room-um)">${twig("room-leaf")}</g><g filter="url(#room-pe)" opacity=".55" transform="translate(16 12)">${twig("room-leaf")}</g></g></g></svg>`);
-      cast = document.body.lastElementChild;
-    }
-    paint();
-    let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paint, 120); });
-    // daybreak: the light rises with the first load
-    document.documentElement.style.setProperty("--day", "0");
-    requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.style.setProperty("--day", "1")));
-  })();
 })();
 </script>
 <script>

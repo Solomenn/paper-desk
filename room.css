@@ -1,39 +1,82 @@
 @import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css");
 @import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css");
-/* Shared by the album, the journal and the receipt: sasshi's morning room behind the page, and the sticky notes'
-   handwriting (霞鹜文楷) for every word. (index.html carries the same room inline.) */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/400.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/500.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/700.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/400.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/500.css");
+/* 雪国驿舍 · the room every page sits in: a wooden room by a small snow-country station. Two themes (html[data-theme]):
+   night — the lamp and the stove are the only warm light, the window is cold; day — snow light through the window, the stove low.
+   Print (Song / Hei) for everything the desk prints or labels; handwriting (霞鹜文楷) only for what you write by hand. */
 :root {
-  /* the desk's inks and paper: sumi, ainezu, usuzumi, gofun */
-  --ink: #2a323a; --muted: #4f5d69; --faint: #8e9aa4; --paper: #f8f9f7; --paper2: #eef2f4; --desk: #e3e8eb;
-  --line: rgba(54, 66, 78, .14);
+  /* paper and ink: the inks stay dark — they are on paper, and paper is lit */
+  --ink: #2a323a; --muted: #4f5d69; --faint: #8e9aa4; --paper: #f8f9f7; --paper2: #eef2f4; --line: rgba(54, 66, 78, .14);
+  --card: #eef0ed; --warmpaper: #ece3cc; --ai: #2f4f73; --shu: #b5442f;
+  /* the room's own colours */
+  --night: #141b2a; --snow: #e8eef5; --lamp: #f1e5b4; --walnut: #2a2019; --iron: #34352f; --ember: #d9783f; --window: #ffcf86;
+  /* text set straight on the wall (titles in the margin, captions, pagers): changes with the light */
+  --on-wall: #3a3530; --on-wall2: rgba(58, 53, 48, .62);
   --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
-  --serif: var(--hand); --sans: var(--hand); --mono: var(--hand);
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  --sans: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
-html { background: #e3e8eb; }
-html body { background: transparent !important; }
+html[data-theme="night"] { --on-wall: #e6dcc8; --on-wall2: rgba(230, 220, 200, .55); color-scheme: dark; }
+html { background: var(--walnut); }
+html[data-theme="day"] { background: #e6e2da; }
+html body { background: transparent !important; font-family: var(--sans); }
 html body::before { display: none !important; }
-body, body * { font-family: var(--hand) !important; }
-.desk { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #e3e8eb; contain: strict; }
-.desk > svg, .desk > .falloff, .desk > .tooth { position: absolute; inset: 0; width: 100%; height: 100%; }
-.desk .fl { position: absolute; inset: -50%; background-repeat: repeat; }
-.fl-a { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .42; transform: rotate(30deg); }
-.fl-b { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='560' height='560'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.007 0.028' numOctaves='4' seed='13' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 560px; opacity: .38; transform: rotate(-38deg); }
-.fl-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 .45  0 0 0 0 .5  0 0 0 0 .53  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .10; transform: rotate(-50deg); }
-.fl-s { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.004 0.045' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -9 0 0 0 1.25'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .16; transform: rotate(-64deg); }
-.falloff { background: radial-gradient(150% 130% at 96% 0%, transparent 42%, rgb(196 207 217 / .36) 100%); mix-blend-mode: multiply; }
-.sun, .lift { opacity: var(--day, 1); transition: opacity 1.6s ease-out; }
-.sun { mix-blend-mode: multiply; }
-.lift { mix-blend-mode: color-dodge; }
-.tooth { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); background-size: 240px; mix-blend-mode: multiply; opacity: .07; }
-/* the shadow falls over everything on the desk, as the 3D engine casts it over the book */
-.cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; mix-blend-mode: multiply; opacity: calc(.2 * var(--day, 1)); transition: opacity 1.6s ease-out; }
-@media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
+
+/* ───────── the wall: boards, grain, and the light on them ───────── */
+.desk { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; background: #2b2119; transition: background 1.2s; }
+html[data-theme="day"] .desk { background: #e7e3db; }
+.desk > i { position: absolute; inset: 0; transition: opacity 1.2s; }
+.desk .boards { background:
+  repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 1px, rgba(255,240,220,.05) 1px 2px, transparent 2px 128px),
+  repeating-linear-gradient(90deg, rgba(255,235,210,.03) 0 64px, transparent 64px 192px, rgba(0,0,0,.06) 192px 320px); }
+html[data-theme="day"] .desk .boards { background:
+  repeating-linear-gradient(90deg, rgba(90,80,64,.16) 0 1px, rgba(255,255,255,.5) 1px 2px, transparent 2px 128px),
+  repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 64px, transparent 64px 192px, rgba(120,104,84,.05) 192px 320px); }
+.desk .grain { opacity: .5; mix-blend-mode: soft-light; background-size: 420px 420px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.012 0.32' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .3  0 0 0 1.4 -.35'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); }
+html[data-theme="day"] .desk .grain { opacity: .35; mix-blend-mode: multiply; }
+/* the lamp: a warm pool from above the desk */
+.desk .lamp { background: radial-gradient(62% 58% at 50% 6%, rgba(255, 207, 134, .26), rgba(255, 207, 134, .08) 45%, transparent 72%); }
+html[data-theme="day"] .desk .lamp { opacity: .25; }
+/* the stove, down in the left corner: it breathes */
+.desk .stove { background: radial-gradient(46% 52% at 0% 100%, rgba(217, 120, 63, .38), rgba(217, 120, 63, .1) 50%, transparent 75%); animation: ember 5.2s ease-in-out infinite; }
+html[data-theme="day"] .desk .stove { opacity: .3; }
+/* the window, off to the right: cold — moonlight and snow at night, a broad patch of snow light by day */
+.desk .win { background: linear-gradient(270deg, rgba(150, 175, 215, .14), transparent 38%); }
+html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 20%, rgba(255, 255, 255, .85), rgba(244, 248, 252, .4) 45%, transparent 75%); }
+.desk .tooth { opacity: .07; mix-blend-mode: multiply; background-size: 240px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); }
+@keyframes ember { 0%, 100% { opacity: 1; } 18% { opacity: .86; } 33% { opacity: .97; } 51% { opacity: .82; } 70% { opacity: .95; } 84% { opacity: .88; } }
+
+/* ───────── the light over everything on the desk (papers included) ───────── */
+/* night: what the lamp reaches is warm and bright, the corners fall into the dark; the stove's glow reaches the papers near it */
+.cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; transition: opacity 1.2s; }
+.cast.shade { mix-blend-mode: multiply; background: radial-gradient(85% 80% at 50% 28%, #fff6ea 0%, #f0e2cc 42%, #b9a38a 82%, #8f7a64 100%); opacity: .82; }
+.cast.glow { mix-blend-mode: screen; background: radial-gradient(40% 45% at 0% 100%, rgba(217, 120, 63, .16), transparent 70%); animation: ember 5.2s ease-in-out infinite; }
+html[data-theme="day"] .cast.shade { background: radial-gradient(120% 110% at 92% 8%, transparent 40%, rgba(190, 200, 212, .6) 100%); opacity: .7; }
+html[data-theme="day"] .cast.glow { opacity: 0; }
+/* day: the window bars, soft, laid across the desk */
+.cast.bars { mix-blend-mode: multiply; opacity: 0; }
+html[data-theme="day"] .cast.bars { opacity: .16; }
+@media (prefers-reduced-motion: reduce) { .desk .stove, .cast.glow { animation: none; } }
+
+/* ───────── the day / night switch: a little brass knob, bottom right ───────── */
+.themeBtn { position: fixed; right: 18px; bottom: 16px; z-index: 40000; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
+  color: var(--on-wall); background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-wall) 25%, transparent); opacity: .7; transition: opacity .2s, transform .3s; }
+.themeBtn:hover { opacity: 1; transform: rotate(-12deg); }
+.themeBtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+html.theming, html.theming * { transition: background-color 1s, color .8s, border-color .8s !important; }
 
 /* 禁则: no closing punctuation at the start of a line, no opening one at the end */
 body { line-break: strict; word-break: normal; hanging-punctuation: allow-end; }
 /* the running title in the margin */
 #hashira { position: fixed; left: 6px; top: 50%; transform: translateY(-50%); z-index: 2; writing-mode: vertical-rl; pointer-events: none;
-  font-size: 11px; letter-spacing: .6em; color: rgba(79, 93, 105, .6); white-space: nowrap; }
+  font: 11px var(--serif); letter-spacing: .6em; color: var(--on-wall2); white-space: nowrap; }
 .seal { display: inline-block; width: 46px; height: 46px; cursor: pointer; transform: rotate(-3deg); opacity: .9; transition: transform .2s; }
 .seal:hover { transform: rotate(-3deg) scale(1.06); }
 .seal svg { width: 100%; height: 100%; display: block; mix-blend-mode: multiply; }

@@ -721,15 +721,16 @@
     tracked(ctx, 'DAILY RECEIPT', x + 30, 112, `500 19px ${MONO}`, '#8e9aa4', 8, 'left');
 
     /* 标题 */
+    const night = document.documentElement.dataset.theme === 'night';
     ctx.font = `600 76px ${SANS}`;
-    ctx.fillStyle = '#1c232b';
+    ctx.fillStyle = night ? '#e6dcc8' : '#1c232b';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('今日小票', x, 194);
 
     /* 副标题 */
     ctx.font = `400 26px ${SANS}`;
-    ctx.fillStyle = '#4f5d69';
+    ctx.fillStyle = night ? 'rgba(230,220,200,.6)' : '#4f5d69';
     ctx.fillText('把今天的事打成一张热敏小票', x + 2, 238);
   }
 
