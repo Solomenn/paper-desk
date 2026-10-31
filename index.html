@@ -38,6 +38,7 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
+  #world { position: fixed; inset: 0; z-index: 1; transform-origin: 0 0; }
   #desk { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
 
   /* the cloth: bigger than the screen, slides under your hand, grows where you put things */
@@ -206,6 +207,18 @@
     transition: color .2s, transform .2s var(--ease);
   }
   .ibtn:hover { color: var(--accent); transform: translateY(-2px); }
+  .tcard { width: 50px; height: 62px; background: var(--paper); border-radius: 4px; padding: 7px 7px 0; cursor: pointer; position: relative;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 6px 12px -4px rgba(70,52,28,.35); transition: transform .2s var(--ease); }
+  .tcard:hover { transform: translateY(-4px) rotate(-2deg); }
+  .tcard b { display: block; font: 700 12px var(--serif); color: var(--ink); letter-spacing: .1em; margin-bottom: 6px; }
+  .tcard i { display: block; height: 2px; margin: 0 0 6px 10px; background: #e2dacb; position: relative; }
+  .tcard i::before { content: ""; position: absolute; left: -10px; top: -3px; width: 6px; height: 6px; border: 1px solid #cfc8b8; border-radius: 1.5px; }
+  .tcard.proj { border-top: 3px solid var(--accent); padding-top: 5px; }
+  .tsep { width: 1px; align-self: stretch; margin: 6px 0; background: rgba(90, 64, 34, .22); }
+  .zoomer { display: flex; align-items: center; gap: 2px; height: 34px; padding: 0 4px; border-radius: 17px; background: rgba(251, 248, 239, .85); box-shadow: 0 2px 6px rgba(70, 52, 28, .16); }
+  .zoomer button { width: 26px; height: 26px; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+  .zoomer button:hover { color: var(--accent); background: rgba(181,82,59,.07); }
+  .zoomer span { min-width: 42px; text-align: center; font: 11.5px var(--mono); color: var(--muted); cursor: pointer; }
 
   #help {
     position: fixed; left: 28px; bottom: 100px; z-index: 40001; width: 248px;
@@ -336,8 +349,31 @@
     font-size: 11px; letter-spacing: .1em; color: var(--accent); white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; }
   #drawer:hover .ctab::before { opacity: 1; }
 
+  .sheetc { cursor: grab; }
+  .pcard.moving .sheetc { cursor: grabbing; }
+  .chk li { cursor: default; }
+  .pcard.hello .sheetc { animation: hello .7s var(--ease); }
+  @keyframes hello { 30% { box-shadow: 0 0 0 3px rgba(181,82,59,.45), 0 20px 40px -16px rgba(70,52,28,.45); } }
+  #done.gulp .book { animation: gulp .45s var(--ease); }
+  @keyframes gulp { 40% { transform: scale(1.08) rotate(-3deg); } }
+  /* the album: a small cloth-bound notebook */
+  #done .book { position: absolute; inset: 0; border-radius: 3px 9px 9px 3px; overflow: hidden;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.22) 0 9px, rgba(255,255,255,.08) 9px 11px, transparent 11px),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,.04) 0 2px, transparent 2px 4px),
+      #8d4a34;
+    box-shadow: 2px 2px 0 #efe6d4, 3px 4px 0 #e2d7c1, 4px 6px 0 #d8ccb3, 0 14px 22px -8px rgba(50,30,14,.5), inset 0 0 0 1px rgba(0,0,0,.15); }
+  #done .lbl { position: absolute; left: 22px; right: 12px; top: 22px; padding: 10px 6px 8px; background: #f6eedd; border-radius: 2px; text-align: center;
+    box-shadow: inset 0 0 0 1px rgba(141,74,52,.35), inset 0 0 0 3px #f6eedd, inset 0 0 0 4px rgba(141,74,52,.25); }
+  #done .lbl b { display: block; font: 700 17px var(--serif); letter-spacing: .3em; color: #5a2e20; margin-right: -.3em; }
+  #done .lbl span { display: block; margin-top: 4px; font: 10.5px var(--mono); color: #8d6b55; letter-spacing: .12em; }
+  #done .ribbon { position: absolute; right: 22px; bottom: -6px; width: 9px; height: 30px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+  #done .seal { position: absolute; left: 50%; bottom: 18px; margin-left: -9px; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(246,238,221,.55);
+    color: rgba(246,238,221,.7); font: 700 12px/23px var(--serif); text-align: center; transform: rotate(-8deg); }
+
   /* the album pile, bottom right */
-  #done { position: fixed; right: 56px; bottom: 44px; width: 118px; height: 150px; z-index: 2; cursor: pointer; transition: transform .25s var(--ease); }
+  #done { position: fixed; right: 44px; bottom: 22px; width: 96px; height: 126px; z-index: 40000; cursor: pointer; transition: transform .25s var(--ease); }
   #done:hover { transform: translateY(-4px) rotate(-1deg); }
   #done .mini { position: absolute; inset: 0; background: var(--paper); border-radius: 6px; padding: 12px 11px;
     box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 4px 10px rgba(70,52,28,.18);
@@ -350,6 +386,7 @@
 </style>
 </head>
 <body>
+<div id="world">
 <div id="mat"></div>
 <div id="todayCard" class="pcard">
   <div class="sheetc">
@@ -386,11 +423,16 @@
     </div></div>
   </div>
 </div>
-<div id="done" title="卡册：盖过章的项目卡"></div>
 <div id="desk"></div>
+</div>
+<div id="done" title="卡册：盖过章的项目卡"></div>
+
 <div id="drawer" title="甩到这里收起"></div>
 
 <div id="tray">
+  <div class="tcard" id="trayToday" title="今日卡"><b>今日</b><i></i><i></i><i></i></div>
+  <div class="tcard proj" id="trayProject" title="项目卡"><b>项目</b><i></i><i></i></div>
+  <span class="tsep"></span>
   <div class="pad" data-cat="work" title="工作"></div>
   <div class="pad" data-cat="life" title="生活"></div>
   <div class="pad" data-cat="idea" title="灵感"></div>
@@ -404,6 +446,7 @@
   <button class="ibtn" id="tidy" title="全部收进边缘（T）">⇥</button>
   <a class="ibtn" href="receipt.html" title="打印今天的小票" style="display:grid;place-items:center;text-decoration:none">⎙</a>
   <button class="ibtn" id="helpBtn" title="怎么用">?</button>
+  <div class="zoomer"><button id="zoomOut" title="缩小（Ctrl + 滚轮）">−</button><span id="zoomPct" title="回到 100%">100%</span><button id="zoomIn" title="放大（Ctrl + 滚轮）">+</button></div>
 </div>
 
 <div id="help">
@@ -416,7 +459,7 @@
   <b>项目卡</b> 一个项目的目标和完成条件，↻ 翻到背面计时；条件都勾完点「盖章」收进卡册（右下角）<br>
   <b>卡</b> 抓住卡片顶部那条可以挪；点 ≡ 收到右边缘，点边上的白色卡签拿回来<br>
   <b>便签</b> 只是备忘，随手记、贴、钉<br>
-  <b>桌面</b> 按住空白处拖动（或滚轮）挪桌面；便签放到布边，布会再铺开一块；双击空白回到中间<br>
+  <b>桌面</b> 按住空白处拖动（或滚轮）往右挪；便签放到右边布边，布会再铺开一块；Ctrl + 滚轮或右下 − + 缩放；双击空白回到开头<br>
   <b>写</b> 双击便签　<b>换色</b> 右键　<b>扔</b> 丢进废纸篓
 </div>
 
@@ -440,9 +483,10 @@
   const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
   /* how far the cloth has slid (the sticky-note script owns panning and tells us) */
-  let O = (load("paper-desk.mat.v1", {}) || {}).o || { x: 0, y: 0 };
+  let O = (load("paper-desk.mat.v2", {}) || {}).o || { x: 0, y: 0 }, Z = 1;
   const placers = [];
   addEventListener("deskpan", e => { O = e.detail; placers.forEach(f => f()); });
+  addEventListener("deskzoom", e => { Z = e.detail; });
 
   /* ───────── a checklist: the box ticks, the text is plain text you type into ───────── */
   function Checklist(ul, o) {
@@ -514,7 +558,7 @@
       tab.classList.toggle("show", t && o.has());
       place();
     }
-    const tabXY = () => { const r = tab.parentElement.getBoundingClientRect(); return { x: r.left - el.offsetWidth * .12, y: o.tabTop }; };
+    const tabXY = () => { const r = tab.parentElement.getBoundingClientRect(); return { x: r.left / Z - el.offsetWidth * .12, y: o.tabTop / Z }; };
     function tuck() {
       if (o.tucked()) return;
       document.activeElement && el.contains(document.activeElement) && document.activeElement.blur();
@@ -536,31 +580,37 @@
       setTimeout(() => el.classList.remove("fly"), 560);
     }
     tab.addEventListener("click", untuck);
-    // drag by the top strip; a plain click on ≡ tucks the card away
-    $$(".head", el).forEach(head => head.addEventListener("pointerdown", e => {
-      if (e.button !== 0 || e.target.closest("input, textarea") || el.classList.contains("fly")) return;
+    // grab the card anywhere that isn't text, a box or a button and move it; a plain click on ≡ tucks it away
+    el.addEventListener("pointerdown", e => {
+      if (e.button !== 0 || el.classList.contains("fly")) return;
+      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .turn")) return;
       const grip = e.target.closest(".grip");
       const p0 = { ...o.pos() }, sx = e.clientX, sy = e.clientY;
       let moved = false;
-      head.setPointerCapture(e.pointerId);
+      el.setPointerCapture(e.pointerId);
       const mv = ev => {
-        const dx = ev.clientX - sx, dy = ev.clientY - sy;
+        const dx = (ev.clientX - sx) / Z, dy = (ev.clientY - sy) / Z;
         if (!moved && Math.hypot(dx, dy) < 4) return;
         moved = true; el.classList.add("moving");
         o.setPos({ x: p0.x + dx, y: p0.y + dy }); place();
       };
       const up = () => {
-        head.removeEventListener("pointermove", mv); head.removeEventListener("pointerup", up);
+        el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up);
         el.classList.remove("moving");
         if (moved) o.saved(); else if (grip) tuck();
       };
-      head.addEventListener("pointermove", mv); head.addEventListener("pointerup", up);
+      el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up);
       e.preventDefault();
-    }));
-    return { sync, tuck, untuck, place };
+    });
+    // from the tray: bring the card back if it's tucked, otherwise slide the desk to it
+    function show() {
+      if (o.tucked()) { untuck(); return; }
+      const p = o.pos(); window.DeskView && DeskView.bringIntoView(p.x, p.y, el.offsetWidth, el.offsetHeight);
+      el.classList.remove("hello"); void el.offsetWidth; el.classList.add("hello");
+    }
+    return { sync, tuck, untuck, place, show };
   }
 
-  const W0 = innerWidth, H0 = innerHeight;
 
   /* ═════════ today's card ═════════ */
   const TKEY = "paper-desk.today.v1", TPOS = "paper-desk.todaycard.v1";
@@ -571,7 +621,7 @@
     { id: uid(), text: "给猫剪指甲", addedAt: Date.now() },
   ];
   items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt }));
-  const tp = load(TPOS, null) || { x: Math.max(30, W0 / 2 - 180 - 340), y: Math.max(30, H0 / 2 - 260), tucked: false };
+  const tp = load(TPOS, null) || { x: 60, y: 50, tucked: false };
   const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
   const todayEl = $("#todayCard");
   let tSaveT = null;
@@ -613,7 +663,7 @@
     cur.conds = (cur.conds || []).filter(x => x.t && x.t.trim());
     S = { v: 3, current: cur, tucked: false, done: S.done, pos: null };
   }
-  if (!S.pos) S.pos = { x: W0 / 2 - 180, y: Math.max(24, H0 / 2 - 270) };
+  if (!S.pos) S.pos = { x: 400, y: 40 };
   let pSaveT = null;
   const saveP = later => { clearTimeout(pSaveT); pSaveT = setTimeout(() => store(PKEY, S), later ? 400 : 0); };
   const filled = () => S.current ? S.current.conds.filter(c => c.t.trim()) : [];
@@ -640,17 +690,7 @@
     cardEl.classList.toggle("ready", !!S.current && f.length > 0 && k === f.length && !S.current.stamped);
   }
   function renderDone() {
-    const de = $("#done"), d = S.done;
-    de.innerHTML = d.length ? "" : '<div class="empty-hint"></div>';
-    d.slice(-5).forEach((t, i) => {
-      const m = document.createElement("div"); m.className = "mini";
-      const r = ((String(t.id).charCodeAt(0) * 37 + i * 13) % 11) - 5;
-      m.style.transform = `translate(${r}px, ${-i * 2}px) rotate(${r * 1.1}deg)`;
-      m.innerHTML = `<div></div><div class="ms"></div>`;
-      m.firstChild.textContent = t.title;
-      de.appendChild(m);
-    });
-    de.insertAdjacentHTML("beforeend", `<div class="count">卡册 · ${d.length}</div>`);
+    $("#done").innerHTML = `<div class="book"><div class="lbl"><b>卡册</b><span>${S.done.length} 张</span></div><div class="ribbon"></div><div class="seal">成</div></div>`;
   }
   const condList = Checklist($(".chk", cardEl), {
     key: "t", placeholder: "加一条完成条件",
@@ -740,11 +780,13 @@
       $(".stamp", cardEl).classList.add("show"); $(".postmark", cardEl).classList.add("show");
       renderProgress();
       setTimeout(() => {
-        const r = $("#done").getBoundingClientRect(), c = cardEl.getBoundingClientRect();
+        const r = $("#done").getBoundingClientRect();
         cardEl.classList.add("fly");
-        cardEl.style.transform = `translate(${r.left + r.width / 2 - c.width * .16}px, ${r.top + r.height / 2 - c.height * .16}px) scale(.32) rotate(8deg)`;
+        cardEl.style.transform = `translate(${(r.left + r.width / 2) / Z - cardEl.offsetWidth * .1}px, ${(r.top + r.height / 2) / Z - cardEl.offsetHeight * .1}px) scale(.2) rotate(8deg)`;
+        cardEl.style.opacity = "0";
         setTimeout(() => {
-          cardEl.classList.remove("fly");
+          cardEl.classList.remove("fly"); cardEl.style.opacity = "";
+          $(".book", $("#done")) && $("#done").classList.add("gulp"); setTimeout(() => $("#done").classList.remove("gulp"), 500);
           $(".stamp", cardEl).classList.remove("show"); $(".postmark", cardEl).classList.remove("show");
           delete t.stamped; t.doneAt = Date.now();
           S.done.push(t); S.current = null; S.tucked = false;
@@ -760,6 +802,8 @@
     setTimeout(() => $("[data-k=title]", cardEl).focus(), 50);
   });
   $("#done").addEventListener("click", () => { location.href = "album.html"; });
+  $("#trayToday").addEventListener("click", () => todayCard.show());
+  $("#trayProject").addEventListener("click", () => { if (!S.current) newEl.click(); else projectCard.show(); });
 
   resetTimer(); renderProject(); condList.render(); projectCard.sync(); saveP();
 })();
@@ -807,27 +851,44 @@
   const ease = (dt, k) => 1 - Math.exp(-dt * k);
 
   /* ───────── the cloth: pan by dragging empty space, it grows where you put things ───────── */
-  const MKEY = "paper-desk.mat.v1";
-  const matEl = document.getElementById("mat");
-  let O = { x: 0, y: 0 }, mat = null;           // O: how far the desk has slid; mat: the cloth in un-slid screen coords
+  // The cloth starts at the left and rolls out to the right. Everything on it lives in "world" units:
+  // screen = world × Z. O is how far the desk has slid; mat is the cloth before sliding.
+  const MKEY = "paper-desk.mat.v2", BOTTOM = 118;
+  const matEl = document.getElementById("mat"), worldEl = document.getElementById("world");
+  let O = { x: 0, y: 0 }, mat = null, Z = 1;
   const panV = { x: 0, y: 0 };
-  let homing = false;
-  try { const d = JSON.parse(localStorage.getItem(MKEY)); if (d && d.mat) { O = d.o; mat = d.mat; } } catch {}
-  if (!mat) mat = { l: -W * .45, t: -H * .45, r: W * 1.45, b: H * 1.45 };
+  let homing = null;
+  try { const d = JSON.parse(localStorage.getItem(MKEY)); if (d && d.mat) { O = d.o; mat = d.mat; Z = d.z || 1; } } catch {}
+  W = innerWidth / Z; H = innerHeight / Z;
+  if (!mat) mat = { l: 22, t: 22, r: innerWidth * 1.9, b: innerHeight - BOTTOM };
+  const wr = el => { const r = el.getBoundingClientRect(); return { left: r.left / Z, top: r.top / Z, right: r.right / Z, bottom: r.bottom / Z, width: r.width / Z, height: r.height / Z }; };
+  function setZoom(z, cx = innerWidth / 2, cy = innerHeight / 2) {
+    const z0 = Z;
+    Z = clamp(Math.round(z * 100) / 100, .5, 1.6);
+    if (Z === z0) return;
+    W = innerWidth / Z; H = innerHeight / Z;
+    worldEl.style.transform = `scale(${Z})`;
+    document.getElementById("zoomPct").textContent = Math.round(Z * 100) + "%";
+    dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
+    pan(cx / Z - cx / z0, cy / Z - cy / z0, true);
+    const c = clampO(O); pan(c.x - O.x, c.y - O.y, true);
+    layoutMat(); saveMat(); renderTabs();
+  }
   function layoutMat() {
     matEl.style.left = (mat.l + O.x) + "px"; matEl.style.top = (mat.t + O.y) + "px";
     matEl.style.width = (mat.r - mat.l) + "px"; matEl.style.height = (mat.b - mat.t) + "px";
     dispatchEvent(new CustomEvent("deskpan", { detail: O }));
   }
   let mt = null;
-  function saveMat() { clearTimeout(mt); mt = setTimeout(() => { try { localStorage.setItem(MKEY, JSON.stringify({ o: O, mat })); } catch {} }, 300); }
+  function saveMat() { clearTimeout(mt); mt = setTimeout(() => { try { localStorage.setItem(MKEY, JSON.stringify({ o: O, mat, z: Z })); } catch {} }, 300); }
+  // the left edge of the cloth stays near the left of the screen; you can slide right as far as the cloth goes
   function clampO(o) {
-    const m = 90;
-    return { x: clamp(o.x, Math.min(0, W - mat.r - m), Math.max(0, -mat.l + m)), y: clamp(o.y, Math.min(0, H - mat.b - m), Math.max(0, -mat.t + m)) };
+    const fit = (lo, hi, v) => lo > hi ? (lo + hi) / 2 : clamp(v, lo, hi);
+    return { x: fit(W - 40 - mat.r, 22 - mat.l, o.x), y: fit(H - BOTTOM / Z - mat.b, 22 - mat.t, o.y) };
   }
   // slide the whole desk (cloth, notes, today's card); the tray, the edge tabs and the done pile stay put
-  function pan(dx, dy) {
-    const o = clampO({ x: O.x + dx, y: O.y + dy });
+  function pan(dx, dy, free) {
+    const o = free ? { x: O.x + dx, y: O.y + dy } : clampO({ x: O.x + dx, y: O.y + dy });
     dx = o.x - O.x; dy = o.y - O.y;
     if (Math.abs(dx) < .01 && Math.abs(dy) < .01) return false;
     O = o;
@@ -842,23 +903,30 @@
     layoutMat(); saveMat();
     return true;
   }
-  // a note left near the hem: the cloth rolls out further that way
+  // a note left near the right hem: the cloth rolls out further to the right
   function grow(n) {
-    const hx = n.x - O.x, hy = n.y - O.y, room = 180, more = 600;
-    let g = false;
-    if (hx - HW < mat.l + room) { mat.l = hx - HW - more; g = true; }
-    if (hx + HW > mat.r - room) { mat.r = hx + HW + more; g = true; }
-    if (hy - HH < mat.t + room) { mat.t = hy - HH - more; g = true; }
-    if (hy + HH > mat.b - room) { mat.b = hy + HH + more; g = true; }
-    if (!g) return;
+    const hx = n.x - O.x, room = 220, more = 700;
+    if (hx + HW <= mat.r - room) return;
+    mat.r = hx + HW + more;
     matEl.classList.add("grow"); layoutMat(); saveMat();
     setTimeout(() => matEl.classList.remove("grow"), 750);
   }
-  function goHome() { homing = true; panV.x = panV.y = 0; }
+  function goTo(o) { homing = clampO(o); panV.x = panV.y = 0; }
+  function goHome() { setZoom(1); goTo({ x: 0, y: 0 }); }
+  // slide so that a rectangle on the cloth (before sliding) comes into view
+  function bringIntoView(x, y, w, h) {
+    let ox = O.x, oy = O.y;
+    if (x + ox < 30) ox = 30 - x; else if (x + w + ox > W - 150 / Z) ox = W - 150 / Z - w - x;
+    if (y + oy < 20) oy = 20 - y; else if (y + h + oy > H - BOTTOM / Z) oy = H - BOTTOM / Z - h - y;
+    goTo({ x: ox, y: oy });
+  }
+  window.DeskView = { bringIntoView, zoom: () => Z };
   function panFrame(dt) {
     if (homing) {
       const k = 1 - Math.exp(-dt * 7);
-      if (!pan(-O.x * k, -O.y * k) || Math.hypot(O.x, O.y) < 1) { pan(-O.x, -O.y); homing = false; }
+      const dx = homing.x - O.x, dy = homing.y - O.y;
+      if (Math.hypot(dx, dy) < 1) { pan(dx, dy); homing = null; return; }
+      if (!pan(dx * k, dy * k)) homing = null;
       return;
     }
     if (act && act.type === "pan") return;
@@ -982,7 +1050,6 @@
         if (n.x < mL) { n.x = mL; n.vx = Math.abs(n.vx) * 0.35; n.w *= -0.5; }
         if (n.y < mT) { n.y = mT; n.vy = Math.abs(n.vy) * 0.35; n.w *= -0.5; }
         if (n.y > mB) { n.y = mB; n.vy = -Math.abs(n.vy) * 0.35; n.w *= -0.5; }
-        if (n.x > mR && mR < W - DRAWER_W - HW) { n.x = mR; n.vx = -Math.abs(n.vx) * 0.35; n.w *= -0.5; }
         if (n.x + HW * 0.35 > W - DRAWER_W) { dock(n); break; }
         const sp = Math.hypot(n.vx, n.vy);
         n.liftT = Math.min(0.9, sp / 700);
@@ -1033,7 +1100,7 @@
     const counts = {};
     list.forEach(n => counts[n.cat] = (counts[n.cat] || 0) + 1);
     let y = TAB_TOP, prev = null;
-    const room = H - TAB_TOP - 40;
+    const room = innerHeight - TAB_TOP - 40;
     const need = list.length * (TAB_H + TAB_GAP) + Object.keys(counts).length * GROUP_GAP;
     const squeeze = need > room ? room / need : 1;
     const seen = new Set();
@@ -1051,7 +1118,7 @@
       el.title = firstLine(n);
       if (prev !== n.cat) el.dataset.label = CATS[n.cat].name + " · " + counts[n.cat];
       else delete el.dataset.label;
-      tabY.set(n.id, y + TAB_H * Math.max(.6, squeeze) / 2);
+      tabY.set(n.id, (y + TAB_H * Math.max(.6, squeeze) / 2) / Z);
       seen.add(n.id);
       prev = n.cat;
       y += (TAB_H + TAB_GAP) * squeeze;
@@ -1160,7 +1227,8 @@
     const ne = e.target.closest && e.target.closest(".note");
     if (!ne) {
       if (act || (e.target.closest && e.target.closest(".pcard, #help, #menu"))) return;
-      e.preventDefault(); homing = false;
+      e.preventDefault(); homing = null;
+      if (e.ctrlKey || e.metaKey) { setZoom(Z * Math.exp(-e.deltaY * .0025), e.clientX, e.clientY); return; }
       if (e.shiftKey && !e.deltaX) pan(-e.deltaY, 0); else pan(-e.deltaX, -e.deltaY);
       return;
     }
@@ -1194,12 +1262,12 @@
   }
   function trash(n) {
     endEdit(n);
-    const r = bin.getBoundingClientRect();
+    const r = wr(bin);
     n.mode = "trash";
     n.t = { x: r.left + r.width / 2, y: r.top + r.height / 2, a: n.a + 2.4, s: 0.05 };
   }
   function overBin() {
-    const r = bin.getBoundingClientRect();
+    const r = wr(bin);
     return P.x > r.left - 16 && P.x < r.right + 16 && P.y > r.top - 16 && P.y < r.bottom + 16;
   }
 
@@ -1212,10 +1280,10 @@
     movePin(x, y);
     act = { type: "pin" };
   }
-  function movePin(x, y) { floatPin.style.transform = `translate(${x - 10}px,${y - 14}px) scale(1.25)`; }
+  function movePin(x, y) { floatPin.style.transform = `translate(${x * Z - 10}px,${y * Z - 14}px) scale(1.25)`; }
   function dropPin() {
     floatPin.style.visibility = "hidden";
-    const hit = document.elementsFromPoint(P.x, P.y).find(e => e.classList && e.classList.contains("note"));
+    const hit = document.elementsFromPoint(P.x * Z, P.y * Z).find(e => e.classList && e.classList.contains("note"));
     floatPin.style.visibility = "";
     const n = hit && hit._note;
     if (n && !inDrawer(n) && n.mode !== "trash") {
@@ -1237,7 +1305,7 @@
     const el = document.createElement("div");
     el.className = "pin free held";
     document.body.appendChild(el);
-    el.style.transform = `translate(${x - 10}px,${y - 10}px) scale(${popped ? 1.4 : 1.2})`;
+    el.style.transform = `translate(${x * Z - 10}px,${y * Z - 10}px) scale(${popped ? 1.4 : 1.2})`;
     requestAnimationFrame(() => flyPinEl(el));
   }
   function flyPinEl(el) {
@@ -1283,13 +1351,13 @@
     del.onclick = () => { closeMenu(); trash(n); };
     menu.appendChild(del);
     menu.classList.add("show");
-    menu.style.left = Math.min(x, W - 180) + "px"; menu.style.top = Math.min(y, H - 50) + "px";
+    menu.style.left = Math.min(x, innerWidth - 180) + "px"; menu.style.top = Math.min(y, innerHeight - 50) + "px";
   }
   function closeMenu() { menu.classList.remove("show"); }
 
   /* pointer routing */
   addEventListener("pointermove", e => {
-    P.x = e.clientX; P.y = e.clientY; P.shift = e.shiftKey;
+    P.x = e.clientX / Z; P.y = e.clientY / Z; P.shift = e.shiftKey;
     if (!act) return;
     if (act.type === "pan") { pan(P.x - act.lx, P.y - act.ly); act.lx = P.x; act.ly = P.y; return; }
     if (act.type === "pin") movePin(P.x, P.y);
@@ -1303,7 +1371,7 @@
   });
 
   addEventListener("pointerdown", e => {
-    P.x = P.px = e.clientX; P.y = P.py = e.clientY; P.vx = P.vy = P.ax = P.ay = 0;
+    P.x = P.px = e.clientX / Z; P.y = P.py = e.clientY / Z; P.vx = P.vy = P.ax = P.ay = 0;
     if (e.button !== 0) return;
     if (!e.target.closest("#menu")) closeMenu();
     const t = e.target;
@@ -1322,7 +1390,7 @@
     const pad = t.closest(".pad");
     if (pad) {
       const cat = pad.dataset.cat;
-      const r = pad.getBoundingClientRect();
+      const r = wr(pad);
       act = {
         type: "pending", sx: P.x, sy: P.y,
         onDrag: () => {
@@ -1370,7 +1438,7 @@
     for (const m of notes) endEdit(m);
     // empty cloth: take hold of the desk itself
     if (!t.closest(".pcard, #newProject, #tray, #drawer, #menu, #help, #done, .ibtn, button, input, textarea, a")) {
-      homing = false; panV.x = panV.y = 0;
+      homing = null; panV.x = panV.y = 0;
       act = { type: "pan", lx: P.x, ly: P.y };
       document.body.classList.add("panning");
       e.preventDefault();
@@ -1432,7 +1500,7 @@
   document.getElementById("helpBtn").onclick = () => document.getElementById("help").classList.toggle("show");
 
   addEventListener("resize", () => {
-    W = innerWidth; H = innerHeight;
+    W = innerWidth / Z; H = innerHeight / Z;
     layoutMat();
     for (const n of notes) if (!inDrawer(n) && n.x > W - DRAWER_W - 20) { n.x = W - DRAWER_W - HW - 20; draw(n); }
     renderTabs();
@@ -1463,9 +1531,9 @@
   function demo() {
     const t = Date.now();
     return [
-      { cat: "work", text: "周五前交稿\n先搭结构，再填内容。", x: W * .77, y: H * .24, a: -.05, pin: { u: 0, v: -76 } },
-      { cat: "life", text: "买猫粮\n灯泡 3000K · 胶带", x: W * .84, y: H * .55, a: .03 },
-      { cat: "idea", text: "便签收进右边缘\n像本子侧面的索引贴。", x: W * .73, y: H * .70, a: -.025 },
+      { cat: "work", text: "周五前交稿\n先搭结构，再填内容。", x: 900, y: 170, a: -.05, pin: { u: 0, v: -76 } },
+      { cat: "life", text: "买猫粮\n灯泡 3000K · 胶带", x: 1010, y: 420, a: .03 },
+      { cat: "idea", text: "桌面往右还很长\n按住空白处拖过去看看。", x: 1420, y: 300, a: -.025 },
       { cat: "work", text: "回三封邮件", docked: true, dockedAt: t - 5 },
       { cat: "work", text: "会议纪要 10/26\n结论：先做性能基线", docked: true, dockedAt: t - 4 },
       { cat: "life", text: "周末去植物园\n下雨就改拼图", docked: true, dockedAt: t - 3 },
@@ -1485,6 +1553,12 @@
     requestAnimationFrame(frame);
   }
 
+  worldEl.style.transform = `scale(${Z})`;
+  document.getElementById("zoomPct").textContent = Math.round(Z * 100) + "%";
+  document.getElementById("zoomIn").onclick = () => setZoom(Z * 1.15);
+  document.getElementById("zoomOut").onclick = () => setZoom(Z / 1.15);
+  document.getElementById("zoomPct").onclick = () => setZoom(1);
+  dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
   layoutMat();
   load();
   requestAnimationFrame(frame);
