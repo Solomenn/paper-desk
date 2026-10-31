@@ -131,7 +131,43 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--stamp); }
   .zstamp .big { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1; }
   .zstamp .sm { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; }
-  .zpm { position: absolute; right: 62px; bottom: 44px; width: 96px; height: 96px; opacity: .7; transform: rotate(12deg); mix-blend-mode: multiply; z-index: 2; }
+  .zpm { position: absolute; right: 62px; bottom: 44px; width: 96px; height: 96px; opacity: .8; transform: rotate(var(--pr, -12deg)); mix-blend-mode: multiply; z-index: 2; }
+
+  /* ───────── the binder: clear sleeves, rings at the spine ───────── */
+  .grid { gap: 14px; }
+  .slv { position: relative; border-radius: 4px; padding: 7px 7px 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(220,228,234,.12));
+    box-shadow: inset 0 0 0 1px rgba(54, 66, 78, .16), inset 0 -3px 0 rgba(54, 66, 78, .05); }
+  .slv > .mc { height: 100%; }
+  /* the film over the card: a soft sheen and the welded top edge of the pocket */
+  .slv::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 6px),
+      linear-gradient(118deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.32) 44%, rgba(255,255,255,0) 52%, rgba(255,255,255,0) 70%, rgba(255,255,255,.18) 78%, rgba(255,255,255,0) 84%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); }
+  .slv.empty { background: repeating-linear-gradient(135deg, rgba(54,66,78,.025) 0 6px, transparent 6px 12px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(220,228,234,.12)); }
+  .rings { position: absolute; left: 50%; top: 0; bottom: 0; width: 34px; margin-left: -17px; z-index: 12; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-around; padding: 70px 0; }
+  .rings::before { content: ""; position: absolute; left: 11px; right: 11px; top: 46px; bottom: 46px; border-radius: 3px;
+    background: linear-gradient(90deg, #8e979f, #e6eaed 45%, #a2abb3 70%, #7d868e); box-shadow: 0 2px 4px rgba(21,35,58,.3); }
+  .rings i { position: relative; display: block; height: 22px; border-radius: 12px; border: 4px solid transparent;
+    background: linear-gradient(#0000, #0000) padding-box, linear-gradient(180deg, #f2f4f6, #9ea7af 50%, #e3e7ea 70%, #858e96) border-box;
+    box-shadow: 0 3px 5px rgba(21,35,58,.35); }
+
+  /* ───────── held up: the binder goes soft behind a veil, the card in the middle, its words beside it ───────── */
+  #wrap, #pager { transition: filter .4s, opacity .4s; }
+  body.holding #wrap, body.holding #pager { filter: blur(3px); opacity: .55; }
+  #zoom.show { background: rgba(227, 232, 235, .45); }
+  #zoom { grid-template-columns: minmax(0, 260px) 340px; gap: 56px; justify-content: center; align-items: center; }
+  #zcap { opacity: 0; transform: translateX(-12px); transition: opacity .4s .15s, transform .5s .15s var(--ease); color: var(--ink); pointer-events: none; }
+  #zoom.show #zcap { opacity: 1; transform: none; }
+  #zcap .k { font-size: 12px; letter-spacing: .5em; color: var(--faint); }
+  #zcap h2 { margin: 14px 0 10px; font: 600 24px/1.35 var(--hand); color: #1c232b; }
+  #zcap .when { font-size: 13px; letter-spacing: .1em; color: var(--muted); }
+  #zcap .steps { margin-top: 6px; font-size: 13px; color: var(--accent); }
+  #zcap .memo { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #36424e; }
+  #zcap .hint { margin-top: 26px; font-size: 12px; color: var(--faint); letter-spacing: .08em; }
+  @media (max-width: 760px) { #zoom { grid-template-columns: 1fr; } #zcap { display: none; } }
 
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--muted); letter-spacing: .08em; display: none; }
 </style>
@@ -151,11 +187,12 @@
     <div class="side r" id="pr"></div>
     <div id="cast"></div>
   </div>
+  <div class="rings" aria-hidden="true"><i></i><i></i><i></i></div>
 </div>
 <div id="pager"></div>
 <div id="empty">这些是示例卡片。在桌子上做完一张任务卡，它就会出现在这里。</div>
 
-<div id="zoom"><div id="zc"></div></div>
+<div id="zoom"><div id="zcap"><div class="k">卡 册</div><h2></h2><div class="when"></div><div class="steps"></div><p class="memo"></p><div class="hint">点卡片翻面 · 点空白处放回插袋</div></div><div id="zc"></div></div>
 
 <script>
 (() => {
@@ -225,8 +262,9 @@
       $(".d", mc).textContent = fmt(t.doneAt).slice(5);
       const r = ((i * 7 + p * 3) % 5) - 2;
       mc.style.transform = `rotate(${r * .35}deg)`;
-      grid.appendChild(mc);
+      const slv = el("div", "slv"); slv.appendChild(mc); grid.appendChild(slv);
     });
+    for (let k = grid.children.length; k < PER; k++) grid.appendChild(el("div", "slv empty"));
     pg.appendChild(grid);
     const no = el("div", "pno"); no.textContent = String(p).padStart(2, "0"); pg.appendChild(no);
     return pg;
@@ -411,10 +449,12 @@
         <div class="body"><div class="goal"></div></div>
         <div class="when"></div>
         <div class="zstamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm">${ds.slice(5)}</div></div></div></div>
-        <svg class="zpm" viewBox="0 0 100 100"><g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
-          <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
-          <text x="50" y="47" text-anchor="middle" font-size="9" font-family="monospace" fill="#4a4a5a">${ds}</text>
-          <text x="50" y="60" text-anchor="middle" font-size="8" font-family="serif" fill="#4a4a5a">完 成</text></svg>
+        <svg class="zpm" viewBox="0 0 100 100" style="--pr:${(-12 + (Math.random() - .5) * 10).toFixed(1)}deg">
+          <defs><path id="zpArc" d="M21 52 A29 29 0 0 1 79 52"/></defs>
+          <g fill="none" stroke="#3a3530"><circle cx="50" cy="50" r="36" stroke-width="1.7" stroke-opacity=".6"/><circle cx="50" cy="50" r="24" stroke-width=".9" stroke-opacity=".45"/></g>
+          <g fill="#3a3530" fill-opacity=".62"><text font-size="7.5" letter-spacing="2"><textPath href="#zpArc" startOffset="50%" text-anchor="middle">纸桌 · 完成</textPath></text>
+          <rect x="31" y="45" width="38" height=".9"/><rect x="31" y="58" width="38" height=".9"/>
+          <text x="50" y="55" text-anchor="middle" font-size="7.5" letter-spacing=".6">${ds.slice(2)}</text></g></svg>
       </div>
       <div class="zf back"><div class="tint"></div>
         <div class="head"><span class="tt"></span><span class="n">${conds.length} / ${conds.length}</span></div>
@@ -431,11 +471,17 @@
     const ul = $("ul", zc);
     conds.forEach(c => { const li = el("li"); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = c.t; ul.appendChild(li); });
     ry = 0; zc.style.setProperty("--ry", "0deg");
+    const cap = $("#zcap");
+    $("h2", cap).textContent = t.title || "（未命名）";
+    $(".when", cap).textContent = (t.startedAt ? `${md(t.startedAt)} — ` : "") + ds;
+    $(".steps", cap).textContent = conds.length ? `${conds.length} 步，都做完了` : "";
+    $(".memo", cap).textContent = (t.memo || t.goal || "").split("\n").slice(0, 4).join("\n");
     $("#zoom").classList.add("show");
+    document.body.classList.add("holding");
     window.Sound && Sound.play("pickUp", { vol: .6 });
   }
   function flipZoom() { window.Sound && Sound.play("cardUnfold", { vol: .5 }); ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
-  function closeCard() { if ($("#zoom").classList.contains("show")) window.Sound && Sound.play("drop", { vol: .45 }); $("#zoom").classList.remove("show"); }
+  function closeCard() { if ($("#zoom").classList.contains("show")) window.Sound && Sound.play("drop", { vol: .45 }); $("#zoom").classList.remove("show"); document.body.classList.remove("holding"); }
   $("#zoom").addEventListener("click", e => { if (e.target.closest("#zc")) flipZoom(); else closeCard(); });
 
   /* ───────── fit to the window ───────── */
