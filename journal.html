@@ -60,10 +60,13 @@
   /* ───────── a book flying out of the shelf (a small 3D box: spine in front, cover on its right side) ───────── */
   #fly { position: fixed; inset: 0; z-index: 30; pointer-events: none; perspective: 1700px; display: none; }
   #fly.on { display: block; }
-  .fb { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
-  .fb > div { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
-  .fb .sp { left: 0; width: 100%; }
-  .fb .cv { border-radius: 2px 6px 6px 2px; }
+  .fbw { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+  .fb { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 50% 100%; }
+  .fb > * { position: absolute; left: 0; top: 0; backface-visibility: hidden; }
+  .fb .cv { border-radius: 0 5px 5px 0; overflow: hidden; }
+  .fb .tp { background: repeating-linear-gradient(90deg, #f3ecdd 0 1px, #e3d9c4 1px 2px); box-shadow: inset 0 0 0 2px var(--bc); }
+  .fb .bk { border-radius: 5px 0 0 5px; }
+  .fb .fe { background: repeating-linear-gradient(90deg, #f6f0e2 0 1px, #e3d9c4 1px 2px); }
 
   /* ───────── the open book ───────── */
   #reader { position: fixed; inset: 0; z-index: 20; display: none; }
@@ -71,7 +74,8 @@
   #wrap { position: absolute; left: 50%; top: 50%; width: calc(var(--pw) * 2); height: var(--ph); transform: translate(-50%, -50%) scale(var(--k, 1)); touch-action: none; }
   #book { position: relative; width: 100%; height: 100%; perspective: calc(var(--pw) * 6.5); transition: transform .7s var(--ease); }
   #book.closed { transform: translateX(calc(var(--pw) / -2)); }
-  .block { position: absolute; top: 0; height: 100%; width: var(--pw); background: var(--paper2); pointer-events: none; transition: opacity .3s; }
+  .block { position: absolute; top: 0; height: 100%; width: var(--pw); background: var(--paper2); pointer-events: none; transition: opacity .25s .4s; }
+  #book.closed .block.l { transition: opacity .15s; }
   .block.l { right: 50%; border-radius: 2px 0 0 2px; box-shadow: -3px 0 0 #ebe4d4, -5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
   .block.r { left: 50%; border-radius: 0 2px 2px 0; box-shadow: 3px 0 0 #ebe4d4, 5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
   #book.closed .block.l { opacity: 0; }
@@ -170,9 +174,9 @@
 
 <div id="reader">
   <div id="wrap">
-    <div class="block l"></div>
-    <div class="block r"></div>
     <div id="book" class="closed">
+      <div class="block l"></div>
+      <div class="block r"></div>
       <div class="side l" id="pl"></div>
       <div class="side r" id="pr"></div>
       <div id="cast"></div>
@@ -348,8 +352,8 @@
     book.classList.toggle("closed", cur === 0);
     $("#pager").textContent = cur === 0 ? "" : `${cur} / ${nLeaves}`;
   }
-  function buildTurner(front, back) {
-    const sw = PW / K;
+  function buildTurner(front, back, n = K) {
+    const K = n, sw = PW / K;
     const root = el("div", "turner");
     let parent = root; const strips = [];
     for (let k = 0; k < K; k++) {
@@ -370,10 +374,10 @@
     return { root, strips };
   }
   function pose(T, theta, dir, lift = 0) {
-    const stiff = T.cover ? .15 : 1;  // the cover is board: it barely bends
-    const bend = (30 * Math.sin(Math.PI * theta / 180) + lift) * stiff;
+    const K = T.strips.length;
+    const bend = 30 * Math.sin(Math.PI * theta / 180) + lift;
     const ang = [];
-    for (let k = 0; k < K; k++) { const t = k / (K - 1); ang.push(clamp(theta + dir * bend * t * t, 0, 180)); }
+    for (let k = 0; k < K; k++) { const t = K > 1 ? k / (K - 1) : 0; ang.push(clamp(theta + dir * bend * t * t, 0, 180)); }
     let prev = 0;
     ang.forEach((a, k) => {
       const rel = a - prev; prev = a;
@@ -400,8 +404,10 @@
   function begin(dir) {
     if (dir > 0 && cur >= nLeaves) return null;
     if (dir < 0 && cur <= 0) return null;
-    if (dir > 0) { show(2 * cur - 1, 2 * cur + 2); T = buildTurner(2 * cur, 2 * cur + 1); T.cover = cur === 0; }
-    else { show(2 * cur - 3, 2 * cur); T = buildTurner(2 * cur - 2, 2 * cur - 1); T.cover = cur === 1; }
+    const cover = dir > 0 ? cur === 0 : cur === 1;
+    if (dir > 0) { show(2 * cur - 1, 2 * cur + 2); T = buildTurner(2 * cur, 2 * cur + 1, cover ? 1 : K); }
+    else { show(2 * cur - 3, 2 * cur); T = buildTurner(2 * cur - 2, 2 * cur - 1, cover ? 1 : K); }
+    T.cover = cover;
     if (T.cover) book.classList.remove("closed");
     T.dir = dir; T.theta = dir > 0 ? 0 : 180;
     pose(T, T.theta, dir);
@@ -486,20 +492,49 @@
     const k = Math.min((innerWidth - 90) / (PW * 2 + 32), (innerHeight - 110) / (PH + 28), 1.25);
     $("#wrap").style.setProperty("--k", Math.max(.4, k).toFixed(3));
   }
-  // a little box: the spine faces you, the front cover is its right-hand side
+  // a little book in 3D. Box: x = thickness (D), y = height (H), z = depth (Wc); the spine faces you,
+  // the front cover is its right-hand side, the page block shows on top and at the fore-edge.
   function flyBox(b, sr) {
     const D = sr.width, H = sr.height, Wc = H * PW / PH;
-    const box = el("div", "fb");
-    box.style.width = D + "px"; box.style.height = H + "px";
-    const sp = b.spine.cloneNode(true); sp.className = "sp spine"; sp.style.cssText = b.spine.style.cssText + `;transform:translateZ(${Wc / 2}px);position:absolute;left:0;top:0;width:${D}px;height:${H}px`;
-    const cv = el("div", "cv pg cover"); cv.style.setProperty("--bc", b.color);
-    cv.style.cssText += `;width:${Wc}px;left:${(D - Wc) / 2}px;transform:rotateY(90deg) translateZ(${D / 2}px)`;
+    const wrap = el("div", "fbw"), box = el("div", "fb");
+    wrap.style.cssText = `left:${sr.left}px;top:${sr.top}px;width:${D}px;height:${H}px`;
+    const face = (cls, w, h, tf, extra = "") => { const f = el("div", cls); f.style.cssText = `width:${w}px;height:${h}px;transform:${tf};${extra}`; return f; };
+    const sp = b.spine.cloneNode(true); sp.classList.remove("gone"); sp.className = "spine";
+    sp.style.cssText = b.spine.style.cssText + `;position:absolute;left:0;top:0;width:${D}px;height:${H}px;transform:translateZ(${Wc / 2}px);transition:none`;
+    const cv = face("cv pg cover", Wc, H, `translateX(${(D - Wc) / 2}px) rotateY(90deg) translateZ(${D / 2}px)`, `--bc:${b.color}`);
     const inner = el("div"); inner.style.cssText = `position:absolute;left:0;top:0;width:${PW}px;height:${PH}px;transform:scale(${H / PH});transform-origin:0 0`;
     inner.innerHTML = `<div class="plate"><div class="y">${b.y}</div><div class="m">${CN[b.m - 1]}月</div><div class="s">手 账</div></div>`;
     cv.appendChild(inner);
-    box.append(sp, cv);
-    box.style.left = sr.left + "px"; box.style.top = sr.top + "px";
-    return { box, D, H, Wc };
+    const bk = face("bk", Wc, H, `translateX(${(D - Wc) / 2}px) rotateY(-90deg) translateZ(${D / 2}px)`, `background:${b.color}`);
+    const tp = face("tp", D, Wc, `translateY(${-Wc / 2}px) rotateX(90deg)`, `--bc:${b.color}`);
+    const fe = face("fe", D, H, `rotateY(180deg) translateZ(${Wc / 2}px)`);
+    box.append(sp, cv, bk, tp, fe);
+    wrap.appendChild(box);
+    return { wrap, box, H };
+  }
+  // hook the top of the spine → it tips out → pull it out towards you → turn it round to the cover and bring it in front of you
+  function flight(b, sr, cr, back) {
+    const { wrap, box, H } = flyBox(b, sr);
+    fly.replaceChildren(wrap); fly.classList.add("on");
+    const dx = cr.left + cr.width / 2 - (sr.left + sr.width / 2), dy = cr.top + cr.height / 2 - (sr.top + sr.height / 2), s = cr.height / H;
+    const outer = [
+      { transform: "translate(0px,0px) scale(1)", offset: 0 },
+      { transform: "translate(0px,-6px) scale(1)", offset: .2 },
+      { transform: "translate(0px,-30px) scale(1.12)", offset: .42 },
+      { transform: `translate(${dx * .55}px,${dy * .55 - 40}px) scale(${1 + (s - 1) * .55})`, offset: .72 },
+      { transform: `translate(${dx}px,${dy}px) scale(${s})`, offset: 1 },
+    ];
+    const inner = [
+      { transform: "rotateX(0deg) rotateY(0deg) rotateZ(0deg)", offset: 0 },
+      { transform: "rotateX(-20deg) rotateY(0deg) rotateZ(-1deg)", offset: .2 },
+      { transform: "rotateX(-6deg) rotateY(-8deg) rotateZ(-2deg)", offset: .42 },
+      { transform: "rotateX(4deg) rotateY(-62deg) rotateZ(-1deg)", offset: .72 },
+      { transform: "rotateX(0deg) rotateY(-90deg) rotateZ(0deg)", offset: 1 },
+    ];
+    const opt = { duration: reduced ? 1 : 1250, easing: "cubic-bezier(.4,.05,.25,1)", fill: "forwards" };
+    if (back) { outer.reverse().forEach(k => k.offset = 1 - k.offset); inner.reverse().forEach(k => k.offset = 1 - k.offset); }
+    const a1 = wrap.animate(outer, opt), a2 = box.animate(inner, opt);
+    return Promise.all([a1.finished, a2.finished]);
   }
   function coverRect() {
     // where the closed book's cover sits on screen
@@ -512,39 +547,21 @@
     const sr = sp.getBoundingClientRect();
     reader.classList.add("on"); reader.style.visibility = "hidden";
     const cr = coverRect();
-    const { box, H } = flyBox(b, sr);
-    fly.replaceChildren(box); fly.classList.add("on");
     sp.classList.add("gone");
     shelf.classList.add("dim");
-    const dx = cr.left + cr.width / 2 - (sr.left + sr.width / 2), dy = cr.top + cr.height / 2 - (sr.top + sr.height / 2), s = cr.height / H;
-    const a = box.animate([
-      { transform: "translate(0,0) rotateY(0deg) rotateZ(0deg) scale(1)" },
-      { transform: "translate(0,-34px) rotateY(0deg) rotateZ(-4deg) scale(1)", offset: .22 },
-      { transform: `translate(${dx * .45}px,${dy * .45 - 60}px) rotateY(-50deg) rotateZ(-2deg) scale(${1 + (s - 1) * .5})`, offset: .6 },
-      { transform: `translate(${dx}px,${dy}px) rotateY(-90deg) rotateZ(0deg) scale(${s})` },
-    ], { duration: reduced ? 1 : 1100, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" });
-    await a.finished;
+    await flight(b, sr, cr, false);
     reader.style.visibility = ""; fly.classList.remove("on"); fly.replaceChildren();
     $("#back").title = "放回书架";
-    setTimeout(async () => { await turn(1, 900); if (b.now) gotoPage(3 + b.keys.indexOf(TODAY)); }, 180);
+    setTimeout(async () => { await turn(1, 1000); if (b.now) gotoPage(3 + b.keys.indexOf(TODAY)); }, 160);
   }
   async function closeBook() {
     if (!B || busy) return;
-    while (cur > 0) if (!(await turn(-1, cur === 1 ? 700 : 260))) break;
-    await new Promise(r => setTimeout(r, 300));
+    while (cur > 0) if (!(await turn(-1, cur === 1 ? 900 : 260))) break;
+    await new Promise(r => setTimeout(r, 250));
     const b = B, sr = b.spine.getBoundingClientRect(), cr = coverRect();
-    const { box, H } = flyBox(b, sr);
-    const dx = cr.left + cr.width / 2 - (sr.left + sr.width / 2), dy = cr.top + cr.height / 2 - (sr.top + sr.height / 2), s = cr.height / H;
-    fly.replaceChildren(box); fly.classList.add("on");
     reader.classList.remove("on");
     shelf.classList.remove("dim");
-    const a = box.animate([
-      { transform: `translate(${dx}px,${dy}px) rotateY(-90deg) scale(${s})` },
-      { transform: `translate(${dx * .45}px,${dy * .45 - 60}px) rotateY(-45deg) scale(${1 + (s - 1) * .5})`, offset: .45 },
-      { transform: "translate(0,-30px) rotateY(0deg) rotateZ(-3deg) scale(1)", offset: .8 },
-      { transform: "translate(0,0) rotateY(0deg) scale(1)" },
-    ], { duration: reduced ? 1 : 950, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" });
-    await a.finished;
+    await flight(b, sr, cr, true);
     b.spine.classList.remove("gone"); fly.classList.remove("on"); fly.replaceChildren();
     B = null; $("#back").title = "回到桌子";
   }
