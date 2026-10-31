@@ -140,27 +140,26 @@
   .dh { display: flex; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 12px; flex: none; }
   .dh b { font: 700 34px var(--serif); }
   .dh span { font-size: 13px; color: var(--muted); letter-spacing: .12em; }
-  .ticks { list-style: none; margin: 0 0 8px; padding: 0; flex: none; max-height: 168px; overflow: hidden; }
-  .ticks li { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; padding: 2.5px 0; }
-  .ticks li.sub { padding-left: 22px; font-size: 12.5px; }
-  .ticks li i { flex: none; width: 14px; height: 14px; margin-top: 3px; border-radius: 3px; border: 1.3px solid #cfc8b8; position: relative; }
+  .ticks { list-style: none; margin: 0 0 14px; padding: 0 0 12px; flex: none; border-bottom: 1px dashed rgba(96, 88, 72, .22); }
+  .ticks li { display: flex; gap: 10px; align-items: center; font-size: 14px; line-height: 1.5; padding: 3px 0; }
+  .ticks li.sub { padding-left: 24px; font-size: 13px; }
+  .ticks li i { flex: none; width: 14px; height: 14px; border-radius: 3px; border: 1.3px solid #cfc8b8; position: relative; }
   .ticks li.done i { background: var(--accent); border-color: var(--accent); }
   .ticks li.done i::after { content: ""; position: absolute; left: 3.5px; top: .5px; width: 3.5px; height: 7.5px; border: solid var(--paper); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
   .ticks li.done span { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.45); }
-  .projs { flex: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  .ps { display: flex; align-items: center; gap: 10px; font: 600 13.5px var(--serif); }
-  .ps .st { flex: none; width: 24px; height: 28px; transform: rotate(-6deg); background: radial-gradient(circle, transparent 1.3px, #fffdf6 1.7px) -2px -2px / 4px 4px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.2)); position: relative; }
-  .ps .st::after { content: "成"; position: absolute; inset: 3px; border: 1px solid var(--stamp); background: #f2dccb; color: var(--stamp); font: 700 10px/16px var(--serif); text-align: center; }
-  .ps.go .st::after { content: "始"; border-color: var(--accent); background: #dfe8dc; color: var(--accent); }
-  .ps small { font: 11px var(--mono); color: var(--faint); font-weight: 400; }
-  .stk { flex: none; display: flex; gap: 12px; padding: 4px 2px 10px; }
-  .stk .sn { width: 96px; height: 96px; padding: 10px 9px; font: 11.5px/1.45 var(--hand); color: rgba(46,40,30,.85); overflow: hidden; white-space: pre-wrap; word-break: break-word;
-    background: var(--c); box-shadow: 0 2px 3px rgba(70,52,28,.2); }
+  .ticks li.proj span { font: 700 14.5px var(--serif); color: var(--ink); text-decoration: none; flex: 1; }
+  .ticks .mst { flex: none; margin-left: auto; width: 22px; height: 22px; display: grid; place-items: center; transform: rotate(-10deg);
+    font: 700 11px var(--serif); color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 50%; opacity: .78; mix-blend-mode: multiply; }
+  .ticks li.more { color: var(--faint); font: 12px var(--mono); padding-left: 24px; }
+  .stk { position: absolute; inset: 0; pointer-events: none; }
+  .stk .sn { position: absolute; width: 104px; height: 104px; padding: 16px 10px 8px; font: 12px/1.5 var(--hand); color: rgba(46,40,30,.86); overflow: hidden; white-space: pre-wrap; word-break: break-word;
+    background: var(--c); box-shadow: 0 3px 5px rgba(70,52,28,.22); }
   .stk .sn::first-line { font-weight: 700; }
-  .mumble { flex: 1; min-height: 60px; width: 100%; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
+  /* a strip of washi tape across the top */
+  .stk .sn::before { content: ""; position: absolute; left: 50%; top: -7px; width: 56px; height: 16px; margin-left: -28px; transform: rotate(-3deg);
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 4px, rgba(255,255,255,.15) 4px 8px), rgba(214, 196, 160, .55); box-shadow: 0 0 0 .5px rgba(0,0,0,.06); }
+  .mumble { flex: 1; min-height: 120px; width: 100%; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
     font: 15px/27px var(--hand); color: var(--ink); background: repeating-linear-gradient(transparent 0 26px, rgba(96, 88, 72, .2) 26px 27px); background-attachment: local; }
-  .mumble::placeholder { color: #cfc6b4; }
-  .emptyday { color: var(--faint); font-size: 13px; letter-spacing: .1em; margin: 6px 0 12px; }
 
   #pager { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 25; font: 12px var(--mono); color: rgba(250,240,220,.6); letter-spacing: .2em; display: none; }
   #reader.on ~ #pager { display: block; }
@@ -212,8 +211,7 @@
     else D(TODAY).ticks.push(i);
   });
   const pd = get("paper-desk.desk-tasks.v1") || {};
-  (pd.done || []).forEach(t => { if (t.doneAt) D(dayKey(t.doneAt)).projs.push({ t, kind: "done" }); if (t.startedAt && dayKey(t.startedAt) !== dayKey(t.doneAt)) D(dayKey(t.startedAt)).projs.push({ t, kind: "go" }); });
-  (pd.projects || []).forEach(t => { if (t.startedAt) D(dayKey(t.startedAt)).projs.push({ t, kind: "go" }); });
+  (pd.done || []).forEach(t => { if (t.doneAt) D(dayKey(t.doneAt)).projs.push({ t, kind: "done" }); });
   (get("paper-desk.memos.v1") || []).forEach(n => { if (n && n.text && n.text.trim()) D(dayKey(n.createdAt || Date.now())).notes.push(n); });
   Object.keys(memos).forEach(k => { if ((memos[k] || "").trim()) D(k); });
   D(TODAY);
@@ -301,31 +299,33 @@
     const wd = WD[new Date(B.y, m - 1, d).getDay()];
     const day = el("div", "day");
     day.innerHTML = `<div class="dh"><b>${d}</b><span>${CN[m - 1]}月 · 周${wd}${k === TODAY ? " · 今天" : ""}</span></div>`;
-    if (x.ticks.length) {
+    // one list of what got done: stamped projects first (bold, a small red stamp at the end of the line), then the ticks
+    const rows = [...x.projs.map(p => ({ proj: p.t })), ...x.ticks.filter(t => t.done), ...x.ticks.filter(t => !t.done)];
+    if (rows.length) {
       const ul = el("ul", "ticks");
-      x.ticks.forEach(t => { const li = el("li", (t.done ? "done" : "") + (t.sub ? " sub" : "")); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = t.text; ul.appendChild(li); });
+      rows.slice(0, 9).forEach(r => {
+        if (r.proj) {
+          const li = el("li", "proj done"); li.innerHTML = `<i></i><span></span><b class="mst">成</b>`;
+          li.querySelector("span").textContent = r.proj.title || "项目"; ul.appendChild(li); return;
+        }
+        const li = el("li", (r.done ? "done" : "") + (r.sub ? " sub" : "")); li.innerHTML = "<i></i><span></span>";
+        li.querySelector("span").textContent = r.text; ul.appendChild(li);
+      });
+      if (rows.length > 9) ul.insertAdjacentHTML("beforeend", `<li class="more">+${rows.length - 9}</li>`);
       day.appendChild(ul);
     }
-    if (x.projs.length) {
-      const box = el("div", "projs");
-      x.projs.forEach(({ t, kind }) => {
-        const r = el("div", "ps" + (kind === "go" ? " go" : "")); r.innerHTML = `<i class="st"></i><span></span><small></small>`;
-        r.children[1].textContent = t.title || "项目";
-        r.children[2].textContent = kind === "done" ? (t.sessions ? `${t.sessions} 次 · ${t.focus || 0}′` : "") : "开始";
-        box.appendChild(r);
-      });
-      day.appendChild(box);
-    }
+    // the sticky notes are stuck onto the page with tape, overlapping the lines at the bottom right
     if (x.notes.length) {
       const box = el("div", "stk");
+      const spots = [{ r: 6, b: 18, a: 4 }, { r: 104, b: 6, a: -5 }, { r: 50, b: 108, a: -2 }];
       x.notes.slice(0, 3).forEach((n, i) => {
-        const s = el("div", "sn"); s.textContent = n.text; s.style.setProperty("--c", CAT_C[n.cat] || CAT_C.work);
-        s.style.transform = `rotate(${[-2.5, 1.8, -1][i]}deg)`; box.appendChild(s);
+        const sn = el("div", "sn"); sn.textContent = n.text; sn.style.setProperty("--c", CAT_C[n.cat] || CAT_C.work);
+        sn.style.right = spots[i].r + "px"; sn.style.bottom = spots[i].b + "px"; sn.style.transform = `rotate(${spots[i].a}deg)`;
+        box.appendChild(sn);
       });
       day.appendChild(box);
     }
-    if (!x.ticks.length && !x.projs.length && !x.notes.length) day.insertAdjacentHTML("beforeend", `<div class="emptyday">还没有记录</div>`);
-    const ta = el("textarea", "mumble"); ta.dataset.k = k; ta.value = memos[k] || ""; ta.placeholder = "碎碎念…"; ta.spellcheck = false;
+    const ta = el("textarea", "mumble"); ta.dataset.k = k; ta.value = memos[k] || ""; ta.spellcheck = false;
     day.appendChild(ta);
     pg.appendChild(day);
     const no = el("div", "pno"); no.textContent = String(i - 2).padStart(2, "0"); pg.appendChild(no);
