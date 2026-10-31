@@ -67,7 +67,7 @@
   #todayCard .sheetc > .body > .chk { margin: 0 -22px; padding: 2px 22px 40px; }
 
   /* ───────── right: one board fills the space, slide to the next ───────── */
-  #stage { position: fixed; left: var(--gap); right: var(--gap); top: calc(var(--toph) + 4px); transition: left .4s var(--ease); bottom: calc(var(--trayh) + var(--gap)); overflow: hidden; z-index: 5; }
+  #stage { position: fixed; left: var(--gap); right: var(--gap); top: calc(var(--toph) + 4px); transition: left .4s var(--ease); bottom: var(--gap); overflow: hidden; z-index: 5; }
   #pages { position: absolute; inset: 0; display: flex; width: 200%; transition: transform .65s var(--ease); }
   .page { width: 50%; height: 100%; position: relative; padding: 0 2px; }
   .frame { position: absolute; inset: 0; border-radius: 6px; padding: 14px;
@@ -576,6 +576,17 @@
   .pcard.inl:not(.ready) .face.f .foot { display: none; }
   .pcard.ghost { position: fixed; z-index: 46000; pointer-events: none; transition: none; }
   .pcard.inl.fly { transition: transform .6s var(--ease), opacity .6s; }
+
+  /* the toolbar floats below the screen until it's wanted: the board gets the room */
+  #tray { left: 50% !important; right: auto; width: max-content; bottom: 12px; padding: 0 12px; border-radius: 16px;
+    background: rgba(248, 249, 247, .94); box-shadow: 0 0 0 .5px rgba(21, 35, 58, .16), 0 18px 34px -14px rgba(21, 35, 58, .5);
+    transform: translate(-50%, calc(100% + 24px)); transition: transform .35s var(--ease); }
+  body.trayOn #tray { transform: translate(-50%, 0); }
+  #trayHandle { position: fixed; left: 50%; bottom: 0; z-index: 39999; width: 120px; height: 14px; margin-left: -60px; cursor: pointer; }
+  #trayHandle::after { content: ""; position: absolute; left: 36px; right: 36px; bottom: 5px; height: 4px; border-radius: 2px;
+    background: rgba(54, 66, 78, .35); box-shadow: 0 1px 0 rgba(255, 255, 255, .6); transition: background .2s, transform .2s; }
+  #trayHandle:hover::after { background: #2f4f73; transform: scaleX(1.2); }
+  body.trayOn #trayHandle::after { opacity: 0; }
 </style>
 </head>
 <body>
@@ -650,6 +661,7 @@
 </div></template>
 <div id="detail"><div class="holder"></div></div>
 
+<div id="trayHandle" title="工具"></div>
 <nav id="tray">
   <button class="tb pg" data-p="0" title="项目（1）"><i></i></button>
   <button class="tb pg" data-p="1" title="便签（2）"><i></i></button>
@@ -660,7 +672,7 @@
   <span class="tb corkonly"><span class="pad" data-cat="study" title="拖出一张便签"></span></span>
   <span class="tb dish corkonly" title="拖一颗图钉"><span class="pin"></span></span>
   <button class="tb corkonly" id="tidy" title="折起来，按颜色排好（T）"><span class="tidyI"></span></button>
-  <span class="tspace"></span>
+  <span class="tsep"></span>
   <button class="tb" id="timerBtn" title="计时器"><span class="tclock"></span></button>
   <a class="tb" id="albumBtn" href="album.html" title="卡册"><span class="talbum" data-n="0"></span></a>
   <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
@@ -739,6 +751,25 @@
   $("#pages").style.transition = "none";
   go(page);
   $("#pages").getBoundingClientRect();
+
+  /* ───────── the toolbar: out of sight until the pointer comes to the bottom edge or the handle ───────── */
+  const trayEl = $("#tray");
+  let trayT = 0;
+  const trayOpen = () => { clearTimeout(trayT); document.body.classList.add("trayOn"); };
+  const trayClose = later => {
+    clearTimeout(trayT);
+    trayT = setTimeout(() => {
+      if (trayEl.matches(":hover") || $("#timer.show") || document.body.classList.contains("carrying")) return;
+      document.body.classList.remove("trayOn");
+    }, later ? 700 : 0);
+  };
+  $("#trayHandle").addEventListener("pointerenter", trayOpen);
+  $("#trayHandle").addEventListener("click", trayOpen);
+  trayEl.addEventListener("pointerenter", trayOpen);
+  trayEl.addEventListener("pointerleave", () => trayClose(true));
+  addEventListener("pointermove", e => { if (e.buttons === 0 && e.clientY >= innerHeight - 6 && Math.abs(e.clientX - innerWidth / 2) < 260) trayOpen(); }, { passive: true });
+  addEventListener("pointerdown", e => { if (!e.target.closest("#tray, #trayHandle, #timer")) trayClose(); }, true);
+  window.Tray = { open: trayOpen, close: trayClose };
 
   /* ───────── the cord along the top: reminders that stay on every page ─────────
      Each kind (note, proj, today) registers how to draw its chip and what a click does; the order lives here. */
@@ -1515,7 +1546,7 @@
     timerEl.style.left = Math.min(innerWidth - 180, r.left + r.width / 2 - 84) + "px";
     timerEl.classList.toggle("show", on);
   }
-  tbtn.addEventListener("click", () => showTimer(!timerEl.classList.contains("show")));
+  tbtn.addEventListener("click", () => { showTimer(!timerEl.classList.contains("show")); if (!timerEl.classList.contains("show")) Tray.close(true); });
   addEventListener("pointerdown", e => { if (!e.target.closest("#timer, #timerBtn")) timerEl.classList.remove("show"); });
   $(".dial", timerEl).addEventListener("pointerdown", e => {
     const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
