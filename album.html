@@ -204,7 +204,7 @@
 </head>
 <body>
 <a class="ibtn" id="home" href="./" title="回到桌子">←</a>
-<nav id="kinds"><a data-k="proj" href="album.html?kind=proj">项目</a><a data-k="note" href="album.html?kind=note">便签</a><a data-k="receipt" href="album.html?kind=receipt">小票</a></nav>
+
 
 <div id="wrap">
   <div class="board"></div>
@@ -237,7 +237,8 @@
   document.documentElement.dataset.hashira = KINDS[KIND].run;
   window.setHashira && setHashira(KINDS[KIND].run);
   document.title = KINDS[KIND].name + " · 纸桌";
-  document.querySelectorAll("#kinds a").forEach(a => a.classList.toggle("on", a.dataset.k === KIND));
+  // each album belongs to its page: the arrow goes back there
+  { const h = $("#home"); h.href = { proj: "./#board", note: "./#notes", receipt: "receipt.html" }[KIND]; h.title = { proj: "回到黑板", note: "回到软木板", receipt: "回到小票" }[KIND]; }
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
