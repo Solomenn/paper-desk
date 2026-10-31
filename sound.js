@@ -1,5 +1,5 @@
 /* Sounds for the desk: real foley from sasshi (sounds/manifest.json), one take at random per play, its own
-   gain trim, start (lead) and length. The room's ambience (leaves, birds now and then) is off until asked for.
+   gain trim, start (lead) and length. The room's ambience (the stove, the wind and snow outside) is off until asked for.
    M toggles the sounds, Shift+M the ambience. Shared by every page. (After sasshi src/sound, AGPL-3.0.) */
 (() => {
   "use strict";
@@ -19,7 +19,6 @@
     return ac;
   }
   const manifest = fetch(base + "manifest.json").then(r => r.json()).then(m => (man = m)).catch(() => null);
-  const ambient = fetch(base + "ambient.json").then(r => r.json()).then(m => (ambMan = m)).catch(() => null);
   function buffer(file) {
     if (buffers.has(file)) return Promise.resolve(buffers.get(file));
     if (loading.has(file)) return loading.get(file);
@@ -59,41 +58,56 @@
     const f = strength > .66 ? "hard" : strength > .3 ? "medium" : "soft";
     play(`impact.${material}.${f}`, { vol: .55 + strength * .45, gap: 40 });
   }
-  // the room: leaves looping, a bird now and then
-  let bed = null, birdT = 0;
+  /* the room (雪国驿舍): the stove — a low roar and the wood crackling — and the wind with the snow outside, muffled by the
+     glass. Made here, not recorded. Night: the fire is up and the wind is the loudest thing outside; day: the fire low. */
+  let bed = null, crackT = 0;
+  const night = () => document.documentElement.dataset.theme !== "day";
+  function noise(c, secs, brown) {
+    const b = c.createBuffer(1, c.sampleRate * secs, c.sampleRate), d = b.getChannelData(0); let last = 0;
+    for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
+    return b;
+  }
+  function loop(c, buf, filters, gain) {
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = true; src.loopStart = 0; src.start(0, Math.random() * buf.duration);
+    let node = src; filters.forEach(f => { node.connect(f); node = f; }); const g = c.createGain(); g.gain.value = 0; node.connect(g).connect(master);
+    g.gain.linearRampToValueAtTime(gain, c.currentTime + 3); return { src, g };
+  }
+  function levels() { return night() ? { roar: .16, wind: .07, crack: 1 } : { roar: .06, wind: .05, crack: .45 }; }
   function startAmbient() {
     const c = ctx(); if (!c || bed) return;
-    ambient.then(m => {
-      if (!m || !amb || bed) return;
-      buffer(m.bed.file).then(b => {
-        if (!b || !amb || bed) return;
-        const src = c.createBufferSource(), g = c.createGain();
-        src.buffer = b; src.loop = true; g.gain.value = 0;
-        g.gain.linearRampToValueAtTime(Math.pow(10, (m.bed.gainDb || 0) / 20) * .5, c.currentTime + 2.5);
-        src.connect(g).connect(master); src.start();
-        bed = { src, g };
-        const bird = () => {
-          if (!bed) return;
-          const t = m.birds[Math.floor(Math.random() * m.birds.length)];
-          buffer(t.file).then(bb => {
-            if (!bb || !bed) return;
-            const s2 = c.createBufferSource(), g2 = c.createGain(), pan = c.createStereoPanner ? c.createStereoPanner() : null;
-            s2.buffer = bb; g2.gain.value = Math.pow(10, (t.gainDb || 0) / 20) * .35;
-            if (pan) { pan.pan.value = .3 + Math.random() * .6; s2.connect(g2).connect(pan).connect(master); } else s2.connect(g2).connect(master);
-            s2.start();
-          });
-          birdT = setTimeout(bird, 9000 + Math.random() * 22000);
-        };
-        birdT = setTimeout(bird, 4000 + Math.random() * 6000);
-      });
-    });
+    const L = levels(), brown = noise(c, 6, true), white = noise(c, 5, false);
+    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 320;
+    const roar = loop(c, brown, [lp], L.roar);
+    const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = .5;
+    const mf = c.createBiquadFilter(); mf.type = "lowpass"; mf.frequency.value = 900;
+    const wind = loop(c, white, [bp, mf], L.wind);
+    // gusts: the wind rises and falls, the fire breathes
+    const gust = () => { if (!bed) return; const L2 = levels(), t = c.currentTime, k = .45 + Math.random() * .9;
+      wind.g.gain.linearRampToValueAtTime(L2.wind * k, t + 2 + Math.random() * 3); bp.frequency.linearRampToValueAtTime(380 + k * 320, t + 3);
+      roar.g.gain.linearRampToValueAtTime(L2.roar * (.75 + Math.random() * .5), t + 1.5); bed.gT = setTimeout(gust, 2500 + Math.random() * 3500); };
+    bed = { roar, wind, gT: setTimeout(gust, 1500) };
+    // the crackle: short dry snaps, now one, now a little run of them
+    const snap = (v) => {
+      const len = .004 + Math.random() * .02, b = c.createBuffer(1, Math.ceil(c.sampleRate * len), c.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "highpass"; f.frequency.value = 900 + Math.random() * 2500;
+      g.gain.value = v; s.connect(f).connect(g).connect(master); s.start();
+    };
+    const crackle = () => {
+      if (!bed) return; const L2 = levels();
+      const n = Math.random() < .25 ? 2 + Math.floor(Math.random() * 5) : 1;
+      for (let k = 0; k < n; k++) setTimeout(() => bed && snap((.04 + Math.random() * .14) * L2.crack), k * (20 + Math.random() * 70));
+      crackT = setTimeout(crackle, (night() ? 120 : 260) + Math.random() * (night() ? 900 : 1800));
+    };
+    crackT = setTimeout(crackle, 800);
   }
   function stopAmbient() {
-    clearTimeout(birdT);
+    clearTimeout(crackT);
     if (!bed) return;
-    const b = bed; bed = null;
-    try { b.g.gain.linearRampToValueAtTime(0, ac.currentTime + .8); setTimeout(() => { try { b.src.stop(); } catch {} }, 900); } catch {}
+    const b = bed; bed = null; clearTimeout(b.gT);
+    try { [b.roar, b.wind].forEach(x => x.g.gain.linearRampToValueAtTime(0, ac.currentTime + .8)); setTimeout(() => { try { b.roar.src.stop(); b.wind.src.stop(); } catch {} }, 900); } catch {}
   }
+  addEventListener("deskTheme", () => { if (!bed) return; const L = levels(), t = ac.currentTime; bed.roar.g.gain.linearRampToValueAtTime(L.roar, t + 2); bed.wind.g.gain.linearRampToValueAtTime(L.wind, t + 2); });
   function setOn(v) { on = v; put(SKEY, on); if (master) master.gain.value = on ? 1 : 0; if (on && amb) startAmbient(); dispatchEvent(new CustomEvent("deskSound", { detail: { on, amb } })); }
   function setAmb(v) { amb = v; put(AKEY, amb); if (amb && on) startAmbient(); else stopAmbient(); dispatchEvent(new CustomEvent("deskSound", { detail: { on, amb } })); }
   // browsers only let sound start after a gesture
