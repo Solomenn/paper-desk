@@ -727,6 +727,7 @@
   <b>摆正</b> 便签右上角的水平仪，或鼠标停在便签上按 L；Shift+L 全部摆正<br>
   <b>收起</b> 把便签拖到屏幕最右边，或往右一甩；悬停卡签偷看，点一下拿回<br>
   <b>声音</b> M 开关音效，Shift+M 开关窗外的鸟叫和树叶声<br>
+  <b>归档</b> 便签右键「归档」，或拖到工具栏的卡册上，收进便签卡册<br>
   <b>扔掉</b> 拖着便签时右下出现圆圈，拖进去
 </div>
 <div id="menu"></div>
@@ -767,6 +768,14 @@
     store(PAGEKEY, page);
     dispatchEvent(new CustomEvent("deskpage", { detail: page }));
     window.setHashira && setHashira(page === 0 ? "黑板　项目" : "软木板　便签");
+    // the album button opens this page's album
+    const ab = $("#albumBtn");
+    if (ab) {
+      ab.href = page === 0 ? "album.html?kind=proj" : "album.html?kind=note";
+      ab.title = page === 0 ? "项目卡册" : "便签卡册（把便签拖到这里归档）";
+      const n = page === 0 ? ((load("paper-desk.desk-tasks.v1", {}) || {}).done || []).length : (load("paper-desk.notes-archive.v1", []) || []).length;
+      $(".talbum", ab).dataset.n = n;
+    }
   }
   window.Desk = { go, page: () => page };
   $$(".pg").forEach(b => b.addEventListener("click", () => go(+b.dataset.p)));
@@ -1350,7 +1359,7 @@
       want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
       $("h3 small", lane).textContent = ps.length || "";
     });
-    $("#albumBtn .talbum").dataset.n = S.done.length;
+    if (page === 0) $("#albumBtn .talbum").dataset.n = S.done.length;
     for (const [id] of inlineCards) if (!S.projects.some(p => p.id === id && p.col === "doing" && !p.bar)) inlineCards.delete(id);
     Bar.render();
   }
@@ -1873,7 +1882,16 @@
       n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
       renderTabs(); save();
     } else if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); window.Sound && Sound.impact("paper", .12); }
-    else if (n.mode === "trash") { n.el.remove(); notes = notes.filter(x => x !== n); save(); }
+    else if (n.mode === "trash") {
+      if (n.archiving) {
+        let arc = []; try { arc = JSON.parse(localStorage.getItem(ARCKEY)) || []; } catch {}
+        arc.push({ id: n.id, cat: n.cat, text: n.text, createdAt: n.createdAt, archivedAt: Date.now() });
+        try { localStorage.setItem(ARCKEY, JSON.stringify(arc)); } catch {}
+        const ab = document.getElementById("albumBtn");
+        if (ab) { ab.querySelector(".talbum").dataset.n = arc.length; ab.classList.remove("gulp"); void ab.offsetWidth; ab.classList.add("gulp"); }
+      }
+      n.el.remove(); notes = notes.filter(x => x !== n); save();
+    }
   }
 
   /* ───────── drawer: index tabs on the right edge of the screen ───────── */
@@ -2128,11 +2146,25 @@
     if (n.mode === "rotate") { n.mode = "swing"; return; }
     if (n.mode !== "drag") return;
     if (overBin()) { trash(n); return; }
+    { const ab = document.getElementById("albumBtn"), r = ab && document.body.classList.contains("trayOn") ? ab.getBoundingClientRect() : null;
+      if (r && P.x + BR.left > r.left - 12 && P.x + BR.left < r.right + 12 && P.y + BR.top > r.top - 12 && P.y + BR.top < r.bottom + 12) { archive(n); return; } }
     if (Bar.over(P.y + BR.top)) { toBar(n); return; }
     if (P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE) { dock(n); return; }
     n.vx = clamp(P.vx, -2600, 2600); n.vy = clamp(P.vy, -2600, 2600); n.mode = "toss";
     n.thrown = Math.hypot(n.vx, n.vy);
     if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
+  }
+  // into the note album: it flies into the album button and is kept there
+  const ARCKEY = "paper-desk.notes-archive.v1";
+  function archive(n) {
+    endEdit(n); syncBoard();
+    if (n.pin) { n.pin = null; renderPin(n); }
+    const ab = document.getElementById("albumBtn");
+    const r = ab && ab.offsetParent ? wr(ab) : { left: 30 - BR.left, top: innerHeight - 30 - BR.top, width: 0, height: 0 };
+    fly.appendChild(n.el);
+    n.mode = "trash"; n.archiving = true;
+    n.t = { x: r.left + r.width / 2, y: r.top + r.height / 2, a: n.a - .6, s: 0.06 };
+    window.Sound && Sound.play("drop", { vol: .55 });
   }
   function trash(n) {
     endEdit(n);
@@ -2246,6 +2278,10 @@
     fb.textContent = n.folded ? "展开" : "折起";
     fb.onclick = () => { closeMenu(); setFold(n, !n.folded); };
     menu.appendChild(fb);
+    const ar = document.createElement("button");
+    ar.textContent = "归档";
+    ar.onclick = () => { closeMenu(); archive(n); };
+    menu.appendChild(ar);
     const dk = document.createElement("button");
     dk.textContent = "收到右边";
     dk.onclick = () => { closeMenu(); dock(n); };

@@ -169,6 +169,33 @@
   #zcap .hint { margin-top: 26px; font-size: 12px; color: var(--faint); letter-spacing: .08em; }
   @media (max-width: 760px) { #zoom { grid-template-columns: 1fr; } #zcap { display: none; } }
 
+  /* the three albums, as printed words along the top */
+  #kinds { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); z-index: 20; display: flex; gap: 26px; font-size: 14px; letter-spacing: .3em; }
+  #kinds a { color: var(--faint); text-decoration: none; padding-bottom: 4px; border-bottom: 1.5px solid transparent; transition: color .2s; }
+  #kinds a:hover { color: var(--ink); }
+  #kinds a.on { color: #1c232b; border-bottom-color: #b5523b; }
+  /* a sticky note in its sleeve */
+  .mc.mn { background: var(--c); border-radius: 1px; padding: 16px 14px; cursor: zoom-in; }
+  .mc.mn .tx { font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: rgba(46,40,30,.88); display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden; }
+  .mc.mn .tx::first-line { font-size: 15px; font-weight: 600; }
+  .mc.mn .d { color: rgba(46,40,30,.5); }
+  /* a receipt in its sleeve: the top of it shows */
+  .grid { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  .slv { min-height: 0; }
+  .mc.mr { padding: 0; background: #f8f9f7; cursor: zoom-in; overflow: hidden; }
+  .mc.mr img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; display: block; }
+  .mc.mr .d { background: rgba(248,249,247,.9); padding: 2px 6px; border-radius: 3px; }
+  .mc.mr .pc { position: absolute; right: 10px; bottom: 11px; font-size: 10px; color: var(--accent); background: rgba(248,249,247,.9); padding: 2px 6px; border-radius: 3px; }
+  #zc.zn .zf { background: var(--c); border-radius: 2px; }
+  #zc.zn .tx { padding: 34px 30px; font-size: 18px; line-height: 1.75; white-space: pre-wrap; color: rgba(46,40,30,.9); }
+  #zc.zn .tx::first-line { font-size: 22px; font-weight: 600; }
+  #zc.zr { height: 82vh; }
+  #zc.zr .zf { overflow-y: auto; background: #f8f9f7; }
+  #zc.zr img { width: 100%; display: block; }
+  #zcap { pointer-events: auto; }
+  #zcap .putback { border: 1px solid rgba(54,66,78,.25); background: rgba(255,255,255,.7); border-radius: 999px; padding: 6px 14px; font: 13px var(--hand); color: #2f4f73; cursor: pointer; }
+  #zcap .putback:hover { background: #fff; }
+
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--muted); letter-spacing: .08em; display: none; }
 </style>
 <link rel="stylesheet" href="room.css">
@@ -177,6 +204,7 @@
 </head>
 <body>
 <a class="ibtn" id="home" href="./" title="回到桌子">←</a>
+<nav id="kinds"><a data-k="proj" href="album.html?kind=proj">项目</a><a data-k="note" href="album.html?kind=note">便签</a><a data-k="receipt" href="album.html?kind=receipt">小票</a></nav>
 
 <div id="wrap">
   <div class="board"></div>
@@ -201,18 +229,38 @@
   const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
   const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
   const PW = 400, PH = 540, K = 14, PER = 4;
+  // three albums in one binder: stamped projects, archived sticky notes, printed receipts
+  const KIND = ({ note: "note", receipt: "receipt" })[new URLSearchParams(location.search).get("kind")] || "proj";
+  const KINDS = { proj: { name: "项目卡册", n: "张 · 盖过章的项目都在这里", empty: "这些是示例。在黑板上做完一个项目并盖章，它就会收进这里。", run: "项目卡册　盖过章的都在这里" },
+    note: { name: "便签卡册", n: "张 · 归档的便签都在这里", empty: "这些是示例。便签右键「归档」，或拖到工具栏的卡册上，就会收进这里。", run: "便签卡册　归档的都在这里" },
+    receipt: { name: "小票卡册", n: "张 · 每天打印的小票都在这里", empty: "还没有小票。在小票页按 PRINT 打印一张，它就会收进这里。", run: "小票卡册　每天一张" } };
+  document.documentElement.dataset.hashira = KINDS[KIND].run;
+  window.setHashira && setHashira(KINDS[KIND].run);
+  document.title = KINDS[KIND].name + " · 纸桌";
+  document.querySelectorAll("#kinds a").forEach(a => a.classList.toggle("on", a.dataset.k === KIND));
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   /* ───────── data: the cards stamped on the desk ───────── */
   let cards = [];
-  try { const d = JSON.parse(localStorage.getItem("paper-desk.desk-tasks.v1")); if (d && Array.isArray(d.done)) cards = d.done.slice(); } catch {}
-  const demo = !cards.length;
-  if (demo) cards = demoCards();
+  const getJ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+  if (KIND === "proj") { const d = getJ("paper-desk.desk-tasks.v1"); if (d && Array.isArray(d.done)) cards = d.done.slice(); }
+  if (KIND === "note") cards = (getJ("paper-desk.notes-archive.v1") || []).map(n => Object.assign({}, n, { doneAt: n.archivedAt || n.createdAt }));
+  if (KIND === "receipt") cards = (getJ("paper-desk.receipts.v1") || []).map(r => Object.assign({}, r, { doneAt: r.at }));
+  const demo = !cards.length && KIND !== "receipt";
+  if (demo) cards = KIND === "note" ? demoNotes() : demoCards();
+  $("#empty").textContent = KINDS[KIND].empty;
+  if (!cards.length) $("#empty").style.display = "block";
   cards.sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0));
   $("#empty").style.display = demo ? "block" : "none";
 
+  function demoNotes() {
+    const day = 864e5, now = Date.now();
+    return [["work", "周五前交稿\n先搭结构，再填内容。"], ["life", "买猫粮\n灯泡 3000K · 胶带"], ["idea", "便签收进右边缘\n像本子侧面的索引贴。"],
+      ["study", "《深度工作》第 3 章\n记下三个可执行的点"], ["life", "周末去植物园\n下雨就改拼图"], ["work", "会议纪要 10/26\n结论：先做性能基线"]]
+      .map(([cat, text], i) => ({ id: "dn" + i, cat, text, createdAt: now - (8 - i) * day, doneAt: now - (6 - i) * day }));
+  }
   function demoCards() {
     const day = 864e5, now = Date.now();
     const c = (t) => ({ t, done: true });
@@ -243,13 +291,30 @@
     if (p === 0) {
       pg.classList.add("title-pg");
       const first = cards[0], last = cards[cards.length - 1];
-      pg.innerHTML = `<h1>卡册</h1><div class="sub"></div><div class="rule"></div><div class="n"></div><span class="seal" style="position:absolute;right:52px;bottom:64px;width:54px;height:54px"></span>`;
+      pg.innerHTML = `<h1>${KINDS[KIND].name}</h1><div class="sub"></div><div class="rule"></div><div class="n"></div><span class="seal" style="position:absolute;right:52px;bottom:64px;width:54px;height:54px"></span>`;
       $(".sub", pg).textContent = first ? `${fmt(first.doneAt)} — ${fmt(last.doneAt)}` : "";
-      $(".n", pg).textContent = `${cards.length} 张 · 盖过章的都在这里`;
+      $(".n", pg).textContent = `${cards.length} ${KINDS[KIND].n}`;
       return pg;
     }
     const grid = el("div", "grid");
     cards.slice((p - 1) * PER, p * PER).forEach((t, i) => {
+      if (KIND !== "proj") {
+        const mc = el("div", "mc " + (KIND === "note" ? "mn" : "mr"));
+        mc.dataset.i = (p - 1) * PER + i;
+        if (KIND === "note") {
+          mc.style.setProperty("--c", CAT_C[t.cat] || CAT_C.work);
+          mc.innerHTML = `<div class="tx"></div><div class="d"></div>`;
+          $(".tx", mc).textContent = t.text || "";
+        } else {
+          mc.innerHTML = `<img alt=""><div class="d"></div><div class="pc"></div>`;
+          $("img", mc).src = t.img;
+          $(".pc", mc).textContent = t.total ? `${t.done}/${t.total}` : "";
+        }
+        $(".d", mc).textContent = fmt(t.doneAt).slice(5);
+        mc.style.transform = `rotate(${(((i * 7 + p * 3) % 5) - 2) * .45}deg)`;
+        const slv = el("div", "slv"); slv.appendChild(mc); grid.appendChild(slv);
+        return;
+      }
       const mc = el("div", "mc");
       mc.dataset.i = (p - 1) * PER + i;
       mc.style.setProperty("--c", CAT_C[t.cat] || "transparent");
@@ -441,6 +506,42 @@
   function openCard(i) {
     const t = cards[i]; if (!t) return;
     const zc = $("#zc");
+    if (KIND !== "proj") {
+      const cap = $("#zcap");
+      zc.className = KIND === "note" ? "zn" : "zr";
+      if (KIND === "note") {
+        zc.innerHTML = `<div class="zf front"><div class="tx"></div></div>`;
+        zc.style.setProperty("--c", CAT_C[t.cat] || CAT_C.work);
+        $(".tx", zc).textContent = t.text || "";
+        $("h2", cap).textContent = (t.text || "便签").split("\n")[0].slice(0, 24);
+        $(".when", cap).textContent = (t.createdAt ? `写于 ${fmt(t.createdAt)}` : "") + ` · 归档 ${fmt(t.doneAt)}`;
+        $(".steps", cap).innerHTML = t.id && !String(t.id).startsWith("dn") ? `<button class="putback">放回软木板</button>` : "";
+        const pb = $(".putback", cap);
+        if (pb) pb.onclick = e => {
+          e.stopPropagation();
+          const arc = (getJ("paper-desk.notes-archive.v1") || []).filter(n => n.id !== t.id);
+          const live = getJ("paper-desk.memos.v1") || [];
+          live.push({ id: t.id, cat: t.cat, text: t.text, x: 220 + Math.random() * 200, y: 200 + Math.random() * 120, a: 0, z: 9999, createdAt: t.createdAt || Date.now() });
+          try { localStorage.setItem("paper-desk.notes-archive.v1", JSON.stringify(arc)); localStorage.setItem("paper-desk.memos.v1", JSON.stringify(live)); } catch {}
+          window.Sound && Sound.play("pickUp", { vol: .6 });
+          setTimeout(() => location.reload(), 250);
+        };
+      } else {
+        zc.innerHTML = `<div class="zf front"><img alt=""></div>`;
+        $("img", zc).src = t.img;
+        $("h2", cap).textContent = t.store || "今日小票";
+        $(".when", cap).textContent = fmt(t.doneAt);
+        $(".steps", cap).textContent = t.total ? `${t.done} / ${t.total} 件做完 · ${t.pct}%` : "";
+      }
+      $(".memo", cap).textContent = "";
+      $(".k", cap).textContent = KINDS[KIND].name;
+      $(".hint", cap).textContent = KIND === "receipt" ? "滚动看整张 · 点空白处放回插袋" : "点空白处放回插袋";
+      ry = 0; zc.style.setProperty("--ry", "0deg");
+      $("#zoom").classList.add("show"); document.body.classList.add("holding");
+      window.Sound && Sound.play("pickUp", { vol: .6 });
+      return;
+    }
+    zc.className = "";
     const conds = (t.conds || []).filter(c => c.t && c.t.trim());
     const ds = fmt(t.doneAt);
     zc.innerHTML = `
@@ -472,6 +573,7 @@
     conds.forEach(c => { const li = el("li"); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = c.t; ul.appendChild(li); });
     ry = 0; zc.style.setProperty("--ry", "0deg");
     const cap = $("#zcap");
+    $(".k", cap).textContent = KINDS[KIND].name;
     $("h2", cap).textContent = t.title || "（未命名）";
     $(".when", cap).textContent = (t.startedAt ? `${md(t.startedAt)} — ` : "") + ds;
     $(".steps", cap).textContent = conds.length ? `${conds.length} 步，都做完了` : "";
@@ -480,9 +582,10 @@
     document.body.classList.add("holding");
     window.Sound && Sound.play("pickUp", { vol: .6 });
   }
-  function flipZoom() { window.Sound && Sound.play("cardUnfold", { vol: .5 }); ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
+  function flipZoom() { if (KIND !== "proj") return; flipZoom2(); }
+  function flipZoom2() { window.Sound && Sound.play("cardUnfold", { vol: .5 }); ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
   function closeCard() { if ($("#zoom").classList.contains("show")) window.Sound && Sound.play("drop", { vol: .45 }); $("#zoom").classList.remove("show"); document.body.classList.remove("holding"); }
-  $("#zoom").addEventListener("click", e => { if (e.target.closest("#zc")) flipZoom(); else closeCard(); });
+  $("#zoom").addEventListener("click", e => { if (e.target.closest("#zc")) flipZoom(); else if (!e.target.closest("#zcap")) closeCard(); });
 
   /* ───────── fit to the window ───────── */
   function fit() {

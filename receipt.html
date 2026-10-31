@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-hashira="今日小票">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -185,6 +185,7 @@
 </head>
 <body>
 <a class="back" href="./" title="回到桌子">←</a>
+<a class="back" href="album.html?kind=receipt" title="小票卡册" style="left:auto;right:24px;font-size:13px;letter-spacing:.1em;width:auto;padding:0 14px;border-radius:999px">卡册</a>
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
@@ -1214,8 +1215,28 @@
     return url;
   }
 
+  // keep a copy in the receipt album: one per day, the latest print wins
+  function keepReceipt() {
+    try {
+      // just the paper: from under the printer's lip to its torn edge
+      const src = canvas, sx = (W - PAPER_W) / 2 - 16, sy = PAPER_TOP + 50, sw = PAPER_W + 32, sh = Math.min(src.height - sy, rec.height - 40);
+      const k = 380 / sw, c = document.createElement('canvas');
+      c.width = 380; c.height = Math.round(sh * k);
+      const g = c.getContext('2d'); g.fillStyle = '#e3e8eb'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      const m = receiptModel(state), RK = 'paper-desk.receipts.v1';
+      let list = []; try { list = JSON.parse(localStorage.getItem(RK)) || []; } catch (e) { /* ignore */ }
+      list = list.filter(r => r.date !== state.date);
+      list.push({ date: state.date, at: Date.now(), img: c.toDataURL('image/jpeg', .82), store: state.store, done: m.done, total: m.total, pct: m.pct });
+      while (list.length) { try { localStorage.setItem(RK, JSON.stringify(list)); break; } catch (e) { list.shift(); } }   // full: drop the oldest
+      return true;
+    } catch (e) { return false; }
+  }
   function openResult() {
     const url = exportDataURL();
+    exporting = true; { const was = print.printed; print.printed = true; drawFrame(); print.printed = was; }
+    if (keepReceipt()) toast('已收进小票卡册');
+    exporting = false; drawFrame();
     shot.src = url;
     const m = receiptModel(state);
     save.download = `schedule-receipt-${state.date}-${m.pct}.png`;

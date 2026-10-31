@@ -246,7 +246,7 @@
   });
   const pd = get("paper-desk.desk-tasks.v1") || {};
   (pd.done || []).forEach(t => { if (t.doneAt) D(dayKey(t.doneAt)).projs.push({ t, kind: "done" }); });
-  (get("paper-desk.memos.v1") || []).forEach(n => { if (n && n.text && n.text.trim()) D(dayKey(n.createdAt || Date.now())).notes.push(n); });
+  (get("paper-desk.memos.v1") || []).concat(get("paper-desk.notes-archive.v1") || []).forEach(n => { if (n && n.text && n.text.trim()) D(dayKey(n.createdAt || Date.now())).notes.push(n); });
   Object.keys(memos).forEach(k => { if ((memos[k] || "").trim()) D(k); });
   D(TODAY);
   const hasContent = k => { const d = days.get(k); return !!d && (d.ticks.length || d.projs.length || d.notes.length || (memos[k] || "").trim()); };
@@ -332,7 +332,7 @@
     });
     push(flow("项目", b, projs), false);
     // 便签: six to a page, taped in
-    const notes = (get("paper-desk.memos.v1") || []).filter(n => n && n.text && n.text.trim() && inMonth(n.createdAt || Date.now(), b));
+    const notes = (get("paper-desk.memos.v1") || []).concat(get("paper-desk.notes-archive.v1") || []).filter(n => n && n.text && n.text.trim() && inMonth(n.createdAt || Date.now(), b));
     for (let i = 0; i < notes.length; i += 6) {
       const tilt = [-2.5, 1.8, -1, 2.2, -1.6, 1];
       pages.push({ kind: "sec", keys: [], html: `<div class="sec">${head("便签", b)}<div class="notes">${notes.slice(i, i + 6).map((n, j) =>
