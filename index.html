@@ -79,7 +79,7 @@
       radial-gradient(30% 40% at 75% 65%, rgba(255,255,255,.04), transparent 70%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
       #2f3f35; }
-  .lanes { position: absolute; inset: 0 0 26px; display: grid; grid-template-columns: repeat(3, 1fr); }
+  .lanes { position: absolute; inset: 0 0 26px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lane { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 18px 18px 0; }
   .lane + .lane::before { content: ""; position: absolute; left: 0; top: 22px; bottom: 30px; width: 2px; background: rgba(240,236,222,.16); border-radius: 2px; filter: blur(.4px); }
   .lane h3 { margin: 0 0 14px; font: 400 24px var(--hand); color: rgba(244,240,228,.88); letter-spacing: .2em; text-shadow: 0 0 1px rgba(255,255,255,.4); display: flex; align-items: baseline; gap: 10px; }
@@ -503,6 +503,21 @@
   #drawer:hover:not(.peeking) .tab[data-label]::before { opacity: 1; }
   /* notes on their way to or from the drawer ride above everything, in board units */
   #fly { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 49000; }
+  /* steps on the board: the next one under the title; open the card to see and tick them all */
+  .mini .mnext { margin-top: 8px; font-size: 12.5px; color: #4f5d69; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .msteps { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px dashed rgba(54, 66, 78, .18); }
+  .mini .mstep { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font-size: 13px; line-height: 1.45; color: var(--ink); cursor: pointer; }
+  .mini .mstep.sub { padding-left: 20px; font-size: 12.5px; }
+  .mini .mstep .mb { flex: none; width: 14px; height: 14px; margin-top: 2px; border: 1.5px solid #c2cbd2; border-radius: 3px; position: relative; transition: .15s; }
+  .mini .mstep:hover .mb { border-color: var(--accent); }
+  .mini .mstep.done .mb { background: var(--accent); border-color: var(--accent); }
+  .mini .mstep.done .mb::after { content: ""; position: absolute; left: 3.5px; top: .5px; width: 3.5px; height: 7px; border: solid #fff; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .mini .mstep.done span { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79, 122, 90, .5); }
+  .mini .mtog { flex: none; width: 22px; height: 22px; margin: -4px -6px -4px 0; border: 0; border-radius: 6px; background: none; cursor: pointer; position: relative; }
+  .mini .mtog:hover { background: rgba(54, 66, 78, .07); }
+  .mini .mtog::before { content: ""; position: absolute; left: 8px; top: 6px; width: 5px; height: 5px; border: solid #4f5d69; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); transition: transform .2s; }
+  .mini.open .mtog::before { top: 9px; transform: rotate(-135deg); }
+  .mini.open { transform: none; }
 </style>
 </head>
 <body>
@@ -1040,17 +1055,58 @@
   function miniCard(p) {
     const el = document.createElement("div");
     el.className = "mini"; el._p = p;
-    el.innerHTML = `<b></b><p></p><div class="mrow"><div class="bar"><i></i></div><span class="cnt"></span><span class="ready">可盖章</span></div>`;
+    el.innerHTML = `<b></b><p></p><div class="mnext"></div><ul class="msteps"></ul><div class="mrow"><div class="bar"><i></i></div><span class="cnt"></span><span class="ready">可盖章</span><button class="mtog" title="展开步骤"></button></div>`;
     const f = filled(p), k = f.filter(c => c.done).length;
     $("b", el).textContent = p.title || "未命名";
     if (p.goal) $("p", el).textContent = p.goal; else $("p", el).remove();
     if (f.length) { $(".bar i", el).style.width = (k / f.length * 100) + "%"; $(".cnt", el).textContent = `${k}/${f.length}`; }
     else $(".mrow", el).style.display = "none";
+    // the steps: folded, just the next one; opened, all of them, tickable right here on the board
+    const steps = p.conds.filter(c => c.t.trim());
+    const open = openMini === p.id && steps.length > 0;
+    el.classList.toggle("open", open);
+    const next = steps.find(c => !c.done);
+    const mn = $(".mnext", el);
+    if (open || !steps.length) mn.remove();
+    else mn.textContent = next ? "→ " + next.t : "都勾完了";
+    const ul = $(".msteps", el);
+    if (open) p.conds.forEach((c, i) => {
+      if (!c.t.trim()) return;
+      const li = document.createElement("li");
+      li.className = "mstep" + (c.done ? " done" : "") + (c.sub ? " sub" : "");
+      li.dataset.i = i;
+      li.innerHTML = '<i class="mb"></i><span></span>';
+      li.lastChild.textContent = c.t;
+      ul.appendChild(li);
+    });
+    else ul.remove();
     el.classList.toggle("isready", isReady(p));
     el.style.setProperty("--r", tiltOf(p.id) + "deg");
     el.style.setProperty("--mg", MAG[p.col]);
     return el;
   }
+  let openMini = null;
+  // tick a step on the board; a main step with sub-steps ticks them all, a sub-step settles its parent
+  function tickStep(p, i) {
+    const c = p.conds[i]; if (!c) return;
+    const kids = [];
+    if (!c.sub) for (let j = i + 1; j < p.conds.length && p.conds[j].sub; j++) kids.push(p.conds[j]);
+    const to = !c.done;
+    [c, ...kids].forEach(x => { x.done = to; x.at = to ? Date.now() : 0; });
+    if (c.sub) {
+      let j = i; while (j > 0 && p.conds[j].sub) j--;
+      const par = p.conds[j], ks = [];
+      for (let q = j + 1; q < p.conds.length && p.conds[q].sub; q++) ks.push(p.conds[q]);
+      if (!par.sub && ks.length) { par.done = ks.every(x => x.done); par.at = par.done ? Date.now() : 0; }
+    }
+    saveP(); renderBoard();
+  }
+  $("#chalk").addEventListener("click", e => {
+    const m = e.target.closest(".mini"); if (!m) return;
+    if (e.target.closest(".mtog")) { openMini = openMini === m._p.id ? null : m._p.id; renderBoard(); return; }
+    const st = e.target.closest(".mstep");
+    if (st) tickStep(m._p, +st.dataset.i);
+  });
   function renderBoard() {
     COLS.forEach(col => {
       const lane = $(`.lane[data-col=${col}]`), box = $(".cards", lane);
@@ -1072,7 +1128,7 @@
   // drag a card between the columns; a plain click opens it
   $("#chalk").addEventListener("pointerdown", e => {
     const m = e.target.closest(".mini");
-    if (!m || e.button !== 0) return;
+    if (!m || e.button !== 0 || e.target.closest(".mtog, .mstep")) return;
     e.preventDefault();
     const p = m._p, sx = e.clientX, sy = e.clientY, r = m.getBoundingClientRect();
     let ghost = null, slot = null, target = null, lx = sx;
