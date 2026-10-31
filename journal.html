@@ -119,7 +119,7 @@
     background: repeating-linear-gradient(45deg, rgba(79,122,90,.06) 0 2px, transparent 2px 14px), repeating-linear-gradient(-45deg, rgba(79,122,90,.06) 0 2px, transparent 2px 14px); }
 
   /* the month at a glance */
-  .cal { position: absolute; inset: 44px 34px 50px; display: flex; flex-direction: column; }
+  .cal { position: absolute; inset: 40px 32px 46px; display: flex; flex-direction: column; }
   .cal h2 { margin: 0 0 22px; font: 700 28px var(--serif); letter-spacing: .1em; }
   .cal h2 small { font: 13px var(--mono); color: var(--faint); letter-spacing: .1em; margin-left: 10px; font-weight: 400; }
   .cal .wd, .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
@@ -135,29 +135,58 @@
   .cal .marks i.m { width: 9px; height: 2px; border-radius: 1px; background: var(--muted); }
   .cal .marks i.n { border-radius: 1px; background: #e7cf78; }
 
-  /* a day */
-  .day { position: absolute; inset: 34px 32px 44px; display: flex; flex-direction: column; }
-  .dh { display: flex; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 12px; flex: none; }
-  .dh b { font: 700 34px var(--serif); }
-  .dh span { font-size: 13px; color: var(--muted); letter-spacing: .12em; }
-  .ticks { list-style: none; margin: 0 0 14px; padding: 0 0 12px; flex: none; border-bottom: 1px dashed rgba(96, 88, 72, .22); }
-  .ticks li { display: flex; gap: 10px; align-items: center; font-size: 14px; line-height: 1.5; padding: 3px 0; }
-  .ticks li.sub { padding-left: 24px; font-size: 13px; }
-  .ticks li i { flex: none; width: 14px; height: 14px; border-radius: 3px; border: 1.3px solid #cfc8b8; position: relative; }
+  /* sections that run on from page to page */
+  .sec { position: absolute; inset: 34px 32px 46px; display: flex; flex-direction: column; }
+  .sec h3 { flex: none; display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+    font: 700 21px var(--serif); letter-spacing: .14em; }
+  .sec h3 small { font: 11px var(--mono); color: var(--faint); letter-spacing: .12em; font-weight: 400; }
+  .flow { flex: 1; min-height: 0; overflow: hidden; }
+  .ent { margin-bottom: 16px; }
+  .ed { font: 11px var(--mono); color: var(--faint); letter-spacing: .08em; margin-bottom: 5px; }
+  .et { font: 14.5px/1.8 var(--hand); color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+  .ent.today .mumble { height: 135px; min-height: 0; flex: none; }
+  .ticks { list-style: none; margin: 0; padding: 0; }
+  .ticks li { display: flex; gap: 10px; align-items: center; font-size: 13.5px; line-height: 1.5; padding: 2px 0; }
+  .ticks li.sub { padding-left: 24px; font-size: 12.5px; }
+  .ticks li i { flex: none; width: 13px; height: 13px; border-radius: 3px; border: 1.3px solid #cfc8b8; position: relative; }
   .ticks li.done i { background: var(--accent); border-color: var(--accent); }
-  .ticks li.done i::after { content: ""; position: absolute; left: 3.5px; top: .5px; width: 3.5px; height: 7.5px; border: solid var(--paper); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
-  .ticks li.done span { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.45); }
-  .ticks li.proj span { font: 700 14.5px var(--serif); color: var(--ink); text-decoration: none; flex: 1; }
-  .ticks .mst { flex: none; margin-left: auto; width: 22px; height: 22px; display: grid; place-items: center; transform: rotate(-10deg);
-    font: 700 11px var(--serif); color: var(--stamp); border: 1.5px solid var(--stamp); border-radius: 50%; opacity: .78; mix-blend-mode: multiply; }
-  .ticks li.more { color: var(--faint); font: 12px var(--mono); padding-left: 24px; }
-  .stk { position: absolute; inset: 0; pointer-events: none; }
-  .stk .sn { position: absolute; width: 104px; height: 104px; padding: 16px 10px 8px; font: 12px/1.5 var(--hand); color: rgba(46,40,30,.86); overflow: hidden; white-space: pre-wrap; word-break: break-word;
-    background: var(--c); box-shadow: 0 3px 5px rgba(70,52,28,.22); }
-  .stk .sn::first-line { font-weight: 700; }
-  /* a strip of washi tape across the top */
-  .stk .sn::before { content: ""; position: absolute; left: 50%; top: -7px; width: 56px; height: 16px; margin-left: -28px; transform: rotate(-3deg);
-    background: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 4px, rgba(255,255,255,.15) 4px 8px), rgba(214, 196, 160, .55); box-shadow: 0 0 0 .5px rgba(0,0,0,.06); }
+  .ticks li.done i::after { content: ""; position: absolute; left: 3px; top: .5px; width: 3.5px; height: 7px; border: solid var(--paper); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .ticks li.done span { color: var(--muted); }
+  .pj { position: relative; padding: 12px 48px 12px 14px; margin-bottom: 12px; background: #fffdf7; border-radius: 6px; display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 2px 4px rgba(70,52,28,.10); }
+  .pj b { font: 700 15px var(--serif); }
+  .pj .g { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .pj .pd { font: 10.5px var(--mono); color: var(--faint); letter-spacing: .06em; }
+  .pj .mst { position: absolute; right: 12px; top: 50%; margin-top: -15px; width: 30px; height: 30px; display: grid; place-items: center; transform: rotate(-10deg);
+    font: 700 13px var(--serif); font-style: normal; color: var(--stamp); border: 1.6px solid var(--stamp); border-radius: 50%; opacity: .8; mix-blend-mode: multiply; }
+  .notes { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 128px; gap: 24px 22px; padding: 8px 6px 0; }
+  .nt { position: relative; padding: 16px 11px 8px; font: 12px/1.5 var(--hand); color: rgba(46,40,30,.86); overflow: hidden; white-space: pre-wrap; word-break: break-word;
+    background: var(--c); box-shadow: 0 3px 5px rgba(70,52,28,.2); }
+  .nt::first-line { font-weight: 700; }
+  .nt::before { content: ""; position: absolute; left: 50%; top: -7px; width: 56px; height: 16px; margin-left: -28px; transform: rotate(-3deg);
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 4px, rgba(255,255,255,.15) 4px 8px), rgba(214, 196, 160, .55); }
+  /* the month at a glance */
+  .glb { flex: 1; min-height: 0; display: flex; gap: 14px; }
+  .trk { flex: none; width: 150px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tr { display: flex; align-items: center; gap: 3px; height: 12px; font: 9.5px var(--mono); color: var(--faint); }
+  .tr span { width: 16px; text-align: right; margin-right: 5px; }
+  .tr i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .tr i.p { border-radius: 1px; background: var(--stamp); }
+  .tr i.n { border-radius: 1px; background: #e2c86e; }
+  .tr i.m { width: 10px; height: 2px; border-radius: 1px; background: var(--muted); }
+  .tr i.o { background: none; border: 1px solid #ddd5c4; }
+  .tr.later { opacity: .35; }
+  .dn { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .dc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -62%); text-align: center; }
+  .dc small { display: block; font: 10px var(--mono); color: var(--faint); letter-spacing: .14em; }
+  .dc b { font: 700 46px/1 var(--serif); color: var(--ink); }
+  .dl { margin-top: 10px; font: 12px var(--mono); color: var(--muted); letter-spacing: .14em; }
+  /* the summary under the calendar */
+  .cal .sum { flex: none; display: flex; align-items: center; gap: 18px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+  .cal .sum b { font: 700 18px var(--serif); color: var(--ink); margin-right: 3px; }
+  .cal .sum .mb { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 4px; background: #dfe8dc; color: var(--accent); line-height: 1; }
+  .cal .sum .mb small { font: 8.5px var(--mono); }
+  .cal .sum .mb b { color: var(--accent); font-size: 17px; margin: 0; }
   .mumble { flex: 1; min-height: 120px; width: 100%; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
     font: 15px/27px var(--hand); color: var(--ink); background: repeating-linear-gradient(transparent 0 26px, rgba(96, 88, 72, .2) 26px 27px); background-attachment: local; }
 
@@ -252,15 +281,67 @@
     }
   }
 
-  /* ───────── the book's pages ───────── */
-  let B = null, pages = [], cur = 0, nLeaves = 0;
-  const md = k => { const [, m, d] = k.split("-").map(Number); return { m, d }; };
+  /* ───────── the book's pages ─────────
+     a calendar, the month at a glance, then one section per kind (每日 · 项目 · 便签 · 碎碎念), each running on
+     from page to page like a notebook. Pages are kept as HTML so the turner can copy them as often as it likes. */
+  let B = null, pages = [], cur = 0, nLeaves = 0, jump = {};
+  const md2 = k => { const [, m, d] = k.split("-").map(Number); return `${m}/${d}`; };
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const inMonth = (ts, b) => { const d = new Date(ts); return d.getFullYear() === b.y && d.getMonth() + 1 === b.m; };
+  const head = (t, b) => `<h3>${t}<small>${b.m} 月</small></h3>`;
+
+  // lay blocks out page by page: a block that doesn't fit starts the next page
+  const meas = el("div", "pg");
+  meas.style.cssText = `position:absolute;left:-9999px;top:0;width:${PW}px;height:${PH}px;visibility:hidden`;
+  document.body.appendChild(meas);
+  function flow(title, b, blocks) {
+    const out = []; let cur = [];
+    const fresh = () => { meas.innerHTML = `<div class="sec">${head(title, b)}<div class="flow"></div></div>`; return meas.querySelector(".flow"); };
+    let box = fresh();
+    blocks.forEach(bl => {
+      box.insertAdjacentHTML("beforeend", bl.html);
+      if (box.scrollHeight > box.clientHeight + 1 && cur.length) {
+        box.lastElementChild.remove(); out.push(cur); cur = [];
+        box = fresh(); box.insertAdjacentHTML("beforeend", bl.html);
+      }
+      cur.push(bl);
+    });
+    if (cur.length) out.push(cur);
+    return out.map(bs => ({ kind: "sec", html: `<div class="sec">${head(title, b)}<div class="flow">${bs.map(x => x.html).join("")}</div></div>`, keys: bs.map(x => x.k).filter(Boolean) }));
+  }
+
   function buildPages(b) {
-    pages = [{ kind: "cover" }, { kind: "end" }, { kind: "cal" }];
-    b.keys.forEach(k => pages.push({ kind: "day", k }));
+    pages = [{ kind: "cover" }, { kind: "end" }, { kind: "cal" }, { kind: "glance" }];
+    jump = {};
+    const push = (list, strong) => list.forEach(pg => { const at = pages.length; pg.keys.forEach(k => { if (strong || jump[k] == null) jump[k] = at; }); pages.push(pg); });
+    const dk = b.keys;
+    // 每日: the ticks, day after day
+    const tickRows = t => `<li class="${t.done ? "done" : ""}${t.sub ? " sub" : ""}"><i></i><span>${esc(t.text)}</span></li>`;
+    const daily = dk.map(k => ({ k, d: days.get(k) })).filter(x => x.d && x.d.ticks.length).map(({ k, d }) => ({
+      k, html: `<div class="ent"><div class="ed">${md2(k)}${k === TODAY ? " · 今天" : ""}</div><ul class="ticks">${[...d.ticks.filter(t => t.done), ...d.ticks.filter(t => !t.done)].map(tickRows).join("")}</ul></div>` }));
+    push(flow("每日", b, daily), false);
+    // 项目: the cards stamped this month
+    const projs = (pd.done || []).filter(t => t.doneAt && inMonth(t.doneAt, b)).sort((x, y) => x.doneAt - y.doneAt).map(t => {
+      const n = (t.conds || []).filter(c => c.t && c.t.trim() && !c.sub).length;
+      return { k: dayKey(t.doneAt), html: `<div class="pj"><b>${esc(t.title || "项目")}</b>${t.goal ? `<span class="g">${esc(t.goal)}</span>` : ""}<span class="pd">${t.startedAt ? md2(dayKey(t.startedAt)) + " — " : ""}${md2(dayKey(t.doneAt))}${n ? ` · ${n}/${n}` : ""}</span><i class="mst">成</i></div>` };
+    });
+    push(flow("项目", b, projs), false);
+    // 便签: six to a page, taped in
+    const notes = (get("paper-desk.memos.v1") || []).filter(n => n && n.text && n.text.trim() && inMonth(n.createdAt || Date.now(), b));
+    for (let i = 0; i < notes.length; i += 6) {
+      const tilt = [-2.5, 1.8, -1, 2.2, -1.6, 1];
+      pages.push({ kind: "sec", keys: [], html: `<div class="sec">${head("便签", b)}<div class="notes">${notes.slice(i, i + 6).map((n, j) =>
+        `<div class="nt" style="--c:${CAT_C[n.cat] || CAT_C.work};transform:rotate(${tilt[j]}deg)">${esc(n.text)}</div>`).join("")}</div></div>` });
+    }
+    // 碎碎念: everything written, running on; today's is at the end and can be written in
+    const isNow = b.now;
+    const mem = dk.filter(k => (memos[k] || "").trim() && !(isNow && k === TODAY)).map(k => ({ k, html: `<div class="ent"><div class="ed">${md2(k)}</div><div class="et">${esc(memos[k])}</div></div>` }));
+    if (isNow) mem.push({ k: TODAY, html: `<div class="ent today"><div class="ed">${md2(TODAY)} · 今天</div><textarea class="mumble" data-k="${TODAY}" spellcheck="false"></textarea></div>` });
+    push(flow("碎碎念", b, mem), true);
     if (pages.length % 2) pages.push({ kind: "end" });
     nLeaves = pages.length / 2;
   }
+
   function page(i) {
     const P = pages[i], pg = el("div", "pg " + (i % 2 ? "odd" : "even"));
     if (!P) return null;
@@ -270,22 +351,26 @@
       return pg;
     }
     if (P.kind === "end") { pg.classList.add("end"); return pg; }
+    const month = [...days.keys()].filter(k => k.startsWith(`${B.y}-${B.m}-`));
     if (P.kind === "cal") {
       const first = new Date(B.y, B.m - 1, 1), n = new Date(B.y, B.m, 0).getDate();
       const cal = el("div", "cal");
-      cal.innerHTML = `<h2>${CN[B.m - 1]}月<small>${B.y}</small></h2><div class="wd">${[..."一二三四五六日"].map(w => `<span>${w}</span>`).join("")}</div><div class="grid"></div>`;
+      const nd = month.filter(hasContent).length, nt = month.reduce((a, k) => a + days.get(k).ticks.filter(t => t.done).length, 0);
+      const np = month.reduce((a, k) => a + days.get(k).projs.length, 0), nn = month.reduce((a, k) => a + days.get(k).notes.length, 0);
+      cal.innerHTML = `<h2>${CN[B.m - 1]}月<small>${B.y}</small></h2><div class="wd">${[..."一二三四五六日"].map(w => `<span>${w}</span>`).join("")}</div><div class="grid"></div>
+        <div class="sum"><span class="mb"><small>${B.y}</small><b>${String(B.m).padStart(2, "0")}</b></span><span><b>${nd}</b>天</span><span><b>${nt}</b>件</span><span><b>${np}</b>项目</span><span><b>${nn}</b>便签</span></div>`;
       const grid = $(".grid", cal);
       for (let i = 0; i < (first.getDay() + 6) % 7; i++) grid.appendChild(el("span"));
       for (let d = 1; d <= n; d++) {
         const k = `${B.y}-${B.m}-${d}`, c = el("div", "d"), x = days.get(k);
         c.textContent = d;
         if (k === TODAY) c.classList.add("today");
-        if (B.keys.includes(k)) {
-          c.classList.add("has"); c.dataset.goto = 3 + B.keys.indexOf(k);
+        if (hasContent(k)) {
+          c.classList.add("has"); if (jump[k] != null) c.dataset.goto = jump[k];
           const m = el("div", "marks");
-          if (x && x.ticks.some(t => t.done)) m.appendChild(el("i"));
-          if (x && x.projs.some(p => p.kind === "done")) m.appendChild(el("i", "p"));
-          if (x && x.notes.length) m.appendChild(el("i", "n"));
+          if (x.ticks.some(t => t.done)) m.appendChild(el("i"));
+          if (x.projs.length) m.appendChild(el("i", "p"));
+          if (x.notes.length) m.appendChild(el("i", "n"));
           if ((memos[k] || "").trim()) m.appendChild(el("i", "m"));
           c.appendChild(m);
         }
@@ -294,41 +379,36 @@
       pg.appendChild(cal);
       return pg;
     }
-    // a day
-    const k = P.k, x = days.get(k) || { ticks: [], projs: [], notes: [] }, { m, d } = md(k);
-    const wd = WD[new Date(B.y, m - 1, d).getDay()];
-    const day = el("div", "day");
-    day.innerHTML = `<div class="dh"><b>${d}</b><span>${CN[m - 1]}月 · 周${wd}${k === TODAY ? " · 今天" : ""}</span></div>`;
-    // one list of what got done: stamped projects first (bold, a small red stamp at the end of the line), then the ticks
-    const rows = [...x.projs.map(p => ({ proj: p.t })), ...x.ticks.filter(t => t.done), ...x.ticks.filter(t => !t.done)];
-    if (rows.length) {
-      const ul = el("ul", "ticks");
-      rows.slice(0, 9).forEach(r => {
-        if (r.proj) {
-          const li = el("li", "proj done"); li.innerHTML = `<i></i><span></span><b class="mst">成</b>`;
-          li.querySelector("span").textContent = r.proj.title || "项目"; ul.appendChild(li); return;
+    if (P.kind === "glance") {
+      // a row of dots per day, and how much of the month got written down
+      const n = new Date(B.y, B.m, 0).getDate();
+      const upto = B.now ? new Date().getDate() : n;
+      let rows = "", rec = 0;
+      for (let d = 1; d <= n; d++) {
+        const k = `${B.y}-${B.m}-${d}`, x = days.get(k), has = hasContent(k);
+        if (has && d <= upto) rec++;
+        let dots = "";
+        if (x) {
+          const t = x.ticks.filter(t => t.done).length;
+          dots += "<i></i>".repeat(Math.min(8, t));
+          dots += '<i class="p"></i>'.repeat(Math.min(3, x.projs.length));
+          if (x.notes.length) dots += '<i class="n"></i>';
+          if ((memos[k] || "").trim()) dots += '<i class="m"></i>';
         }
-        const li = el("li", (r.done ? "done" : "") + (r.sub ? " sub" : "")); li.innerHTML = "<i></i><span></span>";
-        li.querySelector("span").textContent = r.text; ul.appendChild(li);
-      });
-      if (rows.length > 9) ul.insertAdjacentHTML("beforeend", `<li class="more">+${rows.length - 9}</li>`);
-      day.appendChild(ul);
+        rows += `<div class="tr${d > upto ? " later" : ""}"><span>${d}</span>${dots || (d <= upto ? '<i class="o"></i>' : "")}</div>`;
+      }
+      const pct = upto ? rec / upto : 0, R = 62, C = 2 * Math.PI * R;
+      const gl = el("div", "sec glance");
+      gl.innerHTML = `${head("一览", B)}<div class="glb"><div class="trk">${rows}</div><div class="dn">
+        <svg viewBox="0 0 160 160" width="168" height="168"><circle cx="80" cy="80" r="${R}" fill="none" stroke="#ece5d6" stroke-width="16"/>
+        <circle cx="80" cy="80" r="${R}" fill="none" stroke="var(--accent)" stroke-width="16" stroke-linecap="round" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 80 80)"/></svg>
+        <div class="dc"><small>month</small><b>${B.m}</b></div><div class="dl">${rec} / ${upto}</div></div></div>`;
+      pg.appendChild(gl);
+      return pg;
     }
-    // the sticky notes are stuck onto the page with tape, overlapping the lines at the bottom right
-    if (x.notes.length) {
-      const box = el("div", "stk");
-      const spots = [{ r: 6, b: 18, a: 4 }, { r: 104, b: 6, a: -5 }, { r: 50, b: 108, a: -2 }];
-      x.notes.slice(0, 3).forEach((n, i) => {
-        const sn = el("div", "sn"); sn.textContent = n.text; sn.style.setProperty("--c", CAT_C[n.cat] || CAT_C.work);
-        sn.style.right = spots[i].r + "px"; sn.style.bottom = spots[i].b + "px"; sn.style.transform = `rotate(${spots[i].a}deg)`;
-        box.appendChild(sn);
-      });
-      day.appendChild(box);
-    }
-    const ta = el("textarea", "mumble"); ta.dataset.k = k; ta.value = memos[k] || ""; ta.spellcheck = false;
-    day.appendChild(ta);
-    pg.appendChild(day);
-    const no = el("div", "pno"); no.textContent = String(i - 2).padStart(2, "0"); pg.appendChild(no);
+    pg.innerHTML = P.html;
+    pg.querySelectorAll("textarea.mumble").forEach(ta => { ta.value = memos[ta.dataset.k] || ""; });
+    const no = el("div", "pno"); no.textContent = String(i - 1).padStart(2, "0"); pg.appendChild(no);
     return pg;
   }
   // ruled paper: click a line below the text and the caret goes to that line
@@ -568,7 +648,7 @@
     await flight(b, sr, cr, false);
     reader.style.visibility = ""; fly.classList.remove("on"); fly.replaceChildren();
     $("#back").title = "放回书架";
-    setTimeout(async () => { await turn(1, 1000); if (b.now) gotoPage(3 + b.keys.indexOf(TODAY)); }, 160);
+    setTimeout(() => turn(1, 1000), 160);
   }
   async function closeBook() {
     if (!B || busy) return;
