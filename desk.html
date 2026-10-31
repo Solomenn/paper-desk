@@ -312,7 +312,8 @@
   .tedit { background: rgba(181, 82, 59, .06); border-radius: 3px; user-select: text; -webkit-user-select: text; cursor: text; }
 
   /* done pile, bottom right */
-  #done { position: fixed; right: 56px; bottom: 34px; width: 118px; height: 150px; z-index: 2; }
+  #done { position: fixed; right: 56px; bottom: 34px; width: 118px; height: 150px; z-index: 2; cursor: pointer; transition: transform .25s var(--ease); }
+  #done:hover { transform: translateY(-4px) rotate(-1deg); }
   #done .mini { position: absolute; inset: 0; background: var(--paper); border-radius: 6px; padding: 12px 11px;
     box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 4px 10px rgba(70,52,28,.12);
     font-family: var(--serif); font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--ink); overflow: hidden; }
@@ -356,7 +357,7 @@
     </div>
   </div>
 </div>
-<div id="done" title="已完成"></div>
+<div id="done" title="已完成 · 打开卡册"></div>
 <div id="desk"></div>
 <div id="drawer" title="甩到这里收起"></div>
 
@@ -749,6 +750,7 @@ window.TaskDesk = (() => {
     timerFrame();
     requestAnimationFrame(frame);
   }
+  $("#done").addEventListener("click", () => { location.href = "album.html"; });
   resetTimer(); render(); flipFrame(0);
   requestAnimationFrame(frame);
 

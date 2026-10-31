@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纸桌 · 卡册</title>
+<style>
+  :root {
+    --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --paper2: #f3eee2; --desk: #ece5d6; --accent: #b5523b;
+    --line: rgba(96, 88, 72, .16);
+    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
+    --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+    --pw: 400px; --ph: 540px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--sans); color: var(--ink);
+    background:
+      radial-gradient(120% 90% at 12% 0%, rgba(255, 250, 236, .95), rgba(255, 250, 236, 0) 60%),
+      radial-gradient(90% 70% at 100% 100%, rgba(120, 96, 60, .10), rgba(120, 96, 60, 0) 70%),
+      var(--desk);
+    user-select: none; -webkit-user-select: none;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .55; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #wrap { position: fixed; left: 50%; top: 50%; width: calc(var(--pw) * 2); height: var(--ph);
+    transform: translate(-50%, -52%) scale(var(--k, 1)); touch-action: none; }
+  #book { position: relative; width: 100%; height: 100%; perspective: calc(var(--pw) * 6.5); }
+
+  /* the page stacks under each side, and the board they sit on */
+  .board { position: absolute; inset: -14px -16px; border-radius: 6px;
+    background: linear-gradient(180deg, #d8ccb4, #cbbda1);
+    box-shadow: 0 40px 60px -30px rgba(60, 46, 26, .5), 0 3px 8px rgba(60, 46, 26, .18); }
+  .block { position: absolute; top: 0; height: 100%; width: var(--pw); background: var(--paper2); pointer-events: none; }
+  .block.l { right: 50%; border-radius: 2px 0 0 2px; box-shadow: -3px 0 0 #ebe4d4, -5px 1px 0 #e2d9c6, 0 2px 5px rgba(50,42,34,.12); }
+  .block.r { left: 50%; border-radius: 0 2px 2px 0; box-shadow: 3px 0 0 #ebe4d4, 5px 1px 0 #e2d9c6, 0 2px 5px rgba(50,42,34,.12); }
+
+  .side { position: absolute; top: 0; width: var(--pw); height: var(--ph); overflow: hidden; background: var(--paper); }
+  .side.l { left: 0; }
+  .side.r { left: var(--pw); }
+  .side::after { content: ""; position: absolute; top: 0; bottom: 0; width: 9%; pointer-events: none; z-index: 5; }
+  .side.l::after { right: 0; background: linear-gradient(270deg, rgba(40,32,20,.14), rgba(40,32,20,.04) 30%, transparent); }
+  .side.r::after { left: 0; background: linear-gradient(90deg, rgba(40,32,20,.14), rgba(40,32,20,.04) 30%, transparent); }
+
+  /* the turning leaf: a chain of thin strips, each bent a little further (CSS strip turner after paper-flipbook, MIT) */
+  .turner, .strip { position: absolute; top: 0; height: var(--ph); transform-origin: 0 50%; transform-style: preserve-3d; }
+  .turner { left: var(--pw); z-index: 10; }
+  .sface { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper); }
+  .sface.back { transform: rotateY(180deg); }
+  .clip { position: absolute; top: 0; width: var(--pw); height: var(--ph); }
+  .shade { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  #cast { position: absolute; top: 0; height: 100%; pointer-events: none; z-index: 9; display: none; }
+
+  /* ───────── page content ───────── */
+  .pg { position: absolute; inset: 0; background: var(--paper); }
+  .pg::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .pg.end { background: #e9dfca; }
+  .pg.end::after { content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, rgba(181,82,59,.05) 0 2px, transparent 2px 14px),
+                repeating-linear-gradient(-45deg, rgba(181,82,59,.05) 0 2px, transparent 2px 14px); }
+  .pno { position: absolute; bottom: 18px; font-family: var(--mono); font-size: 10.5px; color: var(--faint); letter-spacing: .15em; }
+  .pg.odd .pno { left: 30px; } .pg.even .pno { right: 30px; }
+
+  .title-pg { display: flex; flex-direction: column; justify-content: center; padding: 0 56px; }
+  .title-pg h1 { font-family: var(--serif); font-size: 46px; margin: 0; letter-spacing: .1em; }
+  .title-pg .sub { color: var(--muted); margin-top: 14px; font-size: 14px; letter-spacing: .1em; }
+  .title-pg .n { font-family: var(--mono); color: var(--accent); font-size: 13px; letter-spacing: .25em; margin-top: 42px; }
+  .title-pg .rule { width: 46px; height: 2px; background: var(--accent); margin-top: 20px; }
+
+  .grid { position: absolute; inset: 34px 30px 46px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 18px; }
+  .mc { position: relative; background: #fffdf7; border-radius: 6px; padding: 14px 13px 12px 15px; cursor: zoom-in; overflow: hidden;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 2px 4px rgba(70,52,28,.10), 0 8px 14px -8px rgba(70,52,28,.25);
+    transition: transform .25s var(--ease), box-shadow .25s; }
+  .mc:hover { transform: translateY(-3px) rotate(-.4deg); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 6px 18px rgba(70,52,28,.18); }
+  .mc .tint { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+  .mc b { display: block; font-family: var(--serif); font-size: 14.5px; line-height: 1.4; }
+  .mc .g { margin-top: 7px; font-size: 11.5px; line-height: 1.6; color: var(--muted);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mc .d { position: absolute; left: 15px; bottom: 11px; font-family: var(--mono); font-size: 10px; color: var(--faint); letter-spacing: .1em; }
+  .mstamp { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 44px; transform: rotate(-6deg);
+    background: radial-gradient(circle, transparent 1.6px, #fffdf6 2px) -2.5px -2.5px / 5px 5px;
+    filter: drop-shadow(0 1px 1px rgba(70,52,28,.25)); }
+  .mstamp::after { content: "成"; position: absolute; inset: 3px; border: 1px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
+    color: var(--accent); font-family: var(--serif); font-weight: 700; font-size: 16px; display: grid; place-items: center; }
+  .mpm { position: absolute; right: 26px; bottom: 22px; width: 46px; height: 46px; opacity: .55; transform: rotate(12deg); mix-blend-mode: multiply; z-index: 1; }
+  .mc ul { list-style: none; margin: 10px 0 0; padding: 0; font-size: 11px; line-height: 1.75; color: var(--faint); }
+  .mc li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 30px); }
+  .mc li::before { content: "✓"; color: var(--accent); margin-right: 6px; font-size: 10px; }
+
+  /* ───────── chrome ───────── */
+  .ibtn { position: fixed; z-index: 20; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(251, 248, 239, .85); color: var(--muted); font-size: 16px; box-shadow: 0 2px 6px rgba(70, 52, 28, .16);
+    transition: color .2s, transform .2s var(--ease); text-decoration: none; display: grid; place-items: center; }
+  .ibtn:hover { color: var(--accent); transform: translateY(-2px); }
+  #home { left: 24px; top: 22px; }
+  #pager { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20; font-family: var(--mono); font-size: 12px; color: var(--faint); letter-spacing: .2em; }
+
+  /* ───────── zoomed card ───────── */
+  #zoom { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(60, 48, 30, 0); pointer-events: none; transition: background .35s; perspective: 1600px; }
+  #zoom.show { background: rgba(60, 48, 30, .28); pointer-events: auto; }
+  #zc { width: 340px; height: 460px; position: relative; transform-style: preserve-3d; cursor: pointer;
+    transition: transform .8s var(--ease), opacity .35s; opacity: 0; transform: scale(.5) rotateY(var(--ry, 0deg)); }
+  #zoom.show #zc { opacity: 1; transform: scale(1) rotateY(var(--ry, 0deg)); }
+  .zf { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper); border-radius: 10px; overflow: hidden;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 30px 60px -20px rgba(50,38,20,.45); }
+  .zf.back { transform: rotateY(180deg); }
+  .zf .tint { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--c); }
+  .zf .head { padding: 20px 22px 16px; border-bottom: 1px solid var(--line); font-family: var(--serif); font-size: 19px; font-weight: 700; display: flex; justify-content: space-between; gap: 10px; }
+  .zf .head .n { font-family: var(--mono); font-weight: 400; font-size: 14px; color: var(--accent); }
+  .zf .body { padding: 18px 22px; }
+  .zf .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 8px; }
+  .zf .goal { font-family: var(--serif); font-size: 17px; line-height: 1.7; }
+  .zf ul { list-style: none; margin: 0; padding: 0; }
+  .zf li { display: flex; gap: 12px; padding: 10px 0; font-size: 15px; line-height: 1.5; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(181,82,59,.5); }
+  .zf li i { flex: none; width: 20px; height: 20px; border-radius: 4px; background: var(--accent); position: relative; margin-top: 1px; }
+  .zf li i::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .zf .when { position: absolute; left: 22px; bottom: 22px; font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .12em; }
+  .zstamp { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px; transform: rotate(-5deg);
+    background: radial-gradient(circle, transparent 3px, #fffdf6 3.5px) -5px -5px / 10px 10px; filter: drop-shadow(0 2px 2px rgba(70,52,28,.25)); }
+  .zstamp .in { position: absolute; inset: 5px; background: #fffdf6; padding: 5px; }
+  .zstamp .art { width: 100%; height: 100%; border: 1.5px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--accent); }
+  .zstamp .big { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1; }
+  .zstamp .sm { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; }
+  .zpm { position: absolute; right: 62px; bottom: 44px; width: 96px; height: 96px; opacity: .7; transform: rotate(12deg); mix-blend-mode: multiply; z-index: 2; }
+
+  #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--muted); letter-spacing: .08em; display: none; }
+</style>
+</head>
+<body>
+<a class="ibtn" id="home" href="desk.html" title="回到桌子">←</a>
+
+<div id="wrap">
+  <div class="board"></div>
+  <div class="block l"></div>
+  <div class="block r"></div>
+  <div id="book">
+    <div class="side l" id="pl"></div>
+    <div class="side r" id="pr"></div>
+    <div id="cast"></div>
+  </div>
+</div>
+<div id="pager"></div>
+<div id="empty">这些是示例卡片。在桌子上做完一张任务卡，它就会出现在这里。</div>
+
+<div id="zoom"><div id="zc"></div></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
+  const PW = 400, PH = 540, K = 14, PER = 4;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  /* ───────── data: the cards stamped on the desk ───────── */
+  let cards = [];
+  try { const d = JSON.parse(localStorage.getItem("paper-desk.desk-tasks.v1")); if (d && Array.isArray(d.done)) cards = d.done.slice(); } catch {}
+  const demo = !cards.length;
+  if (demo) cards = demoCards();
+  cards.sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0));
+  $("#empty").style.display = demo ? "block" : "none";
+
+  function demoCards() {
+    const day = 864e5, now = Date.now();
+    const c = (t) => ({ t, done: true });
+    return [
+      ["work", "回三封邮件", "清空收件箱里需要回复的。", ["客户 A", "供应商报价", "面试安排"]],
+      ["work", "会议纪要 10/26", "结论和负责人写清楚。", ["结论", "负责人", "截止时间"]],
+      ["study", "《深度工作》第 3 章", "记下三个能马上用的点。", ["读完", "摘三条", "选一条明天试"]],
+      ["life", "周末去植物园", "看温室，下雨就改拼图。", ["查开放时间", "带相机", "回来整理照片"]],
+      ["idea", "任务卡做成正反面", "正面目标，背面条件。", ["画草图", "写原型", "自己用一天"]],
+      ["work", "周报", "写清楚推进了什么、卡在哪。", ["三件完成的事", "一个卡点", "下周第一件事"]],
+      ["life", "买猫粮", "灯泡 3000K · 胶带", ["猫粮", "灯泡", "胶带"]],
+      ["study", "研究生产力爆款笔记", "找出它的开头为什么能吸引读者继续看。", ["记录标题和开头", "标出吸引人的原因", "模仿 5 句"]],
+      ["idea", "便签收进右边缘", "像本子侧面的索引贴。", ["做原型", "试手感", "调参数"]],
+    ].map(([cat, title, goal, cs], i) => ({ id: "demo" + i, cat, title, goal, conds: cs.map(c), minutes: 25, doneAt: now - (9 - i) * day }));
+  }
+
+  /* ───────── pages ───────── */
+  // page 0 is the title page (right side of the first spread); cards start on page 1
+  const nCardPages = Math.max(1, Math.ceil(cards.length / PER));
+  const lastPage = nCardPages;               // 0..lastPage
+  const nLeaves = Math.ceil((lastPage + 1) / 2);
+  let cur = 0;                               // leaves turned so far: left shows page 2cur-1, right shows page 2cur
+
+  const fmt = ts => { const d = new Date(ts); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; };
+  function page(p) {
+    const pg = el("div", "pg " + (p % 2 ? "odd" : "even"));
+    if (p < 0 || p > lastPage) { pg.classList.add("end"); return pg; }
+    if (p === 0) {
+      pg.classList.add("title-pg");
+      const first = cards[0], last = cards[cards.length - 1];
+      pg.innerHTML = `<h1>卡册</h1><div class="sub"></div><div class="rule"></div><div class="n"></div>`;
+      $(".sub", pg).textContent = first ? `${fmt(first.doneAt)} — ${fmt(last.doneAt)}` : "";
+      $(".n", pg).textContent = `${cards.length} 张 · 盖过章的都在这里`;
+      return pg;
+    }
+    const grid = el("div", "grid");
+    cards.slice((p - 1) * PER, p * PER).forEach((t, i) => {
+      const mc = el("div", "mc");
+      mc.dataset.i = (p - 1) * PER + i;
+      mc.style.setProperty("--c", CAT_C[t.cat] || "transparent");
+      mc.innerHTML = `<div class="tint"></div><b></b><div class="g"></div><ul></ul><div class="d"></div>` +
+        `<svg class="mpm" viewBox="0 0 100 100"><g fill="none" stroke="#4a4a5a" stroke-width="3"><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="32"/></g>` +
+        `<path d="M8 50h84M8 62h84" stroke="#4a4a5a" stroke-width="2.4" fill="none"/></svg><div class="mstamp"></div>`;
+      (t.conds || []).filter(c => c.t && c.t.trim()).slice(0, 3).forEach(c => { const li = el("li"); li.textContent = c.t; $("ul", mc).appendChild(li); });
+      $("b", mc).textContent = t.title || "（未命名）";
+      $(".g", mc).textContent = t.goal || "";
+      $(".d", mc).textContent = fmt(t.doneAt).slice(5);
+      const r = ((i * 7 + p * 3) % 5) - 2;
+      mc.style.transform = `rotate(${r * .35}deg)`;
+      grid.appendChild(mc);
+    });
+    pg.appendChild(grid);
+    const no = el("div", "pno"); no.textContent = String(p).padStart(2, "0"); pg.appendChild(no);
+    return pg;
+  }
+  const pl = $("#pl"), pr = $("#pr"), book = $("#book"), cast = $("#cast");
+  function show(l, r) { pl.replaceChildren(page(l)); pr.replaceChildren(page(r)); }
+  function settle() {
+    show(2 * cur - 1, 2 * cur);
+    $("#pager").textContent = `${cur + 1} / ${nLeaves + 1}`;
+  }
+
+  /* ───────── the strip turner ───────── */
+  function buildTurner(front, back) {
+    const sw = PW / K;
+    const root = el("div", "turner");
+    let parent = root; const strips = [];
+    for (let k = 0; k < K; k++) {
+      const st = k === 0 ? root : el("div", "strip");
+      st.style.width = sw + "px";
+      if (k > 0) { st.style.left = sw + "px"; parent.appendChild(st); }
+      const ff = el("div", "sface front"); ff.style.width = (sw + .75) + "px";
+      const fc = el("div", "clip"); fc.style.left = (-k * sw) + "px"; fc.appendChild(page(front)); ff.appendChild(fc);
+      const fsh = el("div", "shade"); ff.appendChild(fsh);
+      const bf = el("div", "sface back"); bf.style.width = (sw + .75) + "px"; bf.style.left = "-.75px";
+      const bc = el("div", "clip"); bc.style.left = (-(PW - (k + 1) * sw)) + "px"; bc.appendChild(page(back)); bf.appendChild(bc);
+      const bsh = el("div", "shade"); bf.appendChild(bsh);
+      st.append(ff, bf);
+      strips.push({ el: st, fsh, bsh, ff, bf });
+      parent = st;
+    }
+    book.appendChild(root);
+    return { root, strips };
+  }
+  // theta: 0 lying flat on the right → 180 lying flat on the left; the free edge lags behind the spine
+  function pose(T, theta, dir, lift = 0) {
+    const bend = 30 * Math.sin(Math.PI * theta / 180) + lift;
+    const ang = [];
+    for (let k = 0; k < K; k++) { const t = k / (K - 1); ang.push(clamp(theta + dir * bend * t * t, 0, 180)); }
+    let prev = 0;
+    ang.forEach((a, k) => {
+      const rel = a - prev; prev = a;
+      T.strips[k].el.style.transform = `rotateY(${-rel}deg)`;
+      T.strips[k].ff.style.visibility = a < 90 ? "" : "hidden";
+      T.strips[k].bf.style.visibility = a < 90 ? "hidden" : "";
+    });
+    const shadeF = a => .30 * (1 - Math.cos(a * Math.PI / 180)) / 2;
+    const shadeB = a => .24 * (1 + Math.cos(a * Math.PI / 180)) / 2;
+    ang.forEach((a, k) => {
+      const a0 = ang[k - 1] ?? a + (a - (ang[k + 1] ?? a)), a1 = ang[k + 1] ?? a;
+      const s0 = (a0 + a) / 2, s1 = (a + a1) / 2;
+      const spec = Math.max(0, Math.sin((a1 - a0) * Math.PI / 90)) * .10;
+      T.strips[k].fsh.style.background = `linear-gradient(90deg, rgba(20,18,12,${shadeF(s0).toFixed(3)}), rgba(20,18,12,${shadeF(s1).toFixed(3)})), linear-gradient(90deg, transparent 40%, rgba(255,255,255,${spec.toFixed(3)}))`;
+      T.strips[k].bsh.style.background = `linear-gradient(270deg, rgba(20,18,12,${shadeB(s0).toFixed(3)}), rgba(20,18,12,${shadeB(s1).toFixed(3)}))`;
+    });
+    // the shadow the leaf throws on the page beneath
+    const edge = ang.reduce((acc, a) => acc + (PW / K) * Math.cos(a * Math.PI / 180), 0);
+    const strength = (.28 * Math.max(Math.sin(theta * Math.PI / 180), lift / 60)).toFixed(3);
+    cast.style.display = "block";
+    if (edge >= 0) {
+      cast.style.left = (PW + edge) + "px"; cast.style.width = Math.max(0, PW - edge) + "px";
+      cast.style.background = `linear-gradient(90deg, rgba(20,18,12,${strength}), rgba(20,18,12,0) 72px)`;
+    } else {
+      cast.style.left = "0px"; cast.style.width = Math.max(0, PW + edge) + "px";
+      cast.style.background = `linear-gradient(270deg, rgba(20,18,12,${strength}), rgba(20,18,12,0) 72px)`;
+    }
+  }
+
+  /* ───────── turning ───────── */
+  let T = null, busy = false;
+  function begin(dir) {
+    if (dir > 0 && cur >= nLeaves) return null;
+    if (dir < 0 && cur <= 0) return null;
+    if (dir > 0) { show(2 * cur - 1, 2 * cur + 2); T = buildTurner(2 * cur, 2 * cur + 1); }
+    else { show(2 * cur - 3, 2 * cur); T = buildTurner(2 * cur - 2, 2 * cur - 1); }
+    T.dir = dir; T.theta = dir > 0 ? 0 : 180;
+    pose(T, T.theta, dir);
+    return T;
+  }
+  function end(done) {
+    if (!T) return;
+    T.root.remove(); cast.style.display = "none";
+    if (done) cur += T.dir;
+    T = null; settle();
+  }
+  function animate(from, to, ms) {
+    return new Promise(res => {
+      const t0 = performance.now();
+      const step = now => {
+        const t = clamp((now - t0) / ms, 0, 1);
+        T.theta = from + (to - from) * ease(t);
+        pose(T, T.theta, T.dir);
+        if (t < 1) requestAnimationFrame(step); else res();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  async function turn(dir, ms = 760) {
+    if (busy) return;
+    if (T) end(false);
+    if (!begin(dir)) return;
+    busy = true;
+    await animate(T.theta, dir > 0 ? 180 : 0, reduced ? 1 : ms);
+    end(true); busy = false;
+  }
+
+  /* ───────── pointer: drag a page by its edge, or click a margin ───────── */
+  const toBook = (x, y) => { const r = book.getBoundingClientRect(), k = r.width / (PW * 2); return { x: (x - r.left) / k, y: (y - r.top) / k }; };
+  let drag = null, hoverT = null;
+
+  book.addEventListener("pointerdown", e => {
+    if (busy || e.button !== 0) return;
+    const p = toBook(e.clientX, e.clientY);
+    const dir = p.x > PW ? 1 : -1;
+    drag = { dir, sx: e.clientX, sy: e.clientY, moved: false, card: e.target.closest(".mc"), lastTh: 0, lastT: performance.now(), vel: 0 };
+    book.setPointerCapture(e.pointerId);
+  });
+  book.addEventListener("pointermove", e => {
+    const p = toBook(e.clientX, e.clientY);
+    if (!drag) { hoverCorner(p); return; }
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+      drag.moved = true;
+      if (hoverT) { end(false); hoverT = null; }
+      if (!begin(drag.dir)) { drag = null; return; }
+    }
+    // the free edge follows the hand: x = spine + pw·cos θ
+    const th = Math.acos(clamp((p.x - PW) / PW, -1, 1)) * 180 / Math.PI;
+    const now = performance.now();
+    drag.vel = drag.vel * .6 + ((th - drag.lastTh) / Math.max(1, now - drag.lastT) * 1000) * .4;
+    drag.lastTh = th; drag.lastT = now;
+    T.theta = th; pose(T, th, T.dir);
+  });
+  book.addEventListener("pointerup", async () => {
+    const d = drag; drag = null;
+    if (!d) return;
+    if (!d.moved) {
+      if (d.card) { openCard(+d.card.dataset.i); return; }
+      if (hoverT) { end(false); hoverT = null; }
+      turn(d.dir);
+      return;
+    }
+    if (!T) return;
+    const proj = T.theta + d.vel * .25;
+    const done = T.dir > 0 ? proj > 90 : proj < 90;
+    const to = (T.dir > 0) === done ? 180 : 0;
+    busy = true;
+    await animate(T.theta, to, reduced ? 1 : 140 + Math.abs(to - T.theta) * 3.2);
+    end(done); busy = false;
+  });
+  book.addEventListener("pointerleave", () => { if (!drag && hoverT) { end(false); hoverT = null; } });
+
+  // hover near the free edge and the page corner lifts a little
+  function hoverCorner(p) {
+    if (busy) return;
+    const nearR = p.x > PW * 2 - 46 && cur < nLeaves, nearL = p.x < 46 && cur > 0;
+    const want = nearR ? 1 : nearL ? -1 : 0;
+    if (!want) { if (hoverT) { end(false); hoverT = null; } return; }
+    if (!hoverT || hoverT.dir !== want) { if (hoverT) end(false); hoverT = begin(want); }
+    if (hoverT) pose(hoverT, want > 0 ? 4 : 176, want, 14);
+  }
+
+  addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeCard(); return; }
+    if ($("#zoom").classList.contains("show")) { if (e.key === " " || e.key === "f") { e.preventDefault(); flipZoom(); } return; }
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); turn(1); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); turn(-1); }
+    if (e.key === "Home") { cur = 0; settle(); }
+    if (e.key === "End") { cur = nLeaves; settle(); }
+  });
+
+  /* ───────── a card taken out of its sleeve ───────── */
+  let ry = 0;
+  function openCard(i) {
+    const t = cards[i]; if (!t) return;
+    const zc = $("#zc");
+    const conds = (t.conds || []).filter(c => c.t && c.t.trim());
+    const ds = fmt(t.doneAt);
+    zc.innerHTML = `
+      <div class="zf front"><div class="tint"></div>
+        <div class="head"><span class="tt"></span></div>
+        <div class="body"><div class="label">本次目标</div><div class="goal"></div></div>
+        <div class="when"></div>
+        <div class="zstamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm">${ds.slice(5)}</div></div></div></div>
+        <svg class="zpm" viewBox="0 0 100 100"><g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
+          <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
+          <text x="50" y="47" text-anchor="middle" font-size="9" font-family="monospace" fill="#4a4a5a">${ds}</text>
+          <text x="50" y="60" text-anchor="middle" font-size="8" font-family="serif" fill="#4a4a5a">完 成</text></svg>
+      </div>
+      <div class="zf back"><div class="tint"></div>
+        <div class="head"><span class="tt"></span><span class="n">${conds.length} / ${conds.length}</span></div>
+        <div class="body"><div class="label">完成条件</div><ul></ul></div>
+        <div class="when"></div>
+      </div>`;
+    zc.style.setProperty("--c", CAT_C[t.cat] || "transparent");
+    zc.querySelectorAll(".tt").forEach(e => e.textContent = t.title || "（未命名）");
+    $(".goal", zc).textContent = t.goal || "";
+    zc.querySelectorAll(".when").forEach(e => e.textContent = ds);
+    const ul = $("ul", zc);
+    conds.forEach(c => { const li = el("li"); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = c.t; ul.appendChild(li); });
+    ry = 0; zc.style.setProperty("--ry", "0deg");
+    $("#zoom").classList.add("show");
+  }
+  function flipZoom() { ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
+  function closeCard() { $("#zoom").classList.remove("show"); }
+  $("#zoom").addEventListener("click", e => { if (e.target.closest("#zc")) flipZoom(); else closeCard(); });
+
+  /* ───────── fit to the window ───────── */
+  function fit() {
+    const k = Math.min((innerWidth - 90) / (PW * 2 + 32), (innerHeight - 120) / (PH + 28), 1.3);
+    $("#wrap").style.setProperty("--k", Math.max(.4, k).toFixed(3));
+  }
+  addEventListener("resize", fit);
+  fit(); settle();
+})();
+</script>
+</body>
+</html>
