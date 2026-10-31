@@ -433,7 +433,7 @@
   .treceipt { width: 18px; height: 24px; display: block; background: #fffdf7; box-shadow: 0 1px 3px rgba(21, 35, 58,.3);
     clip-path: polygon(0 0, 100% 0, 100% 92%, 83% 100%, 67% 92%, 50% 100%, 33% 92%, 17% 100%, 0 92%); position: relative; }
   .treceipt::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 1.5px; background: #c9bfae; box-shadow: 0 4px 0 #c9bfae, 0 8px 0 #c9bfae; }
-  #timer { position: fixed; bottom: 82px; z-index: 40001; width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
+  #timer { position: fixed; bottom: 84px; z-index: 40001; width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
     background: var(--paper); box-shadow: 0 0 0 .5px rgba(21, 35, 58,.16), 0 18px 34px -12px rgba(21, 35, 58,.55);
     opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .25s, transform .3s var(--ease); }
   #timer.show { opacity: 1; transform: none; pointer-events: auto; }
@@ -578,15 +578,19 @@
   .pcard.inl.fly { transition: transform .6s var(--ease), opacity .6s; }
 
   /* the toolbar floats below the screen until it's wanted: the board gets the room */
-  #tray { left: 50% !important; right: auto; width: max-content; bottom: 12px; padding: 0 12px; border-radius: 16px;
-    background: rgba(248, 249, 247, .94); box-shadow: 0 0 0 .5px rgba(21, 35, 58, .16), 0 18px 34px -14px rgba(21, 35, 58, .5);
-    transform: translate(-50%, calc(100% + 24px)); transition: transform .35s var(--ease); }
-  body.trayOn #tray { transform: translate(-50%, 0); }
-  #trayHandle { position: fixed; left: 50%; bottom: 0; z-index: 39999; width: 120px; height: 14px; margin-left: -60px; cursor: pointer; }
-  #trayHandle::after { content: ""; position: absolute; left: 36px; right: 36px; bottom: 5px; height: 4px; border-radius: 2px;
-    background: rgba(54, 66, 78, .35); box-shadow: 0 1px 0 rgba(255, 255, 255, .6); transition: background .2s, transform .2s; }
-  #trayHandle:hover::after { background: #2f4f73; transform: scaleX(1.2); }
-  body.trayOn #trayHandle::after { opacity: 0; }
+  #tray { left: 66px !important; right: auto; width: max-content; bottom: 12px; padding: 0 12px; border-radius: 16px;
+    background: rgba(248, 249, 247, .96); box-shadow: 0 0 0 .5px rgba(21, 35, 58, .16), 0 18px 34px -14px rgba(21, 35, 58, .5);
+    transform: translateY(calc(100% + 24px)); transition: transform .3s var(--ease); }
+  body.trayOn #tray { transform: none; }
+  /* the button that opens and closes it: a little tray of four squares, bottom left */
+  #trayHandle { position: fixed; left: 14px; bottom: 16px; z-index: 40002; width: 42px; height: 42px; border: 0; border-radius: 12px; cursor: pointer;
+    display: grid; grid-template-columns: 9px 9px; gap: 4px; place-content: center;
+    background: rgba(248, 249, 247, .96); box-shadow: 0 0 0 .5px rgba(21, 35, 58, .2), 0 8px 18px -8px rgba(21, 35, 58, .55); transition: background .2s, transform .2s; }
+  #trayHandle:hover { transform: translateY(-2px); }
+  #trayHandle i { width: 9px; height: 9px; border-radius: 2.5px; background: #4f5d69; transition: background .2s, transform .25s var(--ease); }
+  #trayHandle i:nth-child(2) { background: #c9a24a; } #trayHandle i:nth-child(3) { background: #4f7a5a; } #trayHandle i:nth-child(4) { background: #b5523b; }
+  body.trayOn #trayHandle { background: #2f4f73; }
+  body.trayOn #trayHandle i { background: #f8f9f7; transform: scale(.85); }
 
   /* narrower cards: one line each for the title, the goal and the next step; the rest is an ellipsis */
   .lane[data-col=doing] .cards { flex-direction: row; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 22px 16px; }
@@ -670,7 +674,7 @@
 </div></template>
 <div id="detail"><div class="holder"></div></div>
 
-<div id="trayHandle" title="工具"></div>
+<button id="trayHandle" title="打开工具栏"><i></i><i></i><i></i><i></i></button>
 <nav id="tray">
   <button class="tb pg" data-p="0" title="项目（1）"><i></i></button>
   <button class="tb pg" data-p="1" title="便签（2）"><i></i></button>
@@ -761,24 +765,12 @@
   go(page);
   $("#pages").getBoundingClientRect();
 
-  /* ───────── the toolbar: out of sight until the pointer comes to the bottom edge or the handle ───────── */
-  const trayEl = $("#tray");
-  let trayT = 0;
-  const trayOpen = () => { clearTimeout(trayT); document.body.classList.add("trayOn"); };
-  const trayClose = later => {
-    clearTimeout(trayT);
-    trayT = setTimeout(() => {
-      if (trayEl.matches(":hover") || $("#timer.show") || document.body.classList.contains("carrying")) return;
-      document.body.classList.remove("trayOn");
-    }, later ? 700 : 0);
-  };
-  $("#trayHandle").addEventListener("pointerenter", trayOpen);
-  $("#trayHandle").addEventListener("click", trayOpen);
-  trayEl.addEventListener("pointerenter", trayOpen);
-  trayEl.addEventListener("pointerleave", () => trayClose(true));
-  addEventListener("pointermove", e => { if (e.buttons === 0 && e.clientY >= innerHeight - 6 && Math.abs(e.clientX - innerWidth / 2) < 260) trayOpen(); }, { passive: true });
-  addEventListener("pointerdown", e => { if (!e.target.closest("#tray, #trayHandle, #timer")) trayClose(); }, true);
-  window.Tray = { open: trayOpen, close: trayClose };
+  /* ───────── the toolbar: opened and closed only by its button at the bottom left; it stays as you leave it ───────── */
+  const TRAYKEY = "paper-desk.tray.v2";
+  const setTray = on => { document.body.classList.toggle("trayOn", on); store(TRAYKEY, on); $("#trayHandle").title = on ? "收起工具栏" : "打开工具栏"; };
+  setTray(!!load(TRAYKEY, false));
+  $("#trayHandle").addEventListener("click", () => setTray(!document.body.classList.contains("trayOn")));
+  window.Tray = { open: () => setTray(true), close: () => {} };
 
   /* ───────── the cord along the top: reminders that stay on every page ─────────
      Each kind (note, proj, today) registers how to draw its chip and what a click does; the order lives here. */
@@ -1556,7 +1548,7 @@
     timerEl.style.left = Math.min(innerWidth - 180, r.left + r.width / 2 - 84) + "px";
     timerEl.classList.toggle("show", on);
   }
-  tbtn.addEventListener("click", () => { showTimer(!timerEl.classList.contains("show")); if (!timerEl.classList.contains("show")) Tray.close(true); });
+  tbtn.addEventListener("click", () => showTimer(!timerEl.classList.contains("show")));
   addEventListener("pointerdown", e => { if (!e.target.closest("#timer, #timerBtn")) timerEl.classList.remove("show"); });
   $(".dial", timerEl).addEventListener("pointerdown", e => {
     const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
