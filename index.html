@@ -355,6 +355,14 @@
   .note .fold:hover { background: rgba(0,0,0,.06); }
   .note.editing .fold, .note.pinned .fold { display: none; }
   .note.folded .rh { display: none; }
+  /* level it: a little spirit level, only while the note is crooked */
+  .note .level { position: absolute; right: 28px; top: 4px; width: 22px; height: 22px; border-radius: 6px; z-index: 4; cursor: pointer; opacity: 0; transition: opacity .15s, background .15s; display: none; }
+  .note.tilted .level { display: block; }
+  .note:hover .level { opacity: 1; }
+  .note .level:hover { background: rgba(0,0,0,.06); }
+  .note .level::before { content: ""; position: absolute; left: 4px; right: 4px; top: 7px; height: 7px; border: 1.5px solid rgba(46,40,30,.55); border-radius: 4px; box-sizing: border-box; }
+  .note .level::after { content: ""; position: absolute; left: 9px; top: 9px; width: 4px; height: 3px; border-radius: 2px; background: rgba(46,40,30,.55); }
+  .note.editing .level { display: none; }
 
   /* cards */
   .pcard { position: relative; width: 300px; }
@@ -454,19 +462,54 @@
   @media (prefers-reduced-motion: reduce) { #pages { transition: none; } }
 
   /* ═════════ the corkboard is just the desk now: the notes lie in the morning light; the projects keep their chalkboard ═════════ */
-  #cork .frame { background: none; box-shadow: none; padding: 0; }
-  #cork .inner { inset: 0; box-shadow: none; overflow: visible; background: none; }
   #detail { background: rgba(227, 232, 235, .55); }
   .tb { color: #4f5d69; }
   .tb:hover { background: rgba(47, 79, 115, .07); color: #2f4f73; }
   .tsep { background: #c2cbd2; }
-  .pg[data-p="1"] i { background: none; border: 0; border-radius: 0; box-shadow: none; filter: drop-shadow(0 1px 1.5px rgba(21, 35, 58, .3)); }
-  .pg[data-p="1"] i::after { left: 2px; top: 2px; width: 13px; height: 13px; transform: rotate(-7deg); box-shadow: 11px 5px 0 #cfe4cf; }
   .pg::after { background: #2f4f73; }
   .lane h3 { letter-spacing: .06em; font-size: 26px; }
+
+  /* ═════════ the two boards, refined: a thin oak frame with soft rounded corners, real materials, a soft blue-black drop ═════════ */
+  .frame { border-radius: 20px; padding: 11px;
+    background:
+      repeating-linear-gradient(92deg, rgba(120, 82, 40, .07) 0 1px, transparent 1px 5px, rgba(255, 255, 255, .05) 5px 6px, transparent 6px 13px),
+      linear-gradient(135deg, #dcc6a2 0%, #c4a176 38%, #d2b287 62%, #b38d61 100%);
+    box-shadow: 0 0 0 .5px rgba(21, 35, 58, .2), 0 2px 3px rgba(21, 35, 58, .12), 0 34px 60px -34px rgba(21, 35, 58, .6),
+      inset 0 1px 0 rgba(255, 250, 238, .7), inset 0 -1px 0 rgba(90, 60, 30, .25); }
+  .inner { inset: 11px; border-radius: 10px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, .42), inset 0 0 0 1px rgba(40, 26, 12, .35), inset 0 -1px 0 rgba(255, 255, 255, .08); }
+  .inner::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+    background: linear-gradient(168deg, rgba(255, 255, 255, .07), transparent 26%), radial-gradient(120% 90% at 50% 50%, transparent 60%, rgba(0, 0, 0, .18)); }
+  #notes { z-index: 2; }
+
+  /* slate: a dark green board, faint eraser swirls and chalk dust left on it */
+  #chalk .inner { background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='e'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0025 .008' numOctaves='4' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  .3 0 0 0 -.11'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23e)'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat,
+      radial-gradient(60% 50% at 28% 36%, rgba(255, 255, 255, .045), transparent 70%),
+      linear-gradient(175deg, #33433a, #28352e 70%, #233029); }
+  .lane h3, .lane .add, .lane + .lane::before, .lane h3::after, .empty { filter: url(#chalky); }
+  .lane h3 { color: rgba(246, 244, 236, .92); text-shadow: 0 0 6px rgba(255, 255, 255, .12); }
+  .lane + .lane::before { width: 2px; background: rgba(240, 238, 228, .2); }
+  .lane h3::after { height: 2px; background: rgba(240, 238, 228, .28); }
+  /* an aluminium chalk tray, two sticks and a felt eraser */
+  .ledge { height: 18px; z-index: 2; border-radius: 0 0 10px 10px;
+    background: linear-gradient(180deg, #f2f4f5 0%, #c9cfd4 45%, #9aa3aa 100%);
+    box-shadow: 0 -3px 6px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .8); }
+  .ledge i { bottom: 9px; height: 7px; border-radius: 3.5px; background: linear-gradient(#ffffff, #e6e2d6); box-shadow: 0 2px 2px rgba(21, 35, 58, .35); }
+  .ledge b { position: absolute; right: 9%; bottom: 9px; width: 64px; height: 16px; border-radius: 3px;
+    background: linear-gradient(#c49a62, #a67d4a 55%) top / 100% 9px no-repeat, linear-gradient(#4b4f55, #3a3d42); box-shadow: 0 2px 3px rgba(21, 35, 58, .4); }
+
+  /* cork: granules of every brown, a few pale flecks */
+  #cork .inner { background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .33  0 0 0 0 .19  0 0 0 0 .07  0 0 -2.4 0 1.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 .9  0 0 0 0 .72  2.6 0 0 0 -1.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.2' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25  0 0 0 0 .14  0 0 0 0 .05  0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+      radial-gradient(80% 70% at 40% 35%, #d2a571, #c08f5a 70%, #b2804c); }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalky" x="-5%" y="-20%" width="110%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="d"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 1.35" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
 <div class="desk" id="room" aria-hidden="true"><i class="fl fl-a"></i><i class="fl fl-b"></i><i class="fl fl-c"></i><i class="fl fl-s"></i><i class="falloff"></i></div>
 
 <aside id="cal">
@@ -495,7 +538,7 @@
         <div class="lane" data-col="todo"><h3>To do<small></small></h3><div class="cards"></div><button class="add">＋ 写一个</button></div>
         <div class="lane" data-col="done"><h3>Done<small></small></h3><div class="cards"></div></div>
       </div>
-      <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
+      <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:30%;width:38px;background:linear-gradient(#f6dda9,#e9c98c)"></i><b></b></div>
     </div></div></section>
     <section class="page" id="cork"><div class="frame"><div class="inner"><div id="notes"></div></div></div></section>
   </div>
@@ -557,6 +600,7 @@
   <b>项目</b> 卡片在三列之间拖；点开看详情，勾完盖章收进卡册<br>
   <b>便签</b> 从下面拖出；拖角转动；图钉按上去就固定<br>
   <b>折起</b> 便签右上角或右键；T 全部折起按颜色排好<br>
+  <b>摆正</b> 便签右上角的水平仪，或鼠标停在便签上按 L；Shift+L 全部摆正<br>
   <b>扔掉</b> 拖着便签时右下出现圆圈，拖进去
 </div>
 <div id="menu"></div>
@@ -1353,7 +1397,7 @@
     }, o);
     const el = document.createElement("div");
     el.className = "note";
-    el.innerHTML = '<div class="sheet"><div class="text" spellcheck="false"></div></div><i class="fold" title="折起 / 展开"></i>' +
+    el.innerHTML = '<div class="sheet"><div class="text" spellcheck="false"></div></div><i class="fold" title="折起 / 展开"></i><i class="level" title="摆正（L）"></i>' +
       '<i class="rh tl"></i><i class="rh tr"></i><i class="rh bl"></i><i class="rh br"></i>';
     n.el = el; n.sheet = el.firstChild; n.textEl = n.sheet.firstChild;
     n.textEl.textContent = n.text;
@@ -1381,6 +1425,7 @@
     const el = n.el;
     el.style.transform = `translate(${n.x - HW}px,${n.y - hh(n)}px) rotate(${n.a}rad) scale(${n.s})`;
     el.style.zIndex = n.z;
+    el.classList.toggle("tilted", Math.abs(angDiff(n.mode === "turnTo" ? n.aT : n.a, 0)) > 0.004);
     // light comes from the window, so shadows are offset in screen space, not note space
     const L = Math.max(0, n.lift), d = 1.5 + L * 18, b = 2 + L * 30;
     el.style.setProperty("--lift", L.toFixed(3));
@@ -1503,7 +1548,7 @@
           setFold(n, true);
           front(n);
           n.mode = "place";
-          n.t = { x: W - 18 - (cols.length - c) * colW + colW / 2, y: 22 + FH / 2 + j * gap, a: (Math.random() - .5) * .03, s: 1 };
+          n.t = { x: W - 18 - (cols.length - c) * colW + colW / 2, y: 22 + FH / 2 + j * gap, a: 0, s: 1 };
           n.liftT = .5;
         }, i++ * 40);
       });
@@ -1682,6 +1727,10 @@
       menu.appendChild(d);
     }
     menu.appendChild(Object.assign(document.createElement("span"), { className: "sep" }));
+    const lv = document.createElement("button");
+    lv.textContent = "摆正";
+    lv.onclick = () => { closeMenu(); turnTo(n, 0); };
+    menu.appendChild(lv);
     const fb = document.createElement("button");
     fb.textContent = n.folded ? "展开" : "折起";
     fb.onclick = () => { closeMenu(); setFold(n, !n.folded); };
@@ -1735,14 +1784,14 @@
       act = {
         type: "pending", sx: P.x, sy: P.y,
         onDrag: () => {
-          const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top + r.height / 2, s: 0.32, sT: 1, a: (Math.random() - .5) * .1 });
+          const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top + r.height / 2, s: 0.32, sT: 1, a: 0 });
           startDrag(n); act.fresh = true;
         },
         onClick: () => {
           const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top, s: 0.32, a: 0 });
           front(n);
           n.mode = "place";
-          n.t = { x: W * (0.35 + Math.random() * 0.3), y: H * (0.3 + Math.random() * 0.25), a: (Math.random() - .5) * .14, s: 1 };
+          n.t = { x: W * (0.35 + Math.random() * 0.3), y: H * (0.3 + Math.random() * 0.25), a: 0, s: 1 };
           n.liftT = 0.8;
           setTimeout(() => beginEdit(n), 520);
         },
@@ -1751,6 +1800,7 @@
       return;
     }
 
+    if (t.closest(".level")) { const n = t.closest(".note")._note; endEdit(n); turnTo(n, 0); e.preventDefault(); return; }
     if (t.closest(".fold")) { const n = t.closest(".note")._note; setFold(n, !n.folded); e.preventDefault(); return; }
 
     const ne = t.closest(".note");
@@ -1799,6 +1849,10 @@
     if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return;
     if ((e.key === "t" || e.key === "T") && !e.metaKey && !e.ctrlKey) { if (Desk.page() !== 1) { Desk.go(1); setTimeout(tidy, 450); } else tidy(); }
     if (e.key === "Escape") closeMenu();
+    if ((e.key === "l" || e.key === "L") && !e.metaKey && !e.ctrlKey) {
+      if (e.shiftKey) notes.forEach(n => { if (n.mode === "rest" || n.mode === "swing") turnTo(n, 0); });
+      else { const n = notes.find(n => n.el.matches(":hover")); if (n) turnTo(n, 0); }
+    }
   });
   document.getElementById("tidy").onclick = () => { if (Desk.page() !== 1) { Desk.go(1); setTimeout(tidy, 450); } else tidy(); };
   addEventListener("deskpage", () => { notes.forEach(endEdit); closeMenu(); });
