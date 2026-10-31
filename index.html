@@ -226,10 +226,6 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   .pcard.moving .sheetc, .pcard.moving .face { box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 30px 50px -18px rgba(70, 52, 28, .5); }
   .head { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 20px 14px; border-bottom: 1px solid var(--line); cursor: grab; position: relative; z-index: 1; }
-  .grip { flex: none; width: 18px; height: 18px; border: 0; padding: 0; cursor: pointer; background:
-    linear-gradient(var(--faint) 0 0) 0 4px / 18px 1.5px no-repeat, linear-gradient(var(--faint) 0 0) 0 8.25px / 18px 1.5px no-repeat,
-    linear-gradient(var(--faint) 0 0) 0 12.5px / 18px 1.5px no-repeat; }
-  .grip:hover { filter: sepia(1) saturate(4) hue-rotate(-20deg); }
   .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(181,82,59,.45); border-radius: 999px; letter-spacing: .08em; }
   .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 18px/1.35 var(--serif); color: var(--ink); cursor: text; }
   .tin::placeholder { color: #d4cdbd; }
@@ -360,7 +356,7 @@
 <div id="world">
 <div id="todayCard" class="pcard">
   <div class="sheetc">
-    <div class="head"><button class="grip" title="收起"></button><span class="ttl"></span><span class="pn"></span></div>
+    <div class="head"><span class="ttl"></span><span class="pn"></span></div>
     <div class="bar"><i></i></div>
     <div class="body"><ul class="chk"></ul></div>
   </div>
@@ -368,7 +364,7 @@
 <template id="projTpl"><div class="pcard projc">
   <div class="flipper">
     <div class="face f"><div class="sheetc">
-      <div class="head"><button class="grip" title="收起"></button><input class="tin" data-k="title" placeholder="项目" maxlength="40"><span class="pn"></span></div>
+      <div class="head"><input class="tin" data-k="title" placeholder="项目" maxlength="40"><span class="pn"></span></div>
       <div class="bar"><i></i></div>
       <div class="body">
         <textarea class="goal" data-k="goal" rows="1" placeholder="目标"></textarea>
@@ -384,7 +380,7 @@
       </svg>
     </div></div>
     <div class="face b"><div class="sheetc">
-      <div class="head"><button class="grip" title="收起"></button><span class="ttl"></span><span class="pn"></span></div>
+      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
       <div class="bar"><i></i></div>
       <div class="dialwrap"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div></div>
       <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button></div>
@@ -598,7 +594,6 @@
       if (el.classList.contains("peek")) { untuck(); e.preventDefault(); return; }
       if (el.classList.contains("fly")) return;
       if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .turn, .toss")) return;
-      const grip = e.target.closest(".grip");
       const p0 = { ...o.pos() }, sx = e.clientX, sy = e.clientY;
       let moved = false;
       el.setPointerCapture(e.pointerId);
@@ -615,7 +610,7 @@
         el.classList.remove("moving"); drawer.classList.remove("hot");
         // dropped on the right edge: it files itself into a tab, and comes back to where it was picked up
         if (moved && nearEdge(ev.clientX)) { tuck(); o.setPos(p0); o.saved(); return; }
-        if (moved) o.saved(); else if (grip) tuck();
+        if (moved) o.saved();
       };
       el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up);
       e.preventDefault();
