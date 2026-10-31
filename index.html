@@ -453,44 +453,14 @@
   @media (max-width: 900px) { :root { --calw: 240px; --gap: 14px; } .lanes { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
   @media (prefers-reduced-motion: reduce) { #pages { transition: none; } }
 
-  /* ═════════ the boards are just the desk now: no frame, no chalk, no cork (sasshi: no containers) ═════════ */
-  .frame { background: none; box-shadow: none; padding: 0; }
-  .inner { inset: 0; box-shadow: none; overflow: visible; }
-  #chalk .inner, #cork .inner { background: none; }
-  .ledge { display: none; }
-  .lanes { inset: 0; column-gap: 28px; }
-  .lane { padding: 6px 4px 0; }
-  .lane + .lane::before { left: -15px; top: 10px; bottom: 24px; width: 1px; background: #c2cbd2; filter: none; }
-  .lane h3 { font: 400 22px var(--hand); color: #1c232b; letter-spacing: .24em; text-shadow: none; margin-bottom: 18px; }
-  .lane h3 small { color: #8e9aa4; font-size: 14px; }
-  .lane h3::after { background: #c2cbd2; height: 1px; }
-  .lane .add { color: #4f5d69; font-size: 16px; }
-  .lane .add:hover { color: #2f4f73; }
-  .lane.over .cards { background: rgba(47, 79, 115, .05); }
-  .lane .cards { gap: 18px; padding-top: 14px; }
-  .empty { color: #8e9aa4; font-size: 14px; }
-  .slot { background: #2f4f73; opacity: .55; }
-  /* a project: a slip of paper held down with a strip of washi tape */
-  .mini { background: #fbfaf6; border-radius: 2px; padding: 16px 16px 13px;
-    box-shadow: 0 0 0 .5px rgba(21, 35, 58, .08), 0 1px 1px rgba(21, 35, 58, .06), 0 14px 24px -16px rgba(21, 35, 58, .5); }
-  .mini:hover { box-shadow: 0 0 0 .5px rgba(21, 35, 58, .08), 0 2px 2px rgba(21, 35, 58, .05), 0 22px 30px -18px rgba(21, 35, 58, .55); }
-  .mini::before { top: -8px; width: 58px; height: 17px; margin-left: -29px; border-radius: 1px; transform: rotate(-3deg);
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 3px, transparent 3px 7px), var(--mg); opacity: .82; box-shadow: 0 1px 1px rgba(21, 35, 58, .08);
-    -webkit-mask: linear-gradient(90deg, transparent 0 1px, #000 1px calc(100% - 1px), transparent 0); }
-  .mini b { color: #1c232b; font-weight: 400; font-size: 16px; }
-  .mini.ghost { box-shadow: 0 30px 40px -20px rgba(21, 35, 58, .55); }
+  /* ═════════ the corkboard is just the desk now: the notes lie in the morning light; the projects keep their chalkboard ═════════ */
+  #cork .frame { background: none; box-shadow: none; padding: 0; }
+  #cork .inner { inset: 0; box-shadow: none; overflow: visible; background: none; }
   #detail { background: rgba(227, 232, 235, .55); }
-  /* toolbar icons for the two pages */
   .tb { color: #4f5d69; }
   .tb:hover { background: rgba(47, 79, 115, .07); color: #2f4f73; }
   .tsep { background: #c2cbd2; }
-  .pg i { width: 28px; height: 22px; border: 0; border-radius: 0; box-shadow: none; filter: drop-shadow(0 1px 1.5px rgba(21, 35, 58, .3)); }
-  .pg[data-p="0"] i { background:
-      linear-gradient(#fbfaf6, #fbfaf6) 0 3px / 8px 8px no-repeat, linear-gradient(#fbfaf6, #fbfaf6) 0 13px / 8px 6px no-repeat,
-      linear-gradient(#fbfaf6, #fbfaf6) 10px 3px / 8px 10px no-repeat, linear-gradient(#fbfaf6, #fbfaf6) 20px 3px / 8px 6px no-repeat,
-      linear-gradient(#e7b9a8, #e7b9a8) 1px 1px / 6px 3px no-repeat, linear-gradient(#e9d9a6, #e9d9a6) 11px 1px / 6px 3px no-repeat, linear-gradient(#b9cfbf, #b9cfbf) 21px 1px / 6px 3px no-repeat; }
-  .pg[data-p="0"] i::after { display: none; }
-  .pg[data-p="1"] i { background: none; }
+  .pg[data-p="1"] i { background: none; border: 0; border-radius: 0; box-shadow: none; filter: drop-shadow(0 1px 1.5px rgba(21, 35, 58, .3)); }
   .pg[data-p="1"] i::after { left: 2px; top: 2px; width: 13px; height: 13px; transform: rotate(-7deg); box-shadow: 11px 5px 0 #cfe4cf; }
   .pg::after { background: #2f4f73; }
 </style>
@@ -520,8 +490,8 @@
   <div id="pages">
     <section class="page" id="chalk"><div class="frame"><div class="inner">
       <div class="lanes">
-        <div class="lane" data-col="todo"><h3>想做<small></small></h3><div class="cards"></div><button class="add">＋ 写一个</button></div>
         <div class="lane" data-col="doing"><h3>在做<small></small></h3><div class="cards"></div></div>
+        <div class="lane" data-col="todo"><h3>想做<small></small></h3><div class="cards"></div><button class="add">＋ 写一个</button></div>
         <div class="lane" data-col="done"><h3>做完<small></small></h3><div class="cards"></div></div>
       </div>
       <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
@@ -1017,8 +987,8 @@
   let pSaveT = null;
   const saveP = later => { clearTimeout(pSaveT); pSaveT = setTimeout(() => store(PKEY, S), later ? 400 : 0); };
 
-  const COLS = ["todo", "doing", "done"], COLNAME = { todo: "想做", doing: "在做", done: "做完" };
-  const MAG = { todo: "#e6d49c", doing: "#e4b3a2", done: "#b4cbbb" };
+  const COLS = ["doing", "todo", "done"], COLNAME = { todo: "想做", doing: "在做", done: "做完" };
+  const MAG = { todo: "#c9a24a", doing: "#c9573f", done: "#4f7a5a" };
   const filled = p => p.conds.filter(c => c.t.trim() && !c.sub);
   const isReady = p => { const f = filled(p); return f.length > 0 && f.every(c => c.done); };
   const tiltOf = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0; return ((Math.abs(h) % 9) - 4) * .35; };
