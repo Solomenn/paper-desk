@@ -245,8 +245,9 @@
      画布常量
      ============================================================ */
   const W = 1206;
-  const SANS = '"LXGW WenKai","霞鹜文楷","KaiTi","STKaiti",serif';
-  const MONO = SANS;
+  // a thermal printer prints: Noto Sans SC for the words, a monospace for the figures
+  const SANS = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+  const MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans SC",monospace';
 
   // sasshi's inks: 墨 sumi, 鉄鼠 tetsu, 藍鼠 ainezu, 白鼠 shironezu, 藍 ai, 薄墨 usuzumi
   const INK = '#1c232b';
@@ -1401,7 +1402,7 @@
 
   // the receipt is drawn on a canvas: wait (a little) for the handwriting face before printing
   const fontsIn = Promise.race([
-    Promise.all(['400 26px "LXGW WenKai"', '700 38px "LXGW WenKai"'].map(f => document.fonts.load(f))),
+    Promise.all(['400 26px "Noto Sans SC"', '500 38px "Noto Sans SC"'].map(f => document.fonts.load(f))),
     new Promise(r => setTimeout(r, 2500)),
   ]).catch(() => {});
   fontsIn.then(() => {
