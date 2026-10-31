@@ -617,6 +617,26 @@
   #sndBtn.off .w1, #sndBtn.off .w2 { display: none; } #sndBtn.off .x { display: inline; }
   #sndBtn.off, #ambBtn:not(.on) { color: #a9b4bc; }
   #ambBtn.on { color: #4f7a5a; }
+
+  /* the full cards in Doing, dressed like the small cards: a slip of paper, title in the middle, the goal in grey over a
+     dashed line, small boxes, the progress at the foot — still written in place */
+  .pcard.inl .sheetc { border-radius: 3px; background: #fbfaf6; box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 10px 18px -10px rgba(0,0,0,.6); }
+  .pcard.inl .head { position: static; border-bottom: 0; padding: 16px 16px 2px; }
+  .pcard.inl .head .tin { font: 400 16px/1.4 var(--hand); color: #1c232b; }
+  .pcard.inl .projc .head, .pcard.inl .head { padding-left: 16px; }
+  .pcard.inl .head .pn { position: absolute; right: 16px; bottom: 14px; width: auto; margin: 0; font-size: 12.5px; letter-spacing: .02em; z-index: 2; }
+  .pcard.inl .sheetc > .bar { order: 5; margin: 10px 62px 18px 16px; height: 3px; }
+  .pcard.inl .sheetc > .body { padding: 4px 16px 0; }
+  .pcard.inl .goal { font-size: 13px; line-height: 1.6; color: #4f5d69; padding: 2px 4px 8px; margin: 0 -4px 8px; border-radius: 0; border-bottom: 1px dashed rgba(54,66,78,.18); height: auto; }
+  .pcard.inl .chk li { padding: 1px 0; gap: 8px; }
+  .pcard.inl .chk .box { width: 15px; height: 15px; margin-top: 5px; border-radius: 3px; border-width: 1.5px; }
+  .pcard.inl .chk li.done .box::after { left: 4px; top: 1px; width: 4px; height: 8px; }
+  .pcard.inl .chk textarea { font-size: 13.5px; line-height: 1.5; padding: 2px 4px; height: 24px; }
+  .pcard.inl .chk li.sub { padding-left: 22px; }
+  .pcard.inl .chk li.sub .box { width: 13px; height: 13px; margin-top: 6px; }
+  .pcard.inl .chk .sbar { left: 23px; }
+  .pcard.inl .sheetc > .body > .chk { padding-bottom: 2px; }
+  .pcard.inl .foot { padding: 4px 16px 0; }
 </style>
 <script src="sound.js"></script>
 </head>
