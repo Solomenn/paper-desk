@@ -181,6 +181,7 @@
 </style>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
+<script src="sound.js"></script>
 </head>
 <body>
 <a class="back" href="./" title="回到桌子">←</a>
@@ -1171,6 +1172,7 @@
      ============================================================ */
   function startPrint(onDone) {
     if (print.active) return false;
+    window.Sound && Sound.play("zip", { vol: .5, rate: .8 });
     fromDesk(); layout();
     puffs.length = 0;
     lastSpawn = 0;
@@ -1180,6 +1182,7 @@
     print.timer = setTimeout(() => {
       print.active = false;
       print.printed = true;
+      window.Sound && Sound.play("paperRustle", { vol: .6 });
       drawFrame();
       if (onDone) setTimeout(onDone, 420);
     }, DUR + 40);

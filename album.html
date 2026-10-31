@@ -137,6 +137,7 @@
 </style>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
+<script src="sound.js"></script>
 </head>
 <body>
 <a class="ibtn" id="home" href="./" title="回到桌子">←</a>
@@ -302,6 +303,7 @@
     else { show(2 * cur - 3, 2 * cur); T = buildTurner(2 * cur - 2, 2 * cur - 1); }
     T.dir = dir; T.theta = dir > 0 ? 0 : 180;
     pose(T, T.theta, dir);
+    window.Sound && Sound.play("pageTurn", { vol: .6 });
     return T;
   }
   function end(done) {
@@ -430,9 +432,10 @@
     conds.forEach(c => { const li = el("li"); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = c.t; ul.appendChild(li); });
     ry = 0; zc.style.setProperty("--ry", "0deg");
     $("#zoom").classList.add("show");
+    window.Sound && Sound.play("pickUp", { vol: .6 });
   }
-  function flipZoom() { ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
-  function closeCard() { $("#zoom").classList.remove("show"); }
+  function flipZoom() { window.Sound && Sound.play("cardUnfold", { vol: .5 }); ry += 180; $("#zc").style.setProperty("--ry", ry + "deg"); }
+  function closeCard() { if ($("#zoom").classList.contains("show")) window.Sound && Sound.play("drop", { vol: .45 }); $("#zoom").classList.remove("show"); }
   $("#zoom").addEventListener("click", e => { if (e.target.closest("#zc")) flipZoom(); else closeCard(); });
 
   /* ───────── fit to the window ───────── */

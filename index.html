@@ -611,7 +611,13 @@
   .projc .head { padding-left: 54px; }
   .projc .head .pn { width: 44px; text-align: right; margin-left: -8px; }
   .mini b { text-align: center; }
+
+  .tb.snd .x { display: none; }
+  #sndBtn.off .w1, #sndBtn.off .w2 { display: none; } #sndBtn.off .x { display: inline; }
+  #sndBtn.off, #ambBtn:not(.on) { color: #a9b4bc; }
+  #ambBtn.on { color: #4f7a5a; }
 </style>
+<script src="sound.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalky" x="-5%" y="-25%" width="110%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="d"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
@@ -702,6 +708,9 @@
   <a class="tb" id="albumBtn" href="album.html" title="卡册"><span class="talbum" data-n="0"></span></a>
   <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
   <a class="tb" href="receipt.html" title="今日小票"><span class="treceipt"></span></a>
+  <span class="tsep"></span>
+  <button class="tb snd" id="sndBtn" title="声音（M）"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path class="w1" d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path class="w2" d="M18 7a7 7 0 0 1 0 10"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+  <button class="tb snd" id="ambBtn" title="窗外的声音（Shift+M）"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c7 0 13-5 14-14-8 0-14 5-14 12z"/><path d="M5 19c2.5-4 5.5-7 9-9"/></svg></button>
 </nav>
 <div id="timer"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"><span></span></div></div></div>
 <div class="bin" title="扔掉"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9l1-12.5M10 11v6M14 11v6"/></svg></div>
@@ -716,6 +725,7 @@
   <b>折起</b> 便签右上角或右键；T 全部折起按颜色排好<br>
   <b>摆正</b> 便签右上角的水平仪，或鼠标停在便签上按 L；Shift+L 全部摆正<br>
   <b>收起</b> 把便签拖到屏幕最右边，或往右一甩；悬停卡签偷看，点一下拿回<br>
+  <b>声音</b> M 开关音效，Shift+M 开关窗外的鸟叫和树叶声<br>
   <b>扔掉</b> 拖着便签时右下出现圆圈，拖进去
 </div>
 <div id="menu"></div>
@@ -744,6 +754,7 @@
   const PAGEKEY = "paper-desk.page.v1";
   let page = load(PAGEKEY, 0) === 1 ? 1 : 0;
   function go(i) {
+    if (Math.max(0, Math.min(1, i)) !== page) window.Sound && Sound.play("pageTurn", { vol: .35 });
     page = Math.max(0, Math.min(1, i));
     $("#pages").style.transform = `translateX(${-50 * page}%)`;
     document.body.classList.toggle("p0", page === 0); document.body.classList.toggle("p1", page === 1);
@@ -784,6 +795,12 @@
   $("#trayHandle").addEventListener("click", () => setTray(!document.body.classList.contains("trayOn")));
   window.Tray = { open: () => setTray(true), close: () => {} };
 
+  /* ───────── sound switches ───────── */
+  const syncSnd = () => { if (!window.Sound) return; $("#sndBtn").classList.toggle("off", !Sound.on); $("#ambBtn").classList.toggle("on", Sound.amb && Sound.on); };
+  $("#sndBtn").addEventListener("click", () => { Sound.setOn(!Sound.on); if (Sound.on) Sound.play("tab", { vol: .7 }); });
+  $("#ambBtn").addEventListener("click", () => { if (!Sound.on) Sound.setOn(true); Sound.setAmb(!Sound.amb); });
+  addEventListener("deskSound", syncSnd); syncSnd();
+
   /* ───────── the cord along the top: reminders that stay on every page ─────────
      Each kind (note, proj, today) registers how to draw its chip and what a click does; the order lives here. */
   const BARKEY = "paper-desk.bar.v1";
@@ -792,7 +809,7 @@
   if (!Array.isArray(barList)) barList = [];
   const Bar = {
     kinds: {},
-    add(k, id) { if (!barList.some(x => x.k === k && x.id === id)) barList.push({ k, id }); store(BARKEY, barList); Bar.render(); },
+    add(k, id) { window.Sound && Sound.play("tab", { vol: .6 }); if (!barList.some(x => x.k === k && x.id === id)) barList.push({ k, id }); store(BARKEY, barList); Bar.render(); },
     remove(k, id) { barList = barList.filter(x => !(x.k === k && x.id === id)); store(BARKEY, barList); Bar.render(); },
     render() {
       $$(".chip", barEl).forEach(c => c.remove());
@@ -826,6 +843,7 @@
   const CALKEY = "paper-desk.cal.v1";
   let calPinned = !!load(CALKEY, false);
   function setCal(open, pinned) {
+    if ((!!open || (pinned !== undefined ? pinned : calPinned)) !== document.body.classList.contains("calOpen")) window.Sound && Sound.play("paperRustle", { vol: .35 });
     if (pinned !== undefined) { calPinned = pinned; store(CALKEY, calPinned); }
     document.body.classList.toggle("calPinned", calPinned);
     document.body.classList.toggle("calOpen", !!open || calPinned);
@@ -936,6 +954,7 @@
     }
     const kidsOf = it => { const rows = lis().map(li => li._it), i = rows.indexOf(it), out = []; for (let j = i + 1; j < rows.length && rows[j].sub; j++) out.push(rows[j]); return out; };
     function tickItem(it) {
+      window.Sound && Sound.play("tab", { vol: .55 });
       const kids = it.sub ? [] : kidsOf(it);
       if (kids.length) { const to = !kids.every(k => k.done); kids.forEach(k => { k.done = to; o.tick(k); }); }
       else { it.done = !it.done; o.tick(it); }
@@ -1109,6 +1128,7 @@
       raf = requestAnimationFrame(step);
     }
     function flip(toBack) {
+      window.Sound && Sound.play("cardUnfold", { vol: .55, gap: 300 });
       const back = isBack();
       if (toBack === undefined) toBack = !back;
       if (toBack === back) return;
@@ -1365,7 +1385,8 @@
     const up = () => {
       removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
       $$(".lane").forEach(l => l.classList.remove("over"));
-      if (!ghost) { openDetail(p); return; }
+      if (!ghost) { openDetail(p); window.Sound && Sound.play("pickUp", { vol: .5 }); return; }
+      window.Sound && Sound.impact("card", .35);
       ghost.remove(); slot.remove(); m.classList.remove("lifted");
       Bar.hot(false);
       if (Bar.over(lastY)) { p.bar = true; saveP(); Bar.add("proj", p.id); renderBoard(); return; }
@@ -1459,6 +1480,7 @@
         $(".pd", el).textContent = `${String(d.getFullYear()).slice(2)}.${p2(d.getMonth() + 1)}.${p2(d.getDate())}`;
         $(".postmark", el).style.setProperty("--pr", (-12 + (Math.random() - .5) * 10).toFixed(1) + "deg");
         $(".stamp", el).classList.add("show"); $(".postmark", el).classList.add("show");
+        setTimeout(() => window.Sound && Sound.impact("card", 1), 280);
         renderProgress();
         setTimeout(() => {
           const ar = $("#albumBtn").getBoundingClientRect(), er = el.getBoundingClientRect();
@@ -1472,6 +1494,7 @@
             S.projects = S.projects.filter(x => x !== p); saveP();
             if (inline) inlineCards.delete(p.id); else closeDetail(true);
             renderBoard();
+            window.Sound && Sound.play("drop", { vol: .7 });
             const ab = $("#albumBtn"); ab.classList.remove("gulp"); void ab.offsetWidth; ab.classList.add("gulp");
           }, 620);
         }, 1400);
@@ -1795,7 +1818,7 @@
         if (n.vx > 900 && n.x + HW * .3 >= mR - 1) { dock(n); break; }
         const sp = Math.hypot(n.vx, n.vy);
         n.liftT = Math.min(0.9, sp / 700);
-        if (sp < 35) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); }
+        if (sp < 35) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); window.Sound && Sound.impact("paper", Math.min(1, .15 + (n.thrown || 0) / 2200)); n.thrown = 0; }
         break;
       }
       case "dock": case "peek": case "retract": case "place": case "trash": {
@@ -1828,7 +1851,7 @@
     if (n.mode === "dock" || n.mode === "retract") {
       n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
       renderTabs(); save();
-    } else if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); }
+    } else if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); window.Sound && Sound.impact("paper", .12); }
     else if (n.mode === "trash") { n.el.remove(); notes = notes.filter(x => x !== n); save(); }
   }
 
@@ -1909,6 +1932,7 @@
   }
   const tabAt = n => clamp((tabY.get(n.id) || innerHeight / 2) - BR.top, hh(n) + 10 - BR.top, SB() - hh(n) - 10);
   function dock(n) {
+    window.Sound && Sound.play("paperRustle", { vol: .45 });
     syncBoard();
     if (n.pin) { n.pin = null; renderPin(n); }
     endEdit(n);
@@ -1958,6 +1982,7 @@
   /* ───────── folding: a note becomes one strip with its first line; T folds all of them and lines them up by colour ───────── */
   function setFold(n, v) {
     if (!!n.folded === v) return;
+    window.Sound && Sound.play("paperRustle", { vol: .3, gap: 30 });
     endEdit(n);
     const top0 = n.y - hh(n), bot0 = n.y + hh(n);
     n.folded = v;
@@ -2018,6 +2043,7 @@
   let act = null;           // current gesture
 
   function startDrag(n) {
+    window.Sound && Sound.play("pickUp", { vol: .45, gap: 120 });
     endEdit(n);
     const l = rot(P.x - n.x, P.y - n.y, -n.a);
     n.gx = clamp(l.x / n.s, -HW + 4, HW - 4);
@@ -2071,6 +2097,7 @@
   }, { passive: false });
 
   function popPin(n) {
+    window.Sound && Sound.play("tab", { vol: .6, rate: 1.3 });
     flyPin(n.px, n.py, true);
     n.pin = null; renderPin(n);
     startDrag(n);
@@ -2083,6 +2110,7 @@
     if (Bar.over(P.y + BR.top)) { toBar(n); return; }
     if (P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE) { dock(n); return; }
     n.vx = clamp(P.vx, -2600, 2600); n.vy = clamp(P.vy, -2600, 2600); n.mode = "toss";
+    n.thrown = Math.hypot(n.vx, n.vy);
     if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
   }
   function trash(n) {
@@ -2120,6 +2148,7 @@
         renderPin(n); front(n);
         n.el.querySelector(":scope > .pin").classList.add("press");
         n.s = 0.975; draw(n); save();
+        window.Sound && Sound.play("tab", { vol: .8 });
         return;
       }
     }
@@ -2251,6 +2280,7 @@
       act = {
         type: "pending", sx: P.x, sy: P.y,
         onDrag: () => {
+          window.Sound && Sound.play("paperRustle", { vol: .5 });
           const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top + r.height / 2, s: 0.32, sT: 1, a: 0 });
           startDrag(n); act.fresh = true;
         },

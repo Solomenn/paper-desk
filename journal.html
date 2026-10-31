@@ -197,6 +197,7 @@
 </style>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
+<script src="sound.js"></script>
 </head>
 <body>
 <a class="ibtn" id="back" href="./" title="回到桌子">←</a>
@@ -511,6 +512,7 @@
     if (T.cover) book.classList.remove("closed");
     T.dir = dir; T.theta = dir > 0 ? 0 : 180;
     pose(T, T.theta, dir);
+    window.Sound && Sound.play(T.cover ? (dir > 0 ? "coverOpen" : "coverClose") : "pageTurn", { vol: T.cover ? .8 : .45 });
     return T;
   }
   function end(done) {
@@ -649,6 +651,7 @@
     const cr = coverRect();
     sp.classList.add("gone");
     shelf.classList.add("dim");
+    window.Sound && Sound.play("pickUp", { vol: .6 });
     await flight(b, sr, cr, false);
     reader.style.visibility = ""; fly.classList.remove("on"); fly.replaceChildren();
     $("#back").title = "放回书架";
@@ -663,6 +666,7 @@
     shelf.classList.remove("dim");
     await flight(b, sr, cr, true);
     b.spine.classList.remove("gone"); fly.classList.remove("on"); fly.replaceChildren();
+    window.Sound && Sound.impact("card", .45);
     B = null; $("#back").title = "回到桌子";
   }
   $("#back").addEventListener("click", e => { if (B) { e.preventDefault(); closeBook(); } });
