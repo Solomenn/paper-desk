@@ -249,7 +249,21 @@
   .chk textarea:hover { background: rgba(96, 88, 72, .05); }
   .chk textarea:focus { background: rgba(79, 122, 90, .06); }
   .chk textarea::placeholder { color: #c9c1b0; }
+  .chk { position: relative; }
   .chk li { position: relative; }
+  .chk .hd { position: absolute; left: -15px; top: 10px; width: 9px; height: 15px; cursor: grab; opacity: 0; transition: opacity .15s;
+    background: radial-gradient(circle, #a39d8d 1.1px, transparent 1.5px) 0 0 / 4.5px 5px; }
+  .chk li:hover .hd { opacity: .9; }
+  .chk li.sub .hd { left: 13px; }
+  .chk li.new .hd { display: none; }
+  .chk li.lifted { opacity: .25; }
+  .rowghost { position: absolute; left: 20px; right: 20px; top: 0; z-index: 5; pointer-events: none; background: var(--paper); border-radius: 6px;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 12px 24px -8px rgba(60,40,15,.4); }
+  .rowghost li { padding-right: 6px; }
+  .rowghost .hd { opacity: .9; }
+  .dropline { position: absolute; left: 20px; right: 20px; height: 2px; border-radius: 1px; background: var(--accent); pointer-events: none; z-index: 6; transition: left .12s; }
+  .dropline::before { content: ""; position: absolute; left: -3px; top: -3px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--accent); background: var(--paper); box-sizing: border-box; }
+  .dropline.sub { left: 50px; }
   .chk li.sub { padding-left: 30px; }
   .chk li.sub .box { width: 16px; height: 16px; margin-top: 6px; }
   .chk li.sub.done .box::after { left: 4px; top: 0; }
@@ -468,7 +482,7 @@
 <div class="bin" title="扔掉"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9l1-12.5M10 11v6M14 11v6"/></svg></div>
 
 <div id="help">
-  <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除<br>
+  <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除；拖左侧把手排序，往右拖变子任务<br>
   <b>翻面</b> 鼠标移到卡片右下角变成小手，点一下或拖动；背面写随手记、计时；勾完点「盖章」<br>
   <b>便签</b> 从工具栏拖出；拖图钉按上去就固定，拖走图钉才能再动<br>
   <b>收起</b> 卡片和便签拖到屏幕右边；悬停卡签偷看，点一下拿回<br>
@@ -531,7 +545,7 @@
     const lis = () => [...ul.children].filter(li => li._it);
     function row(it) {
       const li = document.createElement("li");
-      li.innerHTML = `<button class="box" title="完成"></button><textarea rows="1" maxlength="80"></textarea><span class="sn"></span><i class="sbar"><b></b></i>`;
+      li.innerHTML = `<span class="hd" title="拖动排序"></span><button class="box" title="完成"></button><textarea rows="1" maxlength="80"></textarea><span class="sn"></span><i class="sbar"><b></b></i>`;
       const ta = li.querySelector("textarea");
       if (it) { li._it = it; ta.value = it[o.key]; li.classList.toggle("done", !!it.done); li.classList.toggle("sub", !!it.sub); }
       else { li.classList.add("new"); ta.placeholder = o.placeholder; }
@@ -586,6 +600,51 @@
       o.remove(it); o.changed(); render();
     }
 
+    // drag a row by its handle: up and down to reorder, right to tuck it under the row above, left to bring it out.
+    // A main item carries its sub-items along.
+    ul.addEventListener("pointerdown", e => {
+      const hd = e.target.closest(".hd"); if (!hd || e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      const li = hd.parentElement, it = li._it; if (!it) return;
+      document.activeElement && ul.contains(document.activeElement) && document.activeElement.blur();
+      const rows = lis(), group = it.sub ? [li] : [li, ...rows.slice(rows.indexOf(li) + 1).filter((x, i, a) => a.slice(0, i + 1).every(y => y._it.sub))];
+      const rest = rows.filter(r => !group.includes(r));
+      const Zk = () => ul.getBoundingClientRect().height / ul.offsetHeight || 1;
+      const sy = e.clientY, sx = e.clientX, r0 = li.getBoundingClientRect();
+      // a floating copy follows the hand; the rows stay put, faded
+      const ghost = document.createElement("div"); ghost.className = "rowghost";
+      group.forEach(g => { const c = g.cloneNode(true); c.querySelector("textarea").value = g.querySelector("textarea").value; ghost.appendChild(c); });
+      ul.appendChild(ghost);
+      group.forEach(g => g.classList.add("lifted"));
+      const line = document.createElement("div"); line.className = "dropline"; ul.appendChild(line);
+      const top0 = (r0.top - ul.getBoundingClientRect().top) / Zk() + ul.scrollTop;
+      let slot = rows.indexOf(li), asSub = !!it.sub;
+      hd.setPointerCapture(e.pointerId);
+      const mv = ev => {
+        const k = Zk(), dy = (ev.clientY - sy) / k, dx = (ev.clientX - sx) / k;
+        ghost.style.transform = `translate(${dx * .25}px, ${top0 + dy}px) rotate(${Math.max(-2, Math.min(2, dx * .02))}deg)`;
+        // where would it land: before the first remaining row whose middle is below the pointer
+        slot = rest.length;
+        for (let i = 0; i < rest.length; i++) { const r = rest[i].getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { slot = i; break; } }
+        const above = rest[slot - 1], below = rest[slot];
+        // it can hang under the row above if it has no sub-items of its own; it must if it would split a parent from its subs
+        const canSub = !!above && group.length === 1;
+        asSub = canSub && ((below && below._it.sub) || (it.sub ? dx > -24 : dx > 24));
+        const ref = below || null, uRect = ul.getBoundingClientRect();
+        const y = ref ? ref.getBoundingClientRect().top : (rest.length ? rest[rest.length - 1].getBoundingClientRect().bottom : uRect.top);
+        line.style.top = ((y - uRect.top) / k + ul.scrollTop - 1) + "px";
+        line.classList.toggle("sub", asSub);
+      };
+      const up = () => {
+        hd.removeEventListener("pointermove", mv); hd.removeEventListener("pointerup", up);
+        ghost.remove(); line.remove(); group.forEach(g => g.classList.remove("lifted"));
+        const items = group.map(g => g._it), before = rest[slot] ? rest[slot]._it : null;
+        o.move(items, before);
+        it.sub = asSub;
+        o.changed(); render();
+      };
+      hd.addEventListener("pointermove", mv); hd.addEventListener("pointerup", up);
+    });
     ul.addEventListener("click", e => {
       const b = e.target.closest(".box"); if (!b) return;
       const li = b.parentElement; if (li._it) tickItem(li._it);
@@ -738,7 +797,7 @@
       if (e.button !== 0) return;
       if (el.classList.contains("peek")) { untuck(); e.preventDefault(); return; }
       if (el.classList.contains("fly")) return;
-      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .toss, .curl")) return;
+      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .curl, .hd")) return;
       const p0 = { ...o.pos() }, sx = e.clientX, sy = e.clientY;
       let moved = false;
       el.setPointerCapture(e.pointerId);
@@ -803,6 +862,7 @@
     items: visible,
     make: text => ({ id: uid(), text, done: false, addedAt: Date.now() }),
     insertAfter: (ref, it) => items.splice(items.indexOf(ref) + 1, 0, it),
+    move: (group, before) => { items = items.filter(i => !group.includes(i)); const at = before ? items.indexOf(before) : items.length; items.splice(at, 0, ...group); },
     add: text => items.push({ id: uid(), text, done: false, addedAt: Date.now() }),
     remove: it => { items = items.filter(i => i !== it); },
     tick: it => { it.doneAt = it.done ? Date.now() : 0; },
@@ -967,6 +1027,7 @@
       items: () => p.conds,
       make: t => ({ t, done: false }),
       insertAfter: (ref, it) => p.conds.splice(p.conds.indexOf(ref) + 1, 0, it),
+      move: (group, before) => { p.conds = p.conds.filter(c => !group.includes(c)); const at = before ? p.conds.indexOf(before) : p.conds.length; p.conds.splice(at, 0, ...group); },
       add: t => p.conds.push({ t, done: false }),
       remove: it => { p.conds = p.conds.filter(c => c !== it); },
       tick: it => { it.at = it.done ? Date.now() : 0; },
