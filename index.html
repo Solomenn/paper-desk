@@ -22,28 +22,24 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; }
-  /* an early-morning wall: warm plaster, the sun coming in from the top right */
-  body {
-    font-family: var(--sans); color: var(--ink);
-    background:
-      radial-gradient(70% 80% at 92% 0%, rgba(255, 214, 150, .55), rgba(255, 214, 150, 0) 60%),
-      radial-gradient(90% 70% at 0% 100%, rgba(120, 82, 46, .16), transparent 70%),
-      linear-gradient(165deg, #f4e7cf 0%, #ead8ba 55%, #dfc9a6 100%);
-    user-select: none; -webkit-user-select: none; touch-action: none;
-  }
-  body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* ───────── sunlight and the shadow of a tree outside the window ───────── */
-  #light { position: fixed; inset: 0; pointer-events: none; z-index: 30000; overflow: hidden; }
-  #light .sun { position: absolute; inset: 0; mix-blend-mode: soft-light;
-    background: linear-gradient(118deg, transparent 38%, rgba(255, 226, 170, .55) 52%, rgba(255, 236, 196, .25) 70%, transparent 86%); }
-  #light svg { position: absolute; right: -4%; top: -6%; width: 62%; height: 100%; mix-blend-mode: multiply; opacity: .75; }
-  #light .sway { transform-origin: 100% 0; animation: sway 9s ease-in-out infinite alternate; }
-  #light .sway2 { transform-origin: 100% 0; animation: sway 6.5s ease-in-out -2s infinite alternate-reverse; }
-  @keyframes sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.4deg) translate(-6px, 4px); } }
+  /* the room, copied from sasshi (src/app/Room.tsx + app.css): 朝霧 paper with washi fibres, the corner away from the window
+     in shade, one patch of low sun from the top right with its glow, paper tooth; the window bar and a twig cast over it all */
+  body { font-family: var(--sans); color: var(--ink); background: #e3e8eb; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .desk { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #e3e8eb; contain: strict; }
+  .desk > svg, .desk > .falloff, .desk > .tooth { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .desk .fl { position: absolute; inset: -50%; background-repeat: repeat; }
+  .fl-a { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .42; transform: rotate(30deg); }
+  .fl-b { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='560' height='560'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.007 0.028' numOctaves='4' seed='13' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 560px; opacity: .38; transform: rotate(-38deg); }
+  .fl-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.03' numOctaves='4' seed='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 .45  0 0 0 0 .5  0 0 0 0 .53  -14 0 0 0 1.3'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .10; transform: rotate(-50deg); }
+  .fl-s { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.004 0.045' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -9 0 0 0 1.25'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"); background-size: 600px; opacity: .16; transform: rotate(-64deg); }
+  .falloff { background: radial-gradient(150% 130% at 96% 0%, transparent 42%, rgb(196 207 217 / .36) 100%); mix-blend-mode: multiply; }
+  .sun, .lift { opacity: var(--day, 1); transition: opacity 1.6s ease-out; }
+  .sun { mix-blend-mode: multiply; }
+  .lift { mix-blend-mode: color-dodge; }
+  .tooth { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); background-size: 240px; mix-blend-mode: multiply; opacity: .07; }
+  /* the shadow falls over everything on the desk, as the 3D engine casts it over the book */
+  .cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; mix-blend-mode: multiply; opacity: calc(.2 * var(--day, 1)); transition: opacity 1.6s ease-out; }
+  @media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
 
   /* ───────── left: today's tear-off calendar ───────── */
   #cal { position: fixed; left: var(--gap); top: var(--gap); bottom: var(--gap); width: var(--calw); z-index: 20; }
@@ -452,11 +448,11 @@
   #menu .sep { width: 1px; height: 16px; background: var(--line); }
 
   @media (max-width: 900px) { :root { --calw: 240px; --gap: 14px; } .lanes { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
-  @media (prefers-reduced-motion: reduce) { #light .sway, #light .sway2 { animation: none; } #pages { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #pages { transition: none; } }
 </style>
 </head>
 <body>
-<div id="light" aria-hidden="true"><div class="sun"></div></div>
+<div class="desk" id="room" aria-hidden="true"><i class="fl fl-a"></i><i class="fl fl-b"></i><i class="fl fl-c"></i><i class="fl fl-s"></i><i class="falloff"></i></div>
 
 <aside id="cal">
 <div class="rings"></div>
@@ -1236,44 +1232,53 @@
   });
   renderClock();
 
-  /* ───────── morning sun through the window, and the shadow of a branch swaying on the wall ───────── */
-  (function tree() {
-    const NS = "http://www.w3.org/2000/svg";
-    let seed = 11;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 1000 1000");
-    svg.setAttribute("preserveAspectRatio", "xMaxYMin slice");
-    let leaves = ["", ""], twigs = ["", ""];
-    function branch(x, y, a, len, w, depth, layer) {
-      const x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len;
-      const bend = (rnd() - .5) * len * .25, mx = (x + x2) / 2 - Math.sin(a) * bend, my = (y + y2) / 2 + Math.cos(a) * bend;
-      twigs[layer] += `<path d="M${x.toFixed(1)} ${y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke-width="${w.toFixed(1)}"/>`;
-      if (depth >= 1) {
-        const n = 2 + Math.floor(rnd() * 3);
-        for (let i = 0; i < n; i++) {
-          const t = .25 + rnd() * .75, side = rnd() < .5 ? -1 : 1;
-          const lx = x + (x2 - x) * t, ly = y + (y2 - y) * t, la = a + side * (.5 + rnd() * .7);
-          const L = 20 + rnd() * 18;
-          const cx = lx + Math.cos(la) * L * .55, cy = ly + Math.sin(la) * L * .55;
-          leaves[layer] += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(L * .55).toFixed(1)}" ry="${(L * .2).toFixed(1)}" transform="rotate(${(la * 180 / Math.PI).toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
-        }
-      }
-      if (depth >= 4) return;
-      const k = 1 + (rnd() < .6 ? 1 : 0);
-      for (let i = 0; i <= k; i++) branch(x2, y2, a + (i - k / 2) * (.45 + rnd() * .3) + (rnd() - .5) * .3, len * (.62 + rnd() * .15), w * .62, depth + 1, layer);
+  /* ───────── the room (sasshi, src/app/Room.tsx + layout.ts lightOf): geometry from the 1440 × 900 reference, scaled ───────── */
+  (function room() {
+    const REF = { w: 1440, h: 900, patch: [[560, -60], [1520, -60], [1520, 690], [1240, 960], [300, 960]], bars: [[910, -60, 730, 960, 16]], twig: [560, -14, 1] };
+    const LEAVES = [[842, 62, -8, .8], [772, 118, -38, 1.05], [706, 186, 24, 1.1], [650, 246, -58, .95], [590, 322, 14, 1.15], [536, 408, -70, 1],
+      [486, 494, 20, 1.1], [430, 590, -46, .9], [380, 676, 30, .85], [612, 268, 150, .7], [724, 150, 140, .75]];
+    const TWIG = "M905 20 C 770 110, 650 200, 530 380 S 390 630, 320 880";
+    const LEAF = "M0 0 C 22 -17, 64 -19, 92 0 C 64 17, 22 15, 0 0 Z";
+    const desk = $("#room");
+    const pts = p => p.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+    const twig = leaf => `<path d="${TWIG}" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>` +
+      LEAVES.map(([x, y, r, k]) => `<use href="#${leaf}" transform="translate(${x} ${y}) rotate(${r}) scale(${k})"/>`).join("");
+    let cast = null;
+    function paint() {
+      const W = innerWidth, H = innerHeight, sx = W / REF.w, sy = H / REF.h, k = Math.sqrt(sx * sy);
+      const small = W < 900;
+      const blur = small ? { patch: 9, bar: 5, umbra: 1.1, penumbra: 5 } : { patch: 16, bar: 10, umbra: 2.2, penumbra: 12 };
+      const patch = pts(REF.patch.map(([x, y]) => [x * sx, y * sy]));
+      const bars = REF.bars.map(([x1, y1, x2, y2, w]) => `<line x1="${x1 * sx}" y1="${y1 * sy}" x2="${x2 * sx}" y2="${y2 * sy}" stroke="#22344a" stroke-width="${w * Math.min(1.25, k)}"/>`).join("");
+      const tw = `translate(${(REF.twig[0] * sx).toFixed(1)} ${(REF.twig[1] * sy).toFixed(1)}) scale(${(REF.twig[2] * k).toFixed(3)})`;
+      const vb = `viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"`;
+      $$(":scope > svg", desk).forEach(e => e.remove());
+      const add = html => { desk.insertAdjacentHTML("beforeend", html); };
+      add(`<svg class="sun" ${vb}><defs><filter id="room-sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter>
+        <linearGradient id="room-sg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="rgb(250 251 252)"/><stop offset="${small ? 0 : .17}" stop-color="rgb(248 250 251)"/>
+        <stop offset="${small ? .2 : .3}" stop-color="rgb(240 243 246)"/><stop offset="1" stop-color="rgb(238 242 245)"/></linearGradient></defs>
+        <rect x="-10" y="-10" width="${W + 20}" height="${H + 20}" fill="url(#room-sg)"/><polygon points="${patch}" fill="#fff" filter="url(#room-sb)"/></svg>`);
+      add(`<svg class="lift" ${vb}><defs><filter id="room-lb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter></defs>
+        <polygon points="${patch}" fill="rgb(19 20 21)" filter="url(#room-lb)"/></svg>`);
+      const old = desk.querySelector(".tooth"); if (old) old.remove();
+      desk.insertAdjacentHTML("beforeend", '<i class="tooth"></i>');
+      if (cast) cast.remove();
+      document.body.insertAdjacentHTML("beforeend", `<svg class="cast" ${vb} aria-hidden="true"><defs>
+        <filter id="room-pb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.patch}"/></filter>
+        <filter id="room-bb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${blur.bar}"/></filter>
+        <filter id="room-um"><feGaussianBlur stdDeviation="${blur.umbra}"/></filter>
+        <filter id="room-pe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${blur.penumbra}"/></filter>
+        <path id="room-leaf" d="${LEAF}"/>
+        <mask id="room-m" maskUnits="userSpaceOnUse" x="-200" y="-200" width="${W + 400}" height="${H + 400}"><polygon points="${patch}" fill="#fff" filter="url(#room-pb)"/></mask></defs>
+        <g mask="url(#room-m)" color="#22344a" fill="#22344a"><g filter="url(#room-bb)" opacity=".9">${bars}</g>
+        <g transform="${tw}"><g filter="url(#room-um)">${twig("room-leaf")}</g><g filter="url(#room-pe)" opacity=".55" transform="translate(16 12)">${twig("room-leaf")}</g></g></g></svg>`);
+      cast = document.body.lastElementChild;
     }
-    branch(1060, 40, Math.PI * .8, 260, 16, 0, 0);
-    branch(1040, 330, Math.PI * .93, 200, 11, 1, 1);
-    branch(1020, -40, Math.PI * .66, 220, 12, 1, 1);
-    svg.innerHTML = `<defs>
-        <filter id="tb1" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter>
-        <filter id="tb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="8"/></filter>
-        <filter id="tb3"><feGaussianBlur stdDeviation="16"/></filter></defs>
-      <g filter="url(#tb3)" fill="rgba(110,74,36,.10)"><rect x="300" y="-200" width="34" height="1500" transform="rotate(24 300 0)"/><rect x="-200" y="560" width="1500" height="30" transform="rotate(-8 0 560)"/></g>
-      <g class="sway2" filter="url(#tb2)"><g fill="none" stroke="rgba(90,60,30,.09)" stroke-linecap="round">${twigs[1]}</g><g fill="rgba(90,60,30,.09)">${leaves[1]}</g></g>
-      <g class="sway" filter="url(#tb1)"><g fill="none" stroke="rgba(80,52,24,.15)" stroke-linecap="round">${twigs[0]}</g><g fill="rgba(80,52,24,.15)">${leaves[0]}</g></g>`;
-    $("#light").appendChild(svg);
+    paint();
+    let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paint, 120); });
+    // daybreak: the light rises with the first load
+    document.documentElement.style.setProperty("--day", "0");
+    requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.style.setProperty("--day", "1")));
   })();
 })();
 </script>
