@@ -147,10 +147,10 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
     s += at(x0, 10.6, 1.75, "mi", "雪国线 · 乘车券");
     s += at(right, 10.6, 1.75, "mi r", `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`);
     // the big numeral: the minutes of the ride
-    s += at(right, 31.2, 21, "sf r", esc(t.minutes), "font-weight:500;letter-spacing:-.015em");
+    s += at(right, 31.2, String(t.minutes).length > 2 ? 16 : 21, "sf r", esc(t.minutes), "font-weight:500;letter-spacing:-.015em");
     s += at(right, 35.4, 1.75, "mi r", "分 钟");
     // the task: one line if it fits at 70 % of the size, else two smaller lines
-    const name = t.name || "这一程，专注什么？", evW = right - x0 - 30, full = ems(name) * 8.6;
+    const name = t.name || (t.start ? "先上车，再想" : "这一程，专注什么？"), evW = right - x0 - 30, full = ems(name) * 8.6;
     if (full <= evW / .7) {
       const px = Math.min(8.6, 8.6 * evW / full);
       s += at(x0 - .4, 23, f2(px), "sf", esc(name), "font-weight:500;letter-spacing:-.005em");
@@ -165,9 +165,17 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
     // a hairline, then the fields
     s += `<i class="p" style="left:calc(var(--u)*${x0});top:calc(var(--u)*37.6);width:calc(var(--u)*${right - x0});height:max(1px,calc(var(--u)*.16));background:rgba(28,35,43,.2)"></i>`;
     const start = t.start || Date.now(), F = [[x0, "日 期", `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${DAYS[d.getDay()]}`], [x0 + 36, "发 车", hm(start)],
-      [x0 + 53, "到 达", hm(start + t.minutes * 60000)], [x0 + 70, "座 位", esc(t.seat || "")]];
+      [x0 + 53, "到 达", hm(t.endAt || start + (t.rideEnd || t.minutes * 60000) + (t.wait || 0))], [x0 + 70, "座 位", esc(t.seat || "")]];
     for (const [x, k, v] of F) s += at(x, 42.2, 1.75, "mi", k) + at(x, 47.4, 3, "sn", v, "color:var(--ink)");
-    s += at(x0, 53.4, 2.4, "sn", "雪国线 · 夜行 · 车内请保持安静", "color:var(--muted);letter-spacing:.06em");
+    const legs = (t.legs || []).slice(1);
+    s += at(x0, 53.4, 2.4, "sn", legs.length ? `雪国线 · 夜行 · ${t.legs[0].m} 分钟起` : "雪国线 · 夜行 · 车内请保持安静", "color:var(--muted);letter-spacing:.06em");
+    // each time the ride was bought on at a station: a small 补票 stamp along the foot, one after another like steps
+    legs.slice(0, 4).forEach((l, i) => {
+      const x = x0 + 40 + i * 12.6, y = 49.2 - i * .5, rot = ((hash(String(l.at)) % 7) - 3) * 1.2;
+      s += `<span class="p sn" style="left:calc(var(--u)*${f2(x)});top:calc(var(--u)*${f2(y)});width:calc(var(--u)*11.4);height:calc(var(--u)*5);border:calc(var(--u)*.3) solid var(--spot, ${SPOT});border-radius:calc(var(--u)*.6);
+        display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*.8);font-size:calc(var(--u)*1.9);color:var(--spot, ${SPOT});opacity:.78;transform:rotate(${rot}deg);mix-blend-mode:multiply"><b style="font-weight:500">补</b>+${esc(l.m)}′</span>`;
+    });
+    if (legs.length > 4) s += at(x0 + 40 + 4 * 12.6, 53, 2, "sn", `+${legs.length - 4}`, "color:var(--spot)");
     // the stub: upright characters down its middle, the number small along its outer side
     const sx = PERF + 9.6, chars = ["乘", "车", "凭", "证"], px = 2.8, step = px * 1.6, y0 = H / 2 - step * 1.5 + px * .36;
     chars.forEach((c, i) => { s += at(sx - px / 2, f2(y0 + i * step), px, "sn", c, "color:#eef2f6;font-weight:500"); });

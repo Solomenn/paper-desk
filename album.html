@@ -322,6 +322,8 @@
       pg.innerHTML = `<h1>${KINDS[KIND].name}</h1><div class="sub"></div><div class="rule"></div><div class="n"></div><span class="seal" style="position:absolute;right:52px;bottom:64px;width:54px;height:54px"></span>`;
       $(".sub", pg).textContent = first ? `${fmt(first.doneAt)} — ${fmt(last.doneAt)}` : "";
       $(".n", pg).textContent = `${cards.length} ${KINDS[KIND].n}`;
+      if (KIND === "ticket") { const one = cards.filter(t => t.legs && t.legs[0] && t.legs[0].m === 5), on = one.filter(t => t.legs.length > 1);
+        if (one.length) $(".n", pg).textContent += ` · 先坐一站 ${one.length} 次，${on.length} 次续了程`; }
       return pg;
     }
     const grid = el("div", "grid");

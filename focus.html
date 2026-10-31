@@ -84,6 +84,22 @@
   #sndT { position: absolute; left: 76px; top: 2.2vh; border: 0; background: none; font: 13px var(--hand); letter-spacing: .3em; color: rgba(232, 217, 168, .0); cursor: pointer; transition: color .4s; }
   #car:hover #sndT { color: rgba(232, 217, 168, .55); }
 
+  /* at a station: get off, or buy on and ride further */
+  #hold { position: absolute; left: 50%; top: 19vh; transform: translate(-50%, 12px); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 20px 28px 22px; border-radius: 18px; background: rgba(8, 12, 20, .62); backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(232,217,168,.16), 0 20px 50px rgba(0,0,0,.45);
+    opacity: 0; pointer-events: none; transition: opacity .6s, transform .6s var(--ease); }
+  #hold.on { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  #hold h2 { margin: 0; font-weight: 400; font-size: 20px; letter-spacing: .3em; color: #f1e6c4; }
+  #hold p { margin: 0; font-size: 13px; letter-spacing: .25em; color: rgba(232,217,168,.7); }
+  #hold .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
+  #hold button { border: 0; border-radius: 999px; padding: 8px 16px; font: 14px var(--hand); letter-spacing: .2em; cursor: pointer; color: #13213a; background: #e8d9a8; transition: transform .2s; }
+  #hold button:hover { transform: translateY(-2px); }
+  #hold button.ghost { color: #e8d9a8; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(232,217,168,.3); }
+  #hudName { outline: none; cursor: text; border-bottom: 1px dashed transparent; }
+  #hudName:hover, #hudName:focus { border-bottom-color: rgba(232,217,168,.4); }
+  #hudName:empty::before { content: "这一程在做什么？点这里写"; color: rgba(232,217,168,.45); }
+  #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { color: rgba(232, 217, 168, .8); }
+
   /* ═════════ arriving: the ticket comes back with the station's stamp ═════════ */
   #arrive { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 16, .72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .8s; }
   #arrive.on { opacity: 1; pointer-events: auto; }
@@ -121,7 +137,9 @@
   <div id="pane"><canvas id="scene"></canvas><canvas id="drops"></canvas></div>
   <div id="sill"></div>
   <div id="line"><i class="track"></i><i class="done"></i></div>
-  <div id="hud"></div>
+  <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
+  <div id="hold"><h2 id="holdName"></h2><p id="holdMsg"></p>
+    <div class="btns"><button data-m="10">补票 · 再坐 10 分</button><button data-m="15">再坐 15 分</button><button data-m="25">再坐 25 分</button><button class="ghost" id="getOff">下车</button></div></div>
   <button id="sndT">车 轮 声</button>
   <button id="off">中 途 下 车</button>
 </section>
@@ -146,14 +164,14 @@
   const tasks = [];
   ((get("paper-desk.desk-tasks.v1", {}) || {}).projects || []).filter(p => p.col === "doing" && (p.title || "").trim()).forEach(p => tasks.push({ name: p.title, proj: p.id }));
   (get("paper-desk.today.v1", []) || []).filter(i => i && !i.done && (i.text || "").trim() && !i.sub).slice(0, 6).forEach(i => tasks.push({ name: i.text }));
-  let pick = tasks[0] || null, minutes = get("paper-desk.trip.min", 25);
+  let pick = tasks[0] || null, minutes = get("paper-desk.trip.min", 5);
   const tEl = $("#tasks");
   tasks.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; $("#free").value = ""; draw(); }; t.el = b; tEl.appendChild(b); });
   if (!tasks.length) tEl.innerHTML = '<span style="color:#5f7089;font-size:13px">黑板 Doing 和今日台历上还没有事，写一件吧</span>';
   $("#free").addEventListener("input", () => { pick = $("#free").value.trim() ? { name: $("#free").value.trim() } : (tasks[0] || null); draw(); });
-  [15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
+  [5, 15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m === 5 ? "5 分 · 先坐一站" : `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
   // stations for a trip of this length: one every 5 minutes or so, from 3 to 9 stops
-  const stopsFor = m => { const n = Math.max(3, Math.min(9, Math.round(m / 5) + 1)), off = (new Date().getDate() * 3) % (STATIONS.length - n + 1); return STATIONS.slice(off, off + n); };
+  const stopsFor = m => { const n = m <= 5 ? 2 : Math.max(3, Math.min(9, Math.round(m / 5) + 1)), off = (new Date().getDate() * 3) % (STATIONS.length - n + 1); return STATIONS.slice(off, off + n); };
   const seatFor = () => { const r = Math.floor(Math.random() * 1e9); return `${1 + r % 8} 号车 ${1 + (r >> 3) % 16}${"ABCD"[(r >> 7) % 4]}`; };
   let seat = seatFor(), no = String(1000 + Math.floor(Math.random() * 9000));
   $("#tkSlot").innerHTML = Ticket.html({ minutes: 25, stops: stopsFor(25), seat, no });
@@ -163,6 +181,7 @@
     tasks.forEach(t => t.el.classList.toggle("on", t === pick));
     document.querySelectorAll("#mins .chip").forEach(b => b.classList.toggle("on", +b.dataset.m === minutes));
     fillTicket(TK, { name: pick ? pick.name : "", minutes, stops: stopsFor(minutes), seat, no });
+    $("#go").textContent = minutes === 5 ? "先 坐 一 站" : "检 票 上 车";
   }
   draw();
 
@@ -401,16 +420,26 @@
   /* ═════════ the trip ═════════ */
   const CRUISE = 240, ACCEL = 7, BRAKE = 11;      // px/s of the nearest layer; seconds to speed up; seconds of braking
   let trip = get(TRIP, null);
+  // older trips (before riding time was kept) get it now
+  function norm(t) {
+    if (!t.rideEnd) { t.rideEnd = t.end - t.start; t.wait = 0; t.unit = t.rideEnd / t.minutes; }
+    if (!t.stopT) t.stopT = t.stops.map((_, i) => t.rideEnd * i / (t.stops.length - 1));
+    if (!t.legs) t.legs = [{ m: t.minutes, at: t.start }];
+    return t;
+  }
+  const rideMs = () => Math.max(0, Math.min(trip.rideEnd, Date.now() - trip.start - trip.wait));
   function lineUI() {
     const L = $("#line"); L.querySelectorAll(".st, .tr").forEach(e => e.remove());
-    trip.stops.forEach((s, i) => { const e = document.createElement("i"); e.className = "st"; e.style.left = (i / (trip.stops.length - 1) * 100) + "%"; e.innerHTML = `<i></i>`; e.firstChild.textContent = s; L.appendChild(e); });
+    trip.stops.forEach((s, i) => { const e = document.createElement("i"); e.className = "st"; e.style.left = (trip.stopT[i] / trip.rideEnd * 100) + "%"; e.innerHTML = `<i></i>`; e.firstChild.textContent = s; L.appendChild(e); });
     const tr = document.createElement("i"); tr.className = "tr"; L.appendChild(tr);
   }
+  // the trip's clock is riding time: time standing at a station (deciding whether to ride on) is left out
+  const unitOf = m => { const dur = +new URLSearchParams(location.search).get("dur"); return dur > 0 ? dur * 1000 / m : 60000; };   // ?dur= seconds, for trying it out
   function board() {
-    if (!pick || !pick.name) { $("#free").focus(); $("#free").placeholder = "先写这一程要专注的事"; return; }
-    const dur = +new URLSearchParams(location.search).get("dur");   // seconds, for trying it out
-    trip = { id: Math.random().toString(36).slice(2, 9), name: pick.name, proj: pick.proj || null, minutes, stops: stopsFor(minutes), seat, no,
-      start: Date.now(), end: Date.now() + (dur > 0 ? dur * 1000 : minutes * 60000), line: LINE };
+    const name = $("#free").value.trim() || (pick ? pick.name : "");
+    const unit = unitOf(minutes), stops = stopsFor(minutes), rideEnd = minutes * unit;
+    trip = { id: Math.random().toString(36).slice(2, 9), name, proj: name && pick && pick.name === name ? pick.proj || null : null, minutes, stops, seat, no,
+      start: Date.now(), end: Date.now() + rideEnd, unit, rideEnd, wait: 0, stopT: stops.map((_, i) => rideEnd * i / (stops.length - 1)), legs: [{ m: minutes, at: Date.now() }], line: LINE };
     put(TRIP, trip);
     audio();
     window.Sound && Sound.play("tab", { vol: .9 });
@@ -424,24 +453,56 @@
   function ride() {
     riding = true; arrived = false;
     $("#car").classList.add("on"); fit(); lineUI();
+    $("#hudName").textContent = trip.name || "";
     const elapsed = (Date.now() - trip.start) / 1000;
     speed = elapsed > ACCEL ? CRUISE : 0; target = CRUISE;
   }
-  function progress() { return Math.min(1, (Date.now() - trip.start) / (trip.end - trip.start)); }
+  function progress() { return rideMs() / trip.rideEnd; }
+  const reachedI = () => { const r = rideMs(); let k = 0; trip.stopT.forEach((t, i) => { if (t <= r + 1) k = i; }); return k; };
   function updateLine() {
-    const p = progress(), n = trip.stops.length - 1;
+    const p = progress(), n = trip.stops.length - 1, k = reachedI();
     $("#line .done").style.width = (p * 100) + "%";
     $("#line .tr").style.left = (p * 100) + "%";
-    document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i / n <= p + 1e-6));
-    const left = Math.max(0, Math.ceil((trip.end - Date.now()) / 60000)), nextI = Math.min(n, Math.floor(p * n) + 1);
-    $("#hud").textContent = p < 1 ? `${trip.name} · 下一站 ${trip.stops[nextI]} · 还有 ${left} 分钟` : `终点 ${trip.stops[n]}`;
+    document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i <= k));
+    const left = Math.max(0, Math.ceil((trip.end - Date.now()) / trip.unit));
+    $("#hudRest").textContent = holding ? ` · 停在 ${trip.stops[n]}` : ` · 下一站 ${trip.stops[Math.min(n, k + 1)]} · 还有 ${left} 分钟`;
   }
+  // the name can be written on the way
+  $("#hudName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
+  $("#hudName").addEventListener("blur", () => { if (!trip) return; trip.name = $("#hudName").textContent.trim().slice(0, 40); $("#hudName").textContent = trip.name; put(TRIP, trip); });
+
+  /* at the end of the line: the train waits at the platform until you choose */
+  let holding = false;
+  function hold() {
+    holding = true;
+    const stop = trip.stops[trip.stops.length - 1], m = Math.round(rideMs() / trip.unit);
+    $("#holdName").textContent = `到了 · ${stop}`;
+    $("#holdMsg").textContent = trip.legs.length > 1 ? `已经坐了 ${m} 分钟。下车，还是再坐一程？` : `坐了 ${m} 分钟。下车，还是再坐一程？`;
+    $("#hold").classList.add("on");
+    chime();
+  }
+  // buy on: more stations further down the line, the train pulls out again
+  function extend(m) {
+    if (!holding) return;
+    holding = false; $("#hold").classList.remove("on");
+    const now = Date.now(), from = trip.rideEnd, add = m * trip.unit, k = Math.max(1, Math.min(6, Math.round(m / 5)));
+    trip.wait = now - trip.start - trip.rideEnd;
+    let si = STATIONS.indexOf(trip.stops[trip.stops.length - 1]);
+    for (let j = 1; j <= k; j++) { si = (si + 1) % STATIONS.length; trip.stops.push(STATIONS[si]); trip.stopT.push(from + add * j / k); }
+    trip.rideEnd = from + add; trip.end = now + add; trip.minutes += m; trip.legs.push({ m, at: now });
+    put(TRIP, trip);
+    if (platform) platform.leaving = true;
+    target = CRUISE; lineUI();
+    window.Sound && Sound.play("tab", { vol: .7 });
+  }
+  document.querySelectorAll("#hold [data-m]").forEach(b => b.onclick = () => extend(+b.dataset.m));
+  $("#getOff").onclick = () => { if (holding) { holding = false; $("#hold").classList.remove("on"); finish(false); } };
   function finish(early) {
     if (arrived) return;
     arrived = true;
-    const p = progress(), n = trip.stops.length - 1, reached = early ? Math.floor(p * n) : n;
+    const n = trip.stops.length - 1, reached = early ? reachedI() : n;
     const stop = trip.stops[reached];
-    const rec = Object.assign({}, trip, { done: !early, endAt: Date.now(), reached, at: stop, focused: Math.round((Math.min(Date.now(), trip.end) - trip.start) / 60000) });
+    const rec = Object.assign({}, trip, { done: !early, endAt: Date.now(), reached, at: stop, focused: Math.round(rideMs() / trip.unit) });
     const all = get(TICKETS, []) || []; all.push(rec); put(TICKETS, all);
     localStorage.removeItem(TRIP);
     // a project you rode with counts the time
@@ -453,12 +514,12 @@
     // the ticket comes back, stamped
     $("#slot").innerHTML = Ticket.html(rec, { punched: true });
     const tk = $("#slot .tkt"); tk.style.setProperty("--tw", "min(520px, 86vw)"); Ticket.physics(tk);
-    $("#arrMsg").textContent = early ? `在 ${stop} 下了车 · 坐了 ${rec.focused} 分钟` : `终点 ${stop} 到了 · ${trip.minutes} 分钟，一路辛苦`;
+    $("#arrMsg").textContent = early ? `在 ${stop} 下了车 · 坐了 ${rec.focused} 分钟`
+      : trip.legs.length > 1 ? `从 ${trip.legs[0].m} 分钟坐起，一路坐到了 ${stop} · ${rec.focused} 分钟` : `在 ${stop} 下了车 · ${rec.focused} 分钟，一路辛苦`;
     $("#arrive").classList.add("on");
-    if (!early) chime();
     setTimeout(() => { tk.classList.add("stamped"); window.Sound && Sound.impact("card", .8); }, 700);
   }
-  $("#off").onclick = () => { if (!arrived && confirm("在下一站下车？这张票会记下你坐到了哪里。")) { target = 0; setTimeout(() => finish(true), 600); } };
+  $("#off").onclick = () => { if (holding) { $("#getOff").click(); return; } if (!arrived && confirm("在下一站下车？这张票会记下你坐到了哪里。")) { target = 0; setTimeout(() => finish(true), 600); } };
   $("#again").onclick = () => { location.reload(); };
 
   /* ───────── the loop ───────── */
@@ -470,8 +531,9 @@
       const leftS = (trip.end - Date.now()) / 1000;
       // brake into the last station: the platform is placed where the train will come to rest
       // constant braking from v0 over T seconds covers v0·T/2: the platform is put exactly there
-      if (!arrived && leftS <= BRAKE && leftS > 0 && !platform) { const T = Math.max(.5, leftS); platform = { x: world + speed * T / 2, v0: speed, T, name: trip.stops[trip.stops.length - 1] }; }
-      if (platform) speed = platform.v0 * Math.max(0, Math.min(1, leftS / platform.T));
+      if (!arrived && !holding && leftS <= BRAKE && leftS > 0 && (!platform || platform.leaving)) { const T = Math.max(.5, leftS); platform = { x: world + speed * T / 2, v0: speed, T, name: trip.stops[trip.stops.length - 1] }; }
+      if (holding) speed = 0;
+      else if (platform && !platform.leaving) speed = platform.v0 * Math.max(0, Math.min(1, leftS / platform.T));
       else speed += (target - speed) * (1 - Math.exp(-dt / (target > speed ? ACCEL / 3 : 1)));
       world += speed * dt;
       if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
@@ -479,15 +541,16 @@
       if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
       scene(dt, now / 1000);
       updateLine();
-      if (!arrived && leftS <= 0) finish(false);
+      if (!arrived && !holding && leftS <= 0) hold();
     }
     requestAnimationFrame(frame);
   }
   addEventListener("resize", () => { if (riding) fit(); });
   // back on the train if the page was closed mid-trip
-  if (trip && trip.end > Date.now() - 5000) { $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket(TK, trip); TK.classList.add("punched"); ride();
+  // back on the train if the page was closed mid-trip (or while it stood at a station)
+  if (trip) { norm(trip); $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket(TK, trip); TK.classList.add("punched"); ride();
+    if (Date.now() >= trip.end) { speed = 0; platform = { x: world, v0: 0, T: 1, name: trip.stops[trip.stops.length - 1] }; }
     addEventListener("pointerdown", () => audio(), { once: true }); }
-  else if (trip) { localStorage.removeItem(TRIP); trip = null; }
   requestAnimationFrame(frame);
 })();
 </script>
