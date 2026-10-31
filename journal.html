@@ -75,7 +75,7 @@
   #book { position: relative; width: 100%; height: 100%; perspective: calc(var(--pw) * 6.5); transition: transform .7s var(--ease); }
   #book.closed { transform: translateX(calc(var(--pw) / -2)); }
   .block { position: absolute; top: 0; height: 100%; width: var(--pw); background: var(--paper2); pointer-events: none; transition: opacity .25s .4s; }
-  #book.closed .block.l { transition: opacity .15s; }
+  #book.closed .block.l, #book.thin .block.l { opacity: 0; transition: opacity .15s; }
   .block.l { right: 50%; border-radius: 2px 0 0 2px; box-shadow: -3px 0 0 #ebe4d4, -5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
   .block.r { left: 50%; border-radius: 0 2px 2px 0; box-shadow: 3px 0 0 #ebe4d4, 5px 1px 0 #e2d9c6, 0 22px 40px -16px rgba(0,0,0,.6); }
   #book.closed .block.l { opacity: 0; }
@@ -331,6 +331,21 @@
     const no = el("div", "pno"); no.textContent = String(i - 2).padStart(2, "0"); pg.appendChild(no);
     return pg;
   }
+  // ruled paper: click a line below the text and the caret goes to that line
+  document.addEventListener("mousedown", e => {
+    const ta = e.target; if (!ta.classList || !ta.classList.contains("mumble")) return;
+    const lh = 27, cs = getComputedStyle(ta), r = ta.getBoundingClientRect(), k = r.height / ta.offsetHeight || 1;
+    const line = Math.floor(((e.clientY - r.top) / k + ta.scrollTop - parseFloat(cs.paddingTop)) / lh);
+    const m = el("div");
+    m.style.cssText = `position:absolute;visibility:hidden;left:-9999px;white-space:pre-wrap;word-break:break-word;width:${ta.clientWidth}px;font:${cs.font};line-height:${lh}px;padding:${cs.padding}`;
+    m.textContent = ta.value + "\u200b"; document.body.appendChild(m);
+    const n = Math.max(1, Math.round((m.scrollHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh)); m.remove();
+    if (line < n) return;
+    e.preventDefault();
+    ta.value += "\n".repeat(line - n + 1);
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   // writing in the book is writing on the back of today's card (same store, same day)
   document.addEventListener("input", e => {
     const ta = e.target; if (!ta.classList || !ta.classList.contains("mumble")) return;
@@ -350,6 +365,7 @@
   function settle() {
     show(2 * cur - 1, 2 * cur);
     book.classList.toggle("closed", cur === 0);
+    book.classList.toggle("thin", cur <= 1);
     $("#pager").textContent = cur === 0 ? "" : `${cur} / ${nLeaves}`;
   }
   function buildTurner(front, back, n = K) {

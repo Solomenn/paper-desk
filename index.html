@@ -170,6 +170,16 @@
   .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
     color: var(--muted); font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s; }
   .tb:hover { background: rgba(96, 88, 72, .07); color: var(--accent); }
+  .tclock { width: 24px; height: 24px; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px #cfc8b8;
+    background: radial-gradient(circle, #fff 0 34%, transparent 35%), conic-gradient(var(--accent) 0 var(--deg, 0deg), #ece5d6 var(--deg, 0deg) 360deg); }
+  #timerBtn.run .tclock { box-shadow: 0 0 0 1.5px var(--accent); }
+  #timer { position: fixed; left: 24px; bottom: 90px; z-index: 40001; width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--paper); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 18px 34px -12px rgba(40,24,8,.55);
+    opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .25s, transform .3s var(--ease); }
+  #timer.show { opacity: 1; transform: none; pointer-events: auto; }
+  #timer .dial { width: 140px; height: 140px; }
+  #timer .disc { inset: 11px; }
+  #timer .hub { inset: 42px; font-size: 15px; }
   .tbook { width: 22px; height: 28px; border-radius: 2px 4px 4px 2px; display: block; transition: transform .2s var(--ease);
     background: linear-gradient(90deg, rgba(0,0,0,.25) 0 4px, transparent 4px), #4f7a5a; box-shadow: 1px 1px 0 #efe6d4, 2px 2px 0 #ddd2bc, 0 3px 6px rgba(40,24,8,.25); }
   .tb:hover .tbook { transform: translateY(-2px) rotate(-4deg); }
@@ -197,10 +207,6 @@
     opacity: 0; transform: translateY(24px) scale(.8); pointer-events: none; transition: opacity .2s, transform .25s var(--ease), background .2s, color .2s, border-color .2s; }
   body.carrying .bin { opacity: 1; transform: none; }
   .bin.hot { color: var(--accent); border-color: var(--accent); background: rgba(250, 232, 224, .95); transform: scale(1.15) !important; }
-  .zoomer { display: flex; align-items: center; height: 44px; }
-  .zoomer button { width: 28px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--muted); font-size: 17px; cursor: pointer; }
-  .zoomer button:hover { color: var(--accent); background: rgba(96, 88, 72, .07); }
-  .zoomer span { min-width: 40px; text-align: center; font: 11.5px var(--mono); color: var(--muted); cursor: pointer; }
 
   #help {
     position: fixed; left: 24px; bottom: 90px; z-index: 40001; width: 248px;
@@ -237,9 +243,9 @@
   .sheetc::before { content: ""; position: absolute; inset: 0; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   .pcard.moving .sheetc, .pcard.moving .face { box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 30px 50px -18px rgba(70, 52, 28, .5); }
-  .head { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 20px 14px; border-bottom: 1px solid var(--line); cursor: grab; position: relative; z-index: 1; }
+  .head { flex: none; display: flex; align-items: center; gap: 10px; padding: 13px 18px 11px; border-bottom: 1px solid var(--line); cursor: grab; position: relative; z-index: 1; }
   .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(79,122,90,.45); border-radius: 999px; letter-spacing: .08em; }
-  .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 18px/1.35 var(--serif); color: var(--ink); cursor: text; }
+  .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 16px/1.35 var(--serif); color: var(--ink); cursor: text; }
   .tin::placeholder { color: #d4cdbd; }
   .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 6px; }
   .prog { flex: none; display: flex; align-items: baseline; gap: 12px; }
@@ -249,20 +255,20 @@
 
   /* checklist rows: the box ticks, the text is just text you can type into */
   .chk { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; position: relative; z-index: 1; }
-  .chk li { display: flex; gap: 11px; align-items: flex-start; padding: 6px 0; }
+  .chk li { display: flex; gap: 10px; align-items: flex-start; padding: 4px 0; }
   .chk .box { flex: none; width: 20px; height: 20px; margin-top: 4px; border-radius: 4px; border: 1.5px solid #cfc8b8; background: none; padding: 0; cursor: pointer; position: relative; transition: .2s var(--ease); }
   .chk .box:hover { border-color: var(--accent); }
   .chk li.done .box { border-color: var(--accent); background: var(--accent); }
   .chk li.done .box::after { content: ""; position: absolute; left: 5.5px; top: 1.5px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
   .chk li.new .box { border-style: dashed; opacity: .6; cursor: default; }
   .chk textarea { flex: 1; min-width: 0; resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px;
-    font: 15px/1.5 var(--sans); color: var(--ink); overflow: hidden; height: 28.5px; transition: background .15s; }
+    font: 14px/1.5 var(--sans); color: var(--ink); overflow: hidden; height: 27px; transition: background .15s; }
   .chk textarea:hover { background: rgba(96, 88, 72, .05); }
   .chk textarea:focus { background: rgba(79, 122, 90, .06); }
   .chk textarea::placeholder { color: #c9c1b0; }
   .chk { position: relative; }
   .chk li { position: relative; }
-  .chk .hd { position: absolute; left: -15px; top: 10px; width: 9px; height: 15px; cursor: grab; opacity: 0; transition: opacity .15s;
+  .chk .hd { position: absolute; left: -14px; top: 9px; width: 9px; height: 15px; cursor: grab; opacity: 0; transition: opacity .15s;
     background: radial-gradient(circle, #a39d8d 1.1px, transparent 1.5px) 0 0 / 4.5px 5px; }
   .chk li:hover .hd { opacity: .9; }
   .chk li.sub .hd { left: 13px; }
@@ -295,21 +301,25 @@
 
   /* today's card */
   /* both cards share one layout */
-  .pcard { width: 340px; height: 480px; }
-  .ttl { flex: 1; min-width: 0; font: 700 18px/1.35 var(--serif); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 2px 0; }
+  .pcard { width: 290px; }
+  .flipc .face.f > .sheetc { position: relative; inset: auto; min-height: 168px; max-height: min(72vh, 620px); }
+  .projc .face.f > .sheetc { min-height: 220px; }
+  .ttl { flex: 1; min-width: 0; font: 700 16px/1.35 var(--serif); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 2px 0; }
   .pn { flex: none; font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .08em; }
-  .sheetc > .bar { flex: none; margin: 0 20px; position: relative; z-index: 1; }
-  .sheetc > .body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 20px 0; position: relative; z-index: 1; }
-  .sheetc > .body > .chk { margin: 0 -20px; padding: 2px 20px 10px; }
+  .sheetc > .bar { flex: none; margin: 0 18px; position: relative; z-index: 1; }
+  .sheetc > .body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 18px 0; position: relative; z-index: 1; }
+  .sheetc > .body > .chk { margin: 0 -18px; padding: 2px 18px 10px; }
 
   /* the project card: goal + conditions on the front, timer on the back */
   /* flat on purpose: no 3D at rest keeps the text as crisp as the other cards; the flip squeezes it sideways and opens the other face */
-  .flipc .flipper { position: absolute; inset: 0; }
-  .flipc .face { position: absolute; inset: 0; }
-  .flipc .face.b, .flipc.back .face.f { display: none; }
+  /* the front sets the card's height; the back lies on top of it, same size */
+  .flipc .flipper { position: relative; }
+  .flipc .face.f { position: relative; }
+  .flipc .face.b { position: absolute; inset: 0; display: none; }
+  .flipc.back .face.f { visibility: hidden; }
   .flipc.back .face.b { display: block; }
   /* the back is a postcard: lines to write on, a stamp box, a postmark that is also the timer */
-  .post .pc { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 20px 16px 0 22px; position: relative; z-index: 1; }
+  .post .pc { flex: 1; min-height: 0; display: flex; gap: 12px; padding: 16px 14px 0 18px; position: relative; z-index: 1; }
   .pl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .pl .ttl { flex: none; margin-bottom: 8px; }
   .memo { flex: 1; min-width: 0; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
@@ -333,7 +343,7 @@
   .flipc.f3d .curl, .flipc.peek .curl { display: none; }
   .flipc.f3d { perspective: 1500px; }
   .flipc.f3d .flipper { transform-style: preserve-3d; will-change: transform; }
-  .flipc.f3d .face { display: block !important; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flipc.f3d .face { display: block !important; visibility: visible !important; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .flipc.f3d .face.b { transform: rotateY(180deg); }
   .flipc .sheetc::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
     background: linear-gradient(105deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 70%), rgba(40, 26, 10, var(--shade, 0));
@@ -343,7 +353,7 @@
     font: 15.5px/1.6 var(--serif); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
   .projc .goal:hover { background: rgba(96, 88, 72, .05); } .projc .goal:focus { background: rgba(79, 122, 90, .06); }
   .projc .goal::placeholder { color: #d4cdbd; }
-  .foot { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 20px 16px; position: relative; z-index: 1; }
+  .foot { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 18px 14px; position: relative; z-index: 1; }
   .fbtn { border: 0; background: none; color: var(--faint); font: 13px var(--sans); cursor: pointer; padding: 4px 6px; border-radius: 6px; letter-spacing: .06em; }
   .fbtn:hover { color: var(--accent); background: rgba(79,122,90,.06); }
   .stampBtn { margin-left: auto; border: 1px solid var(--stamp); color: var(--stamp); background: rgba(181,82,59,.05); font: 13px var(--sans); letter-spacing: .1em;
@@ -448,24 +458,21 @@
         <ul class="chk"></ul>
       </div>
       <div class="foot"><button class="stampBtn">盖章</button></div>
-      <i class="curl" title="翻面"></i>
-    </div></div>
-    <div class="face b"><div class="sheetc post">
-      <div class="pc">
-        <div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div>
-        <div class="pcr">
-          <div class="sbox"><div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div></div>
-          <div class="dial pm" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div>
-        </div>
-      </div>
-      <div class="foot"><span class="meta"></span></div>
-      <i class="curl" title="翻面"></i>
-      <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
+      <div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div>
+            <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
         <g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
           <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
         <text x="50" y="47" text-anchor="middle" font-size="9" font-family="monospace" fill="#4a4a5a" class="pd"></text>
         <text x="50" y="60" text-anchor="middle" font-size="8" font-family="serif" fill="#4a4a5a">完 成</text>
       </svg>
+      <i class="curl" title="翻面"></i>
+    </div></div>
+    <div class="face b"><div class="sheetc post">
+      <div class="pc">
+        <div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div>
+      </div>
+      <div class="foot"><span class="meta"></span></div>
+      <i class="curl" title="翻面"></i>
     </div></div>
   </div>
 </div></template>
@@ -486,23 +493,23 @@
   <span class="tb dish" title="拖一颗图钉"><span class="pin"></span></span>
   <span class="tsep"></span>
   <button class="tb" id="tidy" title="便签全部收进右边（T）">⇥</button>
+  <button class="tb" id="timerBtn" title="计时器"><span class="tclock"></span></button>
   <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
   <a class="tb" href="receipt.html" title="今日小票">⎙</a>
-  <span class="zoomer"><button id="zoomOut" title="缩小">−</button><span id="zoomPct" title="回到 100%">100%</span><button id="zoomIn" title="放大">+</button></span>
-  <button class="tb" id="helpBtn" title="怎么用">?</button>
   <span class="tsep"></span>
   <button class="tb" id="trayTuck" title="收到左边">‹</button>
 </div>
 <div id="trayTab" title="工具栏"></div>
+<div id="timer"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div></div>
 <div class="bin" title="扔掉"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9l1-12.5M10 11v6M14 11v6"/></svg></div>
 
 <div id="help">
   <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除；拖左侧把手排序，往右拖变子任务<br>
-  <b>翻面</b> 鼠标移到卡片右下角变成小手，点一下或拖动；背面写随手记、计时；勾完点「盖章」<br>
+  <b>翻面</b> 鼠标移到卡片右下角变成小手，点一下或拖动；背面写随手记；勾完点「盖章」<br>
   <b>便签</b> 从工具栏拖出；拖图钉按上去就固定，拖走图钉才能再动<br>
   <b>收起</b> 卡片和便签拖到屏幕右边；悬停卡签偷看，点一下拿回<br>
   <b>扔掉</b> 拖着便签时下方出现圆圈，拖进去<br>
-  <b>桌面</b> 拖空白处移动，Ctrl + 滚轮缩放，双击空白回到开头
+  <b>桌面</b> 拖空白处移动，滚轮缩放，双击空白回到开头
 </div>
 
 <div id="menu"></div>
@@ -529,6 +536,23 @@
   const placers = [];
   addEventListener("deskpan", e => { O = e.detail; placers.forEach(f => f()); });
   addEventListener("deskzoom", e => { Z = e.detail; });
+
+  /* ───────── ruled paper: click any line, even below the text, and the caret goes to that line ───────── */
+  function writeAnywhere(ta, lh) {
+    ta.addEventListener("mousedown", e => {
+      const cs = getComputedStyle(ta), r = ta.getBoundingClientRect(), k = r.height / ta.offsetHeight || 1;
+      const line = Math.floor(((e.clientY - r.top) / k + ta.scrollTop - parseFloat(cs.paddingTop)) / lh);
+      const m = document.createElement("div");
+      m.style.cssText = `position:absolute;visibility:hidden;left:-9999px;white-space:pre-wrap;word-break:break-word;width:${ta.clientWidth}px;font:${cs.font};line-height:${lh}px;padding:${cs.padding};letter-spacing:${cs.letterSpacing}`;
+      m.textContent = ta.value + "\u200b"; document.body.appendChild(m);
+      const n = Math.max(1, Math.round((m.scrollHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh)); m.remove();
+      if (line < n) return;
+      e.preventDefault();
+      ta.value += "\n".repeat(line - n + 1);
+      ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
 
   /* ───────── a little right-click menu for the cards ───────── */
   const cmenu = document.createElement("div");
@@ -1005,6 +1029,7 @@
   const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
   const memos = load(MEMOKEY, {}) || {};
   const tmemo = $(".face.b .memo", todayEl);
+  writeAnywhere(tmemo, 28);
   tmemo.value = memos[dayKey()] || "";
   tmemo.addEventListener("input", () => { memos[dayKey()] = tmemo.value; store(MEMOKEY, memos); });
   const flipToday = Flip(todayEl);
@@ -1025,10 +1050,11 @@
     }
     const md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`; };
     function renderMeta() {
-      $(".meta", el).textContent = `始于 ${md(p.startedAt)} · 专注 ${p.sessions || 0} 次 · ${p.focus || 0}′`;
+      $(".meta", el).textContent = `始于 ${md(p.startedAt)}`;
     }
     if (!p.startedAt) p.startedAt = Date.now();
     const memo = $(".memo", el);
+    writeAnywhere(memo, 28);
     memo.value = p.memo || "";
     memo.addEventListener("input", () => { p.memo = memo.value; saveP(true); });
     function renderText() {
@@ -1068,47 +1094,7 @@
 
     const flip = Flip(el);
 
-    // timer
-    const T = { total: 1500, left: 1500, run: false, end: 0 };
-    const resetTimer = () => { T.run = false; T.total = T.left = (p.minutes || 25) * 60; };
-    function renderTimer() {
-      $(".disc", el).style.setProperty("--deg", (T.left / 3600) * 360 + "deg");
-      const s = Math.ceil(T.left), m = Math.floor(s / 60);
-      $(".hub", el).textContent = `${String(m).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-      $(".dial", el).classList.toggle("run", T.run);
-    }
-    const tick = setInterval(() => {
-      if (!T.run) return;
-      T.left = Math.max(0, (T.end - Date.now()) / 1000);
-      if (T.left <= 0) {
-        T.run = false; const d = $(".dial", el); d.classList.remove("ring"); void d.offsetWidth; d.classList.add("ring"); chime();
-        p.sessions = (p.sessions || 0) + 1; p.focus = (p.focus || 0) + Math.round(T.total / 60); renderMeta(); saveP();
-      }
-      renderTimer();
-    }, 250);
-    $(".dial", el).addEventListener("pointerdown", e => {
-      const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width * .3;
-      let moved = false;
-      const set = ev => {
-        let ang = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI; if (ang < 0) ang += 360;
-        const min = Math.max(1, Math.round(ang / 6));
-        T.run = false; T.total = T.left = min * 60; p.minutes = min; renderTimer();
-      };
-      const mv = ev => { if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return; moved = true; set(ev); };
-      const up = () => {
-        removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
-        if (!moved) {
-          if (onHub) { if (T.run) { T.run = false; T.left = Math.max(0, (T.end - Date.now()) / 1000); } else { if (T.left <= 0) T.left = T.total; T.run = true; T.end = Date.now() + T.left * 1000; } renderTimer(); }
-        }
-        saveP();
-      };
-      addEventListener("pointermove", mv); addEventListener("pointerup", up);
-      e.preventDefault();
-    });
-
     function remove() {
-      clearInterval(tick);
       S.projects = S.projects.filter(x => x !== p);
       projCtls.splice(projCtls.indexOf(ctl), 1);
       card.destroy(); saveP();
@@ -1116,7 +1102,7 @@
     // stamp it and file it into the album
     $(".stampBtn", el).addEventListener("click", () => {
       if (p.stamped) return;
-      flip(true); T.run = false;
+      flip(false);
       setTimeout(() => {
         p.stamped = true;
         const d = new Date(), ds = `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
@@ -1136,7 +1122,7 @@
             $("#done").classList.add("gulp"); setTimeout(() => $("#done").classList.remove("gulp"), 500);
           }, 600);
         }, 1400);
-      }, el.classList.contains("back") ? 50 : 950);
+      }, el.classList.contains("back") ? 950 : 50);
     });
     function toss() {
       const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
@@ -1148,7 +1134,7 @@
 
     const ctl = { p, el, card, flip, focusTitle: () => ti.focus() };
     projCtls.push(ctl);
-    resetTimer(); renderText(); renderProgress(); renderMeta(); renderTimer(); list.render(); card.sync();
+    renderText(); renderProgress(); renderMeta(); list.render(); card.sync();
     return ctl;
   }
   S.projects.forEach(ProjectCard);
@@ -1171,6 +1157,56 @@
   $("#done").addEventListener("click", () => { location.href = "album.html"; });
   $("#trayToday").addEventListener("click", () => todayCard.show());
   $("#trayProject").addEventListener("click", newProject);
+
+  /* ───────── the timer: the green disc is the time left, one turn = an hour ───────── */
+  const TKEY2 = "paper-desk.timer.v1";
+  const TM = Object.assign({ total: 1500, left: 1500, run: false, end: 0 }, load(TKEY2, {}) || {});
+  const timerEl = $("#timer"), tbtn = $("#timerBtn");
+  function renderClock() {
+    if (TM.run) TM.left = Math.max(0, (TM.end - Date.now()) / 1000);
+    const deg = (TM.left / 3600) * 360 + "deg";
+    $(".disc", timerEl).style.setProperty("--deg", deg);
+    $(".tclock", tbtn).style.setProperty("--deg", deg);
+    const sec = Math.ceil(TM.left), m = Math.floor(sec / 60);
+    $(".hub", timerEl).textContent = `${String(m).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+    $(".dial", timerEl).classList.toggle("run", TM.run);
+    tbtn.classList.toggle("run", TM.run);
+    tbtn.title = TM.run ? `计时器 · 还剩 ${m} 分` : "计时器";
+  }
+  const saveClock = () => store(TKEY2, TM);
+  setInterval(() => {
+    if (!TM.run) return;
+    renderClock();
+    if (TM.left <= 0) {
+      TM.run = false; saveClock(); chime();
+      timerEl.classList.add("show");
+      const d = $(".dial", timerEl); d.classList.remove("ring"); void d.offsetWidth; d.classList.add("ring");
+    }
+  }, 250);
+  tbtn.addEventListener("click", () => timerEl.classList.toggle("show"));
+  $(".dial", timerEl).addEventListener("pointerdown", e => {
+    const r = e.currentTarget.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width * .3;
+    let moved = false;
+    const set = ev => {
+      let ang = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI; if (ang < 0) ang += 360;
+      const min = Math.max(1, Math.round(ang / 6));
+      TM.run = false; TM.total = TM.left = min * 60; renderClock();
+    };
+    const mv = ev => { if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return; moved = true; set(ev); };
+    const up = () => {
+      removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
+      if (!moved && onHub) {
+        if (TM.run) { TM.left = Math.max(0, (TM.end - Date.now()) / 1000); TM.run = false; }
+        else { if (TM.left <= 0) TM.left = TM.total; TM.run = true; TM.end = Date.now() + TM.left * 1000; }
+        renderClock();
+      }
+      saveClock();
+    };
+    addEventListener("pointermove", mv); addEventListener("pointerup", up);
+    e.preventDefault();
+  });
+  renderClock();
   renderDone(); saveP();
 })();
 </script>
@@ -1237,7 +1273,6 @@
     if (Z === z0) return;
     W = innerWidth / Z; H = innerHeight / Z;
     worldEl.style.transform = `scale(${Z})`;
-    document.getElementById("zoomPct").textContent = Math.round(Z * 100) + "%";
     dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
     pan(cx / Z - cx / z0, cy / Z - cy / z0, true);
     const c = clampO(O); pan(c.x - O.x, c.y - O.y, true);
@@ -1598,8 +1633,9 @@
     if (!ne) {
       if (act || (e.target.closest && e.target.closest(".pcard, #help, #menu"))) return;
       e.preventDefault(); homing = null;
-      if (e.ctrlKey || e.metaKey) { setZoom(Z * Math.exp(-e.deltaY * .0025), e.clientX, e.clientY); return; }
-      if (e.shiftKey && !e.deltaX) pan(-e.deltaY, 0); else pan(-e.deltaX, -e.deltaY);
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { pan(-e.deltaX, 0); return; }
+      if (e.shiftKey) { pan(-e.deltaY, 0); return; }
+      setZoom(Z * Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX, e.clientY);
       return;
     }
     if (act) return;
@@ -1892,7 +1928,12 @@
   document.getElementById("trayTuck").onclick = () => setTray(true);
   trayTab.onclick = () => setTray(false);
   try { if (localStorage.getItem("paper-desk.tray.v1")) { trayEl.classList.add("tucked"); trayTab.classList.add("show"); } } catch {}
-  document.getElementById("helpBtn").onclick = () => document.getElementById("help").classList.toggle("show");
+  // ? opens the little help card
+  addEventListener("keydown", e => {
+    const a = document.activeElement;
+    if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable)) return;
+    if (e.key === "?") document.getElementById("help").classList.toggle("show");
+  });
 
   addEventListener("resize", () => {
     W = innerWidth / Z; H = innerHeight / Z;
@@ -1949,10 +1990,6 @@
   }
 
   worldEl.style.transform = `scale(${Z})`;
-  document.getElementById("zoomPct").textContent = Math.round(Z * 100) + "%";
-  document.getElementById("zoomIn").onclick = () => setZoom(Z * 1.15);
-  document.getElementById("zoomOut").onclick = () => setZoom(Z / 1.15);
-  document.getElementById("zoomPct").onclick = () => setZoom(1);
   dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
   layoutMat();
   load();
