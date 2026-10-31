@@ -11,7 +11,7 @@
     --faint: #b3ad9d;
     --paper: #fbf8ef;
     --desk: #ece5d6;
-    --accent: #b5523b;
+    --accent: #4f7a5a; --stamp: #b5523b;
     --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
     --hand: "LXGW WenKai", "霞鹜文楷", "Klee One", "KaiTi", "STKaiti", var(--serif);
     --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
@@ -25,10 +25,11 @@
     font-family: var(--sans);
     color: var(--ink);
     background:
-      radial-gradient(circle, rgba(139, 110, 70, .16) 1.1px, transparent 1.6px) 0 0 / 26px 26px,
-      radial-gradient(120% 90% at 12% 0%, rgba(255, 250, 236, .95), rgba(255, 250, 236, 0) 60%),
-      radial-gradient(90% 70% at 100% 100%, rgba(120, 96, 60, .10), rgba(120, 96, 60, 0) 70%),
-      var(--desk);
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, .08) 0 2px, transparent 2px 9px, rgba(255, 222, 180, .035) 9px 10px, transparent 10px 17px),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, .06) 0 1px, transparent 1px 43px, rgba(255, 222, 180, .03) 43px 45px, transparent 45px 97px),
+      radial-gradient(120% 90% at 15% 0%, rgba(255, 210, 150, .16), transparent 60%),
+      radial-gradient(90% 70% at 100% 100%, rgba(0, 0, 0, .25), transparent 70%),
+      linear-gradient(180deg, #6e4c34, #533826);
     background-attachment: fixed;
     user-select: none;
     -webkit-user-select: none;
@@ -134,7 +135,7 @@
     box-shadow: inset 1px 0 0 rgba(90, 70, 40, .18), -2px 0 8px rgba(90, 70, 40, .08);
     transition: box-shadow .25s;
   }
-  #drawer.hot { box-shadow: inset 1px 0 0 rgba(181, 82, 59, .6), -6px 0 22px rgba(181, 82, 59, .28); }
+  #drawer.hot { box-shadow: inset 1px 0 0 rgba(79, 122, 90, .6), -6px 0 22px rgba(79, 122, 90, .28); }
   .tab {
     position: absolute; right: 14px; width: 12px; height: 40px;
     background: var(--c); border-radius: 4px 0 0 4px;
@@ -226,13 +227,13 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   .pcard.moving .sheetc, .pcard.moving .face { box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 30px 50px -18px rgba(70, 52, 28, .5); }
   .head { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 20px 14px; border-bottom: 1px solid var(--line); cursor: grab; position: relative; z-index: 1; }
-  .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(181,82,59,.45); border-radius: 999px; letter-spacing: .08em; }
+  .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(79,122,90,.45); border-radius: 999px; letter-spacing: .08em; }
   .tin { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 2px 0; font: 700 18px/1.35 var(--serif); color: var(--ink); cursor: text; }
   .tin::placeholder { color: #d4cdbd; }
   .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 6px; }
   .prog { flex: none; display: flex; align-items: baseline; gap: 12px; }
   .prog .n { font-family: var(--mono); font-size: 20px; color: var(--accent); letter-spacing: .1em; }
-  .bar { height: 3px; border-radius: 2px; background: rgba(181,82,59,.12); overflow: hidden; }
+  .bar { height: 3px; border-radius: 2px; background: rgba(79,122,90,.12); overflow: hidden; }
   .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s var(--ease); }
 
   /* checklist rows: the box ticks, the text is just text you can type into */
@@ -246,9 +247,26 @@
   .chk textarea { flex: 1; min-width: 0; resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px;
     font: 15px/1.5 var(--sans); color: var(--ink); overflow: hidden; height: 28.5px; transition: background .15s; }
   .chk textarea:hover { background: rgba(96, 88, 72, .05); }
-  .chk textarea:focus { background: rgba(181, 82, 59, .06); }
+  .chk textarea:focus { background: rgba(79, 122, 90, .06); }
   .chk textarea::placeholder { color: #c9c1b0; }
-  .chk li.done textarea { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(181,82,59,.5); }
+  .chk li { position: relative; }
+  .chk li.sub { padding-left: 30px; }
+  .chk li.sub .box { width: 16px; height: 16px; margin-top: 6px; }
+  .chk li.sub.done .box::after { left: 4px; top: 0; }
+  .chk .sn { display: none; flex: none; margin-top: 6px; font: 11.5px var(--mono); color: var(--accent); }
+  .chk li.parent .sn { display: block; }
+  .chk .sbar { display: none; position: absolute; left: 31px; right: 0; bottom: 1px; height: 2px; background: rgba(79,122,90,.12); border-radius: 1px; overflow: hidden; }
+  .chk .sbar b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s var(--ease); }
+  .chk li.parent .sbar { display: block; }
+  .chk li.parent .box { cursor: pointer; }
+  #cmenu { position: fixed; z-index: 100002; display: none; min-width: 132px; padding: 6px; border-radius: 10px; background: var(--paper);
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 14px 32px -10px rgba(50,34,16,.45); }
+  #cmenu.show { display: block; }
+  #cmenu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 7px 12px; border-radius: 6px; font: 13.5px var(--sans); color: var(--ink); cursor: pointer; }
+  #cmenu button:hover { background: rgba(79,122,90,.08); color: var(--accent); }
+  #cmenu button.danger { color: #a0473a; }
+  #cmenu hr { border: 0; height: 1px; background: var(--line); margin: 4px 6px; }
+  .chk li.done textarea { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.5); }
 
   /* today's card */
   /* both cards share one layout */
@@ -268,15 +286,15 @@
 
   .projc .goal { resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px; overflow: hidden;
     font: 15.5px/1.6 var(--serif); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
-  .projc .goal:hover { background: rgba(96, 88, 72, .05); } .projc .goal:focus { background: rgba(181, 82, 59, .06); }
+  .projc .goal:hover { background: rgba(96, 88, 72, .05); } .projc .goal:focus { background: rgba(79, 122, 90, .06); }
   .projc .goal::placeholder { color: #d4cdbd; }
   .foot { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 20px 16px; position: relative; z-index: 1; }
   .fbtn { border: 0; background: none; color: var(--faint); font: 13px var(--sans); cursor: pointer; padding: 4px 6px; border-radius: 6px; letter-spacing: .06em; }
-  .fbtn:hover { color: var(--accent); background: rgba(181,82,59,.06); }
+  .fbtn:hover { color: var(--accent); background: rgba(79,122,90,.06); }
   .fbtn.turn { font-size: 17px; }
-  .stampBtn { margin-left: auto; border: 1px solid var(--accent); color: var(--accent); background: rgba(181,82,59,.05); font: 13px var(--sans); letter-spacing: .1em;
+  .stampBtn { margin-left: auto; border: 1px solid var(--stamp); color: var(--stamp); background: rgba(181,82,59,.05); font: 13px var(--sans); letter-spacing: .1em;
     padding: 6px 14px; border-radius: 999px; cursor: pointer; display: none; animation: pop .4s var(--ease); }
-  .stampBtn:hover { background: var(--accent); color: var(--paper); }
+  .stampBtn:hover { background: var(--stamp); color: var(--paper); }
   .projc.ready .stampBtn { display: block; }
   .fbtn.toss { opacity: 0; transition: opacity .2s; }
   .projc:hover .fbtn.toss { opacity: 1; }
@@ -285,7 +303,7 @@
   .dial { width: 176px; height: 176px; border-radius: 50%; position: relative; cursor: pointer; touch-action: none;
     background: radial-gradient(circle, var(--paper) 0 61%, transparent 62%), repeating-conic-gradient(from -1deg, rgba(139,134,122,.45) 0 2deg, transparent 2deg 30deg); }
   .disc { position: absolute; inset: 13px; border-radius: 50%;
-    background: conic-gradient(var(--accent) 0 var(--deg, 0deg), rgba(181,82,59,.06) var(--deg, 0deg) 360deg); box-shadow: inset 0 0 0 1px rgba(181,82,59,.15); }
+    background: conic-gradient(var(--accent) 0 var(--deg, 0deg), rgba(79,122,90,.06) var(--deg, 0deg) 360deg); box-shadow: inset 0 0 0 1px rgba(79,122,90,.15); }
   .hub { position: absolute; inset: 56px; border-radius: 50%; background: var(--paper); display: grid; place-items: center;
     font-family: var(--mono); font-size: 17px; color: var(--ink); box-shadow: 0 1px 3px rgba(70,52,28,.18); }
   .dial.run .hub { color: var(--accent); }
@@ -296,8 +314,8 @@
   .stamp.show { display: block; animation: slam .55s var(--ease) both; }
   @keyframes slam { 0% { transform: translateY(-40px) scale(1.7) rotate(-22deg); opacity: 0; } 60% { transform: translateY(0) scale(.96) rotate(-4deg); opacity: 1; } 100% { transform: rotate(-5deg); } }
   .stamp .in { position: absolute; inset: 5px; background: #fffdf6; padding: 5px; }
-  .stamp .art { width: 100%; height: 100%; border: 1.5px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--accent); }
+  .stamp .art { width: 100%; height: 100%; border: 1.5px solid var(--stamp); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--stamp); }
   .stamp .big { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1; }
   .stamp .sm { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; }
   .postmark { position: absolute; right: 60px; bottom: 40px; width: 96px; height: 96px; opacity: 0; pointer-events: none; z-index: 4; mix-blend-mode: multiply; }
@@ -320,7 +338,7 @@
   .pcard.moving .sheetc { cursor: grabbing; }
   .chk li { cursor: default; }
   .pcard.hello .sheetc { animation: hello .7s var(--ease); }
-  @keyframes hello { 30% { box-shadow: 0 0 0 3px rgba(181,82,59,.45), 0 20px 40px -16px rgba(70,52,28,.45); } }
+  @keyframes hello { 30% { box-shadow: 0 0 0 3px rgba(79,122,90,.45), 0 20px 40px -16px rgba(70,52,28,.45); } }
   #done.gulp .book { animation: gulp .45s var(--ease); }
   @keyframes gulp { 40% { transform: scale(1.08) rotate(-3deg); } }
   /* the album: a small cloth-bound notebook */
@@ -444,59 +462,139 @@
   addEventListener("deskpan", e => { O = e.detail; placers.forEach(f => f()); });
   addEventListener("deskzoom", e => { Z = e.detail; });
 
-  /* ───────── a checklist: the box ticks, the text is plain text you type into ───────── */
+  /* ───────── a little right-click menu for the cards ───────── */
+  const cmenu = document.createElement("div");
+  cmenu.id = "cmenu"; document.body.appendChild(cmenu);
+  function openCMenu(x, y, entries) {
+    cmenu.innerHTML = "";
+    entries.filter(Boolean).forEach(en => {
+      if (en === "-") { cmenu.appendChild(Object.assign(document.createElement("hr"))); return; }
+      const b = document.createElement("button");
+      b.textContent = en.label; if (en.danger) b.className = "danger";
+      b.addEventListener("click", () => { closeCMenu(); en.fn(); });
+      cmenu.appendChild(b);
+    });
+    cmenu.classList.add("show");
+    const r = cmenu.getBoundingClientRect();
+    cmenu.style.left = Math.min(x, innerWidth - r.width - 8) + "px";
+    cmenu.style.top = Math.min(y, innerHeight - r.height - 8) + "px";
+  }
+  function closeCMenu() { cmenu.classList.remove("show"); }
+  addEventListener("pointerdown", e => { if (!e.target.closest("#cmenu")) closeCMenu(); }, true);
+  addEventListener("keydown", e => { if (e.key === "Escape") closeCMenu(); });
+  addEventListener("wheel", closeCMenu, { passive: true });
+
+  /* ───────── a checklist: the box ticks, the text is plain text you type into ─────────
+     Items can be sub-items of the one above (Tab / Shift+Tab, or right-click). A parent shows its own little
+     progress and is done when all its sub-items are. */
   function Checklist(ul, o) {
     const autosize = ta => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+    const lis = () => [...ul.children].filter(li => li._it);
     function row(it) {
       const li = document.createElement("li");
-      li.innerHTML = `<button class="box" title="完成"></button><textarea rows="1" maxlength="80"></textarea>`;
-      const ta = li.lastChild;
-      if (it) { li._it = it; ta.value = it[o.key]; li.classList.toggle("done", !!it.done); }
+      li.innerHTML = `<button class="box" title="完成"></button><textarea rows="1" maxlength="80"></textarea><span class="sn"></span><i class="sbar"><b></b></i>`;
+      const ta = li.querySelector("textarea");
+      if (it) { li._it = it; ta.value = it[o.key]; li.classList.toggle("done", !!it.done); li.classList.toggle("sub", !!it.sub); }
       else { li.classList.add("new"); ta.placeholder = o.placeholder; }
       return li;
     }
-    function render(focusLast) {
-      ul.innerHTML = "";
-      o.items().forEach(it => ul.appendChild(row(it)));
-      ul.appendChild(row(null));
-      requestAnimationFrame(() => $$("textarea", ul).forEach(autosize));
-      if (focusLast) { const ta = ul.lastChild.lastChild; ta.focus(); }
+    // parents follow their sub-items: done when all of them are, with a small bar of their own
+    function groups() {
+      const rows = lis();
+      rows.forEach((li, i) => {
+        if (li._it.sub) return;
+        const kids = [];
+        for (let j = i + 1; j < rows.length && rows[j]._it.sub; j++) kids.push(rows[j]);
+        li.classList.toggle("parent", kids.length > 0);
+        if (!kids.length) return;
+        const k = kids.filter(c => c._it.done).length, all = k === kids.length;
+        if (!!li._it.done !== all) { li._it.done = all; o.tick(li._it); }
+        li.classList.toggle("done", all);
+        li.querySelector(".sn").textContent = `${k}/${kids.length}`;
+        li.querySelector(".sbar b").style.width = (k / kids.length * 100) + "%";
+      });
     }
+    function render(focusItem, atEnd) {
+      const list = o.items();
+      if (list[0] && list[0].sub) list[0].sub = false;   // nothing to hang under
+      ul.innerHTML = "";
+      list.forEach(it => ul.appendChild(row(it)));
+      ul.appendChild(row(null));
+      groups();
+      requestAnimationFrame(() => ul.querySelectorAll("textarea").forEach(autosize));
+      const target = focusItem === "new" ? ul.lastChild : focusItem ? lis().find(li => li._it === focusItem) : null;
+      if (target) { const ta = target.querySelector("textarea"); ta.focus(); if (atEnd !== false) ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }
+    const kidsOf = it => { const rows = lis().map(li => li._it), i = rows.indexOf(it), out = []; for (let j = i + 1; j < rows.length && rows[j].sub; j++) out.push(rows[j]); return out; };
+    function tickItem(it) {
+      const kids = it.sub ? [] : kidsOf(it);
+      if (kids.length) { const to = !kids.every(k => k.done); kids.forEach(k => { k.done = to; o.tick(k); }); }
+      else { it.done = !it.done; o.tick(it); }
+      lis().forEach(li => li.classList.toggle("done", !!li._it.done));
+      groups(); o.changed();
+    }
+    function setSub(it, v) {
+      const rows = lis().map(li => li._it);
+      if (v && rows.indexOf(it) <= 0) return;
+      it.sub = v; o.changed(); render(it);
+    }
+    function addSub(parent) {
+      const kids = kidsOf(parent), after = kids.length ? kids[kids.length - 1] : parent;
+      const it = o.make(""); it.sub = true;
+      o.insertAfter(after, it); render(it);
+    }
+    function remove(it) {
+      o.remove(it); o.changed(); render();
+    }
+
     ul.addEventListener("click", e => {
       const b = e.target.closest(".box"); if (!b) return;
-      const li = b.parentElement; if (!li._it) return;
-      li._it.done = !li._it.done; o.tick(li._it);
-      li.classList.toggle("done", li._it.done);
-      o.changed();
+      const li = b.parentElement; if (li._it) tickItem(li._it);
     });
     ul.addEventListener("input", e => {
-      const ta = e.target; autosize(ta);
+      const ta = e.target; if (ta.tagName !== "TEXTAREA") return;
+      autosize(ta);
       const li = ta.parentElement;
       if (li._it) { li._it[o.key] = ta.value.replace(/\n/g, " "); o.changed(true); }
     });
     ul.addEventListener("keydown", e => {
       const ta = e.target; if (ta.tagName !== "TEXTAREA" || e.isComposing) return;
-      const li = ta.parentElement;
+      const li = ta.parentElement, it = li._it;
       if (e.key === "Enter") {
         e.preventDefault();
-        if (!li._it) {
-          const v = ta.value.trim(); if (!v) return;
-          o.add(v); ta.value = ""; o.changed(); render(true);
-        } else ul.lastChild.lastChild.focus();
-      } else if (e.key === "Backspace" && li._it && ta.value === "") {
+        const v = ta.value.trim();
+        if (!it) { if (!v) return; o.add(v); ta.value = ""; o.changed(); render("new"); return; }
+        if (!v) { render("new"); return; }
+        const n = o.make(""); n.sub = !!it.sub;               // a new line at the same level, right below
+        o.insertAfter(it.sub ? it : (kidsOf(it).slice(-1)[0] || it), n); render(n);
+      } else if (e.key === "Tab" && it) {
+        e.preventDefault(); setSub(it, !e.shiftKey);
+      } else if (e.key === "Backspace" && it && ta.value === "") {
         e.preventDefault();
-        const prev = li.previousElementSibling;
-        o.remove(li._it); o.changed(); render();
-        const i = prev ? [...ul.children].findIndex(x => x._it === prev._it) : -1;
-        const t = i >= 0 ? ul.children[i].lastChild : ul.lastChild.lastChild;
-        t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+        if (it.sub) { setSub(it, false); return; }
+        const rows = lis().map(l => l._it), prev = rows[rows.indexOf(it) - 1];
+        o.remove(it); o.changed(); render(prev || "new");
       } else if (e.key === "Escape") ta.blur();
     });
     ul.addEventListener("focusout", e => {
       const ta = e.target; if (ta.tagName !== "TEXTAREA" || !ul.contains(ta)) return;
       const li = ta.parentElement;
-      if (li._it && !ta.value.trim()) { o.remove(li._it); o.changed(); setTimeout(render); }
-      else if (!li._it && ta.value.trim()) { o.add(ta.value.trim()); o.changed(); setTimeout(render); }
+      if (li._it && !ta.value.trim()) { o.remove(li._it); o.changed(); setTimeout(() => { if (!ul.contains(document.activeElement)) render(); }); }
+      else if (!li._it && ta.value.trim()) { o.add(ta.value.trim()); o.changed(); setTimeout(() => render()); }
+    });
+    ul.addEventListener("contextmenu", e => {
+      const li = e.target.closest("li"); if (!li) return;
+      e.preventDefault(); e.stopPropagation();
+      const it = li._it; if (!it) return;
+      const first = lis()[0] === li;
+      openCMenu(e.clientX, e.clientY, [
+        { label: "编辑", fn: () => { const ta = li.querySelector("textarea"); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } },
+        !it.sub && { label: "加子任务", fn: () => addSub(it) },
+        it.sub ? { label: "设为主任务", fn: () => setSub(it, false) } : !first && { label: "设为子任务", fn: () => setSub(it, true) },
+        { label: it.done ? "取消完成" : "完成", fn: () => tickItem(it) },
+        "-",
+        { label: "删除", danger: true, fn: () => remove(it) },
+      ]);
     });
     return { render };
   }
@@ -583,6 +681,11 @@
         setTimeout(() => { if (!el.classList.contains("peek")) return; el.classList.remove("peek", "fly"); el.style.opacity = ""; if (o.tucked()) el.classList.add("tucked"); }, 520);
       }, 160);
     }
+    el.addEventListener("contextmenu", e => {
+      if (e.target.closest("input, textarea")) return;
+      e.preventDefault();
+      openCMenu(e.clientX, e.clientY, (o.menu ? o.menu() : []).concat([{ label: "收到右边", fn: tuck }]));
+    });
     tab.addEventListener("click", untuck);
     tab.addEventListener("pointerenter", peek);
     tab.addEventListener("pointerleave", unpeek);
@@ -638,7 +741,7 @@
     { id: uid(), text: "买猫粮、灯泡", addedAt: Date.now() },
     { id: uid(), text: "给猫剪指甲", addedAt: Date.now() },
   ];
-  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt }));
+  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt, sub }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt, sub: !!sub }));
   const tp = load(TPOS, null) || { x: 60, y: 50, tucked: false };
   const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
   const todayEl = $("#todayCard");
@@ -647,13 +750,15 @@
   function renderTodayHead() {
     const d = new Date();
     $(".ttl", todayEl).textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${"日一二三四五六"[d.getDay()]}`;
-    const v = visible(), k = v.filter(i => i.done).length;
+    const v = visible().filter(i => !i.sub), k = v.filter(i => i.done).length;
     $(".pn", todayEl).textContent = v.length ? `${k} / ${v.length}` : "";
     $(".bar i", todayEl).style.width = v.length ? (k / v.length * 100) + "%" : "0";
   }
   const todayList = Checklist($(".chk", todayEl), {
     key: "text", placeholder: "＋",
     items: visible,
+    make: text => ({ id: uid(), text, done: false, addedAt: Date.now() }),
+    insertAfter: (ref, it) => items.splice(items.indexOf(ref) + 1, 0, it),
     add: text => items.push({ id: uid(), text, done: false, addedAt: Date.now() }),
     remove: it => { items = items.filter(i => i !== it); },
     tick: it => { it.doneAt = it.done ? Date.now() : 0; },
@@ -661,6 +766,7 @@
   });
   const todayCard = Card(todayEl, {
     label: () => "今日",
+    menu: () => [{ label: "加一条", fn: () => $(".chk li.new textarea", todayEl).focus() }, "-"],
     pos: () => tp, setPos: p => { tp.x = p.x; tp.y = p.y; }, saved: () => saveToday(),
     tucked: () => tp.tucked, setTucked: v => { tp.tucked = v; saveToday(); }, has: () => true,
   });
@@ -705,7 +811,7 @@
   function ProjectCard(p) {
     const el = tpl.content.firstElementChild.cloneNode(true);
     $("#desk").before(el);
-    const filled = () => p.conds.filter(c => c.t.trim());
+    const filled = () => p.conds.filter(c => c.t.trim() && !c.sub);
     const ti = $("[data-k=title]", el), go = $("[data-k=goal]", el);
     const grow = () => { go.style.height = "auto"; go.style.height = go.scrollHeight + "px"; };
     function renderProgress() {
@@ -723,6 +829,8 @@
     const list = Checklist($(".chk", el), {
       key: "t", placeholder: "＋",
       items: () => p.conds,
+      make: t => ({ t, done: false }),
+      insertAfter: (ref, it) => p.conds.splice(p.conds.indexOf(ref) + 1, 0, it),
       add: t => p.conds.push({ t, done: false }),
       remove: it => { p.conds = p.conds.filter(c => c !== it); },
       tick: it => { it.at = it.done ? Date.now() : 0; },
@@ -737,6 +845,13 @@
       label: () => (p.title || "项目").slice(0, 8),
       pos: () => p.pos, setPos: q => { p.pos = q; }, saved: () => saveP(),
       tucked: () => !!p.tucked, setTucked: v => { p.tucked = v; saveP(); },
+      menu: () => [
+        { label: el.classList.contains("back") ? "翻回正面" : "翻到计时", fn: () => flip() },
+        { label: "加一条", fn: () => $(".chk li.new textarea", el).focus() },
+        el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
+        { label: "扔掉", danger: true, fn: () => $(".toss", el).click() },
+        "-",
+      ].filter(Boolean),
     });
 
     // flip: squeeze it sideways, show the other face, open it again (flat, so the text stays sharp)
@@ -861,7 +976,8 @@
   "use strict";
 
   /* ───────── constants ───────── */
-  const NW = 196, NH = 196, HW = NW / 2, HH = NH / 2;
+  const NW = 196, NH = 196, HW = NW / 2, HH = NH / 2, NH_MAX = 540;
+  const hh = n => (n.h || NH) / 2;
   const CATS = {
     work:  { c: "#f3e2a1", name: "工作" },
     life:  { c: "#cfe4cf", name: "生活" },
@@ -926,8 +1042,7 @@
   }
   // there is no visible cloth any more: `mat` is just how far the desk reaches. Only the dots move with it.
   function layoutMat() {
-    document.body.style.backgroundPosition = `${O.x * Z}px ${O.y * Z}px, 0 0, 0 0, 0 0`;
-    document.body.style.backgroundSize = `${26 * Z}px ${26 * Z}px, auto, auto, auto`;
+    document.body.style.backgroundPosition = `${O.x * Z}px 0, ${O.x * Z}px 0, 0 0, 0 0, 0 0`;
     dispatchEvent(new CustomEvent("deskpan", { detail: O }));
   }
   let mt = null;
@@ -1011,7 +1126,8 @@
     el._note = n;
     desk.appendChild(el);
     notes.push(n);
-    paint(n); renderPin(n); draw(n);
+    paint(n); fitHeight(n, true); renderPin(n); draw(n);
+    n.textEl.addEventListener("input", () => fitHeight(n));
     if (n.docked) el.classList.add("hidden");
     zTop = Math.max(zTop, n.z);
     return n;
@@ -1023,13 +1139,13 @@
     if (!n.pin) { if (pin) pin.remove(); return; }
     if (!pin) { pin = document.createElement("div"); pin.className = "pin"; n.el.appendChild(pin); }
     pin.style.left = (HW + n.pin.u) + "px";
-    pin.style.top = (HH + n.pin.v) + "px";
+    pin.style.top = (hh(n) + n.pin.v) + "px";
   }
   function front(n) { n.z = ++zTop; n.el.style.zIndex = n.z; }
 
   function draw(n) {
     const el = n.el;
-    el.style.transform = `translate(${n.x - HW}px,${n.y - HH}px) rotate(${n.a}rad) scale(${n.s})`;
+    el.style.transform = `translate(${n.x - HW}px,${n.y - hh(n)}px) rotate(${n.a}rad) scale(${n.s})`;
     el.style.zIndex = n.z;
     // light comes from above the screen, so shadows are offset in screen space, not note space
     const L = Math.max(0, n.lift), d = 1.5 + L * 18, b = 2 + L * 30;
@@ -1096,7 +1212,7 @@
         n.x += n.vx * dt; n.y += n.vy * dt;
         const f = Math.exp(-5.5 * dt); n.vx *= f; n.vy *= f;
         n.w = 0;
-        const mL = mat.l + O.x + HW * .6, mT = mat.t + O.y + HH * .6, mR = mat.r + O.x - HW * .6, mB = mat.b + O.y - HH * .6;
+        const mL = mat.l + O.x + HW * .6, mT = mat.t + O.y + hh(n) * .6, mR = mat.r + O.x - HW * .6, mB = mat.b + O.y - hh(n) * .6;
         if (n.x < mL) { n.x = mL; n.vx = Math.abs(n.vx) * 0.35; n.w *= -0.5; }
         if (n.y < mT) { n.y = mT; n.vy = Math.abs(n.vy) * 0.35; n.w *= -0.5; }
         if (n.y > mB) { n.y = mB; n.vy = -Math.abs(n.vy) * 0.35; n.w *= -0.5; }
@@ -1236,7 +1352,7 @@
     endEdit(n);
     const l = rot(P.x - n.x, P.y - n.y, -n.a);
     n.gx = clamp(l.x / n.s, -HW + 4, HW - 4);
-    n.gy = clamp(l.y / n.s, -HH + 4, HH - 4);
+    n.gy = clamp(l.y / n.s, -hh(n) + 4, hh(n) - 4);
     n.a0 = n.a;          // the paper wants to keep the angle you gave it
     n.aHome = n.a;
     n.w = 0; n.mode = "drag";
@@ -1338,7 +1454,7 @@
     const n = hit && hit._note;
     if (n && !inDrawer(n) && n.mode !== "trash") {
       const l = rot(P.x - n.x, P.y - n.y, -n.a);
-      if (Math.abs(l.x) < HW - 8 && Math.abs(l.y) < HH - 8) {
+      if (Math.abs(l.x) < HW - 8 && Math.abs(l.y) < hh(n) - 8) {
         floatPin.remove(); floatPin = null;
         if (n.mode === "toss" || n.mode === "place") { n.mode = "rest"; n.liftT = 0; }
         n.pin = { u: l.x / n.s, v: l.y / n.s };
@@ -1369,6 +1485,19 @@
   }
 
   /* editing */
+  // measure the text and let the sheet grow (or shrink back) downwards; the top edge doesn't move
+  function fitHeight(n, initial) {
+    const el = n.el, old = n.h || NH;
+    el.style.height = NH + "px";
+    const h = clamp(Math.ceil(n.textEl.scrollHeight), NH, NH_MAX);
+    el.style.height = h + "px";
+    n.h = h;
+    if (initial || h === old) return;
+    const d = rot(0, (h - old) / 2, n.a);
+    n.x += d.x; n.y += d.y;
+    if (n.pin) { n.pin.v -= (h - old) / 2; renderPin(n); }
+    draw(n);
+  }
   function beginEdit(n) {
     if (inDrawer(n)) return;
     n.el.classList.add("editing");
@@ -1383,7 +1512,7 @@
     n.el.classList.remove("editing");
     n.textEl.contentEditable = "false";
     n.text = n.textEl.innerText.replace(/\n$/, "");
-    save();
+    fitHeight(n); save();
   }
 
   /* menu */

@@ -6,7 +6,7 @@
 <title>纸桌 · 卡册</title>
 <style>
   :root {
-    --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --paper2: #f3eee2; --desk: #ece5d6; --accent: #b5523b;
+    --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --paper2: #f3eee2; --desk: #ece5d6; --accent: #4f7a5a; --stamp: #b5523b;
     --line: rgba(96, 88, 72, .16);
     --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
     --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
@@ -63,8 +63,8 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   .pg.end { background: #e9dfca; }
   .pg.end::after { content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(45deg, rgba(181,82,59,.05) 0 2px, transparent 2px 14px),
-                repeating-linear-gradient(-45deg, rgba(181,82,59,.05) 0 2px, transparent 2px 14px); }
+    background: repeating-linear-gradient(45deg, rgba(79,122,90,.05) 0 2px, transparent 2px 14px),
+                repeating-linear-gradient(-45deg, rgba(79,122,90,.05) 0 2px, transparent 2px 14px); }
   .pno { position: absolute; bottom: 18px; font-family: var(--mono); font-size: 10.5px; color: var(--faint); letter-spacing: .15em; }
   .pg.odd .pno { left: 30px; } .pg.even .pno { right: 30px; }
 
@@ -87,8 +87,8 @@
   .mstamp { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 44px; transform: rotate(-6deg);
     background: radial-gradient(circle, transparent 1.6px, #fffdf6 2px) -2.5px -2.5px / 5px 5px;
     filter: drop-shadow(0 1px 1px rgba(70,52,28,.25)); }
-  .mstamp::after { content: "成"; position: absolute; inset: 3px; border: 1px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
-    color: var(--accent); font-family: var(--serif); font-weight: 700; font-size: 16px; display: grid; place-items: center; }
+  .mstamp::after { content: "成"; position: absolute; inset: 3px; border: 1px solid var(--stamp); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
+    color: var(--stamp); font-family: var(--serif); font-weight: 700; font-size: 16px; display: grid; place-items: center; }
   .mpm { position: absolute; right: 26px; bottom: 22px; width: 46px; height: 46px; opacity: .55; transform: rotate(12deg); mix-blend-mode: multiply; z-index: 1; }
   .mc ul { list-style: none; margin: 10px 0 0; padding: 0; font-size: 11px; line-height: 1.75; color: var(--faint); }
   .mc li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 30px); }
@@ -118,15 +118,15 @@
   .zf .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 8px; }
   .zf .goal { font-family: var(--serif); font-size: 17px; line-height: 1.7; }
   .zf ul { list-style: none; margin: 0; padding: 0; }
-  .zf li { display: flex; gap: 12px; padding: 10px 0; font-size: 15px; line-height: 1.5; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(181,82,59,.5); }
+  .zf li { display: flex; gap: 12px; padding: 10px 0; font-size: 15px; line-height: 1.5; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.5); }
   .zf li i { flex: none; width: 20px; height: 20px; border-radius: 4px; background: var(--accent); position: relative; margin-top: 1px; }
   .zf li i::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
   .zf .when { position: absolute; left: 22px; bottom: 22px; font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .12em; }
   .zstamp { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px; transform: rotate(-5deg);
     background: radial-gradient(circle, transparent 3px, #fffdf6 3.5px) -5px -5px / 10px 10px; filter: drop-shadow(0 2px 2px rgba(70,52,28,.25)); }
   .zstamp .in { position: absolute; inset: 5px; background: #fffdf6; padding: 5px; }
-  .zstamp .art { width: 100%; height: 100%; border: 1.5px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--accent); }
+  .zstamp .art { width: 100%; height: 100%; border: 1.5px solid var(--stamp); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--stamp); }
   .zstamp .big { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1; }
   .zstamp .sm { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; }
   .zpm { position: absolute; right: 62px; bottom: 44px; width: 96px; height: 96px; opacity: .7; transform: rotate(12deg); mix-blend-mode: multiply; z-index: 2; }
