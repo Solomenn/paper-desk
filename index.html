@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
   :root {
     --ink: #3b3a33;
@@ -11,10 +13,11 @@
     --faint: #b3ad9d;
     --paper: #fcf8ee;
     --accent: #4f7a5a; --stamp: #b5523b;
-    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
-    --hand: "LXGW WenKai", "霞鹜文楷", "Klee One", "KaiTi", "STKaiti", var(--serif);
-    --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
-    --mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
+    /* one face everywhere: the handwriting on the sticky notes (霞鹜文楷), loaded from jsDelivr so every machine sees the same */
+    --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
+    --serif: var(--hand);
+    --sans: var(--hand);
+    --mono: var(--hand);
     --line: rgba(96, 88, 72, .16);
     --ease: cubic-bezier(.22, 1, .36, 1);
     --calw: 300px; --gap: 22px; --trayh: 74px;
@@ -501,9 +504,9 @@
         <defs><path id="pmArc" d="M21 52 A29 29 0 0 1 79 52"/></defs>
         <g fill="none" stroke="#3a3530"><circle cx="50" cy="50" r="36" stroke-width="1.7" stroke-opacity=".6"/><circle cx="50" cy="50" r="24" stroke-width=".9" stroke-opacity=".45"/></g>
         <g fill="#3a3530" fill-opacity=".62">
-          <text font-size="7.5" font-family="serif" letter-spacing="2"><textPath href="#pmArc" startOffset="50%" text-anchor="middle">纸桌 · 完成</textPath></text>
+          <text font-size="7.5" font-family="LXGW WenKai, KaiTi, serif" letter-spacing="2"><textPath href="#pmArc" startOffset="50%" text-anchor="middle">纸桌 · 完成</textPath></text>
           <rect x="31" y="45" width="38" height=".9"/><rect x="31" y="58" width="38" height=".9"/>
-          <text class="pd" x="50" y="55" text-anchor="middle" font-size="7.5" font-family="monospace" letter-spacing=".6"></text>
+          <text class="pd" x="50" y="55" text-anchor="middle" font-size="7.5" font-family="LXGW WenKai, KaiTi, serif" letter-spacing=".6"></text>
         </g>
       </svg>
       <i class="curl" title="翻面"></i>
