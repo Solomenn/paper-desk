@@ -84,21 +84,28 @@
   #sndT { position: absolute; left: 76px; top: 2.2vh; border: 0; background: none; font: 13px var(--hand); letter-spacing: .3em; color: rgba(232, 217, 168, .0); cursor: pointer; transition: color .4s; }
   #car:hover #sndT { color: rgba(232, 217, 168, .55); }
 
-  /* at a station: get off, or buy on and ride further */
-  #hold { position: absolute; left: 50%; top: 19vh; transform: translate(-50%, 12px); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 12px;
-    padding: 20px 28px 22px; border-radius: 18px; background: rgba(8, 12, 20, .62); backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(232,217,168,.16), 0 20px 50px rgba(0,0,0,.45);
-    opacity: 0; pointer-events: none; transition: opacity .6s, transform .6s var(--ease); }
-  #hold.on { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
-  #hold h2 { margin: 0; font-weight: 400; font-size: 20px; letter-spacing: .3em; color: #f1e6c4; }
-  #hold p { margin: 0; font-size: 13px; letter-spacing: .25em; color: rgba(232,217,168,.7); }
-  #hold .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
-  #hold button { border: 0; border-radius: 999px; padding: 8px 16px; font: 14px var(--hand); letter-spacing: .2em; cursor: pointer; color: #13213a; background: #e8d9a8; transition: transform .2s; }
-  #hold button:hover { transform: translateY(-2px); }
-  #hold button.ghost { color: #e8d9a8; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(232,217,168,.3); }
+  /* the station stamps: every station passed inks one into the little book propped on the sill */
+  #book { position: absolute; left: 6vw; bottom: calc(12vh + 1.6vh); z-index: 3; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 10px;
+    background: #efeadf; border-radius: 3px; transform: rotate(-2deg); transform-origin: 0 100%;
+    box-shadow: 0 10px 18px -8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(80,60,30,.12); color: #2f4f73; }
+  #book .ttl { writing-mode: vertical-rl; font-size: 11px; letter-spacing: .3em; color: #7a6f5e; padding-right: 4px; border-right: 1px solid rgba(80,60,30,.18); }
+  #book .stp { position: relative; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font-family: "Noto Sans SC", sans-serif;
+    box-shadow: inset 0 0 0 2px #2f4f73, inset 0 0 0 4px #efeadf, inset 0 0 0 5px #2f4f73; color: #2f4f73; mix-blend-mode: multiply; opacity: .82; }
+  #book .stp b { font-weight: 500; font-size: 12px; letter-spacing: .05em; line-height: 1.1; text-align: center; }
+  #book .stp small { position: absolute; bottom: 7px; font-size: 7px; letter-spacing: .05em; }
+  #book .stp.new { animation: inked .5s cubic-bezier(.4, 1.6, .5, 1); }
+  @keyframes inked { from { transform: scale(1.5) rotate(var(--r)); opacity: 0; } to { transform: scale(1) rotate(var(--r)); opacity: .82; } }
+  #book .stp.next { box-shadow: inset 0 0 0 1.5px rgba(122,111,94,.45); color: rgba(122,111,94,.75); mix-blend-mode: normal; border: 0; opacity: 1; background: repeating-conic-gradient(transparent 0 8deg, rgba(239,234,223,.0) 8deg 16deg); }
+  #book .stp.next b { font-size: 10px; } #book .stp.next small { bottom: 9px; }
+  #book .more { font-size: 11px; color: #7a6f5e; letter-spacing: .1em; }
+  #line .st i em { display: block; margin-top: 2px; font-style: normal; font-size: 10px; letter-spacing: .05em; opacity: .7; text-align: center; }
+  #line .st, #line .done { transition: left .8s var(--ease), width .3s linear; }
+  #line .tr b { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font-weight: 400; font-size: 12px; letter-spacing: .1em; color: #f1e6c4; white-space: nowrap; }
   #hudName { outline: none; cursor: text; border-bottom: 1px dashed transparent; }
   #hudName:hover, #hudName:focus { border-bottom-color: rgba(232,217,168,.4); }
   #hudName:empty::before { content: "这一程在做什么？点这里写"; color: rgba(232,217,168,.45); }
   #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { color: rgba(232, 217, 168, .8); }
+  #line .st i.hid { visibility: hidden; }
 
   /* ═════════ arriving: the ticket comes back with the station's stamp ═════════ */
   #arrive { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 16, .72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .8s; }
@@ -138,8 +145,7 @@
   <div id="sill"></div>
   <div id="line"><i class="track"></i><i class="done"></i></div>
   <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
-  <div id="hold"><h2 id="holdName"></h2><p id="holdMsg"></p>
-    <div class="btns"><button data-m="10">补票 · 再坐 10 分</button><button data-m="15">再坐 15 分</button><button data-m="25">再坐 25 分</button><button class="ghost" id="getOff">下车</button></div></div>
+  <div id="book"></div>
   <button id="sndT">车 轮 声</button>
   <button id="off">中 途 下 车</button>
 </section>
@@ -156,8 +162,9 @@
   const pad = n => String(n).padStart(2, "0");
   const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const TRIP = "paper-desk.trip.v1", TICKETS = "paper-desk.tickets.v1";
-  // the 雪国线: made-up stations through snow country
-  const STATIONS = ["白川口", "雪见", "霜原", "静川", "松风", "月岭", "冬木", "鹿鸣", "灯台寺", "雪国"];
+  // the 雪国线: made-up stations through snow country, one every 5 km; the train runs at 60 km/h, so one every 5 minutes
+  const STATIONS = ["白川口", "雪见", "霜原", "静川", "松风", "月岭", "冬木", "鹿鸣", "灯台寺", "银山", "汤泽", "风花", "星野", "寒川", "北原", "青柳", "苇原", "雾桥", "白桦", "新雪", "长冬", "野泽", "石打", "雪国"];
+  const KM = 5;
   const LINE = "雪国线";
 
   /* ───────── what to ride with: Doing projects, today's undone items, or anything ───────── */
@@ -169,9 +176,11 @@
   tasks.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; $("#free").value = ""; draw(); }; t.el = b; tEl.appendChild(b); });
   if (!tasks.length) tEl.innerHTML = '<span style="color:#5f7089;font-size:13px">黑板 Doing 和今日台历上还没有事，写一件吧</span>';
   $("#free").addEventListener("input", () => { pick = $("#free").value.trim() ? { name: $("#free").value.trim() } : (tasks[0] || null); draw(); });
-  [5, 15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m === 5 ? "5 分 · 先坐一站" : `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
-  // stations for a trip of this length: one every 5 minutes or so, from 3 to 9 stops
-  const stopsFor = m => { const n = m <= 5 ? 2 : Math.max(3, Math.min(9, Math.round(m / 5) + 1)), off = (new Date().getDate() * 3) % (STATIONS.length - n + 1); return STATIONS.slice(off, off + n); };
+  [5, 15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m === 5 ? "先坐一站 · 不限时" : `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
+  // where today's trains start, and the stations of a trip: 先坐一站 shows just the next one (the ride goes on as long as you like)
+  const OFF = (new Date().getDate() * 5) % STATIONS.length;
+  const nameAt = (off, k) => STATIONS[(off + k) % STATIONS.length];
+  const stopsFor = m => Array.from({ length: (m === 5 ? 1 : m / KM) + 1 }, (_, k) => nameAt(OFF, k));
   const seatFor = () => { const r = Math.floor(Math.random() * 1e9); return `${1 + r % 8} 号车 ${1 + (r >> 3) % 16}${"ABCD"[(r >> 7) % 4]}`; };
   let seat = seatFor(), no = String(1000 + Math.floor(Math.random() * 9000));
   $("#tkSlot").innerHTML = Ticket.html({ minutes: 25, stops: stopsFor(25), seat, no });
@@ -180,7 +189,7 @@
   function draw() {
     tasks.forEach(t => t.el.classList.toggle("on", t === pick));
     document.querySelectorAll("#mins .chip").forEach(b => b.classList.toggle("on", +b.dataset.m === minutes));
-    fillTicket(TK, { name: pick ? pick.name : "", minutes, stops: stopsFor(minutes), seat, no });
+    fillTicket(TK, { name: pick ? pick.name : "", minutes, open: minutes === 5, stops: stopsFor(minutes), seat, no });
     $("#go").textContent = minutes === 5 ? "先 坐 一 站" : "检 票 上 车";
   }
   draw();
@@ -265,7 +274,7 @@
     const xs = [];
     for (let i = first; i < first + W / gap + 3; i++) xs.push(i * gap - off);
     // no poles on the platform
-    if (platform) { const px = platform.x - world + W / 2; for (let j = 0; j < xs.length; j++) if (Math.abs(xs[j] - px) < 700) xs[j] = null; }
+    if (platform) { const px = W / 2 + (platX() - W / 2) / PAR, half = 1400 * H / 640 / PAR + 120; for (let j = 0; j < xs.length; j++) if (Math.abs(xs[j] - px) < half) xs[j] = null; }
     const keep = xs.filter(x => x !== null); xs.length = 0; xs.push(...keep);
     cx.strokeStyle = "rgba(8, 12, 20, .9)"; cx.lineWidth = 1.2;
     for (let w = 0; w < 3; w++) {   // the wires sag between poles
@@ -289,26 +298,76 @@
       cx.fillStyle = "#ffd28a"; cx.fillRect(x + 10, y - 17, 9, 8); cx.fillRect(x + 27, y - 17, 9, 8);
     }
   }
-  function drawPlatform() {
+  /* a small station in snow country, seen from the carriage: the platform runs right under the window, so its snowy surface fills
+     the bottom of the pane; on it the lamps, the station-name board (name large, the neighbours left and right on a 藍 band),
+     a wooden waiting room with a heavy snow roof and lit windows, a bench, a low fence along the far edge. It is the nearest thing
+     outside and goes by fastest. */
+  const PAR = 1.5, SANS = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+  const platX = () => (platform.x - world) * PAR + W / 2;
+  function drawPlatform(t) {
     if (!platform) return;
-    const x = platform.x - world + W / 2, y = H * .86;
-    if (x < -900 || x > W + 900) return;
-    // the platform edge, the shelter, lamps and the station's name
-    cx.fillStyle = "#0a111c"; cx.fillRect(x - 600, y - 22, 1200, 26);
-    cx.fillStyle = "#d9e2ec"; cx.fillRect(x - 600, y - 24, 1200, 4);
-    cx.fillStyle = "#0b1320"; cx.fillRect(x - 160, y - 150, 320, 12); cx.fillRect(x - 150, y - 140, 6, 118); cx.fillRect(x + 144, y - 140, 6, 118);
-    cx.fillStyle = "#dfe7f0"; cx.fillRect(x - 168, y - 156, 336, 7);
-    [-420, -160, 160, 420].forEach(dx => {
-      const lx = x + dx, g = cx.createRadialGradient(lx, y - 132, 0, lx, y - 132, 120);
-      g.addColorStop(0, "rgba(255, 214, 140, .5)"); g.addColorStop(1, "rgba(255, 214, 140, 0)");
-      cx.fillStyle = g; cx.fillRect(lx - 120, y - 250, 240, 250);
-      cx.fillStyle = "#0b1320"; cx.fillRect(lx - 2, y - 130, 4, 108); cx.fillStyle = "#ffe0a0"; cx.fillRect(lx - 9, y - 136, 18, 6);
-    });
-    // the sign
-    cx.fillStyle = "#f2f5f8"; cx.fillRect(x - 110, y - 108, 220, 54);
-    cx.strokeStyle = "#2f4f73"; cx.lineWidth = 3; cx.strokeRect(x - 106, y - 104, 212, 46);
-    cx.fillStyle = "#1c232b"; cx.font = `600 26px ${getComputedStyle(document.body).fontFamily}`; cx.textAlign = "center"; cx.fillText(platform.name, x, y - 72);
-    cx.font = `12px ${getComputedStyle(document.body).fontFamily}`; cx.fillStyle = "#4f5d69"; cx.fillText(`${LINE} · ${platform.name} 站`, x, y - 59);
+    const c = cx, s = H / 640, x = platX(), L = 1400 * s;
+    if (x + L < -300) { if (!platform.stop) platform = null; return; }
+    if (x - L > W + 300) return;
+    const a = x - L, b = x + L, back = H * .7, ramp = 70 * s;
+    // the surface: snow, darker toward the far edge; the ends slope down
+    const sg = c.createLinearGradient(0, back, 0, H); sg.addColorStop(0, "#8d9fb8"); sg.addColorStop(.35, "#b9c8da"); sg.addColorStop(1, "#e6edf5");
+    c.fillStyle = sg; c.beginPath(); c.moveTo(a + ramp, back); c.lineTo(b - ramp, back); c.lineTo(b, H); c.lineTo(a, H); c.closePath(); c.fill();
+    // the lamps' pools of light on the snow
+    const lamps = [-.86, -.3, .42, .9].map(k => x + k * L);
+    lamps.forEach(lx => { const g = c.createRadialGradient(lx, H * .86, 0, lx, H * .86, 220 * s); g.addColorStop(0, "rgba(255, 222, 160, .38)"); g.addColorStop(1, "rgba(255, 222, 160, 0)");
+      c.save(); c.translate(lx, H * .86); c.scale(1, .32); c.translate(-lx, -H * .86); c.fillStyle = g; c.fillRect(lx - 230 * s, H * .86 - 230 * s, 460 * s, 460 * s); c.restore(); });
+    // the edge: tactile paving half under snow, then the white line at the very edge
+    c.fillStyle = "rgba(196, 166, 92, .55)";
+    for (let k = a + 20 * s; k < b - 20 * s; k += 26 * s) if (hsh(Math.floor(k / s) * .13) > .3) c.fillRect(k, H * .925, 22 * s, 7 * s);
+    c.fillStyle = "#f4f7fa"; c.fillRect(a, H - 6 * s, b - a, 3 * s);
+    // the fence along the far edge
+    c.fillStyle = "#1a2433";
+    for (let k = a + ramp; k < b - ramp; k += 64 * s) c.fillRect(k, back - 30 * s, 4 * s, 32 * s);
+    c.fillRect(a + ramp, back - 26 * s, b - a - ramp * 2, 3 * s); c.fillRect(a + ramp, back - 12 * s, b - a - ramp * 2, 3 * s);
+    c.fillStyle = "#e3eaf2"; c.fillRect(a + ramp, back - 29 * s, b - a - ramp * 2, 3 * s);
+    // the waiting room: dark boards, lit windows, a roof deep in snow
+    const hx = x - L * .52, hw = 380 * s, hh = 130 * s, hb = back + 14 * s;
+    const glow = c.createRadialGradient(hx, hb - hh * .5, 0, hx, hb - hh * .5, 260 * s); glow.addColorStop(0, "rgba(255, 196, 120, .25)"); glow.addColorStop(1, "rgba(255, 196, 120, 0)");
+    c.fillStyle = glow; c.fillRect(hx - 300 * s, hb - 300 * s, 600 * s, 360 * s);
+    c.fillStyle = "#2b221d"; c.fillRect(hx - hw / 2, hb - hh, hw, hh);
+    c.fillStyle = "rgba(0,0,0,.25)"; for (let k = hx - hw / 2; k < hx + hw / 2; k += 14 * s) c.fillRect(k, hb - hh, 1.2 * s, hh);
+    [-.3, .08].forEach(k => { const wx = hx + k * hw, wy = hb - hh * .78, ww = 80 * s, wh = 56 * s;
+      c.fillStyle = "#ffd690"; c.fillRect(wx, wy, ww, wh); c.fillStyle = "#3b2c22"; c.fillRect(wx + ww / 2 - 2 * s, wy, 4 * s, wh); c.fillRect(wx, wy + wh / 2 - 2 * s, ww, 4 * s);
+      c.strokeStyle = "#3b2c22"; c.lineWidth = 5 * s; c.strokeRect(wx, wy, ww, wh); });
+    c.fillStyle = "#1a1411"; c.fillRect(hx + hw * .3, hb - hh * .82, 52 * s, hh * .82);
+    c.fillStyle = "#f2f5f8"; c.fillRect(hx - 58 * s, hb - hh - 2 * s - 26 * s, 116 * s, 24 * s);
+    c.fillStyle = "#2f4f73"; c.font = `500 ${15 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("候 车 室", hx, hb - hh - 15 * s);
+    c.fillStyle = "#1b1512"; c.beginPath(); c.moveTo(hx - hw / 2 - 30 * s, hb - hh); c.lineTo(hx, hb - hh - 70 * s); c.lineTo(hx + hw / 2 + 30 * s, hb - hh); c.closePath(); c.fill();
+    c.fillStyle = "#edf2f7"; c.beginPath(); c.moveTo(hx - hw / 2 - 36 * s, hb - hh + 6 * s);
+    c.quadraticCurveTo(hx - hw / 2 - 40 * s, hb - hh - 16 * s, hx - hw * .25, hb - hh - 48 * s); c.quadraticCurveTo(hx, hb - hh - 98 * s, hx + hw * .25, hb - hh - 48 * s);
+    c.quadraticCurveTo(hx + hw / 2 + 40 * s, hb - hh - 16 * s, hx + hw / 2 + 36 * s, hb - hh + 6 * s); c.quadraticCurveTo(hx, hb - hh - 24 * s, hx - hw / 2 - 36 * s, hb - hh + 6 * s); c.fill();
+    c.fillStyle = "#dfe7f0"; c.beginPath(); c.ellipse(hx - hw * .4, hb, 70 * s, 14 * s, 0, Math.PI, 0); c.ellipse(hx + hw * .45, hb, 50 * s, 10 * s, 0, Math.PI, 0); c.fill();
+    // a bench, snow on its seat
+    const bx = hx + hw * .78;
+    c.fillStyle = "#241c17"; c.fillRect(bx, H * .79 - 30 * s, 110 * s, 6 * s); c.fillRect(bx, H * .79 - 52 * s, 110 * s, 5 * s); c.fillRect(bx + 8 * s, H * .79 - 30 * s, 5 * s, 30 * s); c.fillRect(bx + 97 * s, H * .79 - 30 * s, 5 * s, 30 * s);
+    c.fillStyle = "#eef3f8"; c.fillRect(bx - 2 * s, H * .79 - 34 * s, 114 * s, 4 * s);
+    // lamps
+    lamps.forEach(lx => { const top = H * .86 - 330 * s;
+      c.fillStyle = "#121a26"; c.fillRect(lx - 3 * s, top, 6 * s, H * .86 - top); c.fillRect(lx - 3 * s, top, 36 * s, 5 * s);
+      const g = c.createRadialGradient(lx + 30 * s, top + 12 * s, 0, lx + 30 * s, top + 12 * s, 90 * s); g.addColorStop(0, "rgba(255, 226, 170, .55)"); g.addColorStop(1, "rgba(255, 226, 170, 0)");
+      c.fillStyle = g; c.fillRect(lx - 70 * s, top - 80 * s, 200 * s, 200 * s);
+      c.fillStyle = "#121a26"; c.beginPath(); c.moveTo(lx + 18 * s, top + 4 * s); c.lineTo(lx + 42 * s, top + 4 * s); c.lineTo(lx + 46 * s, top + 16 * s); c.lineTo(lx + 14 * s, top + 16 * s); c.closePath(); c.fill();
+      c.fillStyle = "#fff1cf"; c.fillRect(lx + 18 * s, top + 16 * s, 24 * s, 4 * s);
+      c.fillStyle = "#e9eff5"; c.fillRect(lx - 4 * s, top - 3 * s, 40 * s, 3 * s); });
+    // the station-name board
+    const nx = x + L * .1, nw = 330 * s, nh = 104 * s, nb = H * .88, nt = nb - 250 * s;
+    c.fillStyle = "#121a26"; c.fillRect(nx - nw * .4, nt, 7 * s, nb - nt); c.fillRect(nx + nw * .4 - 7 * s, nt, 7 * s, nb - nt);
+    c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(nx - nw / 2 + 4 * s, nt + 6 * s, nw, nh);
+    c.fillStyle = "#f6f8fa"; c.fillRect(nx - nw / 2, nt, nw, nh);
+    c.fillStyle = "#e7edf3"; c.fillRect(nx - nw / 2 - 3 * s, nt - 6 * s, nw + 6 * s, 7 * s);
+    c.fillStyle = "#1c232b"; c.font = `700 ${40 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(platform.name, nx, nt + 46 * s);
+    c.fillStyle = "#6b7682"; c.font = `500 ${11 * s}px ${SANS}`; c.fillText(`${LINE}　${platform.name} 站`, nx, nt + 64 * s);
+    c.fillStyle = "#2f4f73"; c.fillRect(nx - nw / 2, nt + nh - 30 * s, nw, 30 * s);
+    c.fillStyle = "#eef3f8"; c.font = `500 ${13 * s}px ${SANS}`; c.textBaseline = "middle";
+    c.textAlign = "left"; c.fillText(`◀ ${platform.prev || ""}`, nx - nw / 2 + 12 * s, nt + nh - 15 * s);
+    c.textAlign = "right"; c.fillText(`${platform.next || ""} ▶`, nx + nw / 2 - 12 * s, nt + nh - 15 * s);
+    c.textAlign = "left"; c.textBaseline = "alphabetic";
   }
   function scene(dt, t) {
     const c = cx; c.setTransform(D, 0, 0, D, 0, 0);
@@ -331,9 +390,9 @@
     layer(.3, .8, .05, .006, 3, "#a9bbd2");
     pines(.35, .8, 20, 46, "#121d30", "rgba(225, 235, 248, .8)");
     layer(.7, .88, .04, .01, 2, "#c4d2e3");
-    drawPlatform();
-    if (speed > 2 || platform) poles();
+    poles();
     layer(1.4, 1.0, .06, .012, 2, "#dde6f0");
+    drawPlatform(t);
     // falling snow, swept back by the train's speed
     const sweep = speed / 260, gust = .5 + .5 * Math.sin(t * .23) * Math.sin(t * .071 + 1);
     for (const f of flakes) {
@@ -417,29 +476,21 @@
   $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
   $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关";
 
-  /* ═════════ the trip ═════════ */
+  /* ═════════ the trip ═════════
+     The clock is the distance: 1 km a minute. A station every 5 km goes by without stopping and inks a stamp into the book on the
+     sill. A timed trip brakes into its last station; 先坐一站 rides on until you get off (the train then stops at the next station). */
   const CRUISE = 240, ACCEL = 7, BRAKE = 11;      // px/s of the nearest layer; seconds to speed up; seconds of braking
   let trip = get(TRIP, null);
-  // older trips (before riding time was kept) get it now
-  function norm(t) {
-    if (!t.rideEnd) { t.rideEnd = t.end - t.start; t.wait = 0; t.unit = t.rideEnd / t.minutes; }
-    if (!t.stopT) t.stopT = t.stops.map((_, i) => t.rideEnd * i / (t.stops.length - 1));
-    if (!t.legs) t.legs = [{ m: t.minutes, at: t.start }];
-    return t;
-  }
-  const rideMs = () => Math.max(0, Math.min(trip.rideEnd, Date.now() - trip.start - trip.wait));
-  function lineUI() {
-    const L = $("#line"); L.querySelectorAll(".st, .tr").forEach(e => e.remove());
-    trip.stops.forEach((s, i) => { const e = document.createElement("i"); e.className = "st"; e.style.left = (trip.stopT[i] / trip.rideEnd * 100) + "%"; e.innerHTML = `<i></i>`; e.firstChild.textContent = s; L.appendChild(e); });
-    const tr = document.createElement("i"); tr.className = "tr"; L.appendChild(tr);
-  }
-  // the trip's clock is riding time: time standing at a station (deciding whether to ride on) is left out
-  const unitOf = m => { const dur = +new URLSearchParams(location.search).get("dur"); return dur > 0 ? dur * 1000 / m : 60000; };   // ?dur= seconds, for trying it out
+  if (trip && trip.v !== 2) { localStorage.removeItem(TRIP); trip = null; }
+  const unitOf = m => { const dur = +new URLSearchParams(location.search).get("dur"); return dur > 0 ? dur * 1000 / m : 60000; };   // ?dur= seconds for 5 km/min, for trying it out
+  const kmNow = () => { const ms = Date.now() - trip.start; return Math.max(0, (trip.open ? ms : Math.min(ms, trip.minutes * trip.unit)) / trip.unit); };
+  const lastK = () => trip.open ? Infinity : trip.minutes / KM;
+  const nm = k => nameAt(trip.off, k);
   function board() {
     const name = $("#free").value.trim() || (pick ? pick.name : "");
-    const unit = unitOf(minutes), stops = stopsFor(minutes), rideEnd = minutes * unit;
-    trip = { id: Math.random().toString(36).slice(2, 9), name, proj: name && pick && pick.name === name ? pick.proj || null : null, minutes, stops, seat, no,
-      start: Date.now(), end: Date.now() + rideEnd, unit, rideEnd, wait: 0, stopT: stops.map((_, i) => rideEnd * i / (stops.length - 1)), legs: [{ m: minutes, at: Date.now() }], line: LINE };
+    trip = { v: 2, id: Math.random().toString(36).slice(2, 9), name, proj: name && pick && pick.name === name ? pick.proj || null : null, open: minutes === 5, minutes,
+      off: OFF, seat, no, start: Date.now(), unit: unitOf(minutes === 5 ? 5 : minutes), passed: 0, stamps: [], line: LINE };
+    trip.stops = stopsFor(minutes);
     put(TRIP, trip);
     audio();
     window.Sound && Sound.play("tab", { vol: .9 });
@@ -449,77 +500,91 @@
   $("#go").onclick = board;
   $("#free").addEventListener("keydown", e => { if (e.key === "Enter") board(); });
 
-  let riding = false, arrived = false, lastClack = 0;
+  let riding = false, arrived = false, lastClack = 0, lineTotal = 0, stopping = null;
   function ride() {
     riding = true; arrived = false;
-    $("#car").classList.add("on"); fit(); lineUI();
+    $("#car").classList.add("on"); fit(); lineUI(); bookUI();
     $("#hudName").textContent = trip.name || "";
+    $("#off").textContent = trip.open ? "下 车" : "中 途 下 车";
     const elapsed = (Date.now() - trip.start) / 1000;
     speed = elapsed > ACCEL ? CRUISE : 0; target = CRUISE;
   }
-  function progress() { return rideMs() / trip.rideEnd; }
-  const reachedI = () => { const r = rideMs(); let k = 0; trip.stopT.forEach((t, i) => { if (t <= r + 1) k = i; }); return k; };
+  /* the line along the bottom: the stations so far and what lies ahead, each with its km; the train carries the distance run */
+  function lineUI() {
+    const k = Math.floor(kmNow() / KM);
+    lineTotal = trip.open ? (k + 2) * KM : trip.minutes;
+    const L = $("#line"), n = lineTotal / KM, wide = L.clientWidth, every = Math.max(1, Math.ceil(64 / (wide / n)));
+    L.querySelectorAll(".st").forEach(e => e.remove());
+    for (let i = 0; i <= n; i++) {
+      const e = document.createElement("i"); e.className = "st"; e.style.left = (i / n * 100) + "%";
+      const lab = document.createElement("i"); lab.textContent = nm(i); lab.innerHTML += `<em>${i * KM} km</em>`;
+      if (i % every && i !== n) lab.className = "hid";
+      e.appendChild(lab); L.insertBefore(e, $("#line .tr"));
+    }
+    if (!$("#line .tr")) { const tr = document.createElement("i"); tr.className = "tr"; tr.innerHTML = "<b></b>"; L.appendChild(tr); }
+  }
   function updateLine() {
-    const p = progress(), n = trip.stops.length - 1, k = reachedI();
+    const km = kmNow(), p = Math.min(1, km / lineTotal), k = Math.floor(km / KM);
+    if (trip.open && (k + 2) * KM !== lineTotal) lineUI();
     $("#line .done").style.width = (p * 100) + "%";
     $("#line .tr").style.left = (p * 100) + "%";
-    document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i <= k));
-    const left = Math.max(0, Math.ceil((trip.end - Date.now()) / trip.unit));
-    $("#hudRest").textContent = holding ? ` · 停在 ${trip.stops[n]}` : ` · 下一站 ${trip.stops[Math.min(n, k + 1)]} · 还有 ${left} 分钟`;
+    $("#line .tr b").textContent = `${km.toFixed(1)} km`;
+    document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i * KM <= km + 1e-6));
+    const nk = Math.min(lastK(), k + 1), toNext = Math.max(0, nk * KM - km);
+    $("#hudRest").textContent = stopping ? ` · 列车正驶入 ${stopping.name}` : (trip.open ? ` · 已行 ${km.toFixed(1)} km · ${nm(nk)} 还有 ${toNext.toFixed(1)} km`
+      : ` · 已行 ${km.toFixed(1)} km · 下一站 ${nm(nk)} · 终点 ${nm(lastK())} 还有 ${Math.max(0, Math.ceil((trip.minutes - km) * trip.unit / 60000))} 分钟`);
   }
-  // the name can be written on the way
   $("#hudName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
   $("#hudName").addEventListener("blur", () => { if (!trip) return; trip.name = $("#hudName").textContent.trim().slice(0, 40); $("#hudName").textContent = trip.name; put(TRIP, trip); });
 
-  /* at the end of the line: the train waits at the platform until you choose */
-  let holding = false;
-  function hold() {
-    holding = true;
-    const stop = trip.stops[trip.stops.length - 1], m = Math.round(rideMs() / trip.unit);
-    $("#holdName").textContent = `到了 · ${stop}`;
-    $("#holdMsg").textContent = trip.legs.length > 1 ? `已经坐了 ${m} 分钟。下车，还是再坐一程？` : `坐了 ${m} 分钟。下车，还是再坐一程？`;
-    $("#hold").classList.add("on");
-    chime();
+  /* the stamp book on the sill: the last few stamps, and a dashed ring waiting for the next station */
+  function bookUI(fresh) {
+    const B = $("#book"), st = trip.stamps, show = st.slice(-5), md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${d.getDate()}`; };
+    B.innerHTML = `<span class="ttl">站 章</span>` + (st.length > 5 ? `<span class="more">… ${st.length - 5}</span>` : "") +
+      show.map((x, i) => `<span class="stp${fresh && i === show.length - 1 ? " new" : ""}" style="--r:${((x.k * 37) % 17) - 8}deg;transform:rotate(${((x.k * 37) % 17) - 8}deg)"><b>${x.name}</b><small>${md(x.at)}</small></span>`).join("") +
+      (trip.passed < lastK() - 1 || trip.open ? `<span class="stp next"><b>${nm(trip.passed + 1)}</b><small>${(trip.passed + 1) * KM} km</small></span>` : "");
   }
-  // buy on: more stations further down the line, the train pulls out again
-  function extend(m) {
-    if (!holding) return;
-    holding = false; $("#hold").classList.remove("on");
-    const now = Date.now(), from = trip.rideEnd, add = m * trip.unit, k = Math.max(1, Math.min(6, Math.round(m / 5)));
-    trip.wait = now - trip.start - trip.rideEnd;
-    let si = STATIONS.indexOf(trip.stops[trip.stops.length - 1]);
-    for (let j = 1; j <= k; j++) { si = (si + 1) % STATIONS.length; trip.stops.push(STATIONS[si]); trip.stopT.push(from + add * j / k); }
-    trip.rideEnd = from + add; trip.end = now + add; trip.minutes += m; trip.legs.push({ m, at: now });
-    put(TRIP, trip);
-    if (platform) platform.leaving = true;
-    target = CRUISE; lineUI();
-    window.Sound && Sound.play("tab", { vol: .7 });
+  function stampChime() {
+    if (!ac) return;
+    [784, 988].forEach((fq, i) => { const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * .16;
+      o.type = "sine"; o.frequency.value = fq; g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.06, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + .9);
+      o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + 1); });
   }
-  document.querySelectorAll("#hold [data-m]").forEach(b => b.onclick = () => extend(+b.dataset.m));
-  $("#getOff").onclick = () => { if (holding) { holding = false; $("#hold").classList.remove("on"); finish(false); } };
+  // a station goes by: its stamp
+  function pass(k) {
+    trip.passed = k; trip.stamps.push({ k, name: nm(k), at: Date.now() }); put(TRIP, trip);
+    bookUI(true); stampChime(); window.Sound && setTimeout(() => Sound.impact("card", .45), 120);
+  }
+
   function finish(early) {
     if (arrived) return;
     arrived = true;
-    const n = trip.stops.length - 1, reached = early ? reachedI() : n;
-    const stop = trip.stops[reached];
-    const rec = Object.assign({}, trip, { done: !early, endAt: Date.now(), reached, at: stop, focused: Math.round(rideMs() / trip.unit) });
+    const km = kmNow(), k = stopping ? stopping.k : lastK();
+    if (!trip.stamps.some(x => x.k === k)) trip.stamps.push({ k, name: nm(k), at: Date.now() });
+    const stops = Array.from({ length: k + 1 }, (_, i) => nm(i)), focused = Math.round(km * trip.unit / 60000);
+    const rec = Object.assign({}, trip, { stops, done: !early, endAt: Date.now(), reached: k, at: nm(k), focused, km: +km.toFixed(1), minutes: trip.open ? focused : trip.minutes });
     const all = get(TICKETS, []) || []; all.push(rec); put(TICKETS, all);
     localStorage.removeItem(TRIP);
-    // a project you rode with counts the time
     if (rec.proj) {
       const S = get("paper-desk.desk-tasks.v1", null);
       const p2 = S && (S.projects || []).find(x => x.id === rec.proj);
       if (p2) { p2.sessions = (p2.sessions || 0) + 1; p2.focus = (p2.focus || 0) + rec.focused; put("paper-desk.desk-tasks.v1", S); }
     }
-    // the ticket comes back, stamped
     $("#slot").innerHTML = Ticket.html(rec, { punched: true });
     const tk = $("#slot .tkt"); tk.style.setProperty("--tw", "min(520px, 86vw)"); Ticket.physics(tk);
-    $("#arrMsg").textContent = early ? `在 ${stop} 下了车 · 坐了 ${rec.focused} 分钟`
-      : trip.legs.length > 1 ? `从 ${trip.legs[0].m} 分钟坐起，一路坐到了 ${stop} · ${rec.focused} 分钟` : `在 ${stop} 下了车 · ${rec.focused} 分钟，一路辛苦`;
+    $("#arrMsg").textContent = early ? `在 ${rec.at} 下了车 · ${rec.km} km · ${focused} 分钟` : `${rec.at} 到了 · ${rec.km} km · ${focused} 分钟 · 盖了 ${rec.stamps.length} 枚站章`;
     $("#arrive").classList.add("on");
+    chime();
     setTimeout(() => { tk.classList.add("stamped"); window.Sound && Sound.impact("card", .8); }, 700);
   }
-  $("#off").onclick = () => { if (holding) { $("#getOff").click(); return; } if (!arrived && confirm("在下一站下车？这张票会记下你坐到了哪里。")) { target = 0; setTimeout(() => finish(true), 600); } };
+  // getting off: the train brakes into the next station and stops there
+  $("#off").onclick = () => {
+    if (arrived || stopping) return;
+    if (!trip.open && !confirm("在下一站下车？这张票会记下你坐到了哪里。")) return;
+    const k = Math.min(lastK(), trip.passed + 1), T = Math.max(1.5, Math.min(8, speed / CRUISE * 8));
+    stopping = { k, name: nm(k), t0: performance.now(), T, v0: speed, w0: world, early: !trip.open };
+    platform = { x: world + speed * T / 2, name: nm(k), prev: nm(Math.max(0, k - 1)), next: nm(k + 1), stop: true };
+  };
   $("#again").onclick = () => { location.reload(); };
 
   /* ───────── the loop ───────── */
@@ -528,28 +593,33 @@
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (!riding) platSnow(dt);
     else {
-      const leftS = (trip.end - Date.now()) / 1000;
-      // brake into the last station: the platform is placed where the train will come to rest
-      // constant braking from v0 over T seconds covers v0·T/2: the platform is put exactly there
-      if (!arrived && !holding && leftS <= BRAKE && leftS > 0 && (!platform || platform.leaving)) { const T = Math.max(.5, leftS); platform = { x: world + speed * T / 2, v0: speed, T, name: trip.stops[trip.stops.length - 1] }; }
-      if (holding) speed = 0;
-      else if (platform && !platform.leaving) speed = platform.v0 * Math.max(0, Math.min(1, leftS / platform.T));
-      else speed += (target - speed) * (1 - Math.exp(-dt / (target > speed ? ACCEL / 3 : 1)));
-      world += speed * dt;
+      const km = kmNow(), k = Math.floor(km / KM);
+      if (!arrived && !stopping) {
+        // stations on the way go by at speed, each one stamped
+        while (trip.passed < k && trip.passed + 1 < lastK()) pass(trip.passed + 1);
+        const nk = trip.passed + 1, secs = (nk * KM - km) * trip.unit / 1000;
+        if (nk < lastK() && secs > 0 && secs < 7 && (!platform || platform.k !== nk) && speed > 20) platform = { k: nk, x: world + speed * secs, name: nm(nk), prev: nm(nk - 1), next: nm(nk + 1) };
+        // a timed trip brakes into its last station: constant braking from v0 over T covers v0·T/2, the platform is put exactly there
+        const leftS = trip.open ? Infinity : (trip.start + trip.minutes * trip.unit - Date.now()) / 1000;
+        if (leftS <= BRAKE) { const T = Math.max(.5, leftS); stopping = { k: lastK(), name: nm(lastK()), t0: now, T, v0: speed, w0: world, early: false };
+          platform = { x: world + speed * T / 2, name: nm(lastK()), prev: nm(lastK() - 1), next: nm(lastK() + 1), stop: true }; }
+      }
+      if (stopping) {
+        // even braking, worked out from the time (not summed frame by frame), so it comes to rest exactly at the platform
+        const S = stopping, tau = Math.min(S.T, (now - S.t0) / 1000);
+        speed = S.v0 * (1 - tau / S.T); world = S.w0 + S.v0 * (tau - tau * tau / (2 * S.T));
+        if (tau >= S.T && !arrived) { if (!S.done) S.done = now; else if (now - S.done > 1200) finish(S.early); }
+      } else { speed += (target - speed) * (1 - Math.exp(-dt / (target > speed ? ACCEL / 3 : 1))); world += speed * dt; }
       if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
-      // the rail joints: every 25 m or so
       if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
       scene(dt, now / 1000);
       updateLine();
-      if (!arrived && !holding && leftS <= 0) hold();
     }
     requestAnimationFrame(frame);
   }
-  addEventListener("resize", () => { if (riding) fit(); });
+  addEventListener("resize", () => { if (riding) { fit(); lineUI(); } });
   // back on the train if the page was closed mid-trip
-  // back on the train if the page was closed mid-trip (or while it stood at a station)
-  if (trip) { norm(trip); $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket(TK, trip); TK.classList.add("punched"); ride();
-    if (Date.now() >= trip.end) { speed = 0; platform = { x: world, v0: 0, T: 1, name: trip.stops[trip.stops.length - 1] }; }
+  if (trip) { $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket(TK, trip); TK.classList.add("punched"); ride();
     addEventListener("pointerdown", () => audio(), { once: true }); }
   requestAnimationFrame(frame);
 })();
