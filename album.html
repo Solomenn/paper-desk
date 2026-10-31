@@ -121,6 +121,8 @@
   .zf li { display: flex; gap: 12px; padding: 10px 0; font-size: 15px; line-height: 1.5; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.5); }
   .zf li i { flex: none; width: 20px; height: 20px; border-radius: 4px; background: var(--accent); position: relative; margin-top: 1px; }
   .zf li i::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .zf .zmemo { margin-top: 12px; white-space: pre-wrap; font: 15px/28px "LXGW WenKai", "霞鹜文楷", "KaiTi", serif; color: var(--ink);
+    background: repeating-linear-gradient(transparent 0 27px, rgba(96, 88, 72, .2) 27px 28px); min-height: 84px; max-height: 196px; overflow: hidden; }
   .zf .when { position: absolute; left: 22px; bottom: 22px; font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .12em; }
   .zstamp { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px; transform: rotate(-5deg);
     background: radial-gradient(circle, transparent 3px, #fffdf6 3.5px) -5px -5px / 10px 10px; filter: drop-shadow(0 2px 2px rgba(70,52,28,.25)); }
@@ -402,7 +404,7 @@
     zc.innerHTML = `
       <div class="zf front"><div class="tint"></div>
         <div class="head"><span class="tt"></span></div>
-        <div class="body"><div class="label">本次目标</div><div class="goal"></div></div>
+        <div class="body"><div class="goal"></div></div>
         <div class="when"></div>
         <div class="zstamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm">${ds.slice(5)}</div></div></div></div>
         <svg class="zpm" viewBox="0 0 100 100"><g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
@@ -412,13 +414,16 @@
       </div>
       <div class="zf back"><div class="tint"></div>
         <div class="head"><span class="tt"></span><span class="n">${conds.length} / ${conds.length}</span></div>
-        <div class="body"><div class="label">完成条件</div><ul></ul></div>
+        <div class="body"><ul></ul><div class="zmemo"></div></div>
         <div class="when"></div>
       </div>`;
     zc.style.setProperty("--c", CAT_C[t.cat] || "transparent");
     zc.querySelectorAll(".tt").forEach(e => e.textContent = t.title || "（未命名）");
     $(".goal", zc).textContent = t.goal || "";
     zc.querySelectorAll(".when").forEach(e => e.textContent = ds);
+    const md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`; };
+    if (t.startedAt) $(".back .when", zc).textContent = `${md(t.startedAt)} — ${md(t.doneAt)}` + (t.sessions ? ` · ${t.sessions} 次 · ${t.focus || 0}′` : "");
+    $(".zmemo", zc).textContent = t.memo || "";
     const ul = $("ul", zc);
     conds.forEach(c => { const li = el("li"); li.innerHTML = "<i></i><span></span>"; li.lastChild.textContent = c.t; ul.appendChild(li); });
     ry = 0; zc.style.setProperty("--ry", "0deg");

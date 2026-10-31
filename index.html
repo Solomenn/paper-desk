@@ -45,7 +45,7 @@
   #desk { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
 
   body.panning, body.panning * { cursor: grabbing !important; }
-  .note { pointer-events: auto; }
+  .note, #desk > .pcard:not(.tucked) { pointer-events: auto; }
 
   /* ───────── sticky note ───────── */
   .note {
@@ -279,10 +279,24 @@
 
   /* the project card: goal + conditions on the front, timer on the back */
   /* flat on purpose: no 3D at rest keeps the text as crisp as the other cards; the flip squeezes it sideways and opens the other face */
-  .projc .flipper { position: absolute; inset: 0; }
-  .projc .face { position: absolute; inset: 0; }
-  .projc .face.b, .projc.back .face.f { display: none; }
-  .projc.back .face.b { display: block; }
+  .flipc .flipper { position: absolute; inset: 0; }
+  .flipc .face { position: absolute; inset: 0; }
+  .flipc .face.b, .flipc.back .face.f { display: none; }
+  .flipc.back .face.b { display: block; }
+  /* the back is a postcard: lines to write on, a stamp box, a postmark that is also the timer */
+  .post .pc { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 12px 16px 0 20px; position: relative; z-index: 1; }
+  .memo { flex: 1; min-width: 0; resize: none; border: 0; outline: none; padding: 0 2px; margin: 0; cursor: text;
+    font: 15px/28px var(--hand); color: var(--ink); background: repeating-linear-gradient(transparent 0 27px, rgba(96, 88, 72, .2) 27px 28px); background-attachment: local; }
+  .pcr { flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 26px; padding-top: 4px; }
+  .sbox { width: 80px; height: 94px; border: 1.5px dashed rgba(139, 134, 122, .4); border-radius: 3px; position: relative; flex: none; }
+  .post .stamp { left: -4px; top: -4px; right: auto; bottom: auto; }
+  .post .postmark { right: 52px; top: 118px; bottom: auto; width: 84px; height: 84px; }
+  .dial.pm { width: 92px; height: 92px; flex: none;
+    background: radial-gradient(circle, var(--paper) 0 60%, transparent 61%), repeating-conic-gradient(from -1deg, rgba(139,134,122,.45) 0 2deg, transparent 2deg 30deg); }
+  .dial.pm::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; border: 1.5px solid rgba(74, 74, 90, .28); pointer-events: none; }
+  .dial.pm .disc { inset: 8px; }
+  .dial.pm .hub { inset: 27px; font-size: 11.5px; }
+  .meta { margin-left: auto; font: 11px var(--mono); color: var(--faint); letter-spacing: .06em; }
 
   .projc .goal { resize: none; border: 0; background: none; outline: none; padding: 3px 4px; margin: 0 -4px; border-radius: 4px; overflow: hidden;
     font: 15.5px/1.6 var(--serif); color: var(--muted); height: 32px; margin-bottom: 4px; flex: none; }
@@ -372,14 +386,22 @@
 </head>
 <body>
 <div id="world">
-<div id="todayCard" class="pcard">
-  <div class="sheetc">
-    <div class="head"><span class="ttl"></span><span class="pn"></span></div>
-    <div class="bar"><i></i></div>
-    <div class="body"><ul class="chk"></ul></div>
+<div id="todayCard" class="pcard flipc">
+  <div class="flipper">
+    <div class="face f"><div class="sheetc">
+      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
+      <div class="bar"><i></i></div>
+      <div class="body"><ul class="chk"></ul></div>
+      <div class="foot"><button class="fbtn turn" title="翻到背面（F）">↻</button></div>
+    </div></div>
+    <div class="face b"><div class="sheetc post">
+      <div class="head"><span class="ttl"></span></div>
+      <div class="pc"><textarea class="memo" spellcheck="false"></textarea></div>
+      <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button></div>
+    </div></div>
   </div>
 </div>
-<template id="projTpl"><div class="pcard projc">
+<template id="projTpl"><div class="pcard projc flipc">
   <div class="flipper">
     <div class="face f"><div class="sheetc">
       <div class="head"><input class="tin" data-k="title" placeholder="项目" maxlength="40"><span class="pn"></span></div>
@@ -388,20 +410,24 @@
         <textarea class="goal" data-k="goal" rows="1" placeholder="目标"></textarea>
         <ul class="chk"></ul>
       </div>
-      <div class="foot"><button class="fbtn turn" title="翻到背面计时（F）">↻</button><button class="fbtn toss" title="扔掉">✕</button><button class="stampBtn">盖章</button></div>
-      <div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div>
+      <div class="foot"><button class="fbtn turn" title="翻到背面（F）">↻</button><button class="fbtn toss" title="扔掉">✕</button><button class="stampBtn">盖章</button></div>
+    </div></div>
+    <div class="face b"><div class="sheetc post">
+      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
+      <div class="pc">
+        <textarea class="memo" spellcheck="false"></textarea>
+        <div class="pcr">
+          <div class="sbox"><div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div></div>
+          <div class="dial pm" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div>
+        </div>
+      </div>
+      <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button><span class="meta"></span></div>
       <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
         <g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
           <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
         <text x="50" y="47" text-anchor="middle" font-size="9" font-family="monospace" fill="#4a4a5a" class="pd"></text>
         <text x="50" y="60" text-anchor="middle" font-size="8" font-family="serif" fill="#4a4a5a">完 成</text>
       </svg>
-    </div></div>
-    <div class="face b"><div class="sheetc">
-      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
-      <div class="bar"><i></i></div>
-      <div class="dialwrap"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div></div>
-      <div class="foot"><button class="fbtn turn" title="翻回正面（F）">↻</button></div>
     </div></div>
   </div>
 </div></template>
@@ -640,7 +666,7 @@
     }
     function untuck() {
       if (!o.tucked()) return;
-      clearTimeout(peekT);
+      clearTimeout(peekT); raise();
       const wasPeeking = el.classList.contains("peek");
       document.body.classList.remove("cardpeek");
       const p = tabXY();
@@ -692,6 +718,9 @@
     el.addEventListener("pointerenter", () => { if (el.classList.contains("peek")) clearTimeout(peekT); });
     el.addEventListener("pointerleave", () => { if (el.classList.contains("peek")) unpeek(); });
     // grab the card anywhere that isn't text, a box or a button and move it; a plain click on ≡ tucks it away
+    const raise = () => { el.style.zIndex = window.deskFront ? window.deskFront() : 5; };
+    el.addEventListener("pointerdown", raise, true);
+    el.addEventListener("focusin", raise);
     el.addEventListener("pointerdown", e => {
       if (e.button !== 0) return;
       if (el.classList.contains("peek")) { untuck(); e.preventDefault(); return; }
@@ -720,6 +749,7 @@
     });
     // from the tray: bring the card back if it's tucked, otherwise slide the desk to it
     function show() {
+      raise();
       if (o.tucked()) { untuck(); return; }
       const p = o.pos(); window.DeskView && DeskView.bringIntoView(p.x, p.y, el.offsetWidth, el.offsetHeight);
       el.classList.remove("hello"); void el.offsetWidth; el.classList.add("hello");
@@ -729,7 +759,7 @@
       ctls.splice(ctls.indexOf(ctl), 1); placers.splice(placers.indexOf(place), 1);
       layoutTabs();
     }
-    return { sync, tuck, untuck, place, show, destroy };
+    return { sync, tuck, untuck, place, show, destroy, raise };
   }
 
 
@@ -745,11 +775,12 @@
   const tp = load(TPOS, null) || { x: 60, y: 50, tucked: false };
   const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
   const todayEl = $("#todayCard");
+  $("#desk").appendChild(todayEl);
   let tSaveT = null;
   const saveToday = later => { clearTimeout(tSaveT); tSaveT = setTimeout(() => { store(TKEY, items); store(TPOS, tp); }, later ? 400 : 0); renderTodayHead(); };
   function renderTodayHead() {
     const d = new Date();
-    $(".ttl", todayEl).textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${"日一二三四五六"[d.getDay()]}`;
+    $$(".ttl", todayEl).forEach(e => e.textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${"日一二三四五六"[d.getDay()]}`);
     const v = visible().filter(i => !i.sub), k = v.filter(i => i.done).length;
     $(".pn", todayEl).textContent = v.length ? `${k} / ${v.length}` : "";
     $(".bar i", todayEl).style.width = v.length ? (k / v.length * 100) + "%" : "0";
@@ -766,7 +797,7 @@
   });
   const todayCard = Card(todayEl, {
     label: () => "今日",
-    menu: () => [{ label: "加一条", fn: () => $(".chk li.new textarea", todayEl).focus() }, "-"],
+    menu: () => [{ label: todayEl.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flipToday() }, { label: "加一条", fn: () => { flipToday(false); $(".chk li.new textarea", todayEl).focus(); } }, "-"],
     pos: () => tp, setPos: p => { tp.x = p.x; tp.y = p.y; }, saved: () => saveToday(),
     tucked: () => tp.tucked, setTucked: v => { tp.tucked = v; saveToday(); }, has: () => true,
   });
@@ -806,11 +837,40 @@
     } catch {}
   }
 
+  // flip: squeeze it sideways, show the other face, open it again (flat, so the text stays sharp)
+  const flippers = [];
+  function Flip(el) {
+    const flipper = $(".flipper", el);
+    let flipping = false;
+    function flip(toBack) {
+      const back = el.classList.contains("back");
+      if (toBack === undefined) toBack = !back;
+      if (toBack === back || flipping) return;
+      if (reduced) { el.classList.toggle("back", toBack); return; }
+      flipping = true;
+      flipper.animate([{ transform: "scaleX(1)" }, { transform: "scaleX(0.02)" }], { duration: 150, easing: "cubic-bezier(.5,0,.9,.6)" }).onfinish = () => {
+        el.classList.toggle("back", toBack);
+        flipper.animate([{ transform: "scaleX(0.02)" }, { transform: "scaleX(1)" }], { duration: 220, easing: "cubic-bezier(.2,.7,.3,1)" }).onfinish = () => { flipping = false; };
+      };
+    }
+    $$(".turn", el).forEach(b => b.addEventListener("click", () => flip()));
+    flippers.push({ el, flip });
+    return flip;
+  }
+  // today's card: its back is today's jottings (the receipt prints them at the bottom)
+  const MEMOKEY = "paper-desk.todaymemo.v1";
+  const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  const memos = load(MEMOKEY, {}) || {};
+  const tmemo = $(".face.b .memo", todayEl);
+  tmemo.value = memos[dayKey()] || "";
+  tmemo.addEventListener("input", () => { memos[dayKey()] = tmemo.value; store(MEMOKEY, memos); });
+  const flipToday = Flip(todayEl);
+
   const tpl = $("#projTpl");
   const projCtls = [];
   function ProjectCard(p) {
     const el = tpl.content.firstElementChild.cloneNode(true);
-    $("#desk").before(el);
+    $("#desk").appendChild(el);
     const filled = () => p.conds.filter(c => c.t.trim() && !c.sub);
     const ti = $("[data-k=title]", el), go = $("[data-k=goal]", el);
     const grow = () => { go.style.height = "auto"; go.style.height = go.scrollHeight + "px"; };
@@ -820,6 +880,14 @@
       $$(".bar i", el).forEach(b => b.style.width = f.length ? (k / f.length * 100) + "%" : "0");
       el.classList.toggle("ready", f.length > 0 && k === f.length && !p.stamped);
     }
+    const md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`; };
+    function renderMeta() {
+      $(".meta", el).textContent = `${md(p.startedAt)} 起` + (p.sessions ? ` · ${p.sessions} 次 · ${p.focus || 0}′` : "");
+    }
+    if (!p.startedAt) p.startedAt = Date.now();
+    const memo = $(".memo", el);
+    memo.value = p.memo || "";
+    memo.addEventListener("input", () => { p.memo = memo.value; saveP(true); });
     function renderText() {
       if (document.activeElement !== ti) ti.value = p.title;
       if (document.activeElement !== go) go.value = p.goal;
@@ -846,7 +914,7 @@
       pos: () => p.pos, setPos: q => { p.pos = q; }, saved: () => saveP(),
       tucked: () => !!p.tucked, setTucked: v => { p.tucked = v; saveP(); },
       menu: () => [
-        { label: el.classList.contains("back") ? "翻回正面" : "翻到计时", fn: () => flip() },
+        { label: el.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flip() },
         { label: "加一条", fn: () => $(".chk li.new textarea", el).focus() },
         el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
         { label: "扔掉", danger: true, fn: () => $(".toss", el).click() },
@@ -854,21 +922,7 @@
       ].filter(Boolean),
     });
 
-    // flip: squeeze it sideways, show the other face, open it again (flat, so the text stays sharp)
-    const flipper = $(".flipper", el);
-    let flipping = false;
-    function flip(toBack) {
-      const back = el.classList.contains("back");
-      if (toBack === undefined) toBack = !back;
-      if (toBack === back || flipping) return;
-      if (reduced) { el.classList.toggle("back", toBack); return; }
-      flipping = true;
-      flipper.animate([{ transform: "scaleX(1)" }, { transform: "scaleX(0.02)" }], { duration: 150, easing: "cubic-bezier(.5,0,.9,.6)" }).onfinish = () => {
-        el.classList.toggle("back", toBack);
-        flipper.animate([{ transform: "scaleX(0.02)" }, { transform: "scaleX(1)" }], { duration: 220, easing: "cubic-bezier(.2,.7,.3,1)" }).onfinish = () => { flipping = false; };
-      };
-    }
-    $$(".turn", el).forEach(b => b.addEventListener("click", () => flip()));
+    const flip = Flip(el);
 
     // timer
     const T = { total: 1500, left: 1500, run: false, end: 0 };
@@ -882,12 +936,15 @@
     const tick = setInterval(() => {
       if (!T.run) return;
       T.left = Math.max(0, (T.end - Date.now()) / 1000);
-      if (T.left <= 0) { T.run = false; const d = $(".dial", el); d.classList.remove("ring"); void d.offsetWidth; d.classList.add("ring"); chime(); }
+      if (T.left <= 0) {
+        T.run = false; const d = $(".dial", el); d.classList.remove("ring"); void d.offsetWidth; d.classList.add("ring"); chime();
+        p.sessions = (p.sessions || 0) + 1; p.focus = (p.focus || 0) + Math.round(T.total / 60); renderMeta(); saveP();
+      }
       renderTimer();
     }, 250);
     $(".dial", el).addEventListener("pointerdown", e => {
       const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < 34 * Z;
+      const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width * .3;
       let moved = false;
       const set = ev => {
         let ang = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI; if (ang < 0) ang += 360;
@@ -915,7 +972,7 @@
     // stamp it and file it into the album
     $(".stampBtn", el).addEventListener("click", () => {
       if (p.stamped) return;
-      flip(false); T.run = false;
+      flip(true); T.run = false;
       setTimeout(() => {
         p.stamped = true;
         const d = new Date(), ds = `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
@@ -928,13 +985,14 @@
           el.style.transform = `translate(${(r.left + r.width / 2) / Z - el.offsetWidth * .1}px, ${(r.top + r.height / 2) / Z - el.offsetHeight * .1}px) scale(.2) rotate(8deg)`;
           el.style.opacity = "0";
           setTimeout(() => {
-            const rec = { id: p.id, title: p.title, goal: p.goal, conds: p.conds, minutes: p.minutes, doneAt: Date.now() };
+            const rec = { id: p.id, title: p.title, goal: p.goal, conds: p.conds, minutes: p.minutes, memo: p.memo || "",
+              startedAt: p.startedAt, sessions: p.sessions || 0, focus: p.focus || 0, doneAt: Date.now() };
             S.done.push(rec);
             remove(); renderDone();
             $("#done").classList.add("gulp"); setTimeout(() => $("#done").classList.remove("gulp"), 500);
           }, 600);
         }, 1400);
-      }, el.classList.contains("back") ? 420 : 50);
+      }, el.classList.contains("back") ? 50 : 420);
     });
     $(".toss", el).addEventListener("click", () => {
       const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
@@ -946,7 +1004,7 @@
 
     const ctl = { p, el, card, flip, focusTitle: () => ti.focus() };
     projCtls.push(ctl);
-    resetTimer(); renderText(); renderProgress(); renderTimer(); list.render(); card.sync();
+    resetTimer(); renderText(); renderProgress(); renderMeta(); renderTimer(); list.render(); card.sync();
     return ctl;
   }
   S.projects.forEach(ProjectCard);
@@ -957,13 +1015,14 @@
       pos: { x: innerWidth / 2 / Z - 180 - O.x + k * 26, y: 30 / Z - O.y + k * 22 } };
     S.projects.push(p); saveP();
     const c = ProjectCard(p);
+    c.card.raise();
     c.el.classList.remove("hello"); void c.el.offsetWidth; c.el.classList.add("hello");
     setTimeout(() => c.focusTitle(), 60);
   }
   addEventListener("keydown", e => {
     const a = document.activeElement;
     if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable)) return;
-    if (e.key === "f" || e.key === "F") { const c = projCtls.find(c => c.el.matches(":hover")) || projCtls[projCtls.length - 1]; c && c.flip(); }
+    if (e.key === "f" || e.key === "F") { const c = flippers.find(c => c.el.matches(":hover")); c && c.flip(); }
   });
   $("#done").addEventListener("click", () => { location.href = "album.html"; });
   $("#trayToday").addEventListener("click", () => todayCard.show());
@@ -1142,6 +1201,7 @@
     pin.style.top = (hh(n) + n.pin.v) + "px";
   }
   function front(n) { n.z = ++zTop; n.el.style.zIndex = n.z; }
+  window.deskFront = () => ++zTop;
 
   function draw(n) {
     const el = n.el;

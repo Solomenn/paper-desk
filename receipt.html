@@ -445,6 +445,11 @@
   }
   let state = loadState();
   { const it = deskItems(); if (it.length) { state.items = it; state.date = todayISO(); } }
+  { // the back of today's card
+    let m = null; try { m = JSON.parse(localStorage.getItem('paper-desk.todaymemo.v1')); } catch (e) { /* ignore */ }
+    const d = new Date(), line = m && (m[`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`] || '').split('\n').map(x => x.trim()).find(Boolean);
+    if (line) state.quote = line.slice(0, 18);
+  }
   function persist() {
     try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch (e) { /* ignore */ }
   }
