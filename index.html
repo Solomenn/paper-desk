@@ -486,6 +486,23 @@
   .inner { border-radius: 1px; box-shadow: inset 0 3px 6px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(30, 16, 4, .55), inset 0 -1px 0 rgba(255, 255, 255, .06); }
   .ledge { background: linear-gradient(180deg, rgba(255, 238, 205, .35), rgba(255, 238, 205, 0) 4px, rgba(0, 0, 0, 0) 12px, rgba(40, 22, 8, .35)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120'%3E%3Cfilter id='w' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .32' numOctaves='3' seed='6' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.46 0 0 0 .26  .32 0 0 0 .15  .18 0 0 0 .06  0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E") 0 40px / 600px 120px;
     box-shadow: 0 -3px 5px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 238, 205, .4); }
+
+  /* ───────── right-edge drawer: the screen edge is a notebook edge, notes become index tabs ───────── */
+  #drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 14px; z-index: 50000;
+    background: repeating-linear-gradient(to right, #e4dccb 0 1px, #f7f2e7 1px 3px);
+    box-shadow: inset 1px 0 0 rgba(90, 70, 40, .18), -2px 0 8px rgba(21, 35, 58, .08); transition: box-shadow .25s, opacity .3s; }
+  #drawer.hot { box-shadow: inset 1px 0 0 rgba(79, 122, 90, .6), -6px 0 22px rgba(79, 122, 90, .28); }
+  body.p0 #drawer { opacity: 0; pointer-events: none; }
+  .tab { position: absolute; right: 14px; width: 12px; height: 40px; background: var(--c); border-radius: 4px 0 0 4px;
+    box-shadow: -1px 1px 2px rgba(21, 35, 58, .22), inset 0 0 0 .5px rgba(80,60,30,.12); cursor: pointer;
+    transition: width .22s var(--ease), top .4s var(--ease), transform .4s var(--ease); }
+  .tab.enter { transform: translateX(14px); }
+  .tab:hover, .tab.peeking { width: 20px; }
+  .tab[data-label]::before { content: attr(data-label); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    font-size: 11px; letter-spacing: .1em; color: var(--muted); white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #drawer:hover:not(.peeking) .tab[data-label]::before { opacity: 1; }
+  /* notes on their way to or from the drawer ride above everything, in board units */
+  #fly { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 49000; }
 </style>
 </head>
 <body>
@@ -581,9 +598,12 @@
   <b>便签</b> 从下面拖出；拖角转动；图钉按上去就固定<br>
   <b>折起</b> 便签右上角或右键；T 全部折起按颜色排好<br>
   <b>摆正</b> 便签右上角的水平仪，或鼠标停在便签上按 L；Shift+L 全部摆正<br>
+  <b>收起</b> 把便签拖到屏幕最右边，或往右一甩；悬停卡签偷看，点一下拿回<br>
   <b>扔掉</b> 拖着便签时右下出现圆圈，拖进去
 </div>
 <div id="menu"></div>
+<div id="drawer" title="甩到这里收起"></div>
+<div id="fly"></div>
 
 <script>
 /* ═════════ The desk: today's calendar on the left, one board at a time on the right ═════════
@@ -1343,12 +1363,15 @@
   const KR = 90, CR = 13;           // pinned: spring toward the pointer, damping
   const YANK = 270;                 // pull this far from the pin and it pops out
   const SNAP = Math.PI / 12;        // Shift while twisting snaps to 15°
+  const DRAWER_W = 14, DOCK_ZONE = 46, TAB_TOP = 14, TAB_H = 40, TAB_GAP = 6, GROUP_GAP = 20;
 
   const board = document.getElementById("notes");
   const bin = document.querySelector(".bin");
   const dish = document.querySelector(".dish");
   const menu = document.getElementById("menu");
+  const drawer = document.getElementById("drawer"), fly = document.getElementById("fly");
   let BR = board.getBoundingClientRect(), W = board.clientWidth, H = board.clientHeight;
+  const SR = () => innerWidth - BR.left, SB = () => innerHeight - BR.top;
   const syncBoard = () => { BR = board.getBoundingClientRect(); W = board.clientWidth; H = board.clientHeight; };
   let notes = [];
   let zTop = 10;
@@ -1383,7 +1406,8 @@
     n.textEl.textContent = n.text;
     el._note = n;
     el.classList.toggle("folded", !!n.folded);
-    board.appendChild(el);
+    (n.docked ? fly : board).appendChild(el);
+    if (n.docked) el.classList.add("hidden");
     notes.push(n);
     paint(n); fitHeight(n, true); renderPin(n); draw(n);
     n.textEl.addEventListener("input", () => fitHeight(n));
@@ -1473,12 +1497,13 @@
         if (n.x > mR) { n.x = mR; n.vx = -Math.abs(n.vx) * 0.35; }
         if (n.y < mT) { n.y = mT; n.vy = Math.abs(n.vy) * 0.35; }
         if (n.y > mB) { n.y = mB; n.vy = -Math.abs(n.vy) * 0.35; }
+        if (n.vx > 900 && n.x + HW * .3 >= mR - 1) { dock(n); break; }
         const sp = Math.hypot(n.vx, n.vy);
         n.liftT = Math.min(0.9, sp / 700);
         if (sp < 35) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); }
         break;
       }
-      case "place": case "trash": {
+      case "dock": case "peek": case "retract": case "place": case "trash": {
         const t = n.t;
         n.x += (t.x - n.x) * k; n.y += (t.y - n.y) * k;
         n.a += angDiff(t.a, n.a) * k; n.s += (t.s - n.s) * k;
@@ -1500,8 +1525,91 @@
   }
   function arrive(n) {
     n.x = n.t.x; n.y = n.t.y; n.s = n.t.s;
-    if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); }
+    if (n.mode === "dock" || n.mode === "retract") {
+      n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
+      renderTabs(); save();
+    } else if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); }
     else if (n.mode === "trash") { n.el.remove(); notes = notes.filter(x => x !== n); save(); }
+  }
+
+  /* ───────── drawer: index tabs on the right edge of the screen ───────── */
+  const tabEls = new Map(), tabY = new Map();
+  function inDrawer(n) { return n.docked || n.mode === "dock" || n.mode === "peek" || n.mode === "retract"; }
+  const firstLine = n => (n.text.split("\n")[0] || "").slice(0, 30);
+  function renderTabs() {
+    const list = notes.filter(inDrawer).sort((a, b) => ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat) || a.dockedAt - b.dockedAt);
+    const counts = {};
+    list.forEach(n => counts[n.cat] = (counts[n.cat] || 0) + 1);
+    let y = TAB_TOP, prev = null;
+    const room = innerHeight - TAB_TOP - 40;
+    const need = list.length * (TAB_H + TAB_GAP) + Object.keys(counts).length * GROUP_GAP;
+    const squeeze = need > room ? room / need : 1;
+    const seen = new Set();
+    for (const n of list) {
+      if (prev && prev !== n.cat) y += GROUP_GAP * squeeze;
+      let el = tabEls.get(n.id);
+      if (!el) {
+        el = document.createElement("div"); el.className = "tab enter"; el._note = n;
+        drawer.appendChild(el); tabEls.set(n.id, el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("enter")));
+      }
+      el.style.setProperty("--c", CATS[n.cat].c);
+      el.style.top = y + "px";
+      el.style.height = (TAB_H * Math.max(.6, squeeze)) + "px";
+      el.title = firstLine(n);
+      if (prev !== n.cat) el.dataset.label = CATS[n.cat].name + " · " + counts[n.cat]; else delete el.dataset.label;
+      tabY.set(n.id, y + TAB_H * Math.max(.6, squeeze) / 2);
+      seen.add(n.id); prev = n.cat;
+      y += (TAB_H + TAB_GAP) * squeeze;
+    }
+    for (const [id, el] of tabEls) if (!seen.has(id)) { el.remove(); tabEls.delete(id); }
+  }
+  const tabAt = n => clamp((tabY.get(n.id) || innerHeight / 2) - BR.top, hh(n) + 10 - BR.top, SB() - hh(n) - 10);
+  function dock(n) {
+    syncBoard();
+    if (n.pin) { n.pin = null; renderPin(n); }
+    endEdit(n);
+    fly.appendChild(n.el);
+    n.mode = "dock"; n.dockedAt = Date.now();
+    renderTabs();
+    n.t = { x: SR() + 60, y: tabAt(n), a: 0, s: 0.5 };
+    n.liftT = 0.4;
+  }
+  function peek(n) {
+    if (n.mode !== "rest" && n.mode !== "retract" && n.mode !== "peek") return;
+    syncBoard();
+    if (n.el.classList.contains("hidden")) {
+      n.el.classList.remove("hidden");
+      n.x = SR() + 110; n.y = tabAt(n); n.a = 0; n.s = 1;
+    }
+    front(n);
+    n.mode = "peek";
+    n.t = { x: SR() - DRAWER_W - 46, y: tabAt(n), a: -0.03, s: 1 };
+    n.liftT = 0.25;
+    tabEls.get(n.id)?.classList.add("peeking");
+    drawer.classList.add("peeking");
+  }
+  function retract(n) {
+    if (n.mode !== "peek") return;
+    n.mode = "retract";
+    n.t = { x: SR() + 110, y: n.y, a: 0, s: 1 };
+    n.liftT = 0;
+    tabEls.get(n.id)?.classList.remove("peeking");
+    if (!notes.some(m => m.mode === "peek")) drawer.classList.remove("peeking");
+  }
+  function undock(n, drag) {
+    syncBoard();
+    n.docked = false;
+    tabEls.get(n.id)?.classList.remove("peeking");
+    drawer.classList.remove("peeking");
+    n.el.classList.remove("hidden");
+    if (n.mode !== "peek") { n.x = SR() - 40; n.y = tabAt(n); n.a = 0; n.s = 1; }
+    front(n);
+    if (drag) { startDrag(n); renderTabs(); return; }
+    n.mode = "place";
+    n.t = { x: W - HW - 30 - Math.random() * 120, y: clamp(n.y, hh(n) + 10, H - hh(n) - 10), a: 0, s: 1 };
+    n.liftT = 0.6;
+    renderTabs();
   }
 
   /* ───────── folding: a note becomes one strip with its first line; T folds all of them and lines them up by colour ───────── */
@@ -1517,7 +1625,7 @@
     const d = (n.y + hh(n)) - bot0;
     if (Math.abs(d) > 1) {
       for (const m of notes) {
-        if (m === n || m.pin || (m.mode !== "rest" && m.mode !== "place")) continue;
+        if (m === n || m.pin || inDrawer(m) || (m.mode !== "rest" && m.mode !== "place")) continue;
         if (Math.abs(m.x - n.x) > HW * .9 || m.y - hh(m) < bot0 - 6 || m.y - hh(m) < top0) continue;
         m.mode = "place";
         m.t = { x: m.x, y: Math.min(H - hh(m) - 6, m.y + d), a: m.a, s: 1 };
@@ -1530,7 +1638,7 @@
   }
   function tidy() {
     syncBoard();
-    const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
+    const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && !inDrawer(n) && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
     const colW = Math.min(NW + 30, (W - 36) / Math.max(1, cols.length));
     let i = 0;
     cols.forEach((list, c) => {
@@ -1614,6 +1722,7 @@
     if (n.mode === "rotate") { n.mode = "swing"; return; }
     if (n.mode !== "drag") return;
     if (overBin()) { trash(n); return; }
+    if (P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE) { dock(n); return; }
     n.vx = clamp(P.vx, -2600, 2600); n.vy = clamp(P.vy, -2600, 2600); n.mode = "toss";
     if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
   }
@@ -1728,6 +1837,10 @@
     fb.textContent = n.folded ? "展开" : "折起";
     fb.onclick = () => { closeMenu(); setFold(n, !n.folded); };
     menu.appendChild(fb);
+    const dk = document.createElement("button");
+    dk.textContent = "收到右边";
+    dk.onclick = () => { closeMenu(); dock(n); };
+    menu.appendChild(dk);
     const del = document.createElement("button");
     del.textContent = "扔掉";
     del.onclick = () => { closeMenu(); trash(n); };
@@ -1747,6 +1860,7 @@
     if (act && act.type === "note") {
       document.body.classList.add("carrying");
       bin.classList.toggle("hot", overBin());
+      drawer.classList.toggle("hot", P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE);
     }
   });
 
@@ -1793,6 +1907,21 @@
       return;
     }
 
+    // index tab: click to pull it out, drag to pull it straight into your hand
+    const tab = t.closest(".tab");
+    if (tab) {
+      const n = tab._note;
+      act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
+      e.preventDefault();
+      return;
+    }
+    const pk = t.closest(".note");
+    if (pk && pk._note.mode === "peek") {
+      const n = pk._note;
+      act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
+      e.preventDefault();
+      return;
+    }
     if (t.closest(".level")) { const n = t.closest(".note")._note; endEdit(n); turnTo(n, 0); e.preventDefault(); return; }
     if (t.closest(".fold")) { const n = t.closest(".note")._note; setFold(n, !n.folded); e.preventDefault(); return; }
 
@@ -1800,7 +1929,7 @@
     if (ne) {
       const n = ne._note;
       if (n.el.classList.contains("editing") && t.closest(".text")) return;
-      if (n.mode === "trash") return;
+      if (n.mode === "trash" || n.mode === "dock" || n.mode === "retract") return;
       for (const m of notes) if (m !== n) endEdit(m);
       if (n.pin) { const pe = n.el.querySelector(":scope > .pin"); pe.classList.remove("nudge"); void pe.offsetWidth; pe.classList.add("nudge"); e.preventDefault(); return; }
       if (t.classList.contains("rh")) startSpin(n); else startDrag(n);
@@ -1817,7 +1946,7 @@
     else if (a.type === "pin") dropPin();
     else if (a.type === "note" || a.type === "rotate") { act = a; releaseNote(a.n); act = null; }
     else if (a.type === "spin") { a.n.mode = "rest"; a.n.liftT = 0; a.n.el.classList.remove("spinning"); save(); }
-    bin.classList.remove("hot"); document.body.classList.remove("carrying");
+    bin.classList.remove("hot"); drawer.classList.remove("hot"); document.body.classList.remove("carrying");
   });
 
   addEventListener("dblclick", e => {
@@ -1848,13 +1977,32 @@
     }
   });
   document.getElementById("tidy").onclick = () => { if (Desk.page() !== 1) { Desk.go(1); setTimeout(tidy, 450); } else tidy(); };
-  addEventListener("deskpage", () => { notes.forEach(endEdit); closeMenu(); });
+  addEventListener("deskpage", () => { notes.forEach(endEdit); closeMenu(); notes.filter(n => n.mode === "peek").forEach(retract); });
+  // hover a tab to peek, leave to tuck it back
+  let retractTimer = null;
+  drawer.addEventListener("pointerover", e => {
+    const tab = e.target.closest(".tab");
+    if (!tab || act) return;
+    clearTimeout(retractTimer);
+    for (const n of notes) if (n.mode === "peek" && n !== tab._note) retract(n);
+    peek(tab._note);
+  });
+  addEventListener("pointerover", e => {
+    if (act || e.target.closest(".tab")) return;
+    const ne = e.target.closest(".note");
+    if (ne && ne._note.mode === "peek") { clearTimeout(retractTimer); return; }
+    const peeking = notes.filter(n => n.mode === "peek");
+    if (!peeking.length) return;
+    clearTimeout(retractTimer);
+    retractTimer = setTimeout(() => peeking.forEach(retract), 140);
+  });
+  addEventListener("resize", renderTabs);
 
   // keep every note on the board when the window changes size
   function keepIn() {
     syncBoard();
     for (const n of notes) {
-      if (n.mode !== "rest") continue;
+      if (n.mode !== "rest" || inDrawer(n)) continue;
       const x = clamp(n.x, HW * .5, W - HW * .5), y = clamp(n.y, hh(n) * .5, H - hh(n) * .5);
       if (n.pin && (x !== n.x || y !== n.y)) { n.pin = null; renderPin(n); }
       n.x = x; n.y = y; draw(n);
@@ -1869,7 +2017,7 @@
     saveT = setTimeout(() => {
       const data = notes.filter(n => n.mode !== "trash").map(n => ({
         id: n.id, cat: n.cat, text: n.el.classList.contains("editing") ? n.textEl.innerText : n.text,
-        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded,
+        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded, docked: inDrawer(n), dockedAt: n.dockedAt || 0,
         z: n.z, createdAt: n.createdAt,
       }));
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
@@ -1884,11 +2032,9 @@
     const wasDesk = data.some(d => "docked" in d);
     data.sort((a, b) => a.z - b.z).forEach(d => {
       delete d.task;
-      if (d.docked) d.folded = true;
-      delete d.docked; delete d.dockedAt;
       makeNote(d);
     });
-    keepIn();
+    keepIn(); renderTabs();
     save();
   }
   function demo() {
@@ -1909,7 +2055,12 @@
     const dt = Math.min(0.033, Math.max(0.001, (now - last) / 1000));
     last = now;
     trackPointer(dt);
-    for (const n of notes.slice()) if (step(n, dt)) draw(n);
+    BR = board.getBoundingClientRect();
+    fly.style.transform = `translate(${BR.left}px,${BR.top}px)`;
+    for (const n of notes.slice()) {
+      if (step(n, dt)) draw(n);
+      if (n.mode === "rest" && !n.docked && n.el.parentNode === fly) board.appendChild(n.el);
+    }
     requestAnimationFrame(frame);
   }
   load();
