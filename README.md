@@ -41,6 +41,14 @@
 
 桌子工具栏 `⎙` 打开。基于自己做的「日程进度打印机」（LIFE POS），打印今日卡上的事和今天盖过章的项目：勾了的 `OK`（打勾时间），没勾的 `··`。EDIT 面板里「今天的桌子」可重新导入。
 
+## 本地预览
+
+```sh
+py serve.py            # 打开 http://localhost:8000（换端口：py serve.py 8080）
+```
+
+别用 `py -m http.server`：Windows 上 Python 的 mimetypes 会读注册表，`.js` 常常被登记成 `text/plain`，而浏览器对 ES module 做严格 MIME 校验，会拒绝执行 `carriage.js` —— 3D 车厢于是一个都不出现，只剩 2D 墙面，控制台只有一行 MIME 报错。`serve.py` 把 `.js` 钉成 `text/javascript`，并且不发缓存头，改完刷新就行，不用 Ctrl+F5。
+
 ## 存档（localStorage）
 
 | key | 内容 |
