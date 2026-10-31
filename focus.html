@@ -14,36 +14,71 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: #070d18; font-family: var(--hand); color: #e8eef5; user-select: none; -webkit-user-select: none; }
   body { line-break: strict; }
 
-  /* ═════════ the platform at night: where you choose the trip and have the ticket punched ═════════ */
-  #board { position: fixed; inset: 0; display: grid; place-items: center; z-index: 5; transition: opacity .9s, transform 1.2s var(--ease);
-    background: radial-gradient(70% 60% at 50% 30%, #1f3150, #0b1424 70%), #0b1424; }
-  #board.gone { opacity: 0; transform: scale(1.04); pointer-events: none; }
-  #board .lamp { position: absolute; top: 0; width: 2px; height: 22vh; background: #3a4558; }
-  #board .lamp::after { content: ""; position: absolute; left: -16px; bottom: -6px; width: 34px; height: 12px; border-radius: 0 0 17px 17px; background: #d9c38c;
-    box-shadow: 0 0 40px 18px rgba(255, 214, 140, .25), 0 40px 160px 40px rgba(255, 214, 140, .08); }
-  #board .lamp.a { left: 22%; } #board .lamp.b { right: 22%; }
-  #snow0 { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
-    color: #9fb0c4; text-decoration: none; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: color .2s; }
-  .home:hover { color: #fff; }
-  .panel { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 26px; }
-  .panel h1 { margin: 0; font-weight: 400; font-size: 15px; letter-spacing: .8em; margin-right: -.8em; color: #9fb0c4; }
-  .choose { display: flex; flex-direction: column; gap: 14px; width: min(560px, 90vw); }
-  .row { display: flex; align-items: center; gap: 14px; }
-  .row > span { flex: none; width: 4.5em; font-size: 13px; letter-spacing: .3em; color: #8193aa; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { border: 0; border-radius: 999px; padding: 6px 13px; font: 14px var(--hand); color: #c9d5e3; background: rgba(255,255,255,.06);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); cursor: pointer; transition: background .2s, color .2s; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chip:hover { background: rgba(255,255,255,.12); }
-  .chip.on { background: #e8eef5; color: #13213a; }
-  .row input { flex: 1; min-width: 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.2); background: none; outline: none; padding: 6px 2px; font: 16px var(--hand); color: #fff; }
-  .row input::placeholder { color: #5f7089; }
-  .go { margin-top: 6px; border: 0; border-radius: 999px; padding: 11px 34px; font: 16px var(--hand); letter-spacing: .5em; color: #13213a; background: #e8d9a8;
-    cursor: pointer; box-shadow: 0 10px 30px -10px rgba(232, 217, 168, .6); transition: transform .2s; }
-  .go:hover { transform: translateY(-2px); }
+  /* ═════════ setting off (after 听雨来信's writing desk): a dark board in a snowy night; you write the task in the light of the
+     little engine's lamp, which runs along its rail under the words and puffs steam at every key ═════════ */
+  #board { position: fixed; inset: 0; z-index: 5; overflow-y: auto; overflow-x: hidden; transition: opacity .9s, transform 1.2s var(--ease); background: #151c26;
+    --ink: #dedccb; --serif: "Noto Serif SC", "Songti SC", "STSong", serif; --mono: ui-monospace, "SF Mono", Menlo, monospace; --light: .7; --spread: 72%; }
+  #board.gone { opacity: 0; transform: scale(1.03); pointer-events: none; }
+  .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    color: #d7d9c6; text-decoration: none; font-size: 20px; transition: background .2s; }
+  .home:hover { background: #bfc8b315; }
+  #bgc, #snow0 { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #bgc { z-index: 0; } #snow0 { z-index: 6; }
+  #board .shell { position: relative; z-index: 2; width: min(920px, calc(100% - 64px)); margin: auto; padding: 26px 0 34px; transition: opacity .7s, transform .9s var(--ease); }
+  #board.sent .shell { opacity: 0; transform: translateY(30px); pointer-events: none; }
+  #board .topbar { height: 55px; display: flex; align-items: center; justify-content: center; position: relative; }
+  #board .wordmark { font: 14px var(--serif); letter-spacing: .38em; color: var(--ink); opacity: .62; }
+  #board .tops { position: absolute; right: 0; display: flex; align-items: center; gap: 16px; }
+  #board .count { font: 13px var(--mono); letter-spacing: .16em; color: #c1c7b9; }
+  #board .ibtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #d7d9c6; text-decoration: none; transition: background .2s; }
+  #board .ibtn:hover { background: #bfc8b315; }
+  #board .ibtn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+  #board .gap { height: 80px; }
+  .paper { position: relative; isolation: isolate; height: 520px; border-radius: 100px 100px 0 0; overflow: hidden; background: linear-gradient(180deg, #34352f, #373830);
+    box-shadow: 0 -1px 0 #cad0bf13, 0 15px 70px #04090430; }
+  .paper .grain { position: absolute; inset: 0; pointer-events: none; opacity: .2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%239c9c86' filter='url(%23n)' opacity='.38' d='M0 0h140v140H0z'/%3E%3C/svg%3E"); }
+  /* the lamp's beam: from the engine's headlamp, up over the words */
+  .beam { position: absolute; left: var(--lx, 30%); top: 0; width: 640px; height: var(--bh, 330px); transform: translateX(-50%) rotate(var(--tilt, 6deg)); transform-origin: 50% 100%;
+    filter: blur(12px); opacity: var(--light); pointer-events: none; z-index: 1; }
+  .beam::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, #fce3aaee 0, #e8d5a69c 23%, #d2c9a629 53%, transparent 76%);
+    clip-path: polygon(calc(50% - var(--spread) / 2) 0, calc(50% + var(--spread) / 2) 0, 50% 100%); }
+  #steam { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+  .writing { position: relative; z-index: 3; margin: 70px 11% 0; }
+  #free { width: 100%; border: 0; outline: 0; background: transparent; padding: 8px 4px; font: 26px/1.8 var(--serif); letter-spacing: .05em; color: #ece6cb; caret-color: #f1e5b4; }
+  #free::placeholder { color: #c0c0aa; opacity: .6; }
+  #mirror { position: absolute; visibility: hidden; white-space: pre; font: 26px/1.8 var(--serif); letter-spacing: .05em; padding: 8px 4px; }
+  #tasks { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 18px; min-height: 30px; }
+  #tasks button { border: 0; background: none; padding: 2px 0; font: 19px var(--serif); letter-spacing: .06em; color: #d8d2b8; opacity: .6; cursor: pointer; transition: opacity .2s, color .2s; max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tasks button:hover { opacity: .95; }
+  #tasks button.on { opacity: 1; color: #f3ead0; text-decoration: underline; text-underline-offset: 7px; text-decoration-color: #f1e5b466; }
+  #tasks .none { font: 14px var(--serif); color: #a5a79a; opacity: .7; }
+  .mechanism { position: absolute; left: 0; right: 0; top: 318px; height: 92px; z-index: 3; pointer-events: none; }
+  .mechanism .rail { position: absolute; top: 58px; left: -1%; right: -1%; height: 7px; border-radius: 2px; background: linear-gradient(#5d635c, #2a2f2a 45%, #0b0e0c 80%, #3a3f38); box-shadow: 0 2px 3px #0008; }
+  .mechanism .ties { position: absolute; top: 65px; left: -1%; right: -1%; height: 9px; background: repeating-linear-gradient(90deg, #1e1b17 0 16px, transparent 16px 38px); opacity: .9; }
+  #loco { position: absolute; left: var(--hx, 30%); top: -10px; width: 150px; height: 75px; transform: translateX(-50%); filter: drop-shadow(0 4px 3px #0009); }
+  #loco svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .controls { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; padding: 20px 34px; display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 26px; align-items: end; background: #3a3c321e; }
+  .controls label > span { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 17px; color: #b0b4a1; font: 12px var(--mono); letter-spacing: .05em; }
+  .controls output { white-space: nowrap; font-family: var(--hand); font-size: 13px; }
+  #board input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; cursor: pointer; background:
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(12.5% - 1px), #b4b6a130 calc(12.5% - 1px), #b4b6a130 12.5%),
+    linear-gradient(#969e744d, #969e744d) center / 100% 1px no-repeat; }
+  #board input#ride { background: repeating-linear-gradient(90deg, #b4b6a140 0 1px, transparent 1px calc(20% - .2px)) 0 0 / calc(100% + 1px) 100%, linear-gradient(#969e744d, #969e744d) center / 100% 1px no-repeat; }
+  #board input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 21px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; }
+  #board input[type=range]::-moz-range-thumb { width: 5px; height: 18px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 70px; padding: 14px 30px; border-radius: 0 0 28px 28px; background: #20241fe8; color: #a7ae9d; }
+  .foot .q { display: inline-flex; align-items: center; gap: 9px; border: 0; background: none; padding: 9px 0; font: 14px var(--hand); color: #bdc4b1; cursor: pointer; }
+  .foot .q:hover { color: #f4f0da; }
+  .foot .hint { font-size: 13px; letter-spacing: .1em; }
+  .go { border: 0; border-radius: 7px; padding: 11px 22px; font: 15px var(--hand); letter-spacing: .3em; color: #293128; background: #d2d6bd; cursor: pointer; transition: background .2s; }
+  .go:hover { background: #e5e7d4; }
+  /* the ticket, once you set off: it comes up out of the night and is punched */
+  #tkStage { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; opacity: 0; transform: translateY(26px); transition: opacity .7s, transform .9s var(--ease); }
+  #board.sent #tkStage { opacity: 1; transform: none; }
+  @media (max-width: 680px) { .paper { height: 470px; border-radius: 60px 60px 0 0; } .writing { margin: 50px 9% 0; } .mechanism { top: 268px; } .controls { padding: 16px 18px 22px; gap: 13px; } }
 
   /* ═════════ the ticket: ticket.js (after sasshi's admission ticket) ═════════ */
-  #tkSlot { position: relative; z-index: 2; }
   #tkSlot .tkt { --tw: min(560px, 88vw); }
 
   /* ═════════ the carriage: a window onto the snow at night ═════════ */
@@ -122,20 +157,34 @@
 <body>
 <a class="home" href="./" title="回到桌子">←</a>
 
-<!-- the platform -->
+<!-- setting off -->
 <section id="board">
-  <i class="lamp a"></i><i class="lamp b"></i>
-  <canvas id="snow0"></canvas>
-  <div class="panel">
-    <h1>雪 国 线 · 夜 行</h1>
-    <div id="tkSlot"></div>
-    <div class="choose">
-      <div class="row"><span>专 注</span><div class="chips" id="tasks"></div></div>
-      <div class="row"><span></span><input id="free" maxlength="40" placeholder="或者写一件别的事"></div>
-      <div class="row"><span>行 程</span><div class="chips" id="mins"></div></div>
+  <canvas id="bgc"></canvas>
+  <div class="shell">
+    <header class="topbar"><span class="wordmark">雪国线 · 夜行</span>
+      <div class="tops"><span class="count" id="tkCount"></span><a class="ibtn" href="album.html?kind=ticket" title="车票卡册">
+        <svg viewBox="0 0 24 24"><path d="M3 7h13v10H3zM16 7h5v10h-5"/><path d="M16 9v1M16 12v1M16 15v1"/></svg></a></div></header>
+    <div class="gap"></div>
+    <div class="paper">
+      <i class="grain"></i>
+      <i class="beam" id="beam"></i>
+      <canvas id="steam"></canvas>
+      <div class="writing">
+        <span id="mirror"></span>
+        <input id="free" maxlength="40" placeholder="这一程，专注什么？" spellcheck="false" autocomplete="off">
+        <div id="tasks"></div>
+      </div>
+      <div class="mechanism"><i class="ties"></i><i class="rail"></i><div id="loco"></div></div>
+      <div class="controls">
+        <label><span>LIGHT <output id="lightO">柔光</output></span><input id="light" type="range" min="15" max="100" value="70"></label>
+        <label><span>SPREAD <output id="spreadO">72°</output></span><input id="spread" type="range" min="30" max="100" value="72"></label>
+        <label><span>RIDE <output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
+      </div>
     </div>
-    <button class="go" id="go">检票上车</button>
+    <footer class="foot"><button class="q" id="sndB"></button><span class="hint">写下这一程的事，或点一个 · Enter 检票</span><button class="go" id="go">检票上车</button></footer>
   </div>
+  <div id="tkStage"><div id="tkSlot"></div></div>
+  <canvas id="snow0"></canvas>
 </section>
 
 <!-- the carriage -->
@@ -167,32 +216,159 @@
   const KM = 5;
   const LINE = "雪国线";
 
-  /* ───────── what to ride with: Doing projects, today's undone items, or anything ───────── */
+  /* ───────── what to ride with: Doing projects, today's undone items, or anything you write ───────── */
   const tasks = [];
   ((get("paper-desk.desk-tasks.v1", {}) || {}).projects || []).filter(p => p.col === "doing" && (p.title || "").trim()).forEach(p => tasks.push({ name: p.title, proj: p.id }));
   (get("paper-desk.today.v1", []) || []).filter(i => i && !i.done && (i.text || "").trim() && !i.sub).slice(0, 6).forEach(i => tasks.push({ name: i.text }));
-  let pick = tasks[0] || null, minutes = get("paper-desk.trip.min", 5);
-  const tEl = $("#tasks");
-  tasks.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; $("#free").value = ""; draw(); }; t.el = b; tEl.appendChild(b); });
-  if (!tasks.length) tEl.innerHTML = '<span style="color:#5f7089;font-size:13px">黑板 Doing 和今日台历上还没有事，写一件吧</span>';
-  $("#free").addEventListener("input", () => { pick = $("#free").value.trim() ? { name: $("#free").value.trim() } : (tasks[0] || null); draw(); });
-  [5, 15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m === 5 ? "先坐一站 · 不限时" : `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
+  const RIDES = [5, 15, 25, 45, 60, 90];
+  let pick = null, minutes = RIDES.includes(get("paper-desk.trip.min", 5)) ? get("paper-desk.trip.min", 5) : 5;
+  const tEl = $("#tasks"), FREE = $("#free");
+  tasks.forEach(t => { const b = document.createElement("button"); b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; FREE.value = t.name; FREE.focus(); FREE.setSelectionRange(t.name.length, t.name.length); draw(); chuff(.5); }; t.el = b; tEl.appendChild(b); });
+  if (!tasks.length) tEl.innerHTML = '<span class="none">黑板 Doing 和今日台历上还没有事 · 写下一件就好</span>';
+  FREE.addEventListener("input", () => { const v = FREE.value.trim(); pick = tasks.find(t => t.name === v) || (v ? { name: v } : null); draw(); });
   // where today's trains start, and the stations of a trip: 先坐一站 shows just the next one (the ride goes on as long as you like)
   const OFF = (new Date().getDate() * 5) % STATIONS.length;
   const nameAt = (off, k) => STATIONS[(off + k) % STATIONS.length];
   const stopsFor = m => Array.from({ length: (m === 5 ? 1 : m / KM) + 1 }, (_, k) => nameAt(OFF, k));
   const seatFor = () => { const r = Math.floor(Math.random() * 1e9); return `${1 + r % 8} 号车 ${1 + (r >> 3) % 16}${"ABCD"[(r >> 7) % 4]}`; };
   let seat = seatFor(), no = String(1000 + Math.floor(Math.random() * 9000));
-  $("#tkSlot").innerHTML = Ticket.html({ minutes: 25, stops: stopsFor(25), seat, no });
+  $("#tkSlot").innerHTML = Ticket.html({ minutes, stops: stopsFor(minutes), seat, no });
   const TK = $("#tkSlot .tkt"); Ticket.physics(TK);
   const fillTicket = (tk, t) => Ticket.fill(tk, Object.assign({ no, seat }, t));
   function draw() {
     tasks.forEach(t => t.el.classList.toggle("on", t === pick));
-    document.querySelectorAll("#mins .chip").forEach(b => b.classList.toggle("on", +b.dataset.m === minutes));
+    $("#rideO").textContent = minutes === 5 ? "先坐一站 · 不限时" : `${minutes} 分 · ${minutes / KM} 站`;
+    $("#ride").value = RIDES.indexOf(minutes);
     fillTicket(TK, { name: pick ? pick.name : "", minutes, open: minutes === 5, stops: stopsFor(minutes), seat, no });
-    $("#go").textContent = minutes === 5 ? "先 坐 一 站" : "检 票 上 车";
+    aimLoco();
   }
-  draw();
+  { const n = (get(TICKETS, []) || []).length; $("#tkCount").textContent = n ? `${n} 张` : ""; }
+
+  /* the lamp: brightness and how wide the beam opens (kept) */
+  const BD = $("#board"), lamp = get("paper-desk.trip.lamp", { light: 70, spread: 72 });
+  function lampUI() {
+    BD.style.setProperty("--light", (lamp.light / 100).toFixed(2)); BD.style.setProperty("--spread", lamp.spread + "%");
+    $("#light").value = lamp.light; $("#spread").value = lamp.spread;
+    $("#lightO").textContent = lamp.light < 40 ? "微光" : lamp.light < 80 ? "柔光" : "明亮"; $("#spreadO").textContent = Math.round(lamp.spread * 1.6) + "°";
+  }
+  ["light", "spread"].forEach(k => $("#" + k).addEventListener("input", e => { lamp[k] = +e.target.value; lampUI(); put("paper-desk.trip.lamp", lamp); }));
+  $("#ride").addEventListener("input", e => { minutes = RIDES[+e.target.value]; put("paper-desk.trip.min", minutes); draw(); });
+  lampUI();
+
+  /* ───────── the little engine: a tank engine on a rail under the words, its headlamp lighting them ───────── */
+  $("#loco").innerHTML = `<svg viewBox="0 0 200 100" aria-hidden="true"><defs>
+    <linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5d4c"/><stop offset=".45" stop-color="#3b3d33"/><stop offset="1" stop-color="#202219"/></linearGradient>
+    <linearGradient id="lgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c4f40"/><stop offset="1" stop-color="#2a2c24"/></linearGradient>
+    <radialGradient id="lgL"><stop offset="0" stop-color="#fff6d8"/><stop offset=".5" stop-color="#ffe2a0"/><stop offset="1" stop-color="#c79a46"/></radialGradient></defs>
+    <path d="M6 50h34v36H6z" fill="url(#lgC)"/><path d="M6 50q6-8 12-2 6-7 12-1 5-5 10 3z" fill="#141511"/>
+    <path d="M42 26h50v60H42z" fill="url(#lgC)"/><path d="M38 20q29-9 58 0v6H38z" fill="#24261f"/>
+    <path d="M52 34h28v20H52z" fill="#ffcf86"/><path d="M66 34v20M52 44h28" stroke="#3b3d33" stroke-width="2.5"/><path d="M52 34h28v20H52z" fill="none" stroke="#24261f" stroke-width="3"/>
+    <circle cx="56" cy="68" r="3" fill="#f1b640"/><circle cx="64" cy="68" r="3" fill="#e0662d"/><circle cx="72" cy="68" r="3" fill="#191a15"/>
+    <rect x="88" y="44" width="92" height="34" rx="17" fill="url(#lgB)"/>
+    <path d="M100 45v32M128 45v32M154 45v32" stroke="#b9a46a" stroke-width="1.6" opacity=".7"/><path d="M92 50h84" stroke="#b9a46a" stroke-width="1" opacity=".5"/>
+    <path d="M160 44v-26h12v26z" fill="#24261f"/><path d="M156 13h20l-2 6h-16z" fill="#2c2e26"/><path d="M156 13h20" stroke="#b9a46a" stroke-width="1.4"/>
+    <path d="M117 45a10 10 0 0 1 20 0z" fill="#b9a46a"/><path d="M98 45a6 6 0 0 1 12 0z" fill="#3b3d33"/>
+    <rect x="176" y="30" width="12" height="13" rx="2" fill="#24261f"/><circle cx="188" cy="36.5" r="5" fill="url(#lgL)"/><circle cx="188" cy="36.5" r="9" fill="#ffe2a0" opacity=".18"/>
+    <path d="M6 80h182v7H6z" fill="#161712"/><path d="M180 80h10v8h-10z" fill="#7a2f22"/><path d="M188 86l12 13h-12z" fill="#24261f"/>
+    <g class="wh" data-r="7" transform="translate(16 92)"><circle r="7" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-6 0h12M0-6v12" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.6" fill="#b9a46a"/></g>
+    <g class="wh" data-r="7" transform="translate(32 92)"><circle r="7" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-6 0h12M0-6v12" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.6" fill="#b9a46a"/></g>
+    <g class="wh" data-r="8" transform="translate(66 91)"><circle r="8" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-7 0h14M0-7v14" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.8" fill="#b9a46a"/></g>
+    <g class="wh" data-r="14" transform="translate(110 86)"><circle r="14" fill="#1a1b16" stroke="#3d3f35" stroke-width="2.4"/><path d="M-13 0h26M0-13v26M-9-9l18 18M9-9l-18 18" stroke="#3d3f35" stroke-width="1.5"/><circle r="2.6" fill="#b9a46a"/></g>
+    <g class="wh" data-r="14" transform="translate(142 86)"><circle r="14" fill="#1a1b16" stroke="#3d3f35" stroke-width="2.4"/><path d="M-13 0h26M0-13v26M-9-9l18 18M9-9l-18 18" stroke="#3d3f35" stroke-width="1.5"/><circle r="2.6" fill="#b9a46a"/></g>
+    <g class="wh" data-r="8" transform="translate(174 91)"><circle r="8" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-7 0h14M0-7v14" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.8" fill="#b9a46a"/></g>
+    <path id="rod" d="M110 92H142" stroke="#9c8a58" stroke-width="3" stroke-linecap="round"/></svg>`;
+  const LOCO = $("#loco"), PAPER = $(".paper"), wheels = [...LOCO.querySelectorAll(".wh")].map(g => ({ g, r: +g.dataset.r, t: g.getAttribute("transform") }));
+  const loco = { x: 0, tx: 0, ang: 0, leave: 0 };
+  // the engine stands under the end of what you've written (where the caret is), its lamp lighting the words
+  function aimLoco() {
+    const pw = PAPER.clientWidth, wr = $(".writing"), left = wr.offsetLeft;
+    $("#mirror").textContent = FREE.value.slice(0, FREE.selectionStart ?? FREE.value.length) || "";
+    const w = FREE.value ? $("#mirror").getBoundingClientRect().width : 0;
+    loco.tx = Math.max(100, Math.min(pw - 110, left + w - 40));
+  }
+  ["keyup", "click", "select"].forEach(ev => FREE.addEventListener(ev, aimLoco));
+  addEventListener("resize", () => { aimLoco(); fitSteam(); });
+
+  /* steam: a puff at every key, a wisp now and then while it waits, a great cloud when it sets off */
+  const SC = $("#steam"), sg = SC.getContext("2d"), puffs = [];
+  let SW = 0, SH = 0;
+  function fitSteam() { const r = PAPER.getBoundingClientRect(); SW = r.width; SH = r.height; SC.width = SW * devicePixelRatio; SC.height = SH * devicePixelRatio; }
+  fitSteam();
+  const PUFF = (() => { const n = 64, o = document.createElement("canvas"); o.width = o.height = n; const g = o.getContext("2d"), gr = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
+    gr.addColorStop(0, "rgba(236,234,224,.9)"); gr.addColorStop(.5, "rgba(226,226,216,.4)"); gr.addColorStop(1, "rgba(220,220,210,0)"); g.fillStyle = gr; g.fillRect(0, 0, n, n); return o; })();
+  function chimney() { const m = $(".mechanism"), k = LOCO.offsetWidth / 200; return { x: loco.x - LOCO.offsetWidth / 2 + 166 * k, y: m.offsetTop + LOCO.offsetTop + 12 * k }; }
+  function puff(n, big) {
+    const c = chimney();
+    for (let i = 0; i < n; i++) puffs.push({ x: c.x + (Math.random() - .5) * 6, y: c.y, vx: (big ? -30 : -8) + (Math.random() - .5) * (big ? 90 : 18), vy: -(big ? 40 : 26) - Math.random() * (big ? 60 : 20),
+      r: big ? 6 + Math.random() * 6 : 5, gr: big ? 22 + Math.random() * 26 : 16, a: big ? .3 : .4, life: big ? -i * .05 : 0, max: big ? 2.6 + Math.random() : 2.2 });
+  }
+  let ac2 = null;
+  // a soft chuff: a breath of filtered noise
+  function chuff(v = 1) {
+    puff(2, false);
+    try {
+      ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)();
+      if (!wheelsOn) return;
+      const b = ac2.createBuffer(1, ac2.sampleRate * .25, ac2.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ac2.sampleRate * .06));
+      const o = ac2.createBufferSource(), f = ac2.createBiquadFilter(), g = ac2.createGain(); o.buffer = b; f.type = "bandpass"; f.frequency.value = 1400 + Math.random() * 500; f.Q.value = .7;
+      g.gain.value = .05 * v; o.connect(f).connect(g).connect(ac2.destination); o.start();
+    } catch {}
+  }
+  FREE.addEventListener("keydown", e => { if (e.key.length === 1 || e.key === "Backspace" || e.key === "Process") chuff(e.key === "Backspace" ? .5 : 1); });
+  let idle = 0;
+  function deck(dt) {
+    // the engine rolls to where it is wanted; the wheels turn with the distance
+    const tx = loco.leave ? loco.x + (loco.leave += dt * 900) * dt : loco.tx;
+    const dx = loco.leave ? (tx - loco.x) : (tx - loco.x) * (1 - Math.exp(-dt * 6));
+    loco.x += dx;
+    wheels.forEach(w => { const a = (loco.ang + dx / w.r * 180 / Math.PI) % 360; w.g.setAttribute("transform", `${w.t} rotate(${a.toFixed(1)})`); });
+    loco.ang = (loco.ang + dx / 14 * 180 / Math.PI) % 360;
+    const ra = loco.ang * Math.PI / 180, ox = Math.cos(ra) * 6, oy = Math.sin(ra) * 6;
+    $("#rod").setAttribute("d", `M${(110 + ox).toFixed(1)} ${(86 + oy).toFixed(1)}H${(142 + ox).toFixed(1)}`);
+    LOCO.style.left = loco.x + "px";
+    // the beam leaves from the headlamp
+    const k = LOCO.offsetWidth / 200, lampX = loco.x - LOCO.offsetWidth / 2 + 188 * k, lampY = $(".mechanism").offsetTop + LOCO.offsetTop + 36 * k;
+    BD.style.setProperty("--lx", lampX + "px"); BD.style.setProperty("--bh", lampY + "px");
+    if ((idle -= dt) < 0) { idle = 2.5 + Math.random() * 3; if (!loco.leave) puff(1, false); }
+    // steam
+    sg.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); sg.clearRect(0, 0, SW, SH);
+    for (let i = puffs.length - 1; i >= 0; i--) {
+      const p = puffs[i]; p.life += dt; if (p.life > p.max) { puffs.splice(i, 1); continue; } if (p.life < 0) { const c = chimney(); p.x = c.x; p.y = c.y; continue; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy *= 1 - dt * .6; p.vx *= 1 - dt * .4; p.r += p.gr * dt;
+      sg.globalAlpha = p.a * (1 - p.life / p.max); sg.drawImage(PUFF, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    }
+    sg.globalAlpha = 1;
+  }
+
+  /* ───────── the night behind: snowy mountains, dark pines, a lake ───────── */
+  function paintBg() {
+    const cv = $("#bgc"), d = devicePixelRatio || 1, w = innerWidth, h = innerHeight; cv.width = w * d; cv.height = h * d;
+    const g = cv.getContext("2d"); g.scale(d, d);
+    const r = n => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+    let sk = g.createLinearGradient(0, 0, 0, h); sk.addColorStop(0, "#141b2a"); sk.addColorStop(.45, "#27344c"); sk.addColorStop(.62, "#34425a"); sk.addColorStop(1, "#0d141d");
+    g.fillStyle = sk; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 7; i++) { g.fillStyle = `rgba(20,28,42,${.25 + r(i) * .2})`; g.beginPath(); g.ellipse(r(i * 3) * w, h * (.06 + r(i * 5) * .25), w * (.2 + r(i * 7) * .25), h * .035, 0, 0, 7); g.fill(); }
+    // far peaks, white at the top
+    const ridge = (base, amp, seed, step) => { const pts = []; let y = base; for (let x = -20; x <= w + 40; x += step) { y = base - Math.abs(Math.sin(x * .004 + seed) * amp) - r(x * .01 + seed) * amp * .35; pts.push([x, y]); } return pts; };
+    const peaks = (pts, top, fill) => { g.beginPath(); g.moveTo(-20, h); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(w + 40, h); g.closePath();
+      const mg = g.createLinearGradient(0, top, 0, top + h * .2); mg.addColorStop(0, "#d6dde8"); mg.addColorStop(.35, "#7d8aa0"); mg.addColorStop(1, fill); g.fillStyle = mg; g.fill(); };
+    peaks(ridge(h * .58, h * .2, 1.3, 26), h * .36, "#26324a");
+    peaks(ridge(h * .64, h * .12, 4.1, 18), h * .5, "#1b2538");
+    // the lake
+    const lk = g.createLinearGradient(0, h * .74, 0, h); lk.addColorStop(0, "#1d2a3e"); lk.addColorStop(1, "#0a1019"); g.fillStyle = lk; g.fillRect(0, h * .74, w, h * .26);
+    g.strokeStyle = "rgba(200,212,230,.06)"; for (let i = 0; i < 40; i++) { const y = h * (.76 + r(i * 9) * .22), x = r(i * 4) * w; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 30 + r(i) * 90, y); g.stroke(); }
+    // pines, big at the sides
+    const pine = (x, y, s, c, snow) => { g.fillStyle = c; g.beginPath(); g.moveTo(x, y - s * 3.2);
+      for (let k = 0; k < 6; k++) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.lineTo(x + ww, yy); g.lineTo(x + ww * .4, yy - s * .06); }
+      g.lineTo(x + s * .1, y); g.lineTo(x - s * .1, y); for (let k = 5; k >= 0; k--) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.lineTo(x - ww * .4, yy - s * .06); g.lineTo(x - ww, yy); } g.fill();
+      if (snow) { g.fillStyle = "rgba(220,228,238,.35)"; for (let k = 0; k < 6; k++) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.fillRect(x - ww * .7, yy - s * .1, ww * .9, s * .05); } } };
+    for (let i = 0; i < 60; i++) { const x = r(i * 1.7) * w, s = 6 + r(i * 2.3) * 8; pine(x, h * .74, s, "#121b2a"); }
+    for (let i = 0; i < 26; i++) { const side = i % 2 ? 1 : 0, x = side ? w - r(i * 3.1) * w * .22 : r(i * 3.1) * w * .22, s = 20 + r(i * 5.3) * 46 * (1 - Math.min(x, w - x) / (w * .3)); pine(x, h * (.8 + r(i * 7) * .12), s, "#0b111b", true); }
+    const sh = g.createLinearGradient(0, 0, 0, h); sh.addColorStop(0, "#0c131930"); sh.addColorStop(.6, "#10171442"); sh.addColorStop(1, "#0a110f77"); g.fillStyle = sh; g.fillRect(0, 0, w, h);
+  }
+  paintBg(); addEventListener("resize", paintBg);
+  draw(); loco.x = -80;
 
   /* ───────── snow on the platform ───────── */
   function snowfall(cv, n, wind) {
@@ -475,6 +651,9 @@
   }
   $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
   $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关";
+  const sndB = () => { $("#sndB").innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${wheelsOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>${wheelsOn ? "声音已开启" : "声音已关闭"}`; };
+  $("#sndB").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); sndB(); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) chuff(.6); };
+  sndB();
 
   /* ═════════ the trip ═════════
      The clock is the distance: 1 km a minute. A station every 5 km goes by without stopping and inks a stamp into the book on the
@@ -487,18 +666,23 @@
   const lastK = () => trip.open ? Infinity : trip.minutes / KM;
   const nm = k => nameAt(trip.off, k);
   function board() {
-    const name = $("#free").value.trim() || (pick ? pick.name : "");
+    if (trip) return;
+    const name = FREE.value.trim() || (pick ? pick.name : "");
     trip = { v: 2, id: Math.random().toString(36).slice(2, 9), name, proj: name && pick && pick.name === name ? pick.proj || null : null, open: minutes === 5, minutes,
       off: OFF, seat, no, start: Date.now(), unit: unitOf(minutes === 5 ? 5 : minutes), passed: 0, stamps: [], line: LINE };
     trip.stops = stopsFor(minutes);
     put(TRIP, trip);
     audio();
     window.Sound && Sound.play("tab", { vol: .9 });
-    fillTicket(TK, trip); Ticket.punch(TK);
-    setTimeout(() => { $("#board").classList.add("gone"); ride(); }, 1100);
+    fillTicket(TK, trip);
+    // the engine lets off a cloud of steam and pulls away; the ticket comes up and is punched; then you're on board
+    puff(14, true); chuff(1.6); loco.leave = 1; FREE.blur();
+    setTimeout(() => BD.classList.add("sent"), 700);
+    setTimeout(() => Ticket.punch(TK), 1700);
+    setTimeout(() => { BD.classList.add("gone"); ride(); }, 3000);
   }
   $("#go").onclick = board;
-  $("#free").addEventListener("keydown", e => { if (e.key === "Enter") board(); });
+  FREE.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) board(); });
 
   let riding = false, arrived = false, lastClack = 0, lineTotal = 0, stopping = null;
   function ride() {
@@ -591,7 +775,7 @@
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
-    if (!riding) platSnow(dt);
+    if (!riding) { platSnow(dt); deck(dt); }
     else {
       const km = kmNow(), k = Math.floor(km / KM);
       if (!arrived && !stopping) {
