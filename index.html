@@ -9,8 +9,7 @@
     --ink: #3b3a33;
     --muted: #8b867a;
     --faint: #b3ad9d;
-    --paper: #fbf8ef;
-    --desk: #ece5d6;
+    --paper: #fcf8ee;
     --accent: #4f7a5a; --stamp: #b5523b;
     --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
     --hand: "LXGW WenKai", "霞鹜文楷", "Klee One", "KaiTi", "STKaiti", var(--serif);
@@ -18,35 +17,108 @@
     --mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
     --line: rgba(96, 88, 72, .16);
     --ease: cubic-bezier(.22, 1, .36, 1);
+    --calw: 300px; --gap: 22px; --trayh: 74px;
+    --wood: #9a6e45;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; }
+  /* an early-morning wall: warm plaster, the sun coming in from the top right */
   body {
-    font-family: var(--sans);
-    color: var(--ink);
+    font-family: var(--sans); color: var(--ink);
     background:
-      repeating-linear-gradient(90deg, rgba(0, 0, 0, .08) 0 2px, transparent 2px 9px, rgba(255, 222, 180, .035) 9px 10px, transparent 10px 17px),
-      repeating-linear-gradient(90deg, rgba(0, 0, 0, .06) 0 1px, transparent 1px 43px, rgba(255, 222, 180, .03) 43px 45px, transparent 45px 97px),
-      radial-gradient(120% 90% at 15% 0%, rgba(255, 210, 150, .16), transparent 60%),
-      radial-gradient(90% 70% at 100% 100%, rgba(0, 0, 0, .25), transparent 70%),
-      linear-gradient(180deg, #6e4c34, #533826);
-    background-attachment: fixed;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
+      radial-gradient(70% 80% at 92% 0%, rgba(255, 214, 150, .55), rgba(255, 214, 150, 0) 60%),
+      radial-gradient(90% 70% at 0% 100%, rgba(120, 82, 46, .16), transparent 70%),
+      linear-gradient(165deg, #f4e7cf 0%, #ead8ba 55%, #dfc9a6 100%);
+    user-select: none; -webkit-user-select: none; touch-action: none;
   }
-  /* paper fibre over the whole desk */
   body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .55; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  #world { position: fixed; inset: 0; z-index: 1; transform-origin: 0 0; }
-  #desk { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+  /* ───────── sunlight and the shadow of a tree outside the window ───────── */
+  #light { position: fixed; inset: 0; pointer-events: none; z-index: 30000; overflow: hidden; }
+  #light .sun { position: absolute; inset: 0; mix-blend-mode: soft-light;
+    background: linear-gradient(118deg, transparent 38%, rgba(255, 226, 170, .55) 52%, rgba(255, 236, 196, .25) 70%, transparent 86%); }
+  #light svg { position: absolute; right: -4%; top: -6%; width: 62%; height: 100%; mix-blend-mode: multiply; opacity: .75; }
+  #light .sway { transform-origin: 100% 0; animation: sway 9s ease-in-out infinite alternate; }
+  #light .sway2 { transform-origin: 100% 0; animation: sway 6.5s ease-in-out -2s infinite alternate-reverse; }
+  @keyframes sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.4deg) translate(-6px, 4px); } }
 
-  body.panning, body.panning * { cursor: grabbing !important; }
-  .note, #desk > .pcard:not(.tucked) { pointer-events: auto; }
+  /* ───────── left: today's tear-off calendar ───────── */
+  #cal { position: fixed; left: var(--gap); top: var(--gap); bottom: var(--gap); width: var(--calw); z-index: 20; }
+  #cal .rings { position: absolute; left: 18px; right: 18px; top: -6px; height: 20px; z-index: 8; pointer-events: none;
+    background: radial-gradient(circle at 50% 70%, #3a2c1e 0 3.5px, transparent 4px) 0 0 / 26px 20px repeat-x; }
+  #cal .rings::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12px;
+    background: radial-gradient(ellipse at 50% 100%, transparent 0 3px, #8a8378 3.5px 5px, transparent 5.5px) 0 0 / 26px 12px repeat-x; }
+  #todayCard { position: absolute; inset: 0; width: auto; }
+  #todayCard .flipper, #todayCard .face.f, #todayCard .face.f > .sheetc { height: 100%; }
+  #todayCard .face.f > .sheetc { position: relative; max-height: none; border-radius: 6px 6px 10px 10px; }
+  /* the pages still to come, under this one */
+  #todayCard .sheetc { box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 3px 0 -1px #f3ecdc, 0 3px 0 -.5px rgba(80,60,30,.18), 0 6px 0 -2px #ece3cf, 0 6px 0 -1.5px rgba(80,60,30,.16), 0 24px 40px -18px rgba(70,52,28,.5); }
+  .calhead { flex: none; padding: 26px 22px 12px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 14px; align-items: end; position: relative; z-index: 1; border-bottom: 1px dashed rgba(96,88,72,.22); }
+  .calhead .day { grid-row: 1 / 3; font: 700 64px/0.9 var(--serif); color: var(--stamp); letter-spacing: -.02em; }
+  .calhead .mon { font: 600 15px var(--serif); color: var(--ink); letter-spacing: .12em; }
+  .calhead .wk { font: 13px var(--serif); color: var(--muted); letter-spacing: .3em; display: flex; justify-content: space-between; }
+  .calhead .pn { font-size: 12px; letter-spacing: .04em; }
+  #todayCard .sheetc > .bar { margin: 12px 22px 0; }
+  #todayCard .sheetc > .body { padding: 8px 22px 0; }
+  #todayCard .sheetc > .body > .chk { margin: 0 -22px; padding: 2px 22px 40px; }
 
+  /* ───────── right: one board fills the space, slide to the next ───────── */
+  #stage { position: fixed; left: calc(var(--gap) * 2 + var(--calw)); right: var(--gap); top: var(--gap); bottom: calc(var(--trayh) + var(--gap)); overflow: hidden; z-index: 5; }
+  #pages { position: absolute; inset: 0; display: flex; width: 200%; transition: transform .65s var(--ease); }
+  .page { width: 50%; height: 100%; position: relative; padding: 0 2px; }
+  .frame { position: absolute; inset: 0; border-radius: 6px; padding: 14px;
+    background: linear-gradient(90deg, rgba(255,255,255,.08), transparent 30%, rgba(0,0,0,.08)), repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 2px, transparent 2px 11px), linear-gradient(180deg, #a87a4e, #85603b);
+    box-shadow: 0 0 0 1px rgba(60,40,20,.35), 0 24px 44px -20px rgba(60,38,16,.6), inset 0 1px 0 rgba(255,240,210,.35); }
+  .inner { position: absolute; inset: 14px; border-radius: 2px; overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.25); }
+
+  /* the chalkboard */
+  #chalk .inner { background:
+      radial-gradient(40% 50% at 30% 40%, rgba(255,255,255,.05), transparent 70%),
+      radial-gradient(30% 40% at 75% 65%, rgba(255,255,255,.04), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      #2f3f35; }
+  .lanes { position: absolute; inset: 0 0 26px; display: grid; grid-template-columns: repeat(3, 1fr); }
+  .lane { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 18px 18px 0; }
+  .lane + .lane::before { content: ""; position: absolute; left: 0; top: 22px; bottom: 30px; width: 2px; background: rgba(240,236,222,.16); border-radius: 2px; filter: blur(.4px); }
+  .lane h3 { margin: 0 0 14px; font: 400 24px var(--hand); color: rgba(244,240,228,.88); letter-spacing: .2em; text-shadow: 0 0 1px rgba(255,255,255,.4); display: flex; align-items: baseline; gap: 10px; }
+  .lane h3 small { font: 14px var(--hand); color: rgba(244,240,228,.45); letter-spacing: .05em; }
+  .lane h3::after { content: ""; flex: 1; height: 2px; margin-left: 6px; align-self: center; background: rgba(244,240,228,.25); border-radius: 2px; }
+  .lane .cards { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 6px 6px 20px; margin: -6px -6px 0; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+  .lane .add { flex: none; align-self: flex-start; border: 0; background: none; font: 17px var(--hand); color: rgba(244,240,228,.5); cursor: pointer; padding: 4px 2px; letter-spacing: .1em; }
+  .lane .add:hover { color: rgba(244,240,228,.9); }
+  .lane.over .cards { background: rgba(255,255,255,.04); border-radius: 6px; }
+  .ledge { position: absolute; left: 0; right: 0; bottom: 0; height: 20px; background: linear-gradient(180deg, #8f6840, #6f4f2f); box-shadow: 0 -2px 4px rgba(0,0,0,.3); }
+  .ledge i { position: absolute; bottom: 7px; height: 7px; border-radius: 3px; background: #f1ede2; box-shadow: 0 1px 1px rgba(0,0,0,.3); }
+  /* a project, as an index card held by a magnet */
+  .mini { position: relative; flex: none; background: var(--paper); border-radius: 3px; padding: 14px 14px 12px; cursor: grab;
+    box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 10px 18px -10px rgba(0,0,0,.6); transform: rotate(var(--r, 0deg)); transition: transform .25s var(--ease), box-shadow .25s; }
+  .mini:hover { transform: rotate(0deg) translateY(-2px); box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 16px 24px -12px rgba(0,0,0,.7); }
+  .mini::before { content: ""; position: absolute; left: 50%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff8 0 15%, var(--mg, #c9573f) 45%, color-mix(in srgb, var(--mg, #c9573f) 60%, #000) 100%); box-shadow: 1px 2px 3px rgba(0,0,0,.4); }
+  .mini b { display: block; font: 700 15px/1.4 var(--serif); color: var(--ink); }
+  .mini p { margin: 4px 0 0; font: 12.5px/1.55 var(--serif); color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mini .mrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .mini .mrow .bar { flex: 1; }
+  .mini .mrow span { font: 11.5px var(--mono); color: var(--accent); }
+  .mini .ready { display: none; font: 12px var(--sans); color: var(--stamp); border: 1px solid var(--stamp); border-radius: 999px; padding: 1px 8px; letter-spacing: .1em; }
+  .mini.isready .ready { display: inline-block; }
+  .mini.lifted { opacity: .3; }
+  .mini.ghost { position: fixed; z-index: 46000; pointer-events: none; cursor: grabbing; transition: none; box-shadow: 0 30px 40px -18px rgba(0,0,0,.6); }
+  .slot { flex: none; height: 4px; margin: -9px 0; border-radius: 2px; background: rgba(244,240,228,.7); }
+  .empty { font: 15px var(--hand); color: rgba(244,240,228,.3); padding: 4px 2px; }
+
+  /* the corkboard */
+  #cork .inner { background:
+      radial-gradient(circle at 20% 30%, rgba(90,52,20,.25) 0 1px, transparent 1.6px) 0 0 / 9px 11px,
+      radial-gradient(circle at 70% 60%, rgba(255,230,190,.18) 0 1px, transparent 1.6px) 0 0 / 13px 7px,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32  0 0 0 0 .18  0 0 0 0 .06  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      #c99c69; }
+  #notes { position: absolute; inset: 0; }
+</style>
+<style>
   /* ───────── sticky note ───────── */
   .note {
     position: absolute; left: 0; top: 0;
@@ -127,117 +199,6 @@
   .rh:hover::after, .note.spinning .rh::after { opacity: 1; }
   .note.editing .rh, .note.hidden .rh { display: none; }
   @keyframes press { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
-
-  /* ───────── right-edge drawer: the screen edge is a notebook edge, notes become index tabs ───────── */
-  #drawer {
-    position: fixed; top: 0; right: 0; bottom: 0; width: 14px; z-index: 50000;
-    background: repeating-linear-gradient(to right, #e4dccb 0 1px, #f7f2e7 1px 3px);
-    box-shadow: inset 1px 0 0 rgba(90, 70, 40, .18), -2px 0 8px rgba(90, 70, 40, .08);
-    transition: box-shadow .25s;
-  }
-  #drawer.hot { box-shadow: inset 1px 0 0 rgba(79, 122, 90, .6), -6px 0 22px rgba(79, 122, 90, .28); }
-  .tab {
-    position: absolute; right: 14px; width: 12px; height: 40px;
-    background: var(--c); border-radius: 4px 0 0 4px;
-    box-shadow: -1px 1px 2px rgba(70, 52, 28, .22), inset 0 0 0 .5px rgba(80,60,30,.12);
-    cursor: pointer;
-    transition: width .22s var(--ease), top .4s var(--ease), transform .4s var(--ease);
-  }
-  .tab.enter { transform: translateX(14px); }
-  .tab:hover, .tab.peeking { width: 20px; }
-  .tab[data-label]::before {
-    content: attr(data-label); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
-    font-size: 11px; letter-spacing: .1em; color: var(--muted); white-space: nowrap;
-    opacity: 0; transition: opacity .2s; pointer-events: none;
-  }
-  #drawer:hover:not(.peeking) .tab[data-label]::before { opacity: 1; }
-
-  /* ───────── tray: pads, pin dish, bin ───────── */
-  /* one toolbar: cards · paper and pins · actions */
-  #tray {
-    position: fixed; left: 24px; bottom: 18px; z-index: 40000; height: 58px; padding: 0 10px;
-    display: flex; align-items: center; gap: 4px; border-radius: 14px;
-    background: rgba(251, 248, 239, .94); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 10px 26px -10px rgba(70, 52, 28, .45);
-  }
-  #tray { transition: transform .4s var(--ease), opacity .3s; }
-  #tray.tucked { transform: translateX(calc(-100% - 40px)); opacity: 0; pointer-events: none; }
-  #trayTab { position: fixed; left: 0; bottom: 18px; width: 12px; height: 58px; z-index: 40000; cursor: pointer; display: none;
-    border-radius: 0 6px 6px 0; background: rgba(251, 248, 239, .94); box-shadow: 1px 0 0 rgba(80,60,30,.12), 2px 6px 14px -6px rgba(40, 24, 8, .55);
-    transition: width .22s var(--ease); }
-  #trayTab::after { content: ""; position: absolute; left: 4px; top: 50%; margin-top: -9px; width: 2px; height: 18px; border-radius: 1px; background: var(--accent); opacity: .6; }
-  #trayTab.show { display: block; }
-  #trayTab:hover { width: 22px; }
-  .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
-    color: var(--muted); font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s; }
-  .tb:hover { background: rgba(96, 88, 72, .07); color: var(--accent); }
-  .tclock { width: 24px; height: 24px; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px #cfc8b8;
-    background: radial-gradient(circle, #fff 0 34%, transparent 35%), conic-gradient(var(--accent) 0 var(--deg, 0deg), #ece5d6 var(--deg, 0deg) 360deg); }
-  #timerBtn.run .tclock { box-shadow: 0 0 0 1.5px var(--accent); }
-  #timer { position: fixed; left: 24px; bottom: 90px; z-index: 40001; width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--paper); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 18px 34px -12px rgba(40,24,8,.55);
-    opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .25s, transform .3s var(--ease); }
-  #timer.show { opacity: 1; transform: none; pointer-events: auto; }
-  #timer .dial { width: 140px; height: 140px; }
-  #timer .disc { inset: 11px; }
-  #timer .hub { inset: 42px; font-size: 15px; }
-  .tbook { width: 22px; height: 28px; border-radius: 2px 4px 4px 2px; display: block; transition: transform .2s var(--ease);
-    background: linear-gradient(90deg, rgba(0,0,0,.25) 0 4px, transparent 4px), #4f7a5a; box-shadow: 1px 1px 0 #efe6d4, 2px 2px 0 #ddd2bc, 0 3px 6px rgba(40,24,8,.25); }
-  .tb:hover .tbook { transform: translateY(-2px) rotate(-4deg); }
-  .tsep { width: 1px; height: 28px; margin: 0 6px; background: rgba(96, 88, 72, .16); }
-  .tcard { width: 28px; height: 34px; background: #fff; border-radius: 3px; padding: 4px 4px 0; display: block; text-align: left;
-    box-shadow: 0 0 0 .5px rgba(80,60,30,.22), 0 2px 4px rgba(70,52,28,.18); transition: transform .2s var(--ease); }
-  .tb:hover .tcard { transform: translateY(-2px) rotate(-3deg); }
-  .tcard b { display: block; font: 700 8.5px var(--serif); color: var(--ink); letter-spacing: .05em; margin-bottom: 4px; }
-  .tcard i { display: block; height: 1.5px; margin: 0 0 4px 6px; background: #e2dacb; position: relative; }
-  .tcard i::before { content: ""; position: absolute; left: -6px; top: -2px; width: 4px; height: 4px; border: 1px solid #cfc8b8; border-radius: 1px; }
-  .tcard.proj { border-top: 2.5px solid var(--accent); padding-top: 3px; }
-  .pad { width: 28px; height: 28px; background: var(--c); cursor: grab; display: block;
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 80%, #6b5a3a), 0 2px 0 var(--c), 0 3px 0 color-mix(in srgb, var(--c) 75%, #6b5a3a), 0 4px 6px rgba(70, 52, 28, .2);
-    transition: transform .2s var(--ease); }
-  .tb:hover .pad { transform: translateY(-2px) rotate(-3deg); }
-  .pad[data-cat=work]  { --c: #f3e2a1; }
-  .pad[data-cat=life]  { --c: #cfe4cf; }
-  .pad[data-cat=idea]  { --c: #f3cabb; }
-  .pad[data-cat=study] { --c: #cddbe9; }
-  .dish { cursor: grab; }
-  .dish .pin { position: static; margin: 0; cursor: grab; }
-  /* the bin only shows up while you're carrying a note */
-  .bin { position: fixed; left: 50%; bottom: 96px; width: 64px; height: 64px; margin-left: -32px; z-index: 40001; border-radius: 50%;
-    display: grid; place-items: center; color: var(--muted); background: rgba(251, 248, 239, .92); border: 1.5px dashed rgba(139, 110, 70, .5);
-    opacity: 0; transform: translateY(24px) scale(.8); pointer-events: none; transition: opacity .2s, transform .25s var(--ease), background .2s, color .2s, border-color .2s; }
-  body.carrying .bin { opacity: 1; transform: none; }
-  .bin.hot { color: var(--accent); border-color: var(--accent); background: rgba(250, 232, 224, .95); transform: scale(1.15) !important; }
-
-  #help {
-    position: fixed; left: 24px; bottom: 90px; z-index: 40001; width: 248px;
-    background: var(--paper); border-radius: 6px; padding: 14px 16px; font-size: 12.5px; line-height: 1.9;
-    color: var(--muted); box-shadow: 0 10px 30px rgba(70, 52, 28, .2);
-    opacity: 0; transform: translateY(8px); pointer-events: none; transition: .25s var(--ease);
-  }
-  #help.show { opacity: 1; transform: none; pointer-events: auto; }
-  #help b { color: var(--ink); font-weight: 600; }
-
-  #menu {
-    position: fixed; z-index: 100001; display: none; gap: 8px; align-items: center;
-    background: var(--paper); padding: 8px 10px; border-radius: 20px;
-    box-shadow: 0 8px 24px rgba(70, 52, 28, .22);
-  }
-  #menu.show { display: flex; }
-  #menu .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(80,60,30,.15); }
-  #menu .dot.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--accent); }
-  #menu .del { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 14px; padding: 0 2px; }
-  #menu .del:hover { color: var(--accent); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tab, .pad, .ibtn, #help { transition: none; }
-  }
-
-  /* ═════════ two cards on the cloth: today's ticks, and the project you're focused on ═════════ */
-  .pcard { position: fixed; left: 0; top: 0; z-index: 1; }
-  .pcard.tucked { visibility: hidden; pointer-events: none; }
-  .pcard.peek { z-index: 49000; cursor: pointer; }
-  .pcard.peek * { pointer-events: none; }
-  .pcard.fly { transition: transform .55s var(--ease), opacity .55s; }
   .sheetc { position: absolute; inset: 0; background: var(--paper); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden;
     box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 16px 34px -16px rgba(70, 52, 28, .45), 0 2px 4px rgba(70, 52, 28, .08); }
   .sheetc::before { content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -384,70 +345,151 @@
   .postmark.show { animation: ink .4s .25s var(--ease) both; }
   @keyframes ink { from { opacity: 0; transform: scale(1.15) rotate(8deg); } to { opacity: .72; transform: rotate(12deg); } }
 
-  /* edge tabs for the two cards, above the sticky-note tabs */
-  .ctab { position: absolute; right: 14px; width: 16px; height: 46px; border-radius: 5px 0 0 5px; cursor: pointer; display: none;
-    background: var(--paper); box-shadow: -1px 1px 3px rgba(70,52,28,.28), inset 3px 0 0 var(--accent); transition: width .22s var(--ease); }
-  .ctab.show { display: block; }
-  .ctab:hover { width: 28px; }
-  .ctab::before { content: attr(data-label); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
-    font-size: 11px; letter-spacing: .1em; color: var(--accent); white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; }
-  #drawer:hover .ctab::before { opacity: 1; }
-  body.cardpeek #drawer .tab[data-label]::before, body.cardpeek #drawer .ctab::before { opacity: 0 !important; }
-  #drawer .tab { transition: width .22s var(--ease), top .4s var(--ease), transform .4s var(--ease), opacity .2s; }
-  body.cardpeek #drawer .tab { opacity: 0; pointer-events: none; }
+  /* a note can fold into one strip: its first line, nothing else */
+  .note.folded .text { padding: 9px 30px 0 14px; font-size: 15px; white-space: nowrap; text-overflow: ellipsis; }
+  .note.folded .text::first-line { font-size: 15px; }
+  .note.folded .sheet::after { display: none; }
+  .note .fold { position: absolute; right: 4px; top: 4px; width: 22px; height: 22px; border-radius: 6px; z-index: 4; cursor: pointer; opacity: 0; transition: opacity .15s, background .15s; }
+  .note .fold::before { content: ""; position: absolute; left: 7px; top: 6px; width: 6px; height: 6px; border: solid rgba(46,40,30,.55); border-width: 1.6px 0 0 1.6px; transform: rotate(45deg); }
+  .note.folded .fold::before { top: 3px; transform: rotate(225deg); }
+  .note:hover .fold { opacity: 1; }
+  .note .fold:hover { background: rgba(0,0,0,.06); }
+  .note.editing .fold, .note.pinned .fold { display: none; }
+  .note.folded .rh { display: none; }
 
-  .sheetc { cursor: grab; }
-  .pcard.moving .sheetc { cursor: grabbing; }
-  .chk li { cursor: default; }
-  .pcard.hello .sheetc { animation: hello .7s var(--ease); }
-  @keyframes hello { 30% { box-shadow: 0 0 0 3px rgba(79,122,90,.45), 0 20px 40px -16px rgba(70,52,28,.45); } }
-  #done.gulp .book { animation: gulp .45s var(--ease); }
-  @keyframes gulp { 40% { transform: scale(1.08) rotate(-3deg); } }
-  /* the album: a small cloth-bound notebook */
-  #done .book { position: absolute; inset: 0; border-radius: 3px 9px 9px 3px; overflow: hidden;
-    background:
-      linear-gradient(90deg, rgba(0,0,0,.22) 0 9px, rgba(255,255,255,.08) 9px 11px, transparent 11px),
-      repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 4px),
-      repeating-linear-gradient(-45deg, rgba(0,0,0,.04) 0 2px, transparent 2px 4px),
-      #8d4a34;
-    box-shadow: 2px 2px 0 #efe6d4, 3px 4px 0 #e2d7c1, 4px 6px 0 #d8ccb3, 0 14px 22px -8px rgba(50,30,14,.5), inset 0 0 0 1px rgba(0,0,0,.15); }
-  #done .lbl { position: absolute; left: 22px; right: 12px; top: 22px; padding: 10px 6px 8px; background: #f6eedd; border-radius: 2px; text-align: center;
-    box-shadow: inset 0 0 0 1px rgba(141,74,52,.35), inset 0 0 0 3px #f6eedd, inset 0 0 0 4px rgba(141,74,52,.25); }
-  #done .lbl b { display: block; font: 700 17px var(--serif); letter-spacing: .3em; color: #5a2e20; margin-right: -.3em; }
-  #done .lbl span { display: block; margin-top: 4px; font: 10.5px var(--mono); color: #8d6b55; letter-spacing: .12em; }
-  #done .ribbon { position: absolute; right: 22px; bottom: -6px; width: 9px; height: 30px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
-  #done .seal { position: absolute; left: 50%; bottom: 18px; margin-left: -9px; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(246,238,221,.55);
-    color: rgba(246,238,221,.7); font: 700 12px/23px var(--serif); text-align: center; transform: rotate(-8deg); }
+  /* cards */
+  .pcard { position: relative; width: 300px; }
+  .flipc .face.f > .sheetc { position: relative; inset: auto; min-height: 168px; }
+  .sheetc { cursor: default; }
+  .head { cursor: default; }
+  /* the postmark, after the round date stamps on real post: two rings, the name on the arc, the date across */
+  .postmark { --pr: -12deg; }
+  @keyframes ink { from { opacity: 0; transform: scale(1.15) rotate(calc(var(--pr) + 8deg)); } to { opacity: .8; transform: rotate(var(--pr)); } }
+  /* the timer: only the dial; the minutes show while you hover it */
+  .hub span { opacity: 0; transition: opacity .2s; }
+  .dial:hover .hub span, .dial.setting .hub span { opacity: 1; }
 
-  /* the album pile, bottom right */
-  #done { position: fixed; right: 44px; bottom: 22px; width: 96px; height: 126px; z-index: 40000; cursor: pointer; transition: transform .25s var(--ease); }
-  #done:hover { transform: translateY(-4px) rotate(-1deg); }
-  #done .mini { position: absolute; inset: 0; background: var(--paper); border-radius: 6px; padding: 12px 11px;
-    box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 4px 10px rgba(70,52,28,.18);
-    font-family: var(--serif); font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--ink); overflow: hidden; }
-  #done .ms { position: absolute; right: 8px; bottom: 8px; width: 26px; height: 31px;
-    background: radial-gradient(circle, transparent 1.4px, #fffdf6 1.8px) -2px -2px / 4px 4px; transform: rotate(-6deg); }
-  #done .ms::after { content: ""; position: absolute; inset: 3px; border: 1px solid var(--accent); background: #f2dccb; }
-  #done .count { position: absolute; left: -20px; right: -20px; top: calc(100% + 10px); text-align: center; font-size: 12.5px; color: #5d5140; letter-spacing: .14em; }
-  #done .empty-hint { position: absolute; inset: 0; border: 1.5px dashed rgba(90, 70, 40, .35); border-radius: 6px; background: rgba(251,248,239,.3); }
+  /* ───────── the opened project ───────── */
+  #detail { position: fixed; inset: 0; z-index: 45000; display: grid; place-items: center; background: rgba(48, 32, 16, .28);
+    opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #detail.show { opacity: 1; pointer-events: auto; }
+  #detail .holder { transform: translateY(18px) scale(.96); transition: transform .4s var(--ease); }
+  #detail.show .holder { transform: none; }
+  #detail .pcard { width: 360px; }
+  #detail .flipc .face.f > .sheetc { min-height: 300px; max-height: 76vh; }
+  #detail .pcard.fly { transition: transform .6s var(--ease), opacity .6s; }
+
+  /* ───────── the toolbar, under the board ───────── */
+  #tray { position: fixed; left: calc(var(--gap) * 2 + var(--calw)); right: var(--gap); bottom: 14px; height: 58px; z-index: 40000;
+    display: flex; align-items: center; gap: 4px; padding: 0 10px; }
+  .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
+    color: #7a6a52; font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s, opacity .25s; }
+  .tb:hover { background: rgba(96, 70, 40, .08); color: var(--accent); }
+  .tsep { width: 1px; height: 28px; margin: 0 8px; background: rgba(96, 70, 40, .2); }
+  .tspace { flex: 1; }
+  .pg i { width: 30px; height: 22px; border-radius: 2px; display: block; border: 3px solid #9a6e45; box-shadow: 0 2px 4px rgba(60,38,16,.3); transition: transform .2s var(--ease); }
+  .pg[data-p="0"] i { background: #2f3f35; }
+  .pg[data-p="0"] i::after { content: ""; display: block; margin: 5px 4px; height: 2px; background: rgba(244,240,228,.55); box-shadow: 0 5px 0 rgba(244,240,228,.35); }
+  .pg[data-p="1"] i { background: #c99c69; position: relative; }
+  .pg[data-p="1"] i::after { content: ""; position: absolute; left: 5px; top: 3px; width: 9px; height: 9px; background: #f3e2a1; transform: rotate(-6deg); box-shadow: 9px 2px 0 #cfe4cf; }
+  .pg::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--stamp); opacity: 0; transition: opacity .2s; }
+  .pg.on::after { opacity: 1; }
+  .pg:hover i { transform: translateY(-2px); }
+  body:not(.p1) .corkonly { opacity: .35; }
+  .pad { width: 28px; height: 28px; background: var(--c); cursor: grab; display: block;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 80%, #6b5a3a), 0 2px 0 var(--c), 0 3px 0 color-mix(in srgb, var(--c) 75%, #6b5a3a), 0 4px 6px rgba(70, 52, 28, .2);
+    transition: transform .2s var(--ease); }
+  .tb:hover .pad { transform: translateY(-2px) rotate(-3deg); }
+  .pad[data-cat=work]  { --c: #f3e2a1; }
+  .pad[data-cat=life]  { --c: #cfe4cf; }
+  .pad[data-cat=idea]  { --c: #f3cabb; }
+  .pad[data-cat=study] { --c: #cddbe9; }
+  .dish { cursor: grab; }
+  .dish .pin { position: static; margin: 0; cursor: grab; }
+  .tidyI { width: 22px; height: 20px; display: block; background:
+      linear-gradient(#f3e2a1, #f3e2a1) 0 0 / 10px 5px no-repeat, linear-gradient(#f3e2a1, #f3e2a1) 0 7px / 10px 5px no-repeat,
+      linear-gradient(#cfe4cf, #cfe4cf) 12px 0 / 10px 5px no-repeat, linear-gradient(#f3cabb, #f3cabb) 12px 7px / 10px 5px no-repeat,
+      linear-gradient(#cddbe9, #cddbe9) 12px 14px / 10px 5px no-repeat; filter: drop-shadow(0 1px 1px rgba(70,52,28,.35)); }
+  .tclock { width: 24px; height: 24px; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px #cfc0a4;
+    background: radial-gradient(circle, #fffaf0 0 34%, transparent 35%), conic-gradient(var(--accent) 0 var(--deg, 0deg), #efe4cf var(--deg, 0deg) 360deg); }
+  #timerBtn.run .tclock { box-shadow: 0 0 0 1.5px var(--accent); }
+  .tbook { width: 22px; height: 28px; border-radius: 2px 4px 4px 2px; display: block; transition: transform .2s var(--ease);
+    background: linear-gradient(90deg, rgba(0,0,0,.25) 0 4px, transparent 4px), #4f7a5a; box-shadow: 1px 1px 0 #efe6d4, 2px 2px 0 #ddd2bc, 0 3px 6px rgba(40,24,8,.25); }
+  .talbum { width: 22px; height: 28px; border-radius: 2px 4px 4px 2px; display: block; position: relative; transition: transform .2s var(--ease);
+    background: linear-gradient(90deg, rgba(0,0,0,.25) 0 4px, transparent 4px), #8d4a34; box-shadow: 1px 1px 0 #efe6d4, 2px 2px 0 #ddd2bc, 0 3px 6px rgba(40,24,8,.25); }
+  .talbum::after { content: attr(data-n); position: absolute; left: 6px; right: 2px; top: 7px; height: 12px; background: #f6eedd; border-radius: 1px; font: 8.5px/12px var(--mono); color: #8d4a34; text-align: center; }
+  .tb:hover .tbook, .tb:hover .talbum { transform: translateY(-2px) rotate(-4deg); }
+  #albumBtn.gulp .talbum { animation: gulp .45s var(--ease); }
+  @keyframes gulp { 40% { transform: scale(1.25) rotate(-6deg); } }
+  .treceipt { width: 18px; height: 24px; display: block; background: #fffdf7; box-shadow: 0 1px 3px rgba(40,24,8,.3);
+    clip-path: polygon(0 0, 100% 0, 100% 92%, 83% 100%, 67% 92%, 50% 100%, 33% 92%, 17% 100%, 0 92%); position: relative; }
+  .treceipt::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 1.5px; background: #c9bfae; box-shadow: 0 4px 0 #c9bfae, 0 8px 0 #c9bfae; }
+  #timer { position: fixed; bottom: 82px; z-index: 40001; width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--paper); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 18px 34px -12px rgba(40,24,8,.55);
+    opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .25s, transform .3s var(--ease); }
+  #timer.show { opacity: 1; transform: none; pointer-events: auto; }
+  #timer .dial { width: 140px; height: 140px; }
+  #timer .disc { inset: 11px; }
+  #timer .hub { inset: 42px; font-size: 15px; }
+  .bin { position: fixed; right: 40px; bottom: 100px; width: 64px; height: 64px; z-index: 40001; border-radius: 50%;
+    display: grid; place-items: center; color: var(--muted); background: rgba(251, 248, 239, .92); border: 1.5px dashed rgba(139, 110, 70, .5);
+    opacity: 0; transform: translateY(24px) scale(.8); pointer-events: none; transition: opacity .2s, transform .25s var(--ease), background .2s, color .2s, border-color .2s; }
+  body.carrying .bin { opacity: 1; transform: none; }
+  .bin.hot { color: var(--stamp); border-color: var(--stamp); background: rgba(250, 232, 224, .95); transform: scale(1.15) !important; }
+  #help { position: fixed; right: var(--gap); bottom: 82px; z-index: 40001; width: 270px;
+    background: var(--paper); border-radius: 6px; padding: 14px 16px; font-size: 12.5px; line-height: 1.9;
+    color: var(--muted); box-shadow: 0 10px 30px rgba(70, 52, 28, .2);
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: .25s var(--ease); }
+  #help.show { opacity: 1; transform: none; pointer-events: auto; }
+  #help b { color: var(--ink); font-weight: 600; }
+  #menu { position: fixed; z-index: 100001; display: none; gap: 8px; align-items: center;
+    background: var(--paper); padding: 8px 10px; border-radius: 20px; box-shadow: 0 8px 24px rgba(70, 52, 28, .22); }
+  #menu.show { display: flex; }
+  #menu .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(80,60,30,.15); }
+  #menu .dot.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--accent); }
+  #menu button { border: 0; background: none; color: var(--muted); cursor: pointer; font: 13px var(--sans); padding: 2px 4px; }
+  #menu button:hover { color: var(--accent); }
+  #menu .sep { width: 1px; height: 16px; background: var(--line); }
+
+  @media (max-width: 900px) { :root { --calw: 240px; --gap: 14px; } .lanes { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
+  @media (prefers-reduced-motion: reduce) { #light .sway, #light .sway2 { animation: none; } #pages { transition: none; } }
 </style>
 </head>
 <body>
-<div id="world">
+<div id="light" aria-hidden="true"><div class="sun"></div></div>
+
+<aside id="cal">
+<div class="rings"></div>
 <div id="todayCard" class="pcard flipc">
   <div class="flipper">
     <div class="face f"><div class="sheetc">
-      <div class="head"><span class="ttl"></span><span class="pn"></span></div>
+      <div class="calhead"><div class="day"></div><div class="mon"></div><div class="wk"><span class="w"></span><span class="pn"></span></div></div>
       <div class="bar"><i></i></div>
       <div class="body"><ul class="chk"></ul></div>
       <i class="curl" title="翻面"></i>
     </div></div>
     <div class="face b"><div class="sheetc post">
-      <div class="pc"><div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div></div>
+      <div class="pc"><div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false" placeholder="今天的碎碎念"></textarea></div></div>
       <i class="curl" title="翻面"></i>
     </div></div>
   </div>
 </div>
+</aside>
+
+<main id="stage">
+  <div id="pages">
+    <section class="page" id="chalk"><div class="frame"><div class="inner">
+      <div class="lanes">
+        <div class="lane" data-col="todo"><h3>想做<small></small></h3><div class="cards"></div><button class="add">＋ 写一个</button></div>
+        <div class="lane" data-col="doing"><h3>在做<small></small></h3><div class="cards"></div></div>
+        <div class="lane" data-col="done"><h3>做完<small></small></h3><div class="cards"></div></div>
+      </div>
+      <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
+    </div></div></section>
+    <section class="page" id="cork"><div class="frame"><div class="inner"><div id="notes"></div></div></div></section>
+  </div>
+</main>
+
 <template id="projTpl"><div class="pcard projc flipc">
   <div class="flipper">
     <div class="face f"><div class="sheetc">
@@ -459,67 +501,61 @@
       </div>
       <div class="foot"><button class="stampBtn">盖章</button></div>
       <div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm sd"></div></div></div></div>
-            <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
-        <g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
-          <path d="M84 38c4 0 6-3 10-3M84 50c4 0 6-3 10-3M84 62c4 0 6-3 10-3"/></g>
-        <text x="50" y="47" text-anchor="middle" font-size="9" font-family="monospace" fill="#4a4a5a" class="pd"></text>
-        <text x="50" y="60" text-anchor="middle" font-size="8" font-family="serif" fill="#4a4a5a">完 成</text>
+      <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><path id="pmArc" d="M21 52 A29 29 0 0 1 79 52"/></defs>
+        <g fill="none" stroke="#3a3530"><circle cx="50" cy="50" r="36" stroke-width="1.7" stroke-opacity=".6"/><circle cx="50" cy="50" r="24" stroke-width=".9" stroke-opacity=".45"/></g>
+        <g fill="#3a3530" fill-opacity=".62">
+          <text font-size="7.5" font-family="serif" letter-spacing="2"><textPath href="#pmArc" startOffset="50%" text-anchor="middle">纸桌 · 完成</textPath></text>
+          <rect x="31" y="45" width="38" height=".9"/><rect x="31" y="58" width="38" height=".9"/>
+          <text class="pd" x="50" y="55" text-anchor="middle" font-size="7.5" font-family="monospace" letter-spacing=".6"></text>
+        </g>
       </svg>
       <i class="curl" title="翻面"></i>
     </div></div>
     <div class="face b"><div class="sheetc post">
-      <div class="pc">
-        <div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div>
-      </div>
+      <div class="pc"><div class="pl"><div class="ttl"></div><textarea class="memo" spellcheck="false"></textarea></div></div>
       <div class="foot"><span class="meta"></span></div>
       <i class="curl" title="翻面"></i>
     </div></div>
   </div>
 </div></template>
-<div id="desk"></div>
-</div>
-<div id="done" title="卡册：盖过章的项目卡"></div>
+<div id="detail"><div class="holder"></div></div>
 
-<div id="drawer" title="甩到这里收起"></div>
-
-<div id="tray">
-  <button class="tb" id="trayToday" title="今日卡"><span class="tcard"><b>今日</b><i></i><i></i></span></button>
-  <button class="tb" id="trayProject" title="新建项目卡"><span class="tcard proj"><b>项目</b><i></i></span></button>
+<nav id="tray">
+  <button class="tb pg" data-p="0" title="项目（1）"><i></i></button>
+  <button class="tb pg" data-p="1" title="便签（2）"><i></i></button>
   <span class="tsep"></span>
-  <span class="tb"><span class="pad" data-cat="work" title="拖出一张便签"></span></span>
-  <span class="tb"><span class="pad" data-cat="life" title="拖出一张便签"></span></span>
-  <span class="tb"><span class="pad" data-cat="idea" title="拖出一张便签"></span></span>
-  <span class="tb"><span class="pad" data-cat="study" title="拖出一张便签"></span></span>
-  <span class="tb dish" title="拖一颗图钉"><span class="pin"></span></span>
-  <span class="tsep"></span>
-  <button class="tb" id="tidy" title="便签全部收进右边（T）">⇥</button>
+  <span class="tb corkonly"><span class="pad" data-cat="work" title="拖出一张便签"></span></span>
+  <span class="tb corkonly"><span class="pad" data-cat="life" title="拖出一张便签"></span></span>
+  <span class="tb corkonly"><span class="pad" data-cat="idea" title="拖出一张便签"></span></span>
+  <span class="tb corkonly"><span class="pad" data-cat="study" title="拖出一张便签"></span></span>
+  <span class="tb dish corkonly" title="拖一颗图钉"><span class="pin"></span></span>
+  <button class="tb corkonly" id="tidy" title="折起来，按颜色排好（T）"><span class="tidyI"></span></button>
+  <span class="tspace"></span>
   <button class="tb" id="timerBtn" title="计时器"><span class="tclock"></span></button>
+  <a class="tb" id="albumBtn" href="album.html" title="卡册"><span class="talbum" data-n="0"></span></a>
   <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
-  <a class="tb" href="receipt.html" title="今日小票">⎙</a>
-  <span class="tsep"></span>
-  <button class="tb" id="trayTuck" title="收到左边">‹</button>
-</div>
-<div id="trayTab" title="工具栏"></div>
-<div id="timer"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div></div>
+  <a class="tb" href="receipt.html" title="今日小票"><span class="treceipt"></span></a>
+</nav>
+<div id="timer"><div class="dial" title="拖动设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"><span></span></div></div></div>
 <div class="bin" title="扔掉"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9l1-12.5M10 11v6M14 11v6"/></svg></div>
 
 <div id="help">
-  <b>卡</b> 点方框打勾，点文字直接改，回车下一条，空行退格删除；拖左侧把手排序，往右拖变子任务<br>
-  <b>翻面</b> 鼠标移到卡片右下角变成小手，点一下或拖动；背面写随手记；勾完点「盖章」<br>
-  <b>便签</b> 从工具栏拖出；拖图钉按上去就固定，拖走图钉才能再动<br>
-  <b>收起</b> 卡片和便签拖到屏幕右边；悬停卡签偷看，点一下拿回<br>
-  <b>扔掉</b> 拖着便签时下方出现圆圈，拖进去<br>
-  <b>桌面</b> 拖空白处移动，滚轮缩放，双击空白回到开头
+  <b>翻页</b> 按 1 / 2，或触控板左右滑<br>
+  <b>今日</b> 点方框打勾，回车下一条，Tab 变子任务；右下角翻到背面写碎碎念<br>
+  <b>项目</b> 卡片在三列之间拖；点开看详情，勾完盖章收进卡册<br>
+  <b>便签</b> 从下面拖出；拖角转动；图钉按上去就固定<br>
+  <b>折起</b> 便签右上角或右键；T 全部折起按颜色排好<br>
+  <b>扔掉</b> 拖着便签时右下出现圆圈，拖进去
 </div>
-
 <div id="menu"></div>
 
 <script>
-/* ═════════ Two cards on the cloth ═════════
-   Today's card: the small things to tick off today. Unfinished ones carry over; finished ones stay for the day.
-   Project card: one project you're focused on: the goal, the conditions, and a timer on the back.
-   When every condition is ticked, press 盖章 and it's stamped and filed into the album.
-   Both cards move with the desk, can be dragged by their top strip, and tuck into tabs on the right edge (≡). */
+/* ═════════ The desk: today's calendar on the left, one board at a time on the right ═════════
+   Calendar: the small things to tick off today. Unfinished ones carry over; finished ones stay for the day. Its back is today's jottings.
+   项目 (chalkboard): every project is an index card under 想做 / 在做 / 做完. Open one to work on it; stamp it when it's done
+   and it goes into the album.
+   便签 (corkboard): the sticky notes, in the second script below. */
 (() => {
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
@@ -530,12 +566,45 @@
   const isToday = ts => !!ts && dayOf(ts) === dayOf(Date.now());
   const load = (k, fb) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch { return fb; } };
   const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const Z = 1;
 
-  /* how far the cloth has slid (the sticky-note script owns panning and tells us) */
-  let O = (load("paper-desk.mat.v2", {}) || {}).o || { x: 0, y: 0 }, Z = 1;
-  const placers = [];
-  addEventListener("deskpan", e => { O = e.detail; placers.forEach(f => f()); });
-  addEventListener("deskzoom", e => { Z = e.detail; });
+  /* ───────── pages: 1 项目 · 2 便签, keys or a sideways swipe ───────── */
+  const PAGEKEY = "paper-desk.page.v1";
+  let page = load(PAGEKEY, 0) === 1 ? 1 : 0;
+  function go(i) {
+    page = Math.max(0, Math.min(1, i));
+    $("#pages").style.transform = `translateX(${-50 * page}%)`;
+    document.body.classList.toggle("p0", page === 0); document.body.classList.toggle("p1", page === 1);
+    $$(".pg").forEach(b => b.classList.toggle("on", +b.dataset.p === page));
+    store(PAGEKEY, page);
+    dispatchEvent(new CustomEvent("deskpage", { detail: page }));
+  }
+  window.Desk = { go, page: () => page };
+  $$(".pg").forEach(b => b.addEventListener("click", () => go(+b.dataset.p)));
+  const typing = () => { const a = document.activeElement; return a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable); };
+  addEventListener("keydown", e => {
+    if (typing() || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "1") go(0);
+    else if (e.key === "2") go(1);
+    else if (e.key === "3") location.href = "journal.html";
+    else if (e.key === "?") $("#help").classList.toggle("show");
+    else if (e.key === "Escape") $("#help").classList.remove("show");
+  });
+  // two fingers sideways on a trackpad: one page per swipe
+  let swX = 0, swLock = 0;
+  addEventListener("wheel", e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || e.target.closest("#cal, #detail, .note")) return;
+    e.preventDefault();
+    const now = performance.now();
+    if (now < swLock) return;
+    swX += e.deltaX;
+    clearTimeout(go.t); go.t = setTimeout(() => swX = 0, 160);
+    if (Math.abs(swX) > 70) { go(page + Math.sign(swX)); swX = 0; swLock = now + 700; }
+  }, { passive: false });
+  $("#pages").style.transition = "none";
+  go(page);
+  $("#pages").getBoundingClientRect();
+  requestAnimationFrame(() => $("#pages").style.transition = "");
 
   /* ───────── ruled paper: click any line, even below the text, and the caret goes to that line ───────── */
   function writeAnywhere(ta, lh) {
@@ -735,207 +804,6 @@
     });
     return { render };
   }
-
-  /* ───────── a card that lies on the cloth, moves by its top strip and tucks into an edge tab ───────── */
-  // every card has a tab on the right edge; tucked cards' tabs stack from the top, the sticky-note tabs go below them
-  const ctls = [];
-  const TAB0 = 14, TAB_STEP = 52;
-  function tabTopFor(ctl) {
-    let n = 0;
-    for (const c of ctls) { if (c === ctl) break; if (c.tucked()) n++; }
-    return TAB0 + n * TAB_STEP;
-  }
-  function layoutTabs() {
-    let n = 0;
-    for (const c of ctls) { c.tab.style.top = (TAB0 + n * TAB_STEP) + "px"; if (c.tucked()) n++; c.tab.dataset.label = c.label(); }
-    window.CARD_TABS_BOTTOM = TAB0 + n * TAB_STEP + 18;
-    dispatchEvent(new CustomEvent("cardtabs", { detail: window.CARD_TABS_BOTTOM }));
-  }
-  function Card(el, o) {
-    const tab = document.createElement("div");
-    tab.className = "ctab";
-    $("#drawer").appendChild(tab);
-    const place = () => { if (!el.classList.contains("fly")) el.style.transform = `translate(${o.pos().x + O.x}px, ${o.pos().y + O.y}px)`; };
-    placers.push(place);
-    const ctl = { tab, tucked: () => o.tucked(), label: () => o.label() };
-    ctls.push(ctl);
-    function sync() {
-      const t = o.tucked();
-      el.classList.toggle("tucked", t);
-      tab.classList.toggle("show", t);
-      layoutTabs();
-      place();
-    }
-    const tabXY = () => { const r = tab.parentElement.getBoundingClientRect(); return { x: r.left / Z - el.offsetWidth * .12, y: tabTopFor(ctl) / Z }; };
-    function tuck() {
-      if (o.tucked()) return;
-      document.activeElement && el.contains(document.activeElement) && document.activeElement.blur();
-      const p = tabXY();
-      el.classList.add("fly");
-      el.style.transform = `translate(${p.x}px, ${p.y}px) scale(.12) rotate(4deg)`; el.style.opacity = "0";
-      setTimeout(() => { el.classList.remove("fly"); el.style.opacity = ""; o.setTucked(true); sync(); }, 520);
-    }
-    function untuck() {
-      if (!o.tucked()) return;
-      clearTimeout(peekT); raise();
-      const wasPeeking = el.classList.contains("peek");
-      document.body.classList.remove("cardpeek");
-      const p = tabXY();
-      el.classList.remove("peek");
-      o.setTucked(false); sync();
-      if (!wasPeeking) {
-        el.style.transition = "none";
-        el.style.transform = `translate(${p.x}px, ${p.y}px) scale(.12)`; el.style.opacity = "0";
-        void el.offsetWidth;
-        el.style.transition = "";
-      }
-      el.classList.add("fly"); el.style.opacity = "";
-      el.style.transform = `translate(${o.pos().x + O.x}px, ${o.pos().y + O.y}px)`;
-      setTimeout(() => el.classList.remove("fly"), 560);
-    }
-    // like the sticky notes: hover the tab and the card leans out from the edge; leave and it slips back
-    let peekT = null;
-    function peek() {
-      if (!o.tucked() || el.classList.contains("peek")) { clearTimeout(peekT); return; }
-      const p = tabXY();
-      el.classList.add("peek"); el.classList.remove("tucked"); document.body.classList.add("cardpeek");
-      el.style.transition = "none";
-      el.style.transform = `translate(${p.x}px, ${p.y}px) scale(.12)`; el.style.opacity = "0";
-      void el.offsetWidth;
-      el.style.transition = "";
-      el.classList.add("fly"); el.style.opacity = "";
-      const x = (innerWidth - 14) / Z - el.offsetWidth * .62;
-      const y = Math.max(10 / Z, Math.min(tabTopFor(ctl) / Z - 30, innerHeight / Z - el.offsetHeight - 120 / Z));
-      el.style.transform = `translate(${x}px, ${y}px) rotate(-1.5deg)`;
-    }
-    function unpeek() {
-      clearTimeout(peekT);
-      peekT = setTimeout(() => {
-        if (!el.classList.contains("peek")) return;
-        const p = tabXY();
-        el.style.transform = `translate(${p.x}px, ${p.y}px) scale(.12) rotate(4deg)`; el.style.opacity = "0";
-        document.body.classList.remove("cardpeek");
-        setTimeout(() => { if (!el.classList.contains("peek")) return; el.classList.remove("peek", "fly"); el.style.opacity = ""; if (o.tucked()) el.classList.add("tucked"); }, 520);
-      }, 160);
-    }
-    el.addEventListener("contextmenu", e => {
-      if (e.target.closest("input, textarea")) return;
-      e.preventDefault();
-      openCMenu(e.clientX, e.clientY, (o.menu ? o.menu() : []).concat([{ label: "收到右边", fn: tuck }]));
-    });
-    tab.addEventListener("click", untuck);
-    tab.addEventListener("pointerenter", peek);
-    tab.addEventListener("pointerleave", unpeek);
-    el.addEventListener("pointerenter", () => { if (el.classList.contains("peek")) clearTimeout(peekT); });
-    el.addEventListener("pointerleave", () => { if (el.classList.contains("peek")) unpeek(); });
-    // grab the card anywhere that isn't text, a box or a button and move it; a plain click on ≡ tucks it away
-    const raise = () => { el.style.zIndex = window.deskFront ? window.deskFront() : 5; };
-    el.addEventListener("pointerdown", raise, true);
-    el.addEventListener("focusin", raise);
-    el.addEventListener("pointerdown", e => {
-      if (e.button !== 0) return;
-      if (el.classList.contains("peek")) { untuck(); e.preventDefault(); return; }
-      if (el.classList.contains("fly")) return;
-      if (e.target.closest("input, textarea, .box, .dial, .stampBtn, .curl, .hd")) return;
-      const p0 = { ...o.pos() }, sx = e.clientX, sy = e.clientY;
-      let moved = false;
-      el.setPointerCapture(e.pointerId);
-      const drawer = $("#drawer"), nearEdge = x => x > innerWidth - 110;
-      const mv = ev => {
-        const dx = (ev.clientX - sx) / Z, dy = (ev.clientY - sy) / Z;
-        if (!moved && Math.hypot(dx, dy) < 4) return;
-        moved = true; el.classList.add("moving");
-        o.setPos({ x: p0.x + dx, y: p0.y + dy }); place();
-        drawer.classList.toggle("hot", nearEdge(ev.clientX));
-      };
-      const up = ev => {
-        el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up);
-        el.classList.remove("moving"); drawer.classList.remove("hot");
-        // dropped on the right edge: it files itself into a tab, and comes back to where it was picked up
-        if (moved && nearEdge(ev.clientX)) { tuck(); o.setPos(p0); o.saved(); return; }
-        if (moved) o.saved();
-      };
-      el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up);
-      e.preventDefault();
-    });
-    // from the tray: bring the card back if it's tucked, otherwise slide the desk to it
-    function show() {
-      raise();
-      if (o.tucked()) { untuck(); return; }
-      const p = o.pos(); window.DeskView && DeskView.bringIntoView(p.x, p.y, el.offsetWidth, el.offsetHeight);
-      el.classList.remove("hello"); void el.offsetWidth; el.classList.add("hello");
-    }
-    function destroy() {
-      tab.remove(); el.remove();
-      ctls.splice(ctls.indexOf(ctl), 1); placers.splice(placers.indexOf(place), 1);
-      layoutTabs();
-    }
-    return { sync, tuck, untuck, place, show, destroy, raise };
-  }
-
-
-  /* ═════════ today's card ═════════ */
-  const TKEY = "paper-desk.today.v1", TPOS = "paper-desk.todaycard.v1";
-  let items = load(TKEY, null);
-  if (!Array.isArray(items)) items = [
-    { id: uid(), text: "回三封邮件", addedAt: Date.now() },
-    { id: uid(), text: "买猫粮、灯泡", addedAt: Date.now() },
-    { id: uid(), text: "给猫剪指甲", addedAt: Date.now() },
-  ];
-  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt, sub }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt, sub: !!sub }));
-  const tp = load(TPOS, null) || { x: 60, y: 50, tucked: false };
-  const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
-  const todayEl = $("#todayCard");
-  $("#desk").appendChild(todayEl);
-  let tSaveT = null;
-  const saveToday = later => { clearTimeout(tSaveT); tSaveT = setTimeout(() => { store(TKEY, items); store(TPOS, tp); }, later ? 400 : 0); renderTodayHead(); };
-  function renderTodayHead() {
-    const d = new Date();
-    $$(".ttl", todayEl).forEach(e => e.textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${"日一二三四五六"[d.getDay()]}`);
-    const v = visible().filter(i => !i.sub), k = v.filter(i => i.done).length;
-    $(".pn", todayEl).textContent = v.length ? `${k} / ${v.length}` : "";
-    $(".bar i", todayEl).style.width = v.length ? (k / v.length * 100) + "%" : "0";
-  }
-  const todayList = Checklist($(".chk", todayEl), {
-    key: "text", placeholder: "＋",
-    items: visible,
-    make: text => ({ id: uid(), text, done: false, addedAt: Date.now() }),
-    insertAfter: (ref, it) => items.splice(items.indexOf(ref) + 1, 0, it),
-    move: (group, before) => { items = items.filter(i => !group.includes(i)); const at = before ? items.indexOf(before) : items.length; items.splice(at, 0, ...group); },
-    add: text => items.push({ id: uid(), text, done: false, addedAt: Date.now() }),
-    remove: it => { items = items.filter(i => i !== it); },
-    tick: it => { it.doneAt = it.done ? Date.now() : 0; },
-    changed: later => saveToday(later),
-  });
-  const todayCard = Card(todayEl, {
-    label: () => "今日",
-    menu: () => [{ label: todayEl.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flipToday() }, { label: "加一条", fn: () => { flipToday(false); $(".chk li.new textarea", todayEl).focus(); } }, "-"],
-    pos: () => tp, setPos: p => { tp.x = p.x; tp.y = p.y; }, saved: () => saveToday(),
-    tucked: () => tp.tucked, setTucked: v => { tp.tucked = v; saveToday(); }, has: () => true,
-  });
-  todayList.render(); renderTodayHead(); todayCard.sync();
-
-  /* ═════════ project cards: as many as you like ═════════ */
-  const PKEY = "paper-desk.desk-tasks.v1";
-  let S = load(PKEY, null);
-  if (!S || !Array.isArray(S.done)) S = { done: [] };
-  if (S.v !== 4) {
-    const c = t => ({ t, done: false });
-    let projects = [];
-    if (S.v === 3 && S.current) projects = [Object.assign(S.current, { pos: S.pos || { x: 400, y: 40 }, tucked: !!S.tucked })];
-    else if (S.v === 2 && S.current && S.current.goal) projects = [Object.assign(S.current, { pos: { x: 420, y: 50 }, tucked: false })];
-    else if (S.v !== 3) projects = [{ id: uid(), title: "研究生产力爆款笔记", goal: "找出它的开头为什么能吸引读者继续看。",
-      conds: [c("记录标题和开头"), c("标出它吸引人的原因（反常识？提出问题？情绪？）"), c("用同样的原因模仿 5 句")], minutes: 25, pos: { x: 420, y: 50 }, tucked: false }];
-    projects.forEach(p => { p.conds = (p.conds || []).filter(x => x.t && x.t.trim()); delete p.stamped; });
-    S = { v: 4, projects, done: S.done };
-  }
-  let pSaveT = null;
-  const saveP = later => { clearTimeout(pSaveT); pSaveT = setTimeout(() => store(PKEY, S), later ? 400 : 0); };
-
-  function renderDone() {
-    $("#done").innerHTML = `<div class="book"><div class="lbl"><b>卡册</b><span>${S.done.length}</span></div><div class="ribbon"></div><div class="seal">成</div></div>`;
-  }
-
   // the red disc is the time left, one turn = an hour
   function chime() {
     try {
@@ -1024,7 +892,43 @@
     flippers.push({ el, flip });
     return flip;
   }
-  // today's card: its back is today's jottings (the receipt prints them at the bottom)
+
+  /* ═════════ today's calendar ═════════ */
+  const TKEY = "paper-desk.today.v1";
+  let items = load(TKEY, null);
+  if (!Array.isArray(items)) items = [
+    { id: uid(), text: "回三封邮件", addedAt: Date.now() },
+    { id: uid(), text: "买猫粮、灯泡", addedAt: Date.now() },
+    { id: uid(), text: "给猫剪指甲", addedAt: Date.now() },
+  ];
+  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt, sub }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt, sub: !!sub }));
+  const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
+  const todayEl = $("#todayCard");
+  let tSaveT = null;
+  const saveToday = later => { clearTimeout(tSaveT); tSaveT = setTimeout(() => store(TKEY, items), later ? 400 : 0); renderTodayHead(); };
+  function renderTodayHead() {
+    const d = new Date(), wk = "日一二三四五六"[d.getDay()];
+    $(".day", todayEl).textContent = d.getDate();
+    $(".mon", todayEl).textContent = `${d.getFullYear()} · ${d.getMonth() + 1} 月`;
+    $(".wk .w", todayEl).textContent = `星期${wk}`;
+    $(".face.b .ttl", todayEl).textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${wk}`;
+    const v = visible().filter(i => !i.sub), k = v.filter(i => i.done).length;
+    $(".pn", todayEl).textContent = v.length ? `${k} / ${v.length}` : "";
+    $(".bar i", todayEl).style.width = v.length ? (k / v.length * 100) + "%" : "0";
+  }
+  const todayList = Checklist($(".chk", todayEl), {
+    key: "text", placeholder: "＋",
+    items: visible,
+    make: text => ({ id: uid(), text, done: false, addedAt: Date.now() }),
+    insertAfter: (ref, it) => items.splice(items.indexOf(ref) + 1, 0, it),
+    move: (group, before) => { items = items.filter(i => !group.includes(i)); const at = before ? items.indexOf(before) : items.length; items.splice(at, 0, ...group); },
+    add: text => items.push({ id: uid(), text, done: false, addedAt: Date.now() }),
+    remove: it => { items = items.filter(i => i !== it); },
+    tick: it => { it.doneAt = it.done ? Date.now() : 0; },
+    changed: later => saveToday(later),
+  });
+  todayList.render(); renderTodayHead();
+  // the back is today's jottings (the receipt prints them at the bottom)
   const MEMOKEY = "paper-desk.todaymemo.v1";
   const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
   const memos = load(MEMOKEY, {}) || {};
@@ -1033,36 +937,164 @@
   tmemo.value = memos[dayKey()] || "";
   tmemo.addEventListener("input", () => { memos[dayKey()] = tmemo.value; store(MEMOKEY, memos); });
   const flipToday = Flip(todayEl);
+  todayEl.addEventListener("contextmenu", e => {
+    if (e.target.closest("input, textarea")) return;
+    e.preventDefault();
+    openCMenu(e.clientX, e.clientY, [
+      { label: todayEl.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flipToday() },
+      { label: "加一条", fn: () => { flipToday(false); $(".chk li.new textarea", todayEl).focus(); } },
+    ]);
+  });
+  // past midnight: tear off yesterday's page
+  let shownDay = dayKey();
+  setInterval(() => {
+    if (dayKey() === shownDay) return;
+    shownDay = dayKey();
+    todayEl.animate([{ transform: "none" }, { transform: "translateY(-8px) rotate(-2deg)", opacity: .2 }, { transform: "none", opacity: 1 }], { duration: 700, easing: "ease-out" });
+    tmemo.value = memos[dayKey()] || "";
+    todayList.render(); renderTodayHead();
+  }, 30000);
 
-  const tpl = $("#projTpl");
-  const projCtls = [];
-  function ProjectCard(p) {
+  /* ═════════ projects: index cards on the chalkboard ═════════ */
+  const PKEY = "paper-desk.desk-tasks.v1";
+  let S = load(PKEY, null);
+  if (!S || !Array.isArray(S.done)) S = { done: [] };
+  if (S.v !== 4 && S.v !== 5) {
+    const c = t => ({ t, done: false });
+    let projects = [];
+    if (S.v === 3 && S.current) projects = [S.current];
+    else if (S.v === 2 && S.current && S.current.goal) projects = [S.current];
+    else if (S.v !== 3) projects = [
+      { id: uid(), col: "doing", title: "研究生产力爆款笔记", goal: "找出它的开头为什么能吸引读者继续看。",
+        conds: [Object.assign(c("记录标题和开头"), { done: true }), c("标出它吸引人的原因（反常识？提出问题？情绪？）"), c("用同样的原因模仿 5 句")] },
+      { id: uid(), col: "todo", title: "整理书架", goal: "只留下这一年还会翻的书。", conds: [c("清出一格"), c("捐掉的装箱")] },
+    ];
+    projects.forEach(p => { p.conds = (p.conds || []).filter(x => x.t && x.t.trim()); delete p.stamped; });
+    S = { v: 4, projects, done: S.done };
+  }
+  if (S.v === 4) { S.projects.forEach(p => { p.col = p.col || "doing"; delete p.pos; delete p.tucked; }); S.v = 5; }
+  S.projects.forEach(p => { delete p.stamped; if (!p.startedAt) p.startedAt = Date.now(); if (!p.id) p.id = uid(); });
+  let pSaveT = null;
+  const saveP = later => { clearTimeout(pSaveT); pSaveT = setTimeout(() => store(PKEY, S), later ? 400 : 0); };
+
+  const COLS = ["todo", "doing", "done"], COLNAME = { todo: "想做", doing: "在做", done: "做完" };
+  const MAG = { todo: "#c9a24a", doing: "#c9573f", done: "#4f7a5a" };
+  const filled = p => p.conds.filter(c => c.t.trim() && !c.sub);
+  const isReady = p => { const f = filled(p); return f.length > 0 && f.every(c => c.done); };
+  const tiltOf = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0; return ((Math.abs(h) % 9) - 4) * .35; };
+  function miniCard(p) {
+    const el = document.createElement("div");
+    el.className = "mini"; el._p = p;
+    el.innerHTML = `<b></b><p></p><div class="mrow"><div class="bar"><i></i></div><span class="cnt"></span><span class="ready">可盖章</span></div>`;
+    const f = filled(p), k = f.filter(c => c.done).length;
+    $("b", el).textContent = p.title || "未命名";
+    if (p.goal) $("p", el).textContent = p.goal; else $("p", el).remove();
+    if (f.length) { $(".bar i", el).style.width = (k / f.length * 100) + "%"; $(".cnt", el).textContent = `${k}/${f.length}`; }
+    else $(".mrow", el).style.display = "none";
+    el.classList.toggle("isready", isReady(p));
+    el.style.setProperty("--r", tiltOf(p.id) + "deg");
+    el.style.setProperty("--mg", MAG[p.col]);
+    return el;
+  }
+  function renderBoard() {
+    COLS.forEach(col => {
+      const lane = $(`.lane[data-col=${col}]`), box = $(".cards", lane);
+      const ps = S.projects.filter(p => p.col === col);
+      box.innerHTML = "";
+      ps.forEach(p => box.appendChild(miniCard(p)));
+      if (!ps.length) box.innerHTML = `<div class="empty">${col === "done" ? "勾完的放这里" : "空"}</div>`;
+      $("h3 small", lane).textContent = ps.length || "";
+    });
+    $("#albumBtn .talbum").dataset.n = S.done.length;
+  }
+  function moveProject(p, col, before) {
+    S.projects = S.projects.filter(x => x !== p);
+    p.col = col;
+    const at = before ? S.projects.indexOf(before) : -1;
+    if (at < 0) S.projects.push(p); else S.projects.splice(at, 0, p);
+    saveP(); renderBoard();
+  }
+  // drag a card between the columns; a plain click opens it
+  $("#chalk").addEventListener("pointerdown", e => {
+    const m = e.target.closest(".mini");
+    if (!m || e.button !== 0) return;
+    e.preventDefault();
+    const p = m._p, sx = e.clientX, sy = e.clientY, r = m.getBoundingClientRect();
+    let ghost = null, slot = null, target = null, lx = sx;
+    const mv = ev => {
+      if (!ghost) {
+        if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
+        ghost = m.cloneNode(true); ghost.classList.add("ghost"); ghost.style.width = r.width + "px";
+        document.body.appendChild(ghost); m.classList.add("lifted");
+        slot = document.createElement("div"); slot.className = "slot";
+      }
+      const sw = Math.max(-7, Math.min(7, (ev.clientX - lx) * .6)); lx = ev.clientX;
+      ghost.style.left = (r.left + ev.clientX - sx) + "px"; ghost.style.top = (r.top + ev.clientY - sy) + "px";
+      ghost.style.transform = `rotate(${sw}deg) scale(1.03)`;
+      const lane = document.elementsFromPoint(ev.clientX, ev.clientY).map(x => x.closest && x.closest(".lane")).find(Boolean);
+      $$(".lane").forEach(l => l.classList.toggle("over", l === lane));
+      if (!lane) { slot.remove(); target = null; return; }
+      const box = $(".cards", lane), cards = $$(".mini", box).filter(x => x !== m);
+      const before = cards.find(c => { const b = c.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; }) || null;
+      if (before) box.insertBefore(slot, before); else box.appendChild(slot);
+      target = { col: lane.dataset.col, before: before ? before._p : null };
+    };
+    const up = () => {
+      removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
+      $$(".lane").forEach(l => l.classList.remove("over"));
+      if (!ghost) { openDetail(p); return; }
+      ghost.remove(); slot.remove(); m.classList.remove("lifted");
+      if (target) moveProject(p, target.col, target.before);
+    };
+    addEventListener("pointermove", mv); addEventListener("pointerup", up);
+  });
+  $("#chalk").addEventListener("contextmenu", e => {
+    const m = e.target.closest(".mini"); if (!m) return;
+    e.preventDefault();
+    const p = m._p;
+    openCMenu(e.clientX, e.clientY, [
+      { label: "打开", fn: () => openDetail(p) },
+      ...COLS.filter(c => c !== p.col).map(c => ({ label: `移到「${COLNAME[c]}」`, fn: () => moveProject(p, c, null) })),
+      "-",
+      { label: "扔掉", danger: true, fn: () => toss(p) },
+    ]);
+  });
+  function newProject() {
+    const p = { id: uid(), col: "todo", title: "", goal: "", conds: [], minutes: 25, startedAt: Date.now() };
+    S.projects.push(p); saveP(); renderBoard();
+    openDetail(p, true);
+  }
+  $(".lane .add").addEventListener("click", newProject);
+  function toss(p) {
+    const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
+    if (!empty && !confirm(`扔掉「${p.title || "这张项目卡"}」？`)) return false;
+    S.projects = S.projects.filter(x => x !== p); saveP(); renderBoard();
+    return true;
+  }
+
+  /* ───────── an opened project: the full card, front and back ───────── */
+  const tpl = $("#projTpl"), detail = $("#detail"), holder = $(".holder", detail);
+  let opened = null;
+  function openDetail(p, fresh) {
+    closeDetail(true);
     const el = tpl.content.firstElementChild.cloneNode(true);
-    $("#desk").appendChild(el);
-    const filled = () => p.conds.filter(c => c.t.trim() && !c.sub);
+    holder.appendChild(el);
     const ti = $("[data-k=title]", el), go = $("[data-k=goal]", el);
     const grow = () => { go.style.height = "auto"; go.style.height = go.scrollHeight + "px"; };
     function renderProgress() {
-      const f = filled(), k = f.filter(c => c.done).length;
+      const f = filled(p), k = f.filter(c => c.done).length;
       $$(".pn", el).forEach(e => e.textContent = f.length ? `${k} / ${f.length}` : "");
       $$(".bar i", el).forEach(b => b.style.width = f.length ? (k / f.length * 100) + "%" : "0");
-      el.classList.toggle("ready", f.length > 0 && k === f.length && !p.stamped);
+      el.classList.toggle("ready", isReady(p) && !el._stamped);
     }
     const md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`; };
-    function renderMeta() {
-      $(".meta", el).textContent = `始于 ${md(p.startedAt)}`;
-    }
-    if (!p.startedAt) p.startedAt = Date.now();
+    $(".meta", el).textContent = `始于 ${md(p.startedAt)} · ${COLNAME[p.col]}`;
     const memo = $(".memo", el);
     writeAnywhere(memo, 28);
     memo.value = p.memo || "";
     memo.addEventListener("input", () => { p.memo = memo.value; saveP(true); });
-    function renderText() {
-      if (document.activeElement !== ti) ti.value = p.title;
-      if (document.activeElement !== go) go.value = p.goal;
-      grow();
-      $(".face.b .ttl", el).textContent = p.title || "项目";
-    }
+    ti.value = p.title; go.value = p.goal;
+    $(".face.b .ttl", el).textContent = p.title || "项目";
     const list = Checklist($(".chk", el), {
       key: "t", placeholder: "＋",
       items: () => p.conds,
@@ -1072,93 +1104,82 @@
       add: t => p.conds.push({ t, done: false }),
       remove: it => { p.conds = p.conds.filter(c => c !== it); },
       tick: it => { it.at = it.done ? Date.now() : 0; },
-      changed: later => { saveP(later); renderProgress(); },
+      changed: later => { saveP(later); renderProgress(); renderBoard(); },
     });
-    ti.addEventListener("input", () => { p.title = ti.value; $(".face.b .ttl", el).textContent = ti.value || "项目"; card.sync(); saveP(true); });
+    ti.addEventListener("input", () => { p.title = ti.value; $(".face.b .ttl", el).textContent = ti.value || "项目"; saveP(true); renderBoard(); });
     ti.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); go.focus(); } });
     go.addEventListener("input", () => { p.goal = go.value; grow(); saveP(true); });
     go.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $(".chk li.new textarea", el).focus(); } });
-
-    const card = Card(el, {
-      label: () => (p.title || "项目").slice(0, 8),
-      pos: () => p.pos, setPos: q => { p.pos = q; }, saved: () => saveP(),
-      tucked: () => !!p.tucked, setTucked: v => { p.tucked = v; saveP(); },
-      menu: () => [
-        { label: el.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flip() },
-        { label: "加一条", fn: () => $(".chk li.new textarea", el).focus() },
-        el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
-        { label: "扔掉", danger: true, fn: toss },
-        "-",
-      ].filter(Boolean),
-    });
-
     const flip = Flip(el);
-
-    function remove() {
-      S.projects = S.projects.filter(x => x !== p);
-      projCtls.splice(projCtls.indexOf(ctl), 1);
-      card.destroy(); saveP();
-    }
-    // stamp it and file it into the album
+    el.addEventListener("contextmenu", e => {
+      if (e.target.closest("input, textarea")) return;
+      e.preventDefault();
+      openCMenu(e.clientX, e.clientY, [
+        { label: el.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flip() },
+        { label: "加一条", fn: () => { flip(false); $(".chk li.new textarea", el).focus(); } },
+        el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
+        "-",
+        { label: "扔掉", danger: true, fn: () => { if (toss(p)) closeDetail(); } },
+      ]);
+    });
+    // stamp it: the stamp comes down, the postmark is inked over its corner, and the card flies into the album
     $(".stampBtn", el).addEventListener("click", () => {
-      if (p.stamped) return;
+      if (el._stamped) return;
+      el._stamped = true;
       flip(false);
       setTimeout(() => {
-        p.stamped = true;
-        const d = new Date(), ds = `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-        $(".sd", el).textContent = ds; $(".pd", el).textContent = d.getFullYear() + "." + ds;
+        const d = new Date(), p2 = n => String(n).padStart(2, "0");
+        $(".sd", el).textContent = `${p2(d.getMonth() + 1)}.${p2(d.getDate())}`;
+        $(".pd", el).textContent = `${String(d.getFullYear()).slice(2)}.${p2(d.getMonth() + 1)}.${p2(d.getDate())}`;
+        $(".postmark", el).style.setProperty("--pr", (-12 + (Math.random() - .5) * 10).toFixed(1) + "deg");
         $(".stamp", el).classList.add("show"); $(".postmark", el).classList.add("show");
         renderProgress();
         setTimeout(() => {
-          const r = $("#done").getBoundingClientRect();
+          const ar = $("#albumBtn").getBoundingClientRect(), er = el.getBoundingClientRect();
           el.classList.add("fly");
-          el.style.transform = `translate(${(r.left + r.width / 2) / Z - el.offsetWidth * .1}px, ${(r.top + r.height / 2) / Z - el.offsetHeight * .1}px) scale(.2) rotate(8deg)`;
+          el.style.transform = `translate(${ar.left + ar.width / 2 - er.left - er.width / 2}px, ${ar.top + ar.height / 2 - er.top - er.height / 2}px) scale(.06) rotate(8deg)`;
           el.style.opacity = "0";
+          detail.classList.remove("show");
           setTimeout(() => {
-            const rec = { id: p.id, title: p.title, goal: p.goal, conds: p.conds, minutes: p.minutes, memo: p.memo || "",
-              startedAt: p.startedAt, sessions: p.sessions || 0, focus: p.focus || 0, doneAt: Date.now() };
-            S.done.push(rec);
-            remove(); renderDone();
-            $("#done").classList.add("gulp"); setTimeout(() => $("#done").classList.remove("gulp"), 500);
-          }, 600);
+            S.done.push({ id: p.id, title: p.title, goal: p.goal, conds: p.conds, minutes: p.minutes, memo: p.memo || "",
+              startedAt: p.startedAt, sessions: p.sessions || 0, focus: p.focus || 0, doneAt: Date.now() });
+            S.projects = S.projects.filter(x => x !== p); saveP();
+            closeDetail(true); renderBoard();
+            const ab = $("#albumBtn"); ab.classList.remove("gulp"); void ab.offsetWidth; ab.classList.add("gulp");
+          }, 620);
         }, 1400);
       }, el.classList.contains("back") ? 950 : 50);
     });
-    function toss() {
-      const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
-      if (!empty && !confirm(`扔掉「${p.title || "这张项目卡"}」？`)) return;
-      el.classList.add("fly"); el.style.opacity = "0";
-      el.style.transform += " translateY(30px) rotate(-6deg) scale(.9)";
-      setTimeout(remove, 450);
-    }
-
-    const ctl = { p, el, card, flip, focusTitle: () => ti.focus() };
-    projCtls.push(ctl);
-    renderText(); renderProgress(); renderMeta(); list.render(); card.sync();
-    return ctl;
+    opened = { p, el };
+    renderProgress(); list.render();
+    detail.classList.add("show");
+    requestAnimationFrame(grow);
+    if (fresh) setTimeout(() => ti.focus(), 60);
   }
-  S.projects.forEach(ProjectCard);
-
-  function newProject() {
-    const k = S.projects.length % 6;
-    const p = { id: uid(), title: "", goal: "", conds: [], minutes: 25, tucked: false,
-      pos: { x: innerWidth / 2 / Z - 180 - O.x + k * 26, y: 30 / Z - O.y + k * 22 } };
-    S.projects.push(p); saveP();
-    const c = ProjectCard(p);
-    c.card.raise();
-    c.el.classList.remove("hello"); void c.el.offsetWidth; c.el.classList.add("hello");
-    setTimeout(() => c.focusTitle(), 60);
+  function closeDetail(now) {
+    if (!opened) return;
+    const o = opened; opened = null;
+    if (o.el.contains(document.activeElement)) document.activeElement.blur();
+    detail.classList.remove("show");
+    const p = o.p;
+    if (S.projects.includes(p) && !p.title.trim() && !p.goal.trim() && !p.conds.length) { S.projects = S.projects.filter(x => x !== p); saveP(); }
+    renderBoard();
+    if (now) o.el.remove(); else setTimeout(() => o.el.remove(), 320);
   }
+  detail.addEventListener("pointerdown", e => { if (e.target === detail || e.target === holder) closeDetail(); });
   addEventListener("keydown", e => {
-    const a = document.activeElement;
-    if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable)) return;
-    if (e.key === "f" || e.key === "F") { const c = flippers.find(c => c.el.matches(":hover")); c && c.flip(); }
+    if (e.key !== "Escape" || !opened || $("#cmenu.show")) return;
+    if (typing()) { document.activeElement.blur(); return; }
+    closeDetail();
   });
-  $("#done").addEventListener("click", () => { location.href = "album.html"; });
-  $("#trayToday").addEventListener("click", () => todayCard.show());
-  $("#trayProject").addEventListener("click", newProject);
+  addEventListener("keydown", e => {
+    if (typing()) return;
+    if (e.key === "f" || e.key === "F") { const c = flippers.find(c => document.contains(c.el) && c.el.matches(":hover")); c && c.flip(); }
+    if ((e.key === "n" || e.key === "N") && page === 0 && !opened) newProject();
+  });
+  renderBoard(); saveP();
 
-  /* ───────── the timer: the green disc is the time left, one turn = an hour ───────── */
+  /* ───────── the timer: the green disc is the time left, one turn = an hour; no words ───────── */
   const TKEY2 = "paper-desk.timer.v1";
   const TM = Object.assign({ total: 1500, left: 1500, run: false, end: 0 }, load(TKEY2, {}) || {});
   const timerEl = $("#timer"), tbtn = $("#timerBtn");
@@ -1168,10 +1189,10 @@
     $(".disc", timerEl).style.setProperty("--deg", deg);
     $(".tclock", tbtn).style.setProperty("--deg", deg);
     const sec = Math.ceil(TM.left), m = Math.floor(sec / 60);
-    $(".hub", timerEl).textContent = `${String(m).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+    $(".hub span", timerEl).textContent = `${m}′`;
     $(".dial", timerEl).classList.toggle("run", TM.run);
     tbtn.classList.toggle("run", TM.run);
-    tbtn.title = TM.run ? `计时器 · 还剩 ${m} 分` : "计时器";
+    tbtn.title = TM.run ? `计时器 · 还剩 ${m + (sec % 60 ? 1 : 0)} 分` : "计时器";
   }
   const saveClock = () => store(TKEY2, TM);
   setInterval(() => {
@@ -1179,13 +1200,19 @@
     renderClock();
     if (TM.left <= 0) {
       TM.run = false; saveClock(); chime();
-      timerEl.classList.add("show");
+      showTimer(true);
       const d = $(".dial", timerEl); d.classList.remove("ring"); void d.offsetWidth; d.classList.add("ring");
     }
   }, 250);
-  tbtn.addEventListener("click", () => timerEl.classList.toggle("show"));
+  function showTimer(on) {
+    const r = tbtn.getBoundingClientRect();
+    timerEl.style.left = Math.min(innerWidth - 180, r.left + r.width / 2 - 84) + "px";
+    timerEl.classList.toggle("show", on);
+  }
+  tbtn.addEventListener("click", () => showTimer(!timerEl.classList.contains("show")));
+  addEventListener("pointerdown", e => { if (!e.target.closest("#timer, #timerBtn")) timerEl.classList.remove("show"); });
   $(".dial", timerEl).addEventListener("pointerdown", e => {
-    const r = e.currentTarget.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width * .3;
     let moved = false;
     const set = ev => {
@@ -1193,9 +1220,10 @@
       const min = Math.max(1, Math.round(ang / 6));
       TM.run = false; TM.total = TM.left = min * 60; renderClock();
     };
-    const mv = ev => { if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return; moved = true; set(ev); };
+    const mv = ev => { if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 6) return; moved = true; dial.classList.add("setting"); set(ev); };
     const up = () => {
       removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
+      dial.classList.remove("setting");
       if (!moved && onHub) {
         if (TM.run) { TM.left = Math.max(0, (TM.end - Date.now()) / 1000); TM.run = false; }
         else { if (TM.left <= 0) TM.left = TM.total; TM.run = true; TM.end = Date.now() + TM.left * 1000; }
@@ -1207,15 +1235,56 @@
     e.preventDefault();
   });
   renderClock();
-  renderDone(); saveP();
+
+  /* ───────── morning sun through the window, and the shadow of a branch swaying on the wall ───────── */
+  (function tree() {
+    const NS = "http://www.w3.org/2000/svg";
+    let seed = 11;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 1000 1000");
+    svg.setAttribute("preserveAspectRatio", "xMaxYMin slice");
+    let leaves = ["", ""], twigs = ["", ""];
+    function branch(x, y, a, len, w, depth, layer) {
+      const x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len;
+      const bend = (rnd() - .5) * len * .25, mx = (x + x2) / 2 - Math.sin(a) * bend, my = (y + y2) / 2 + Math.cos(a) * bend;
+      twigs[layer] += `<path d="M${x.toFixed(1)} ${y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke-width="${w.toFixed(1)}"/>`;
+      if (depth >= 1) {
+        const n = 2 + Math.floor(rnd() * 3);
+        for (let i = 0; i < n; i++) {
+          const t = .25 + rnd() * .75, side = rnd() < .5 ? -1 : 1;
+          const lx = x + (x2 - x) * t, ly = y + (y2 - y) * t, la = a + side * (.5 + rnd() * .7);
+          const L = 20 + rnd() * 18;
+          const cx = lx + Math.cos(la) * L * .55, cy = ly + Math.sin(la) * L * .55;
+          leaves[layer] += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(L * .55).toFixed(1)}" ry="${(L * .2).toFixed(1)}" transform="rotate(${(la * 180 / Math.PI).toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
+        }
+      }
+      if (depth >= 4) return;
+      const k = 1 + (rnd() < .6 ? 1 : 0);
+      for (let i = 0; i <= k; i++) branch(x2, y2, a + (i - k / 2) * (.45 + rnd() * .3) + (rnd() - .5) * .3, len * (.62 + rnd() * .15), w * .62, depth + 1, layer);
+    }
+    branch(1060, 40, Math.PI * .8, 260, 16, 0, 0);
+    branch(1040, 330, Math.PI * .93, 200, 11, 1, 1);
+    branch(1020, -40, Math.PI * .66, 220, 12, 1, 1);
+    svg.innerHTML = `<defs>
+        <filter id="tb1" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter>
+        <filter id="tb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="8"/></filter>
+        <filter id="tb3"><feGaussianBlur stdDeviation="16"/></filter></defs>
+      <g filter="url(#tb3)" fill="rgba(110,74,36,.10)"><rect x="300" y="-200" width="34" height="1500" transform="rotate(24 300 0)"/><rect x="-200" y="560" width="1500" height="30" transform="rotate(-8 0 560)"/></g>
+      <g class="sway2" filter="url(#tb2)"><g fill="none" stroke="rgba(90,60,30,.09)" stroke-linecap="round">${twigs[1]}</g><g fill="rgba(90,60,30,.09)">${leaves[1]}</g></g>
+      <g class="sway" filter="url(#tb1)"><g fill="none" stroke="rgba(80,52,24,.15)" stroke-linecap="round">${twigs[0]}</g><g fill="rgba(80,52,24,.15)">${leaves[0]}</g></g>`;
+    $("#light").appendChild(svg);
+  })();
 })();
 </script>
 <script>
+/* ═════════ the corkboard: sticky notes you drag, twist, pin, fold into a strip ═════════
+   Everything here is in board units: (0, 0) is the corkboard's top-left corner. */
 (() => {
   "use strict";
 
   /* ───────── constants ───────── */
-  const NW = 196, NH = 196, HW = NW / 2, HH = NH / 2, NH_MAX = 540;
+  const NW = 196, NH = 196, HW = NW / 2, NH_MAX = 540, FH = 40;
   const hh = n => (n.h || NH) / 2;
   const CATS = {
     work:  { c: "#f3e2a1", name: "工作" },
@@ -1227,25 +1296,16 @@
   const KEY = "paper-desk.memos.v1";
 
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // physics (px, s). Gravity pulls the held sheet to hang below your fingers; stiffness is the paper resisting the twist.
-  const G = reduced ? 300 : 1600;   // gravity
-  const KS = 300000;                // rotational stiffness of a sheet held between fingers
-  const DAMP = 4.2;                 // angular damping
-  const KACC = 0.85;                // how much hand acceleration swings the sheet
   const KR = 90, CR = 13;           // pinned: spring toward the pointer, damping
   const YANK = 270;                 // pull this far from the pin and it pops out
   const SNAP = Math.PI / 12;        // Shift while twisting snaps to 15°
-  const DRAWER_W = 14, DOCK_ZONE = 110;
-  let TAB_TOP = window.CARD_TABS_BOTTOM || 72;
-  addEventListener("cardtabs", e => { TAB_TOP = e.detail; renderTabs(); });
-  const TAB_H = 40, TAB_GAP = 6, GROUP_GAP = 20;
 
-  const desk = document.getElementById("desk");
-  const drawer = document.getElementById("drawer");
+  const board = document.getElementById("notes");
   const bin = document.querySelector(".bin");
   const dish = document.querySelector(".dish");
   const menu = document.getElementById("menu");
-  let W = innerWidth, H = innerHeight;
+  let BR = board.getBoundingClientRect(), W = board.clientWidth, H = board.clientHeight;
+  const syncBoard = () => { BR = board.getBoundingClientRect(); W = board.clientWidth; H = board.clientHeight; };
   let notes = [];
   let zTop = 10;
 
@@ -1254,98 +1314,14 @@
   const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
   const uid = () => Math.random().toString(36).slice(2, 9);
   const ease = (dt, k) => 1 - Math.exp(-dt * k);
+  // a fixed element's rectangle, in board units
+  const wr = el => { const r = el.getBoundingClientRect(); return { left: r.left - BR.left, top: r.top - BR.top, right: r.right - BR.left, bottom: r.bottom - BR.top, width: r.width, height: r.height }; };
 
-  /* ───────── the cloth: pan by dragging empty space, it grows where you put things ───────── */
-  // The desk starts at the left and reaches further to the right as you use it. Everything on it lives in "world" units:
-  // screen = world × Z. O is how far the desk has slid; mat is the cloth before sliding.
-  const MKEY = "paper-desk.mat.v2", BOTTOM = 96;
-  const worldEl = document.getElementById("world");
-  let O = { x: 0, y: 0 }, mat = null, Z = 1;
-  const panV = { x: 0, y: 0 };
-  let homing = null;
-  try { const d = JSON.parse(localStorage.getItem(MKEY)); if (d && d.mat) { O = d.o; mat = d.mat; Z = d.z || 1; } } catch {}
-  W = innerWidth / Z; H = innerHeight / Z;
-  if (!mat) mat = { l: 0, t: 0, r: innerWidth * 1.9, b: innerHeight - BOTTOM };
-  const wr = el => { const r = el.getBoundingClientRect(); return { left: r.left / Z, top: r.top / Z, right: r.right / Z, bottom: r.bottom / Z, width: r.width / Z, height: r.height / Z }; };
-  function setZoom(z, cx = innerWidth / 2, cy = innerHeight / 2) {
-    const z0 = Z;
-    Z = clamp(Math.round(z * 100) / 100, .5, 1.6);
-    if (Z === z0) return;
-    W = innerWidth / Z; H = innerHeight / Z;
-    worldEl.style.transform = `scale(${Z})`;
-    dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
-    pan(cx / Z - cx / z0, cy / Z - cy / z0, true);
-    const c = clampO(O); pan(c.x - O.x, c.y - O.y, true);
-    layoutMat(); saveMat(); renderTabs();
-  }
-  // there is no visible cloth any more: `mat` is just how far the desk reaches. Only the dots move with it.
-  function layoutMat() {
-    document.body.style.backgroundPosition = `${O.x * Z}px 0, ${O.x * Z}px 0, 0 0, 0 0, 0 0`;
-    dispatchEvent(new CustomEvent("deskpan", { detail: O }));
-  }
-  let mt = null;
-  function saveMat() { clearTimeout(mt); mt = setTimeout(() => { try { localStorage.setItem(MKEY, JSON.stringify({ o: O, mat, z: Z })); } catch {} }, 300); }
-  // the left edge of the cloth stays near the left of the screen; you can slide right as far as the cloth goes
-  function clampO(o) {
-    const fit = (lo, hi, v) => lo > hi ? (lo + hi) / 2 : clamp(v, lo, hi);
-    return { x: fit(W - 40 - mat.r, -mat.l, o.x), y: fit(H - BOTTOM / Z - mat.b, -mat.t, o.y) };
-  }
-  // slide the whole desk (cloth, notes, today's card); the tray, the edge tabs and the done pile stay put
-  function pan(dx, dy, free) {
-    const o = free ? { x: O.x + dx, y: O.y + dy } : clampO({ x: O.x + dx, y: O.y + dy });
-    dx = o.x - O.x; dy = o.y - O.y;
-    if (Math.abs(dx) < .01 && Math.abs(dy) < .01) return false;
-    O = o;
-    for (const n of notes) {
-      if (inDrawer(n) || n.mode === "trash") continue;
-      n.x += dx; n.y += dy;
-      if (n.t && n.mode === "place") { n.t.x += dx; n.t.y += dy; }
-      if (n.px != null) { n.px += dx; n.py += dy; }
-      if (n.cx != null) { n.cx += dx; n.cy += dy; }
-      draw(n);
-    }
-    layoutMat(); saveMat();
-    return true;
-  }
-  // a note left near the right hem: the cloth rolls out further to the right
-  function grow(n) {
-    const hx = n.x - O.x, room = 220, more = 700;
-    if (hx + HW <= mat.r - room) return;
-    mat.r = hx + HW + more;
-    saveMat();
-  }
-  function goTo(o) { homing = clampO(o); panV.x = panV.y = 0; }
-  function goHome() { setZoom(1); goTo({ x: 0, y: 0 }); }
-  // slide so that a rectangle on the cloth (before sliding) comes into view
-  function bringIntoView(x, y, w, h) {
-    let ox = O.x, oy = O.y;
-    if (x + ox < 30) ox = 30 - x; else if (x + w + ox > W - 150 / Z) ox = W - 150 / Z - w - x;
-    if (y + oy < 20) oy = 20 - y; else if (y + h + oy > H - BOTTOM / Z) oy = H - BOTTOM / Z - h - y;
-    goTo({ x: ox, y: oy });
-  }
-  window.DeskView = { bringIntoView, zoom: () => Z };
-  function panFrame(dt) {
-    if (homing) {
-      const k = 1 - Math.exp(-dt * 7);
-      const dx = homing.x - O.x, dy = homing.y - O.y;
-      if (Math.hypot(dx, dy) < 1) { pan(dx, dy); homing = null; return; }
-      if (!pan(dx * k, dy * k)) homing = null;
-      return;
-    }
-    if (act && act.type === "pan") return;
-    if (Math.hypot(panV.x, panV.y) < 8) return;
-    if (!pan(panV.x * dt, panV.y * dt)) { panV.x = panV.y = 0; return; }
-    const f = Math.exp(-dt * 4.5); panV.x *= f; panV.y *= f;
-  }
-
-  /* ───────── pointer, with smoothed velocity and acceleration ───────── */
-  const P = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, ax: 0, ay: 0 };
+  /* ───────── pointer, with smoothed velocity ───────── */
+  const P = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0 };
   function trackPointer(dt) {
     const rvx = (P.x - P.px) / dt, rvy = (P.y - P.py) / dt;
-    const ovx = P.vx, ovy = P.vy;
     P.vx += (rvx - P.vx) * 0.45; P.vy += (rvy - P.vy) * 0.45;
-    P.ax += ((P.vx - ovx) / dt - P.ax) * 0.3; P.ay += ((P.vy - ovy) / dt - P.ay) * 0.3;
-    P.ax = clamp(P.ax, -26000, 26000); P.ay = clamp(P.ay, -26000, 26000);
     P.px = P.x; P.py = P.y;
   }
 
@@ -1353,20 +1329,20 @@
   function makeNote(o) {
     const n = Object.assign({
       id: uid(), cat: "work", text: "", x: W / 2, y: H / 2, a: 0, w: 0, vx: 0, vy: 0,
-      s: 1, sT: 1, lift: 0, liftT: 0, pin: null, docked: false, dockedAt: 0, mode: "rest", z: ++zTop, createdAt: Date.now(),
+      s: 1, sT: 1, lift: 0, liftT: 0, pin: null, folded: false, mode: "rest", z: ++zTop, createdAt: Date.now(),
     }, o);
     const el = document.createElement("div");
     el.className = "note";
-    el.innerHTML = '<div class="sheet"><div class="text" spellcheck="false"></div></div>' +
+    el.innerHTML = '<div class="sheet"><div class="text" spellcheck="false"></div></div><i class="fold" title="折起 / 展开"></i>' +
       '<i class="rh tl"></i><i class="rh tr"></i><i class="rh bl"></i><i class="rh br"></i>';
     n.el = el; n.sheet = el.firstChild; n.textEl = n.sheet.firstChild;
     n.textEl.textContent = n.text;
     el._note = n;
-    desk.appendChild(el);
+    el.classList.toggle("folded", !!n.folded);
+    board.appendChild(el);
     notes.push(n);
     paint(n); fitHeight(n, true); renderPin(n); draw(n);
     n.textEl.addEventListener("input", () => fitHeight(n));
-    if (n.docked) el.classList.add("hidden");
     zTop = Math.max(zTop, n.z);
     return n;
   }
@@ -1380,20 +1356,19 @@
     pin.style.top = (hh(n) + n.pin.v) + "px";
   }
   function front(n) { n.z = ++zTop; n.el.style.zIndex = n.z; }
-  window.deskFront = () => ++zTop;
 
   function draw(n) {
     const el = n.el;
     el.style.transform = `translate(${n.x - HW}px,${n.y - hh(n)}px) rotate(${n.a}rad) scale(${n.s})`;
     el.style.zIndex = n.z;
-    // light comes from above the screen, so shadows are offset in screen space, not note space
+    // light comes from the window, so shadows are offset in screen space, not note space
     const L = Math.max(0, n.lift), d = 1.5 + L * 18, b = 2 + L * 30;
     el.style.setProperty("--lift", L.toFixed(3));
-    el.style.setProperty("--sx", (d * Math.sin(n.a)).toFixed(1) + "px");
+    el.style.setProperty("--sx", (d * Math.sin(n.a) - d * .35).toFixed(1) + "px");
     el.style.setProperty("--sy", (d * Math.cos(n.a)).toFixed(1) + "px");
     el.style.setProperty("--sb", b.toFixed(1) + "px");
-    el.style.setProperty("--sa", (0.2 + L * 0.06).toFixed(3));
-    const ps = rot(1.5, 2.5, -n.a);
+    el.style.setProperty("--sa", (0.24 + L * 0.06).toFixed(3));
+    const ps = rot(-1, 2.5, -n.a);
     el.style.setProperty("--psx", ps.x.toFixed(1) + "px");
     el.style.setProperty("--psy", ps.y.toFixed(1) + "px");
   }
@@ -1404,7 +1379,6 @@
     let moving = true;
     switch (n.mode) {
       case "drag": {
-        // carried flat: the note keeps its angle and simply follows the hand
         n.w = 0;
         const r2 = rot(-n.gx * n.s, -n.gy * n.s, n.a);
         n.x = P.x + r2.x; n.y = P.y + r2.y;
@@ -1412,7 +1386,6 @@
         break;
       }
       case "rotate": {
-        // pinned: the sheet can only turn around the pin
         const dx = P.x - n.px, dy = P.y - n.py;
         if (Math.hypot(dx, dy) > YANK) { popPin(n); break; }
         if (n.arm > 22) {
@@ -1425,7 +1398,6 @@
         break;
       }
       case "spin": {
-        // twisting by a corner: the sheet follows your hand around its centre (or its pin), with a little paper lag
         const pvx = n.pin ? n.px : n.cx, pvy = n.pin ? n.py : n.cy;
         let target = n.spin0 + angDiff(Math.atan2(P.y - pvy, P.x - pvx), n.ang0);
         if (P.shift) target = Math.round(target / SNAP) * SNAP;
@@ -1450,18 +1422,18 @@
       case "toss": {
         n.x += n.vx * dt; n.y += n.vy * dt;
         const f = Math.exp(-5.5 * dt); n.vx *= f; n.vy *= f;
-        n.w = 0;
-        const mL = mat.l + O.x + HW * .6, mT = mat.t + O.y + hh(n) * .6, mR = mat.r + O.x - HW * .6, mB = mat.b + O.y - hh(n) * .6;
-        if (n.x < mL) { n.x = mL; n.vx = Math.abs(n.vx) * 0.35; n.w *= -0.5; }
-        if (n.y < mT) { n.y = mT; n.vy = Math.abs(n.vy) * 0.35; n.w *= -0.5; }
-        if (n.y > mB) { n.y = mB; n.vy = -Math.abs(n.vy) * 0.35; n.w *= -0.5; }
-        if (n.x + HW * 0.35 > W - DRAWER_W) { dock(n); break; }
+        // the frame stops it
+        const mL = HW * .6, mT = hh(n) * .6, mR = W - HW * .6, mB = H - hh(n) * .6;
+        if (n.x < mL) { n.x = mL; n.vx = Math.abs(n.vx) * 0.35; }
+        if (n.x > mR) { n.x = mR; n.vx = -Math.abs(n.vx) * 0.35; }
+        if (n.y < mT) { n.y = mT; n.vy = Math.abs(n.vy) * 0.35; }
+        if (n.y > mB) { n.y = mB; n.vy = -Math.abs(n.vy) * 0.35; }
         const sp = Math.hypot(n.vx, n.vy);
         n.liftT = Math.min(0.9, sp / 700);
-        if (sp < 35) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); grow(n); }
+        if (sp < 35) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); }
         break;
       }
-      case "dock": case "peek": case "retract": case "place": case "trash": {
+      case "place": case "trash": {
         const t = n.t;
         n.x += (t.x - n.x) * k; n.y += (t.y - n.y) * k;
         n.a += angDiff(t.a, n.a) * k; n.s += (t.s - n.s) * k;
@@ -1481,119 +1453,51 @@
     const pv = rot(n.pin.u, n.pin.v, n.a);
     n.x = n.px - pv.x; n.y = n.py - pv.y;
   }
-
   function arrive(n) {
-    const m = n.mode;
     n.x = n.t.x; n.y = n.t.y; n.s = n.t.s;
-    if (m === "dock" || m === "retract") {
-      n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
-      renderTabs(); save();
-    } else if (m === "place") { n.mode = "rest"; n.liftT = 0; save(); }
-    else if (m === "trash") {
-      n.el.remove(); notes = notes.filter(x => x !== n); save();
-    }
-    // "peek" just stays peeking
+    if (n.mode === "place") { n.mode = "rest"; n.liftT = 0; save(); }
+    else if (n.mode === "trash") { n.el.remove(); notes = notes.filter(x => x !== n); save(); }
   }
 
-  /* ───────── drawer: index tabs on the right edge ───────── */
-  const tabEls = new Map();
-  const tabY = new Map();
-  function inDrawer(n) { return n.docked || n.mode === "dock" || n.mode === "peek" || n.mode === "retract"; }
-  function renderTabs() {
-    const list = notes.filter(inDrawer).sort((a, b) =>
-      ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat) || a.dockedAt - b.dockedAt);
-    const counts = {};
-    list.forEach(n => counts[n.cat] = (counts[n.cat] || 0) + 1);
-    let y = TAB_TOP, prev = null;
-    const room = innerHeight - TAB_TOP - 40;
-    const need = list.length * (TAB_H + TAB_GAP) + Object.keys(counts).length * GROUP_GAP;
-    const squeeze = need > room ? room / need : 1;
-    const seen = new Set();
-    for (const n of list) {
-      if (prev && prev !== n.cat) y += GROUP_GAP * squeeze;
-      let el = tabEls.get(n.id);
-      if (!el) {
-        el = document.createElement("div"); el.className = "tab enter"; el._note = n;
-        drawer.appendChild(el); tabEls.set(n.id, el);
-        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("enter")));
-      }
-      el.style.setProperty("--c", CATS[n.cat].c);
-      el.style.top = y + "px";
-      el.style.height = (TAB_H * Math.max(.6, squeeze)) + "px";
-      el.title = firstLine(n);
-      if (prev !== n.cat) el.dataset.label = CATS[n.cat].name + " · " + counts[n.cat];
-      else delete el.dataset.label;
-      tabY.set(n.id, (y + TAB_H * Math.max(.6, squeeze) / 2) / Z);
-      seen.add(n.id);
-      prev = n.cat;
-      y += (TAB_H + TAB_GAP) * squeeze;
-    }
-    for (const [id, el] of tabEls) if (!seen.has(id)) { el.remove(); tabEls.delete(id); }
-  }
-  const firstLine = n => (n.text.split("\n")[0] || "").slice(0, 30);
-  const clampY = y => clamp(y, HH + 10, H - HH - 10);
-
-  function dock(n) {
-    if (n.pin) { n.pin = null; renderPin(n); }
+  /* ───────── folding: a note becomes one strip with its first line; T folds all of them and lines them up by colour ───────── */
+  function setFold(n, v) {
+    if (!!n.folded === v) return;
     endEdit(n);
-    n.mode = "dock"; n.dockedAt = Date.now();
-    renderTabs();
-    n.t = { x: W + 60, y: tabY.get(n.id) || H / 2, a: 0, s: 0.5 };
-    n.liftT = 0.4;
-  }
-  function peek(n) {
-    if (n.mode !== "rest" && n.mode !== "retract" && n.mode !== "peek") return;
-    if (n.el.classList.contains("hidden")) {
-      n.el.classList.remove("hidden");
-      n.x = W + 110; n.y = clampY(tabY.get(n.id)); n.a = 0; n.s = 1;
-    }
-    front(n);
-    n.mode = "peek";
-    n.t = { x: W - DRAWER_W - 46, y: clampY(tabY.get(n.id)), a: -0.03, s: 1 };
-    n.liftT = 0.25;
-    tabEls.get(n.id)?.classList.add("peeking");
-    drawer.classList.add("peeking");
-  }
-  function retract(n) {
-    if (n.mode !== "peek") return;
-    n.mode = "retract";
-    n.t = { x: W + 110, y: n.y, a: 0, s: 1 };
-    n.liftT = 0;
-    tabEls.get(n.id)?.classList.remove("peeking");
-    if (!notes.some(m => m.mode === "peek")) drawer.classList.remove("peeking");
-  }
-  function undock(n, drag) {
-    n.docked = false;
-    tabEls.get(n.id)?.classList.remove("peeking");
-    drawer.classList.remove("peeking");
-    n.el.classList.remove("hidden");
-    if (n.mode !== "peek") { n.x = W - 40; n.y = clampY(tabY.get(n.id)); n.a = 0; n.s = 1; }
-    front(n);
-    renderTabs();
-    if (drag) { startDrag(n); return; }
-    n.mode = "place";
-    n.t = { x: W - DRAWER_W - 250 - Math.random() * 90, y: n.y, a: (Math.random() - .5) * .12, s: 1 };
-    n.liftT = 0.6;
+    n.folded = v;
+    n.el.classList.toggle("folded", v);
+    fitHeight(n);
+    // unfolded near the bottom: it slides up so the whole sheet shows
+    if (!v && n.mode === "rest" && !n.pin && n.y + hh(n) > H - 8) { n.mode = "place"; n.t = { x: n.x, y: H - hh(n) - 12, a: n.a, s: 1 }; n.liftT = .3; }
+    save();
   }
   function tidy() {
+    syncBoard();
+    const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
+    const colW = Math.min(NW + 30, (W - 36) / Math.max(1, cols.length));
     let i = 0;
-    for (const n of notes) {
-      if (n.docked || n.pin || inDrawer(n) || n.mode === "trash") continue;
-      setTimeout(() => { if (!n.pin && !inDrawer(n) && n.mode !== "drag") dock(n); }, i++ * 55);
-    }
+    cols.forEach((list, c) => {
+      const gap = Math.min(FH + 10, (H - 40 - FH) / Math.max(1, list.length - 1));
+      list.forEach((n, j) => {
+        setTimeout(() => {
+          if (n.mode === "trash" || n.mode === "drag" || n.pin) return;
+          setFold(n, true);
+          front(n);
+          n.mode = "place";
+          n.t = { x: W - 18 - (cols.length - c) * colW + colW / 2, y: 22 + FH / 2 + j * gap, a: (Math.random() - .5) * .03, s: 1 };
+          n.liftT = .5;
+        }, i++ * 40);
+      });
+    });
   }
 
   /* ───────── interactions ───────── */
   let act = null;           // current gesture
-  let retractTimer = null;
 
   function startDrag(n) {
     endEdit(n);
     const l = rot(P.x - n.x, P.y - n.y, -n.a);
     n.gx = clamp(l.x / n.s, -HW + 4, HW - 4);
     n.gy = clamp(l.y / n.s, -hh(n) + 4, hh(n) - 4);
-    n.a0 = n.a;          // the paper wants to keep the angle you gave it
-    n.aHome = n.a;
     n.w = 0; n.mode = "drag";
     front(n);
     n.el.classList.add("grabbing");
@@ -1622,7 +1526,7 @@
     act = { type: "spin", n };
   }
   function turnTo(n, a) {
-    if (inDrawer(n) || n.mode === "trash") return;
+    if (n.mode === "trash") return;
     if (n.pin) { const pv = rot(n.pin.u, n.pin.v, n.a); n.px = n.x + pv.x; n.py = n.y + pv.y; }
     n.aT = n.a + angDiff(a, n.a); n.mode = "turnTo";
   }
@@ -1630,24 +1534,15 @@
   // mouse wheel over a note nudges its angle (Shift: 15° steps)
   addEventListener("wheel", e => {
     const ne = e.target.closest && e.target.closest(".note");
-    if (!ne) {
-      if (act || (e.target.closest && e.target.closest(".pcard, #help, #menu"))) return;
-      e.preventDefault(); homing = null;
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { pan(-e.deltaX, 0); return; }
-      if (e.shiftKey) { pan(-e.deltaY, 0); return; }
-      setZoom(Z * Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX, e.clientY);
-      return;
-    }
-    if (act) return;
+    if (!ne || act) return;
     const n = ne._note;
-    if (n.pin || inDrawer(n) || n.mode === "trash" || n.el.classList.contains("editing")) return;
+    if (n.pin || n.mode === "trash" || n.el.classList.contains("editing")) return;
     e.preventDefault();
     const dir = Math.sign(e.deltaY || e.deltaX);
     if (!dir) return;
     const base = n.mode === "turnTo" ? n.aT : n.a;
     const next = e.shiftKey ? (Math.round(base / SNAP) + dir) * SNAP : base + dir * (2 * Math.PI / 180);
     if (n.mode !== "turnTo" && n.mode !== "rest") return;
-    if (n.pin) { const pv = rot(n.pin.u, n.pin.v, n.a); n.px = n.x + pv.x; n.py = n.y + pv.y; }
     n.aT = next; n.mode = "turnTo";
   }, { passive: false });
 
@@ -1661,9 +1556,7 @@
     if (n.mode === "rotate") { n.mode = "swing"; return; }
     if (n.mode !== "drag") return;
     if (overBin()) { trash(n); return; }
-    const vx = clamp(P.vx, -2600, 2600), vy = clamp(P.vy, -2600, 2600);
-    if (n.x > W - DRAWER_W - DOCK_ZONE || (vx > 900 && n.x + vx / 5.5 > W - DRAWER_W)) { dock(n); return; }
-    n.vx = vx; n.vy = vy; n.mode = "toss";
+    n.vx = clamp(P.vx, -2600, 2600); n.vy = clamp(P.vy, -2600, 2600); n.mode = "toss";
     if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
   }
   function trash(n) {
@@ -1673,8 +1566,8 @@
     n.t = { x: r.left + r.width / 2, y: r.top + r.height / 2, a: n.a + 2.4, s: 0.05 };
   }
   function overBin() {
-    const r = wr(bin);
-    return P.x > r.left - 16 && P.x < r.right + 16 && P.y > r.top - 16 && P.y < r.bottom + 16;
+    const r = bin.getBoundingClientRect(), x = P.x + BR.left, y = P.y + BR.top;
+    return x > r.left - 16 && x < r.right + 16 && y > r.top - 16 && y < r.bottom + 16;
   }
 
   /* pins */
@@ -1686,15 +1579,15 @@
     movePin(x, y);
     act = { type: "pin" };
   }
-  function movePin(x, y) { floatPin.style.transform = `translate(${x * Z - 10}px,${y * Z - 14}px) scale(1.25)`; }
+  function movePin(x, y) { floatPin.style.transform = `translate(${x + BR.left - 10}px,${y + BR.top - 14}px) scale(1.25)`; }
   function dropPin() {
     floatPin.style.visibility = "hidden";
-    const hit = document.elementsFromPoint(P.x * Z, P.y * Z).find(e => e.classList && e.classList.contains("note"));
+    const hit = document.elementsFromPoint(P.x + BR.left, P.y + BR.top).find(e => e.classList && e.classList.contains("note"));
     floatPin.style.visibility = "";
     const n = hit && hit._note;
-    if (n && !inDrawer(n) && n.mode !== "trash") {
+    if (n && n.mode !== "trash") {
       const l = rot(P.x - n.x, P.y - n.y, -n.a);
-      if (Math.abs(l.x) < HW - 8 && Math.abs(l.y) < hh(n) - 8) {
+      if (Math.abs(l.x) < HW - 8 && Math.abs(l.y) < hh(n) - 6) {
         floatPin.remove(); floatPin = null;
         if (n.mode === "toss" || n.mode === "place") { n.mode = "rest"; n.liftT = 0; }
         n.pin = { u: l.x / n.s, v: l.y / n.s };
@@ -1711,7 +1604,7 @@
     const el = document.createElement("div");
     el.className = "pin free held";
     document.body.appendChild(el);
-    el.style.transform = `translate(${x * Z - 10}px,${y * Z - 10}px) scale(${popped ? 1.4 : 1.2})`;
+    el.style.transform = `translate(${x + BR.left - 10}px,${y + BR.top - 10}px) scale(${popped ? 1.4 : 1.2})`;
     requestAnimationFrame(() => flyPinEl(el));
   }
   function flyPinEl(el) {
@@ -1728,8 +1621,11 @@
   // measure the text and let the sheet grow (or shrink back) downwards; the top edge doesn't move
   function fitHeight(n, initial) {
     const el = n.el, old = n.h || NH;
-    el.style.height = NH + "px";
-    const h = clamp(Math.ceil(n.textEl.scrollHeight), NH, NH_MAX);
+    let h = FH;
+    if (!n.folded) {
+      el.style.height = NH + "px";
+      h = clamp(Math.ceil(n.textEl.scrollHeight), NH, NH_MAX);
+    }
     el.style.height = h + "px";
     n.h = h;
     if (initial || h === old) return;
@@ -1739,7 +1635,7 @@
     draw(n);
   }
   function beginEdit(n) {
-    if (inDrawer(n)) return;
+    if (n.folded) setFold(n, false);
     n.el.classList.add("editing");
     const t = n.textEl;
     try { t.contentEditable = "plaintext-only"; } catch { t.contentEditable = "true"; }
@@ -1755,7 +1651,7 @@
     fitHeight(n); save();
   }
 
-  /* menu */
+  /* menu: colour, fold, throw away */
   function openMenu(n, x, y) {
     menu.innerHTML = "";
     for (const c of ORDER) {
@@ -1765,50 +1661,55 @@
       d.onclick = () => { n.cat = c; paint(n); closeMenu(); save(); };
       menu.appendChild(d);
     }
+    menu.appendChild(Object.assign(document.createElement("span"), { className: "sep" }));
+    const fb = document.createElement("button");
+    fb.textContent = n.folded ? "展开" : "折起";
+    fb.onclick = () => { closeMenu(); setFold(n, !n.folded); };
+    menu.appendChild(fb);
     const del = document.createElement("button");
-    del.className = "del"; del.textContent = "✕"; del.title = "扔掉";
+    del.textContent = "扔掉";
     del.onclick = () => { closeMenu(); trash(n); };
     menu.appendChild(del);
     menu.classList.add("show");
-    menu.style.left = Math.min(x, innerWidth - 180) + "px"; menu.style.top = Math.min(y, innerHeight - 50) + "px";
+    menu.style.left = Math.min(x, innerWidth - 240) + "px"; menu.style.top = Math.min(y, innerHeight - 50) + "px";
   }
   function closeMenu() { menu.classList.remove("show"); }
 
   /* pointer routing */
+  const toBoard = e => { BR = board.getBoundingClientRect(); P.x = e.clientX - BR.left; P.y = e.clientY - BR.top; P.shift = e.shiftKey; };
   addEventListener("pointermove", e => {
-    P.x = e.clientX / Z; P.y = e.clientY / Z; P.shift = e.shiftKey;
+    toBoard(e);
     if (!act) return;
-    if (act.type === "pan") { pan(P.x - act.lx, P.y - act.ly); act.lx = P.x; act.ly = P.y; return; }
     if (act.type === "pin") movePin(P.x, P.y);
-    if (act.type === "pending") {
-      if (Math.hypot(P.x - act.sx, P.y - act.sy) > 5) act.onDrag();
-    }
+    if (act.type === "pending" && Math.hypot(P.x - act.sx, P.y - act.sy) > 5) act.onDrag();
     if (act && act.type === "note") {
       document.body.classList.add("carrying");
-      drawer.classList.toggle("hot", act.n.x > W - DRAWER_W - DOCK_ZONE);
       bin.classList.toggle("hot", overBin());
     }
   });
 
   addEventListener("pointerdown", e => {
-    P.x = P.px = e.clientX / Z; P.y = P.py = e.clientY / Z; P.vx = P.vy = P.ax = P.ay = 0;
+    toBoard(e); P.px = P.x; P.py = P.y; P.vx = P.vy = 0;
     if (e.button !== 0) return;
     if (!e.target.closest("#menu")) closeMenu();
     const t = e.target;
+    const onCork = () => { if (window.Desk && Desk.page() !== 1) { Desk.go(1); e.preventDefault(); return false; } return true; };
 
     // a pin in the dish, or a pin on a note
-    if (t.classList.contains("pin")) {
+    if (t.classList.contains("pin") && !t.classList.contains("free")) {
+      if (!onCork()) return;
       const ne = t.closest(".note");
       if (ne) { const n = ne._note; n.pin = null; renderPin(n); save(); }
       grabPin(P.x, P.y);
       e.preventDefault();
       return;
     }
-    if (t.closest(".dish")) { grabPin(P.x, P.y); e.preventDefault(); return; }
+    if (t.closest(".dish")) { if (!onCork()) return; grabPin(P.x, P.y); e.preventDefault(); return; }
 
     // tear a fresh sheet off a pad
     const pad = t.closest(".pad");
     if (pad) {
+      if (!onCork()) return;
       const cat = pad.dataset.cat;
       const r = wr(pad);
       act = {
@@ -1821,7 +1722,7 @@
           const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top, s: 0.32, a: 0 });
           front(n);
           n.mode = "place";
-          n.t = { x: W * (0.35 + Math.random() * 0.25), y: H * (0.3 + Math.random() * 0.25), a: (Math.random() - .5) * .14, s: 1 };
+          n.t = { x: W * (0.35 + Math.random() * 0.3), y: H * (0.3 + Math.random() * 0.25), a: (Math.random() - .5) * .14, s: 1 };
           n.liftT = 0.8;
           setTimeout(() => beginEdit(n), 520);
         },
@@ -1830,25 +1731,13 @@
       return;
     }
 
-    // index tab: click to pull out, drag to pull it straight into your hand
-    const tab = t.closest(".tab");
-    if (tab) {
-      const n = tab._note;
-      act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
-      e.preventDefault();
-      return;
-    }
+    if (t.closest(".fold")) { const n = t.closest(".note")._note; setFold(n, !n.folded); e.preventDefault(); return; }
 
     const ne = t.closest(".note");
     if (ne) {
       const n = ne._note;
       if (n.el.classList.contains("editing") && t.closest(".text")) return;
-      if (n.mode === "peek") {
-        act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
-        e.preventDefault();
-        return;
-      }
-      if (n.mode === "trash" || n.mode === "dock" || n.mode === "retract") return;
+      if (n.mode === "trash") return;
       for (const m of notes) if (m !== n) endEdit(m);
       if (n.pin) { const pe = n.el.querySelector(":scope > .pin"); pe.classList.remove("nudge"); void pe.offsetWidth; pe.classList.add("nudge"); e.preventDefault(); return; }
       if (t.classList.contains("rh")) startSpin(n); else startDrag(n);
@@ -1856,13 +1745,6 @@
       return;
     }
     for (const m of notes) endEdit(m);
-    // empty cloth: take hold of the desk itself
-    if (!t.closest(".pcard, #tray, #drawer, #menu, #help, #done, .ibtn, button, input, textarea, a")) {
-      homing = null; panV.x = panV.y = 0;
-      act = { type: "pan", lx: P.x, ly: P.y };
-      document.body.classList.add("panning");
-      e.preventDefault();
-    }
   });
 
   addEventListener("pointerup", () => {
@@ -1872,13 +1754,12 @@
     else if (a.type === "pin") dropPin();
     else if (a.type === "note" || a.type === "rotate") { act = a; releaseNote(a.n); act = null; }
     else if (a.type === "spin") { a.n.mode = "rest"; a.n.liftT = 0; a.n.el.classList.remove("spinning"); save(); }
-    else if (a.type === "pan") { panV.x = clamp(P.vx, -2600, 2600); panV.y = clamp(P.vy, -2600, 2600); document.body.classList.remove("panning"); }
-    drawer.classList.remove("hot"); bin.classList.remove("hot"); document.body.classList.remove("carrying");
+    bin.classList.remove("hot"); document.body.classList.remove("carrying");
   });
 
   addEventListener("dblclick", e => {
-    if (!e.target.closest(".note, .pcard, #tray, #drawer, #menu, #help, #done, .ibtn")) { goHome(); return; }
     if (e.target.classList.contains("rh") && !e.target.closest(".pinned")) { turnTo(e.target.closest(".note")._note, 0); return; }
+    if (e.target.closest(".fold")) return;
     const ne = e.target.closest(".note");
     if (ne && !ne.classList.contains("editing")) beginEdit(ne._note);
   });
@@ -1889,58 +1770,30 @@
     openMenu(ne._note, e.clientX, e.clientY);
   });
 
-  // hover a tab to peek, leave to tuck it back
-  drawer.addEventListener("pointerover", e => {
-    const tab = e.target.closest(".tab");
-    if (!tab || act) return;
-    clearTimeout(retractTimer);
-    for (const n of notes) if (n.mode === "peek" && n !== tab._note) retract(n);
-    peek(tab._note);
-  });
-  addEventListener("pointerover", e => {
-    if (act) return;
-    if (e.target.closest(".tab")) return;
-    const ne = e.target.closest(".note");
-    if (ne && ne._note.mode === "peek") { clearTimeout(retractTimer); return; }
-    const peeking = notes.filter(n => n.mode === "peek");
-    if (!peeking.length) return;
-    clearTimeout(retractTimer);
-    retractTimer = setTimeout(() => peeking.forEach(retract), 140);
-  });
-
   addEventListener("keydown", e => {
     if (document.activeElement && document.activeElement.isContentEditable) {
       if (e.key === "Escape") notes.forEach(endEdit);
       return;
     }
-    if (e.key === "t" || e.key === "T") tidy();
-    if (e.key === "Escape") { closeMenu(); document.getElementById("help").classList.remove("show"); }
-  });
-  document.getElementById("tidy").onclick = tidy;
-  // the toolbar tucks away to the left edge, like the notes do to the right
-  const trayEl = document.getElementById("tray"), trayTab = document.getElementById("trayTab");
-  const setTray = tucked => {
-    trayEl.classList.toggle("tucked", tucked);
-    setTimeout(() => trayTab.classList.toggle("show", tucked), tucked ? 300 : 0);
-    if (tucked) document.getElementById("help").classList.remove("show");
-    try { localStorage.setItem("paper-desk.tray.v1", tucked ? "1" : ""); } catch {}
-  };
-  document.getElementById("trayTuck").onclick = () => setTray(true);
-  trayTab.onclick = () => setTray(false);
-  try { if (localStorage.getItem("paper-desk.tray.v1")) { trayEl.classList.add("tucked"); trayTab.classList.add("show"); } } catch {}
-  // ? opens the little help card
-  addEventListener("keydown", e => {
     const a = document.activeElement;
-    if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable)) return;
-    if (e.key === "?") document.getElementById("help").classList.toggle("show");
+    if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return;
+    if ((e.key === "t" || e.key === "T") && !e.metaKey && !e.ctrlKey) { if (Desk.page() !== 1) { Desk.go(1); setTimeout(tidy, 450); } else tidy(); }
+    if (e.key === "Escape") closeMenu();
   });
+  document.getElementById("tidy").onclick = () => { if (Desk.page() !== 1) { Desk.go(1); setTimeout(tidy, 450); } else tidy(); };
+  addEventListener("deskpage", () => { notes.forEach(endEdit); closeMenu(); });
 
-  addEventListener("resize", () => {
-    W = innerWidth / Z; H = innerHeight / Z;
-    layoutMat();
-    for (const n of notes) if (!inDrawer(n) && n.x > W - DRAWER_W - 20) { n.x = W - DRAWER_W - HW - 20; draw(n); }
-    renderTabs();
-  });
+  // keep every note on the board when the window changes size
+  function keepIn() {
+    syncBoard();
+    for (const n of notes) {
+      if (n.mode !== "rest") continue;
+      const x = clamp(n.x, HW * .5, W - HW * .5), y = clamp(n.y, hh(n) * .5, H - hh(n) * .5);
+      if (n.pin && (x !== n.x || y !== n.y)) { n.pin = null; renderPin(n); }
+      n.x = x; n.y = y; draw(n);
+    }
+  }
+  addEventListener("resize", () => { keepIn(); save(); });
 
   /* ───────── persistence ───────── */
   let saveT = null;
@@ -1949,33 +1802,39 @@
     saveT = setTimeout(() => {
       const data = notes.filter(n => n.mode !== "trash").map(n => ({
         id: n.id, cat: n.cat, text: n.el.classList.contains("editing") ? n.textEl.innerText : n.text,
-        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin,
-        docked: inDrawer(n), dockedAt: n.dockedAt, z: n.z, createdAt: n.createdAt,
+        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded,
+        z: n.z, createdAt: n.createdAt,
       }));
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
     }, 300);
   }
   function load() {
     let data = null;
-    // older versions kept the notes under paper-desk.desk.v1; carry them over (they no longer hold tasks)
     try { data = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem("paper-desk.desk.v1")); } catch {}
-    if (Array.isArray(data)) data.forEach(d => delete d.task);
-    if (!Array.isArray(data)) data = demo();
-    data.sort((a, b) => a.z - b.z).forEach(d => makeNote(d));
-    renderTabs();
+    let fresh = false;
+    if (!Array.isArray(data)) { data = demo(); fresh = true; }
+    // from the old endless desk: notes tucked into the edge come back folded, and everything is lined up once
+    const wasDesk = data.some(d => "docked" in d);
+    data.sort((a, b) => a.z - b.z).forEach(d => {
+      delete d.task;
+      if (d.docked) d.folded = true;
+      delete d.docked; delete d.dockedAt;
+      makeNote(d);
+    });
+    keepIn();
+    if (wasDesk && !fresh) setTimeout(tidy, 300);
+    save();
   }
   function demo() {
     const t = Date.now();
     return [
-      { cat: "work", text: "周五前交稿\n先搭结构，再填内容。", x: 900, y: 170, a: -.05, pin: { u: 0, v: -76 } },
-      { cat: "life", text: "买猫粮\n灯泡 3000K · 胶带", x: 1010, y: 420, a: .03 },
-      { cat: "idea", text: "桌面往右还很长\n按住空白处拖过去看看。", x: 1320, y: 300, a: -.025 },
-      { cat: "work", text: "回三封邮件", docked: true, dockedAt: t - 5 },
-      { cat: "work", text: "会议纪要 10/26\n结论：先做性能基线", docked: true, dockedAt: t - 4 },
-      { cat: "life", text: "周末去植物园\n下雨就改拼图", docked: true, dockedAt: t - 3 },
-      { cat: "idea", text: "任务卡做成正反面\n正面目标，背面条件", docked: true, dockedAt: t - 2 },
-      { cat: "study", text: "《深度工作》第 3 章\n记下三个可执行的点", docked: true, dockedAt: t - 1 },
-    ].map((d, i) => Object.assign({ z: 10 + i }, d));
+      { cat: "work", text: "周五前交稿\n先搭结构，再填内容。", x: W * .3, y: 150, a: -.05, pin: { u: 0, v: -76 } },
+      { cat: "life", text: "买猫粮\n灯泡 3000K · 胶带", x: W * .55, y: 200, a: .04 },
+      { cat: "idea", text: "右上角那个小尖角\n点一下，便签就折成一条。", x: W * .42, y: H - 150, a: -.025 },
+      { cat: "work", text: "会议纪要 10/26\n结论：先做性能基线", x: W - 140, y: 44, folded: true, a: .01 },
+      { cat: "life", text: "周末去植物园\n下雨就改拼图", x: W - 140, y: 94, folded: true, a: -.01 },
+      { cat: "study", text: "《深度工作》第 3 章\n记下三个可执行的点", x: W - 140, y: 144, folded: true, a: .015 },
+    ].map((d, i) => Object.assign({ z: 10 + i, createdAt: t - 6 + i }, d));
   }
 
   /* ───────── main loop ───────── */
@@ -1984,14 +1843,9 @@
     const dt = Math.min(0.033, Math.max(0.001, (now - last) / 1000));
     last = now;
     trackPointer(dt);
-    panFrame(dt);
     for (const n of notes.slice()) if (step(n, dt)) draw(n);
     requestAnimationFrame(frame);
   }
-
-  worldEl.style.transform = `scale(${Z})`;
-  dispatchEvent(new CustomEvent("deskzoom", { detail: Z }));
-  layoutMat();
   load();
   requestAnimationFrame(frame);
 })();
