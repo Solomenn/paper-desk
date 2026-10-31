@@ -1,9 +1,8 @@
-/* 雪国列车 · the carriage (index.html, visual-lab): you are sitting in a compartment of the snow-country train. The boards hang on
-   its panelled wall; to their right a window onto the snowy forest going by, velvet curtains tied back, a brass sconce, the luggage
-   rack overhead with a suitcase on it, and a little fold-down table under the window with an oil lamp, a mantel clock, books and a
-   magnifying glass. The things are Poly Haven photo-scanned models (CC0); they can be picked up with the eye — the view leans a
-   little with the mouse — and clicked: each one opens a part of the desk. The carriage sways as it runs.
-   three.js (MIT) from jsDelivr. */
+/* 雪国列车 · the carriage (index.html): you sit in a compartment of the snow-country train. The boards hang on its mahogany wall;
+   to their right a window onto the snowy forest going by, curtains tied back with cord, a brass sconce with a frosted globe,
+   the luggage rack and a carved cornice overhead, a polished fold-down table under the window. Only a scene — nothing to click;
+   the carriage sways as it runs and the view leans a touch with the mouse.
+   three.js (MIT) from jsDelivr; wood textures from Poly Haven (CC0). */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -28,7 +27,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 246, 228, .95), rgba(255, 246, 228, 0) 100%),
                 radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #fff3e0 0%, #f2d9b0 32%, #cfb393 64%, #ad9884 100%); }
   html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
-    background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 150, 60, .26), transparent 70%),
+    background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 170, 90, .12), transparent 70%),
                 radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
                 linear-gradient(0deg, rgba(255, 140, 60, .06), transparent 30%); }
   html[data-theme="day"] #car3dLit { mix-blend-mode: soft-light;
@@ -36,16 +35,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   html[data-theme="day"] #car3dLit2 { mix-blend-mode: screen;
     background: radial-gradient(60% 80% at 95% 45%, rgba(225, 238, 252, .30), rgba(205, 222, 240, .10) 70%); }
   html[data-theme="day"] #car3dVig { background: radial-gradient(130% 110% at 70% 45%, transparent 60%, rgba(120, 145, 175, .25) 100%); }
-  #car3dTip { position: fixed; z-index: 50000; pointer-events: none; padding: 5px 10px; border-radius: 4px; font: 12.5px var(--sans, sans-serif); letter-spacing: .08em;
-    color: #f3e7cf; background: rgba(20, 14, 9, .82); box-shadow: 0 0 0 1px rgba(214, 178, 110, .35); opacity: 0; transform: translate(-50%, -140%); transition: opacity .15s; white-space: nowrap; }
-  #car3dTip.on { opacity: 1; }
 </style>`);
 document.body.classList.add("car3d");
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; document.body.prepend(canvas);
 const vig = document.createElement("i"); vig.id = "car3dVig"; canvas.after(vig);
 const lit = document.createElement("i"); lit.id = "car3dLit"; document.body.appendChild(lit);
 const lit2 = document.createElement("i"); lit2.id = "car3dLit2"; document.body.appendChild(lit2);
-const tip = document.createElement("div"); tip.id = "car3dTip"; document.body.appendChild(tip);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75));
@@ -67,16 +62,57 @@ function tex(name, kind, rep, srgb) {
   const t = tl.load(`${A}tex/${name}/${kind}.jpg`); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]);
   if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
+// mahogany tongue-and-groove: narrow vertical boards, each a little different, fine grain, a dark groove and a lit edge between them
+function plankTexture() {
+  const W = 1024, H = 1024, N = 8, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  let sd = 7; const r = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < N; i++) {
+    const x0 = i * W / N, bw = W / N, k = .85 + r() * .3;
+    g.fillStyle = `rgb(${78 * k | 0},${38 * k | 0},${26 * k | 0})`; g.fillRect(x0, 0, bw, H);
+    for (let j = 0; j < 70; j++) {                       // grain: long wavy streaks
+      const gx = x0 + r() * bw, a = .04 + r() * .09, dark = r() < .6;
+      g.strokeStyle = dark ? `rgba(30,10,4,${a})` : `rgba(160,80,50,${a * .8})`; g.lineWidth = .6 + r() * 1.8; g.beginPath(); g.moveTo(gx, 0);
+      for (let y = 0; y <= H; y += 32) g.lineTo(gx + Math.sin(y * .006 + j) * (2 + r() * 2), y); g.stroke();
+    }
+    const sh = g.createLinearGradient(x0, 0, x0 + bw, 0); sh.addColorStop(0, "rgba(255,200,160,.06)"); sh.addColorStop(.5, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.18)");
+    g.fillStyle = sh; g.fillRect(x0, 0, bw, H);
+    g.fillStyle = "rgba(12,4,2,.9)"; g.fillRect(x0, 0, 3, H); g.fillStyle = "rgba(220,150,110,.25)"; g.fillRect(x0 + 3, 0, 1.5, H);
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / .56, 1 / .56); t.anisotropy = 8; return t;
+}
+// the carved cornice: scrolls and leaves in old gilt on dark wood
+function corniceTexture() {
+  const W = 512, H = 128, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  g.fillStyle = "#2a120a"; g.fillRect(0, 0, W, H);
+  const gold = (a) => `rgba(150,112,64,${a * .6})`;
+  g.fillStyle = gold(.55); g.fillRect(0, 8, W, 4); g.fillRect(0, H - 12, W, 4);
+  g.lineCap = "round";
+  for (const [x, f] of [[128, 1], [384, -1]]) {
+    for (const [lw, col, dy] of [[9, "rgba(0,0,0,.55)", 3], [7, gold(.85), 0], [2, "rgba(255,226,170,.5)", -2]]) {
+      g.strokeStyle = col; g.lineWidth = lw; g.beginPath();
+      g.moveTo(x - 120, 64 + dy); g.bezierCurveTo(x - 80, 18 + dy, x - 20, 30 + dy, x - 30 * f, 64 + dy);
+      g.arc(x - 12 * f, 64 + dy, 18, Math.PI, Math.PI * (f > 0 ? 2.6 : -.6), f < 0);
+      g.moveTo(x + 120, 64 + dy); g.bezierCurveTo(x + 80, 110 + dy, x + 20, 98 + dy, x + 30 * f, 64 + dy);
+      g.stroke();
+    }
+    g.fillStyle = gold(.8); g.beginPath(); g.ellipse(x, 64, 10, 14, 0, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+}
 const wood = (name, rep, extra = {}) => new THREE.MeshStandardMaterial({ map: tex(name, "diff", rep, true), normalMap: tex(name, "nor", rep), roughnessMap: tex(name, "rough", rep), fog: false, ...extra });
 const M = {
-  panel: wood("american_walnut_veneer", [.7, .7], { color: 0x8a5e3e, roughness: .55 }),
+  panel: new THREE.MeshStandardMaterial({ map: plankTexture(), roughness: .36, envMapIntensity: .6, fog: false }),
+  cornice: new THREE.MeshStandardMaterial({ map: corniceTexture(), roughness: .5, metalness: .15, fog: false }),
   mould: wood("lacquered_cherry_wood", [3, 3], { color: 0x6e4228, roughness: .4 }),
   walnut: wood("american_walnut_veneer", [1.5, 1.5], { color: 0x8a6448 }),
   cherry: wood("lacquered_cherry_wood", [2, 2], { color: 0x9a6a4a, roughness: .5 }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc9a25a, metalness: 1, roughness: .32, fog: false }),
   iron: new THREE.MeshStandardMaterial({ color: 0x2a2b2d, metalness: .6, roughness: .55, fog: false }),
   ceiling: new THREE.MeshStandardMaterial({ color: 0xe9dfc9, roughness: .9, fog: false }),
-  velvet: new THREE.MeshPhysicalMaterial({ color: 0x2c0a10, roughness: .92, sheen: .35, sheenColor: new THREE.Color(0x6a2430), sheenRoughness: .7, envMapIntensity: .2, side: THREE.DoubleSide, fog: false }),
+  velvet: new THREE.MeshPhysicalMaterial({ color: 0x3e2a1e, roughness: .9, sheen: .4, sheenColor: new THREE.Color(0xb08a68), sheenRoughness: .7, envMapIntensity: .2, side: THREE.DoubleSide, fog: false }),
+  tabletop: new THREE.MeshStandardMaterial({ map: tex("lacquered_cherry_wood", "diff", [1.5, 1.5], true), color: 0x8a4a30, roughness: .2, envMapIntensity: .9, fog: false }),
+  cord: new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: .8, fog: false }),
+  globe: new THREE.MeshStandardMaterial({ color: 0xfff3e2, emissive: 0xffc890, emissiveIntensity: 1.6, roughness: .55, fog: false }),
   glass: new THREE.MeshPhysicalMaterial({ color: 0x9fb4c8, roughness: .05, metalness: 0, transparent: true, opacity: .05, envMapIntensity: .15, fog: false, depthWrite: false }),
 };
 
@@ -84,7 +120,6 @@ const M = {
 const room = new THREE.Group(); scene.add(room);
 let win = { x: 1.3, y0: 1.0, y1: 1.85, w: .7 };   // set from the viewport in layout()
 const outside = new THREE.Group(); scene.add(outside);
-const props = new THREE.Group(); scene.add(props);
 function rrect(s, x, y, w, h, r) { s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r);
   s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); }
 function buildRoom() {
@@ -95,23 +130,15 @@ function buildRoom() {
   const hole = new THREE.Path(); rrect(hole, wx, win.y0, win.w, wh, .09); s.holes.push(hole);
   const wall = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .06, bevelEnabled: false }), M.panel);
   wall.position.z = -.06; wall.receiveShadow = true; room.add(wall);
-  // the upper wall in neat raised panels: lacquered stiles and rails, a thin bead moulding inside each panel, a frieze under the rack
   const bx = (w, h, x, y, z, d, m = M.mould) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.receiveShadow = true; room.add(b); return b; };
-  const yA = .9, yB = 2.02, PW = .58, wl = wx - .06, wr = wx + win.w + .06;
-  bx(R - L, .07, 0, yA + .035, .012, .024); bx(R - L, .09, 0, yB + .045, .012, .024); bx(R - L, .03, 0, H - .015, .02, .04, M.brass);
-  for (let x = L; x < R; x += PW) {
-    const inWin = x > wl - PW && x < wr;
-    if (!(x > wl && x < wr)) bx(.055, yB - yA, x, (yA + yB) / 2, .012, .024);
-    if (inWin) continue;
-    const x0 = x + .06, x1 = x + PW - .06, y0 = yA + .1, y1 = yB - .08;
-    bx(x1 - x0, .012, (x0 + x1) / 2, y0, .006, .012); bx(x1 - x0, .012, (x0 + x1) / 2, y1, .006, .012);
-    bx(.012, y1 - y0, x0, (y0 + y1) / 2, .006, .012); bx(.012, y1 - y0, x1, (y0 + y1) / 2, .006, .012);
-  }
-  bx(.055, yB - yA, wl, (yA + yB) / 2, .012, .024); bx(.055, yB - yA, wr, (yA + yB) / 2, .012, .024);
+  // the chair rail over the wainscot, and the carved cornice up under the ceiling
+  bx(R - L, .06, 0, .9, .014, .03);
+  const cor = bx(R - L, .1, 0, 2.31, .03, .06, M.cornice); M.cornice.map.repeat.set((R - L) / .2, 1);
+  bx(R - L, .025, 0, 2.225, .05, .09); bx(R - L, .03, 0, H - .015, .04, .08);
   // the wainscot below the chair rail: walnut, then a brass rail
   const ws = new THREE.Shape(); ws.moveTo(L, -.5); ws.lineTo(R, -.5); ws.lineTo(R, .86); ws.lineTo(L, .86); ws.lineTo(L, -.5);
-  const wain = new THREE.Mesh(new THREE.ExtrudeGeometry(ws, { depth: .015, bevelEnabled: false }), M.walnut); wain.receiveShadow = true; room.add(wain);
-  for (let x = L; x < R; x += .62) { const g = new THREE.Mesh(new THREE.BoxGeometry(.012, .62, .006), M.iron); g.position.set(x, .45, .018); room.add(g); }
+  const wain = new THREE.Mesh(new THREE.ExtrudeGeometry(ws, { depth: .015, bevelEnabled: false }), M.mould); wain.receiveShadow = true; room.add(wain);
+  for (let x = L; x < R; x += .5) { bx(.05, .8, x, .45, .02, .012); bx(.36, .012, x + .25, .74, .02, .01); bx(.36, .012, x + .25, .16, .02, .01); bx(.012, .58, x + .07, .45, .02, .01); bx(.012, .58, x + .43, .45, .02, .01); }
   const rail = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, R - L, 12), M.brass); rail.rotation.z = Math.PI / 2; rail.position.set(0, .875, .03); room.add(rail);
   // the window frame (walnut, rounded), its sill and the glass
   const fs = new THREE.Shape(); rrect(fs, wx - .07, win.y0 - .07, win.w + .14, wh + .14, .14);
@@ -119,7 +146,6 @@ function buildRoom() {
   const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(fs, { depth: .05, bevelEnabled: true, bevelSize: .012, bevelThickness: .012, bevelSegments: 3 }), M.cherry);
   frame.castShadow = frame.receiveShadow = true; room.add(frame);
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(win.w, wh), M.glass); glass.position.set(win.x, (win.y0 + win.y1) / 2, -.03); room.add(glass);
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(win.w, .025, .03), M.cherry); bar.position.set(win.x, win.y0 + wh * .62, -.02); room.add(bar);
   // the ceiling: a cream curve over the top, a brass luggage rack along under it
   const ceil = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, R - L, 32, 1, true, Math.PI * .5, Math.PI * .32), M.ceiling);
   ceil.rotation.z = Math.PI / 2; ceil.position.set(0, H - 1.38, 1.4); room.add(ceil);
@@ -133,11 +159,15 @@ function buildRoom() {
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(.011, .011, win.w + .7, 12), M.brass); rod.rotation.z = Math.PI / 2; rod.position.set(win.x, win.y1 + .14, .09); room.add(rod);
   for (const side of [-1, 1]) room.add(curtain(side));
   // the fold-down table under the window, on two brass brackets
-  const top = new THREE.Mesh(new THREE.BoxGeometry(win.w + .2, .035, .42), M.cherry); top.position.set(win.x, .78, .21); top.castShadow = top.receiveShadow = true; room.add(top);
-  for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(.02, .22, .02), M.brass); b.position.set(win.x + sx * (win.w / 2 - .04), .67, .12); b.rotation.x = .75; room.add(b); }
+  const tw = win.w + .1, ts = new THREE.Shape(); ts.moveTo(-tw / 2, 0); ts.lineTo(tw / 2, 0); ts.absellipse(0, 0, tw / 2, .26, 0, Math.PI, false);
+  const top = new THREE.Mesh(new THREE.ExtrudeGeometry(ts, { depth: .03, bevelEnabled: true, bevelSize: .008, bevelThickness: .008, bevelSegments: 4, curveSegments: 40 }), M.tabletop);
+  top.rotation.x = Math.PI / 2; top.position.set(win.x, .8, .01); top.castShadow = top.receiveShadow = true; room.add(top);
+  const col = new THREE.Mesh(new THREE.LatheGeometry([[.07, 0], [.07, .02], [.03, .05], [.022, .12], [.03, .3], [.02, .5], [.026, .7], [.05, .77], [.05, .785]].map(([r, y]) => new THREE.Vector2(r, y)), 24), M.tabletop);
+  col.position.set(win.x, 0, .14); col.castShadow = col.receiveShadow = true; room.add(col);
+  buildSconce();
 }
 function curtain(side) {
-  const w = .34, h = win.y1 - win.y0 + .62, g = new THREE.PlaneGeometry(w, h, 36, 40), p = g.attributes.position, tieY = .38;
+  const w = .26, h = win.y1 - win.y0 + .62, g = new THREE.PlaneGeometry(w, h, 36, 40), p = g.attributes.position, tieY = .38;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i), u = (x / w + .5), v = (y / h + .5);       // v: 0 bottom … 1 top
     const gather = 1 - .62 * Math.exp(-Math.pow((v - tieY) / .16, 2));                 // pinched at the tie-back
@@ -147,8 +177,24 @@ function curtain(side) {
   }
   g.computeVertexNormals();
   const m = new THREE.Mesh(g, M.velvet); m.castShadow = true; m.receiveShadow = true;
-  m.position.set(win.x + side * (win.w / 2 + .1), win.y1 + .14 - h / 2, .1);
-  const grp = new THREE.Group(); grp.add(m); return grp;
+  m.position.set(win.x + side * (win.w / 2 + .06), win.y1 + .14 - h / 2, .1);
+  const grp = new THREE.Group(); grp.add(m);
+  const ty = m.position.y - h / 2 + tieY * h, tx = m.position.x - side * .03;
+  const cord = new THREE.Mesh(new THREE.TorusGeometry(.05, .007, 8, 24), M.cord); cord.rotation.x = Math.PI / 2; cord.scale.set(1, .55, 1); cord.position.set(tx, ty, .13); grp.add(cord);
+  const tas = new THREE.Mesh(new THREE.ConeGeometry(.016, .07, 10), M.cord); tas.position.set(tx + side * .045, ty - .05, .17); grp.add(tas);
+  return grp;
+}
+
+// the sconce on the pier between the boards and the window: a brass back-plate, a curled arm, a frosted globe
+let globe = null, boardEdge = .97;
+function buildSconce() {
+  const g = new THREE.Group(), x = Math.max(boardEdge + .09, win.x - win.w / 2 - .2);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .012, 24), M.brass); plate.rotation.x = Math.PI / 2; plate.scale.set(1, 1, 1.9); plate.position.set(0, -.02, .006); g.add(plate);
+  const arm = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, -.04, .01), new THREE.Vector3(0, -.09, .13), new THREE.Vector3(0, .02, .14)), 20, .006, 8), M.brass); g.add(arm);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(.03, .016, .03, 20), M.brass); cup.position.set(0, .035, .14); g.add(cup);
+  globe = new THREE.Mesh(new THREE.SphereGeometry(.062, 32, 24), M.globe); globe.position.set(0, .1, .14); g.add(globe);
+  g.position.set(x, 1.55, .0); room.add(g);
+  wallLamp.position.set(x, 1.65, .2);
 }
 
 /* ───────── outside: the snowy forest going by ───────── */
@@ -217,40 +263,8 @@ const hemi = new THREE.HemisphereLight(0xffe6c4, 0x2a1c12, .25); scene.add(hemi)
 const moon = new THREE.DirectionalLight(0x9db6dd, .5); moon.position.set(-6, 10, -14); scene.add(moon);
 const ceilLight = new THREE.RectAreaLight(0xffd9a0, 1.6, 5, .5); ceilLight.position.set(-.6, 2.3, 1.4); ceilLight.lookAt(-.6, 0, .4); scene.add(ceilLight);
 const winLight = new THREE.RectAreaLight(0x8fb0e0, 2, 1, 1); scene.add(winLight);
-const sconce = new THREE.PointLight(0xffa456, 3, 3.6, 1.5); scene.add(sconce);
-const flame = new THREE.PointLight(0xff9a45, 5, 4.5, 1.3); flame.castShadow = true; flame.shadow.mapSize.set(512, 512); flame.shadow.bias = -.002; flame.shadow.radius = 6; scene.add(flame);
-
-/* ───────── the things on the table, and the suitcase on the rack ───────── */
-const loader = new GLTFLoader(), things = [];
-const ACTIONS = {
-  lamp: { tip: "油灯 · 点灯 / 熄灯（日夜）", go: () => window.Theme && Theme.toggle() },
-  clock: { tip: "座钟 · 上车，开始专注", go: () => (location.href = "focus.html") },
-  books: { tip: "精装书 · 手账书架", go: () => (location.href = "journal.html") },
-  glass: { tip: "放大镜 · 快捷键与说明", go: () => document.getElementById("help")?.classList.toggle("show") },
-  suitcase: { tip: "旅行箱 · 卡册", go: () => (location.href = document.getElementById("albumBtn")?.getAttribute("href") || "album.html") },
-  lantern: { tip: "壁灯 · 炉火与风雪声", go: () => window.Sound && (Sound.on || Sound.setOn(true), Sound.setAmb(!Sound.amb)) },
-};
-async function thing(key, file, place, keep) {
-  const g = (await loader.loadAsync(`${A}models/${file}/${file}.gltf`)).scene;
-  if (keep) g.traverse(o => { if (o.isMesh && !keep(o)) o.visible = false; });
-  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) { o.material = o.material.clone(); o.material.fog = false; } } });
-  const holder = new THREE.Group(); holder.add(g); holder.userData = { key, base: new THREE.Vector3(), lift: 0 }; place(holder, g);
-  holder.userData.base.copy(holder.position); props.add(holder); things.push(holder); return holder;
-}
-let lampFlame = null;
-async function loadThings() {
-  const tableY = .7975;
-  await Promise.all([
-    thing("lamp", "vintage_oil_lamp", h => { h.scale.setScalar(.62); h.position.set(win.x - win.w / 2 + .12, tableY, .18); }).then(h => h.traverse(o => { if (o.isMesh && /flame/.test(o.name)) { lampFlame = o; o.material.emissive = new THREE.Color(0xffa040); o.material.emissiveIntensity = 3; } })),
-    thing("clock", "mantel_clock_01", h => { h.position.set(win.x + .05, tableY, .12); h.rotation.y = -.12; }),
-    thing("books", "book_encyclopedia_set_01", h => { h.position.set(win.x + win.w / 2 - .22, tableY, .26); h.rotation.y = .35; h.scale.setScalar(.82); },
-      o => { const n = parseInt((o.name.match(/Cube0(\d+)/) || [])[1] || "0", 10); return n === 4 || (n >= 49 && n <= 53); }),
-    thing("glass", "magnifying_glass_01", h => { h.position.set(win.x - .1, tableY + .007, .33); h.rotation.set(-Math.PI / 2, 0, .5); }),
-    thing("suitcase", "vintage_suitcase", h => { h.scale.setScalar(.62); h.rotation.set(-Math.PI / 2, 0, .05); h.position.set(win.x - .12, 2.13, .3); }, o => /suitcase_01/.test(o.name)),
-    thing("lantern", "Lantern_01", h => { h.position.set(win.x + win.w / 2 - .06, 1.72, .16); h.scale.setScalar(.95); }),
-  ]);
-  layoutLights(); placeLit();
-}
+const sconce = new THREE.SpotLight(0xffd6a8, 6, 4, .55, .9, 1.6); scene.add(sconce); scene.add(sconce.target);
+const wallLamp = new THREE.PointLight(0xffcf9c, 3, 3.2, 1.8); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
 
 /* ───────── fit the window to the strip right of the boards ───────── */
 function layout() {
@@ -258,19 +272,16 @@ function layout() {
   const halfW = EYE.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
   const side = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidew")) || 300;
   const fx = 1 - side / 2 / W;                               // the strip's middle
-  win.x = (fx * 2 - 1) * halfW; win.w = Math.max(.42, side / W * 2 * halfW * .8);
+  boardEdge = ((1 - (side + 4) / W) * 2 - 1) * halfW;
+  const strip = halfW - boardEdge;                           // the wall showing right of the boards
+  win.w = Math.max(.36, strip * .5); win.x = boardEdge + strip * .55;
   buildRoom(); buildOutside();
-  if (things.length) relayoutThings();
-}
-function relayoutThings() { /* the things follow the window when the viewport changes */
-  const dx = win.x - (layout.lastX ?? win.x); layout.lastX = win.x;
-  things.forEach(h => { h.position.x += dx; h.userData.base.x += dx; });
   layoutLights();
 }
 function layoutLights() {
   winLight.position.set(win.x, (win.y0 + win.y1) / 2, -.02); winLight.width = win.w; winLight.height = win.y1 - win.y0; winLight.lookAt(win.x, (win.y0 + win.y1) / 2, 3);
-  const ln = things.find(h => h.userData.key === "lantern"); if (ln) sconce.position.set(ln.position.x, ln.position.y + .15, .25);
-  const lp = things.find(h => h.userData.key === "lamp"); if (lp) flame.position.set(lp.position.x, lp.position.y + .38, lp.position.z + .02);
+  sconce.position.set(win.x - .1, 2.35, 1.1); sconce.target.position.set(win.x, .8, .25);
+
   layout.lastX = win.x;
 }
 
@@ -280,22 +291,23 @@ function applyTheme() {
   // night: the carriage is lit only by the flames; outside it is cold blue snow.  day: high-key, white and pale blue, soft blue shadows
   if (sky) { sky.material.uniforms.top.value.set(n ? 0x03070f : 0x98b6d8); sky.material.uniforms.bot.value.set(n ? 0x1a2c4c : 0xe8f0f8); }
   scene.background = new THREE.Color(n ? 0x03060c : 0xe6eef6);
-  scene.fog = new THREE.FogExp2(n ? 0x122140 : 0xe4edf6, n ? .011 : .0075);
-  if (ground) { ground.material.color.set(n ? 0x9fb4d4 : 0xffffff); ground.material.emissive.set(n ? 0x16264a : 0xe2ecf7); ground.material.emissiveIntensity = n ? .75 : .6; }
+  scene.fog = n ? new THREE.FogExp2(0x122140, .011) : null;
+  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x7a6048 : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0x8a8480);
+  if (ground) { ground.material.color.set(n ? 0x9fb4d4 : 0xb4c3d4); ground.material.emissive.set(n ? 0x16264a : 0x9fb2c8); ground.material.emissiveIntensity = n ? .75 : .3; }
   hemi.intensity = n ? .05 : 2.1; hemi.color.set(n ? 0xffe6c4 : 0xe4eefa); hemi.groundColor.set(n ? 0x1a120c : 0x9c8a78);
   moon.intensity = n ? .9 : 2.2; moon.color.set(n ? 0x7d9ccc : 0xfff6e8);
   ceilLight.intensity = n ? .18 : .5; ceilLight.color.set(n ? 0xffc890 : 0xf2f6ff);
   winLight.intensity = n ? .9 : 16; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
-  sconce.intensity = n ? 3 : 0; flame.intensity = n ? 5 : 0; if (lampFlame) lampFlame.visible = n;
+  sconce.intensity = n ? 3 : 0; wallLamp.intensity = n ? 3.2 : 0; M.globe.emissiveIntensity = n ? 1.6 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
   renderer.toneMappingExposure = n ? .95 : 1.35;
   trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xd6e2ee)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
-  bloom.strength = n ? .8 : .22; bloom.threshold = n ? .7 : .93; bloom.radius = n ? .7 : .9;
+  bloom.strength = n ? .5 : .18; bloom.threshold = n ? .82 : .95; bloom.radius = n ? .7 : .9;
   placeLit();
 }
 // where the lamp is on screen: the board's light falls off from there
 function placeLit() {
-  const lp = things.find(h => h.userData.key === "lamp"); if (!lp) return;
-  const v = new THREE.Vector3(lp.position.x, lp.position.y + .38, lp.position.z).project(camera);
+  if (!globe) return;
+  const v = globe.getWorldPosition(new THREE.Vector3()).project(camera);
   document.documentElement.style.setProperty("--lx", ((v.x + 1) / 2 * 100).toFixed(1) + "%");
   document.documentElement.style.setProperty("--ly", ((1 - v.y) / 2 * 100).toFixed(1) + "%");
 }
@@ -307,26 +319,9 @@ composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .45, .6, .82); composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-/* ───────── hover, click, and the view leaning with the mouse ───────── */
-const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(9, 9), lean = { x: 0, y: 0, tx: 0, ty: 0 };
-let hot = null;
-addEventListener("pointermove", e => {
-  mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-  lean.tx = mouse.x; lean.ty = mouse.y;
-  tip.style.left = e.clientX + "px"; tip.style.top = e.clientY + "px";
-});
-function pick() {
-  ray.setFromCamera(mouse, camera);
-  const hit = ray.intersectObjects(things, true)[0];
-  let h = hit && hit.object; while (h && !things.includes(h)) h = h.parent;
-  // only when nothing of the page is over that spot
-  if (h && document.elementFromPoint((mouse.x + 1) / 2 * innerWidth, (1 - mouse.y) / 2 * innerHeight) !== canvas) h = null;
-  if (h !== hot) {
-    hot = h; canvas.style.cursor = h ? "pointer" : "";
-    tip.textContent = h ? ACTIONS[h.userData.key].tip : ""; tip.classList.toggle("on", !!h);
-  }
-}
-canvas.addEventListener("click", () => { if (hot) { window.Sound && Sound.play("pickUp", { vol: .5 }); ACTIONS[hot.userData.key].go(); } });
+/* ───────── the view leans a touch with the mouse ───────── */
+const lean = { x: 0, y: 0, tx: 0, ty: 0 };
+addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
 
 /* ───────── the loop: the forest goes by, the carriage sways ───────── */
 let t0 = performance.now(), jolt = 0, nextJolt = 4;
@@ -341,17 +336,14 @@ function frame(now) {
   camera.position.set(EYE.x + lean.x * .07, EYE.y + lean.y * .04 + sy, EYE.z);
   camera.lookAt(LOOK); camera.rotation.z += roll;
   // the hovered thing rises a little
-  things.forEach(h => { const u = h.userData; u.lift += ((h === hot ? 1 : 0) - u.lift) * .15; h.position.y = u.base.y + u.lift * .015; });
-  if (lampFlame && night()) { const f = .85 + Math.sin(t * 13) * .06 + Math.sin(t * 7.3) * .05; flame.intensity = 5 * f; lampFlame.scale.y = f; }
-  pick();
   composer.render();
   requestAnimationFrame(frame);
 }
 
 layout(); applyTheme();
 addEventListener("resize", () => { layout(); applyTheme(); });
-loadThings().then(() => { applyTheme(); }).catch(e => console.error("carriage things", e));
+let loaded = false; THREE.DefaultLoadingManager.onLoad = () => { loaded = true; };
 // ?still: no loop — render on demand (for checking frames without a GPU)
-window.__carDbg = () => ({ win, cam: camera.position.toArray(), things: things.map(h => { const bb = new THREE.Box3().setFromObject(h); return [h.userData.key, bb.min.toArray().map(v=>+v.toFixed(2)), bb.max.toArray().map(v=>+v.toFixed(2))]; }) });
-if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => things.length >= 6 }; }
+window.__carDbg = () => ({ win, boardEdge, cam: camera.position.toArray() });
+if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded }; }
 else requestAnimationFrame(frame);
