@@ -606,20 +606,12 @@
   .lane h3 { justify-content: center; }
   .lane h3::before { content: ""; flex: 1; height: 2px; margin-right: 6px; align-self: center; background: rgba(240, 238, 228, .28); border-radius: 2px; filter: url(#chalky); }
 
-  /* centred project cards: title, goal and each task (box and words together) in the middle */
+  /* centred project cards: the title and the goal in the middle; the tasks stay on the left */
   .projc .head .tin, .projc .face.b .ttl { text-align: center; }
   .projc .head { padding-left: 54px; }
   .projc .head .pn { width: 44px; text-align: right; margin-left: -8px; }
   .projc .goal { text-align: center; }
-  .projc .chk li { justify-content: center; }
-  .projc .chk li textarea { flex: 0 1 auto; field-sizing: content; min-width: 3em; max-width: calc(100% - 64px); }
-  .projc .chk li.new textarea { min-width: 1.5em; }
-  .projc .chk li.sub { padding-left: 0; }
-  .projc .chk li.sub .box { margin-left: 26px; }
-  .projc .chk .sbar { left: 15%; right: 15%; }
   .mini b, .mini p { text-align: center; }
-  .mini .msteps { display: flex; flex-direction: column; align-items: center; }
-  .mini .mstep { max-width: 100%; }
 </style>
 </head>
 <body>
