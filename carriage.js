@@ -38,11 +38,11 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 RectAreaLightUniformsLib.init();
 
-window.__step = "renderer"; const scene = new THREE.Scene();
+const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;   // soft reflections for brass and glass
 scene.environmentIntensity = .35;
-window.__step = "env"; const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 120);
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 120);
 const EYE = new THREE.Vector3(0, 1.35, 3.0), LOOK = new THREE.Vector3(0, 1.35, 0);
 
 /* ───────── materials ───────── */
@@ -288,7 +288,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-window.__step = "layout"; layout(); window.__step = "theme"; applyTheme(); window.__step = "loop";
+layout(); applyTheme();
 addEventListener("resize", () => { layout(); applyTheme(); });
 loadThings().then(() => { applyTheme(); }).catch(e => console.error("carriage things", e));
 // ?still: no loop — render on demand (for checking frames without a GPU)
