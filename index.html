@@ -325,8 +325,6 @@
     padding: 6px 14px; border-radius: 999px; cursor: pointer; display: none; animation: pop .4s var(--ease); }
   .stampBtn:hover { background: var(--stamp); color: var(--paper); }
   .projc.ready .stampBtn { display: block; }
-  .fbtn.toss { opacity: 0; transition: opacity .2s; }
-  .projc:hover .fbtn.toss { opacity: 1; }
   @keyframes pop { from { transform: scale(.8); opacity: 0; } }
   .dialwrap { flex: 1; display: grid; place-items: center; }
   .dial { width: 176px; height: 176px; border-radius: 50%; position: relative; cursor: pointer; touch-action: none;
@@ -424,7 +422,7 @@
         <textarea class="goal" data-k="goal" rows="1" placeholder="目标"></textarea>
         <ul class="chk"></ul>
       </div>
-      <div class="foot"><button class="fbtn toss" title="扔掉">✕</button><button class="stampBtn">盖章</button></div>
+      <div class="foot"><button class="stampBtn">盖章</button></div>
       <i class="curl" title="翻面"></i>
     </div></div>
     <div class="face b"><div class="sheetc post">
@@ -987,7 +985,7 @@
         { label: el.classList.contains("back") ? "翻回正面" : "翻到背面", fn: () => flip() },
         { label: "加一条", fn: () => $(".chk li.new textarea", el).focus() },
         el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
-        { label: "扔掉", danger: true, fn: () => $(".toss", el).click() },
+        { label: "扔掉", danger: true, fn: toss },
         "-",
       ].filter(Boolean),
     });
@@ -1064,13 +1062,13 @@
         }, 1400);
       }, el.classList.contains("back") ? 50 : 950);
     });
-    $(".toss", el).addEventListener("click", () => {
+    function toss() {
       const empty = !p.title.trim() && !p.goal.trim() && !p.conds.length;
       if (!empty && !confirm(`扔掉「${p.title || "这张项目卡"}」？`)) return;
       el.classList.add("fly"); el.style.opacity = "0";
       el.style.transform += " translateY(30px) rotate(-6deg) scale(.9)";
       setTimeout(remove, 450);
-    });
+    }
 
     const ctl = { p, el, card, flip, focusTitle: () => ti.focus() };
     projCtls.push(ctl);
