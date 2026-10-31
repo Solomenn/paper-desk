@@ -13,7 +13,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
-    min-height:100vh;background:radial-gradient(120% 90% at 12% 0%,rgba(255,250,236,.95),rgba(255,250,236,0) 60%),#ece5d6;color:#3b3a33;
+    min-height:100vh;background:radial-gradient(120% 90% at 12% 0%,rgba(255,250,236,.95),rgba(255,250,236,0) 60%),#e3e8eb;color:#1c232b;
     font-family:var(--sans);
     display:flex;flex-direction:column;align-items:center;
     padding:28px 16px 40px;
@@ -23,54 +23,54 @@
   .stage{margin-block:auto;display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
   #scene{
     position:relative;width:min(92vw,560px);
-    border-radius:22px;overflow:hidden;background:transparent;
+    overflow:visible;background:transparent;
   }
   #poster{display:block;width:100%;height:auto;touch-action:manipulation}
-  .hint{margin:0;font-size:12.5px;letter-spacing:.04em;color:#8b867a;text-align:center}
-  .hint b{color:#3b3a33;font-weight:600;letter-spacing:.08em}
+  .hint{margin:0;font-size:12.5px;letter-spacing:.04em;color:#4f5d69;text-align:center}
+  .hint b{color:#1c232b;font-weight:600;letter-spacing:.08em}
   .hint kbd{
     font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:4px;
-    border:1px solid rgba(96,88,72,.25);color:#8b867a;
+    border:1px solid rgba(54,66,78,.25);color:#4f5d69;
   }
 
   .scrim{
-    position:fixed;inset:0;background:rgba(60,48,30,.22);backdrop-filter:blur(2px);
+    position:fixed;inset:0;background:rgba(227,232,235,.5);backdrop-filter:blur(2px);
     opacity:0;pointer-events:none;transition:opacity .28s ease;z-index:20;
   }
   .scrim.on{opacity:1;pointer-events:auto}
 
   .panel{
     position:fixed;right:0;top:0;bottom:0;width:min(430px,100%);
-    background:#fbf8ef;border-left:1px solid rgba(96,88,72,.14);
+    background:#f8f9f7;border-left:1px solid rgba(54,66,78,.14);
     transform:translateX(103%);transition:transform .34s cubic-bezier(.22,.8,.28,1);
     z-index:30;display:flex;flex-direction:column;
-    box-shadow:-30px 0 60px -30px rgba(70,52,28,.35);
+    box-shadow:-30px 0 60px -30px rgba(21,35,58,.35);
   }
   .panel.on{transform:none}
   .panel-head{
-    padding:20px 22px 14px;border-bottom:1px solid rgba(96,88,72,.12);
+    padding:20px 22px 14px;border-bottom:1px solid rgba(54,66,78,.12);
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   }
-  .panel-head .sub{font:500 10.5px var(--mono);letter-spacing:.28em;color:#b3ad9d;margin:0 0 6px}
-  .panel-head h2{margin:0;font-size:19px;font-weight:600;letter-spacing:.02em;color:#3b3a33;font-family:"Source Han Serif SC","Noto Serif SC","Songti SC",serif}
-  .panel-head p{margin:6px 0 0;font-size:12px;color:#8b867a;line-height:1.5}
+  .panel-head .sub{font:500 10.5px var(--mono);letter-spacing:.28em;color:#8e9aa4;margin:0 0 6px}
+  .panel-head h2{margin:0;font-size:19px;font-weight:600;letter-spacing:.02em;color:#1c232b;font-family:"Source Han Serif SC","Noto Serif SC","Songti SC",serif}
+  .panel-head p{margin:6px 0 0;font-size:12px;color:#4f5d69;line-height:1.5}
   .icon-btn{
     flex:0 0 auto;width:32px;height:32px;border-radius:50%;
-    border:1px solid rgba(96,88,72,.2);background:transparent;color:#8b867a;
+    border:1px solid rgba(54,66,78,.2);background:transparent;color:#4f5d69;
     font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;
     transition:background .2s,border-color .2s;
   }
-  .icon-btn:hover{background:rgba(96,88,72,.06);border-color:rgba(96,88,72,.3)}
+  .icon-btn:hover{background:rgba(54,66,78,.06);border-color:rgba(54,66,78,.3)}
   .panel-body{padding:18px 22px 26px;overflow-y:auto;flex:1;overscroll-behavior:contain}
   .field{display:block;margin:0 0 16px}
-  .field>span{display:block;font-size:11px;letter-spacing:.06em;color:#8b867a;margin:0 0 7px}
+  .field>span{display:block;font-size:11px;letter-spacing:.06em;color:#4f5d69;margin:0 0 7px}
   .field input{
     width:100%;padding:11px 13px;border-radius:10px;
-    border:1px solid rgba(96,88,72,.18);background:#fffdf7;color:#3b3a33;
+    border:1px solid rgba(54,66,78,.18);background:#ffffff;color:#1c232b;
     font:400 14px var(--sans);outline:none;transition:border-color .18s,background .18s;
   }
-  .field input:focus{border-color:#b5523b;background:#fff}
-  .field input::placeholder{color:#c4bcab}
+  .field input:focus{border-color:#2f4f73;background:#fff}
+  .field input::placeholder{color:#a9b4bc}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .dots{display:flex;gap:10px;flex-wrap:wrap;padding-top:2px}
   .dot{
@@ -78,80 +78,80 @@
     box-shadow:inset 0 0 0 1px rgba(60,40,20,.18);transition:transform .18s;padding:0;
   }
   .dot:hover{transform:translateY(-1px)}
-  .dot.on::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid #3b3a33}
+  .dot.on::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid #1c232b}
   .sheet-sec{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px}
-  .sheet-sec h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;color:#8b867a}
+  .sheet-sec h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;color:#4f5d69}
   .chips{display:flex;gap:6px}
   .chip{
-    border:1px solid rgba(96,88,72,.2);background:transparent;color:#8b867a;
+    border:1px solid rgba(54,66,78,.2);background:transparent;color:#4f5d69;
     font:500 11.5px var(--sans);padding:5px 10px;border-radius:999px;cursor:pointer;
     transition:all .18s;
   }
-  .chip:hover{color:#b5523b;border-color:rgba(181,82,59,.5)}
+  .chip:hover{color:#2f4f73;border-color:rgba(47,79,115,.5)}
   .rows{display:flex;flex-direction:column;gap:8px}
   .row{
     display:grid;grid-template-columns:26px 84px 1fr 24px;gap:8px;align-items:center;
-    background:#fffdf7;border:1px solid rgba(96,88,72,.14);border-radius:11px;padding:8px 10px;
+    background:#ffffff;border:1px solid rgba(54,66,78,.14);border-radius:11px;padding:8px 10px;
   }
   .check{
-    width:20px;height:20px;border-radius:50%;border:1.5px solid #cfc8b8;background:transparent;
+    width:20px;height:20px;border-radius:50%;border:1.5px solid #c2cbd2;background:transparent;
     cursor:pointer;position:relative;transition:all .18s;padding:0;
   }
-  .check.on{background:#2f6b4a;border-color:#2f6b4a}
+  .check.on{background:#2f4f73;border-color:#2f4f73}
   .check.on::after{
     content:"";position:absolute;left:5px;top:4px;width:7px;height:10px;
-    border-right:2px solid #fbf8ef;border-bottom:2px solid #fbf8ef;transform:rotate(38deg);
+    border-right:2px solid #f8f9f7;border-bottom:2px solid #f8f9f7;transform:rotate(38deg);
   }
-  .time{display:flex;align-items:center;gap:2px;font:500 13px var(--mono);color:#8b867a}
+  .time{display:flex;align-items:center;gap:2px;font:500 13px var(--mono);color:#4f5d69}
   .time input{
     width:30px;padding:4px 0;text-align:center;border-radius:6px;
-    border:1px solid rgba(96,88,72,.16);background:#f6f1e6;color:#3b3a33;
+    border:1px solid rgba(54,66,78,.16);background:#eef2f4;color:#1c232b;
     font:500 13px var(--mono);outline:none;
   }
-  .time input:focus{border-color:#b5523b}
+  .time input:focus{border-color:#2f4f73}
   .row .name{
     width:100%;padding:6px 8px;border-radius:7px;border:1px solid transparent;
-    background:transparent;color:#3b3a33;font:400 13px var(--sans);outline:none;
+    background:transparent;color:#1c232b;font:400 13px var(--sans);outline:none;
   }
-  .row .name:focus{background:#f6f1e6;border-color:rgba(96,88,72,.16)}
-  .del{width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#b3ad9d;font-size:15px;cursor:pointer;line-height:1}
-  .del:hover{background:rgba(180,87,59,.16);color:#d08a6f}
+  .row .name:focus{background:#eef2f4;border-color:rgba(54,66,78,.16)}
+  .del{width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#8e9aa4;font-size:15px;cursor:pointer;line-height:1}
+  .del:hover{background:rgba(47,79,115,.1);color:#2f4f73}
   .add{
     width:100%;margin-top:10px;padding:11px;border-radius:10px;cursor:pointer;
-    border:1px dashed rgba(96,88,72,.28);background:transparent;color:#8b867a;
+    border:1px dashed rgba(54,66,78,.28);background:transparent;color:#4f5d69;
     font:500 12.5px var(--sans);letter-spacing:.04em;transition:all .18s;
   }
-  .add:hover{border-color:#b5523b;color:#b5523b}
-  .panel-foot{display:flex;gap:10px;padding:14px 22px 20px;border-top:1px solid rgba(96,88,72,.12);background:#fbf8ef}
+  .add:hover{border-color:#2f4f73;color:#2f4f73}
+  .panel-foot{display:flex;gap:10px;padding:14px 22px 20px;border-top:1px solid rgba(54,66,78,.12);background:#f8f9f7}
   .btn{
     flex:1;padding:12px;border-radius:10px;border:1px solid transparent;cursor:pointer;
     font:600 13px var(--sans);letter-spacing:.04em;transition:all .2s;text-align:center;
   }
-  .btn.ghost{background:transparent;border-color:rgba(96,88,72,.22);color:#8b867a}
-  .btn.ghost:hover{color:#3b3a33;border-color:rgba(96,88,72,.4)}
-  .btn.primary{background:#3b3a33;color:#fbf8ef}
-  .btn.primary:hover{background:#b5523b}
+  .btn.ghost{background:transparent;border-color:rgba(54,66,78,.22);color:#4f5d69}
+  .btn.ghost:hover{color:#1c232b;border-color:rgba(54,66,78,.4)}
+  .btn.primary{background:#1c232b;color:#f8f9f7}
+  .btn.primary:hover{background:#2f4f73}
 
   .result{
     position:fixed;inset:0;display:none;place-items:center;padding:24px;z-index:40;
-    background:rgba(60,48,30,.3);backdrop-filter:blur(6px);
+    background:rgba(227,232,235,.6);backdrop-filter:blur(6px);
   }
   .result.on{display:grid}
   .result-card{
     width:min(420px,92vw);max-height:92vh;display:flex;flex-direction:column;gap:14px;
-    background:#fbf8ef;border:1px solid rgba(96,88,72,.14);border-radius:18px;
-    padding:20px;box-shadow:0 40px 80px -30px rgba(70,52,28,.45);
+    background:#f8f9f7;border:1px solid rgba(54,66,78,.14);border-radius:18px;
+    padding:20px;box-shadow:0 40px 80px -30px rgba(21,35,58,.45);
   }
-  .result-card h3{margin:0;font-size:16px;font-weight:600;color:#3b3a33}
-  .result-card p{margin:0;font-size:11.5px;color:#8b867a;line-height:1.6}
-  .shot{border-radius:10px;overflow:hidden;background:#ece5d6;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  .result-card h3{margin:0;font-size:16px;font-weight:600;color:#1c232b}
+  .result-card p{margin:0;font-size:11.5px;color:#4f5d69;line-height:1.6}
+  .shot{border-radius:10px;overflow:hidden;background:#e3e8eb;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
   .shot img{display:block;max-width:100%;max-height:52vh;height:auto}
   .result-actions{display:flex;gap:10px}
   .result-actions .btn{text-decoration:none;display:block}
 
   .toast{
     position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);
-    background:#3b3a33;color:#fbf8ef;padding:9px 18px;border-radius:999px;
+    background:#1c232b;color:#f8f9f7;padding:9px 18px;border-radius:999px;
     font:600 12.5px var(--sans);letter-spacing:.03em;
     opacity:0;pointer-events:none;transition:all .26s ease;z-index:60;white-space:nowrap;
   }
@@ -163,9 +163,9 @@
     #scene{border-radius:14px}
     .panel{
       left:0;right:0;top:auto;width:100%;height:auto;max-height:88vh;
-      border-left:0;border-top:1px solid rgba(96,88,72,.14);
+      border-left:0;border-top:1px solid rgba(54,66,78,.14);
       border-radius:18px 18px 0 0;transform:translateY(103%);
-      box-shadow:0 -30px 60px -20px rgba(70,52,28,.35);
+      box-shadow:0 -30px 60px -20px rgba(21,35,58,.35);
     }
     .panel.on{transform:none}
     .panel-head{padding:14px 18px 10px}
@@ -176,8 +176,8 @@
   }
   @media (prefers-reduced-motion:reduce){.panel{transition:none}}
   .back{position:fixed;left:24px;top:22px;z-index:10;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-    background:rgba(251,248,239,.85);color:#8b867a;text-decoration:none;font-size:16px;box-shadow:0 2px 6px rgba(70,52,28,.16);transition:color .2s,transform .2s}
-  .back:hover{color:#b5523b;transform:translateY(-2px)}
+    background:rgba(248,249,247,.9);color:#4f5d69;text-decoration:none;font-size:16px;box-shadow:0 2px 6px rgba(21,35,58,.16);transition:color .2s,transform .2s}
+  .back:hover{color:#2f4f73;transform:translateY(-2px)}
 </style>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
@@ -266,12 +266,13 @@
   const SANS = '"LXGW WenKai","霞鹜文楷","KaiTi","STKaiti",serif';
   const MONO = SANS;
 
-  const INK = '#241e17';
-  const INK2 = '#3a3124';
-  const MUTED = '#6d6558';
-  const RULE = '#b09f84';
-  const GREEN = '#2f6b4a';
-  const RED = '#8b3b2c';
+  // sasshi's inks: 墨 sumi, 鉄鼠 tetsu, 藍鼠 ainezu, 白鼠 shironezu, 藍 ai, 薄墨 usuzumi
+  const INK = '#1c232b';
+  const INK2 = '#36424e';
+  const MUTED = '#4f5d69';
+  const RULE = '#c2cbd2';
+  const GREEN = '#2f4f73';
+  const RED = '#8e9aa4';
 
   const BODY = { x: 98, y: 318, w: 1010, h: 468, r: 58 };
   const GRILLE = { x: 162, y: 440, w: 882, h: 190, r: 26 };
@@ -374,7 +375,7 @@
      数据
      ============================================================ */
   const STORAGE = 'schedule-receipt.v3';
-  const PALETTE = ['#b4573b', '#c2352f', '#7b8f6a', '#4a6ea8', '#c9a24a', '#9b7fb5', '#5fa8c9'];
+  const PALETTE = ['#2f4f73', '#4f7a5a', '#b5523b', '#8e9aa4', '#c9a24a', '#7d6b9e', '#5f8fa8'];
 
   const PRESETS = {
     desk: { label: '今天的桌子', items: [] },
@@ -479,12 +480,12 @@
     const MG = 46;
     const CW = PW - MG - 30;
     const cx = PW / 2;
-    const TITLE = '#17120a';
+    const TITLE = '#1c232b';
     const line = yy => ops.push({ t: 'dash', x: MG, y: yy, w: CW });
 
     /* 三颗星 */
     [-150, 0, 150].forEach(dx => ops.push({
-      t: 'text', x: cx + dx, y: 108, s: '★', font: `400 30px ${SANS}`, color: '#a3957e', align: 'center'
+      t: 'text', x: cx + dx, y: 108, s: '★', font: `400 30px ${SANS}`, color: '#8e9aa4', align: 'center'
     }));
 
     /* 店名 + 副标题 */
@@ -520,7 +521,7 @@
     /* 事项 */
     d.items.forEach((it, i) => {
       const y = 889 + i * 78;
-      ops.push({ t: 'text', x: MG, y, s: it.time, font: `500 37px ${MONO}`, color: '#6a6053' });
+      ops.push({ t: 'text', x: MG, y, s: it.time, font: `500 37px ${MONO}`, color: '#4f5d69' });
       ops.push({
         t: 'text', x: MG + 145, y,
         s: fitText(ctx, it.name, `400 37px ${SANS}`, CW - 145 - 40),
@@ -568,16 +569,16 @@
   }
 
   function paintPaperTexture(c, w, h) {
-    c.fillStyle = '#efe6d4';
+    c.fillStyle = '#f8f9f7';
     c.fillRect(0, 0, w, h);
 
-    /* 网点 */
+    /* 热敏纸的细网点 */
     c.save();
-    c.fillStyle = 'rgba(88,72,50,.10)';
+    c.fillStyle = 'rgba(54,66,78,.05)';
     for (let y = 4; y < h; y += 7) {
       for (let x = 4; x < w; x += 7) {
         c.beginPath();
-        c.arc(x + ((y / 7) % 2 ? 3.5 : 0), y, 1.05, 0, Math.PI * 2);
+        c.arc(x + ((y / 7) % 2 ? 3.5 : 0), y, .9, 0, Math.PI * 2);
         c.fill();
       }
     }
@@ -588,7 +589,7 @@
     c.globalAlpha = .05;
     const rnd = mulberry32(7);
     for (let i = 0; i < 260; i++) {
-      c.strokeStyle = i % 2 ? '#8a7a5e' : '#fffaf0';
+      c.strokeStyle = i % 2 ? '#8e9aa4' : '#ffffff';
       c.lineWidth = .7;
       const x = rnd() * w, y = rnd() * h, len = 6 + rnd() * 22, a = (rnd() - .5) * .5;
       c.beginPath();
@@ -600,17 +601,17 @@
 
     /* 左右边缘的阴影（纸的卷曲感） */
     const lg = c.createLinearGradient(0, 0, 26, 0);
-    lg.addColorStop(0, 'rgba(70,55,36,.20)');
-    lg.addColorStop(1, 'rgba(70,55,36,0)');
+    lg.addColorStop(0, 'rgba(21,35,58,.12)');
+    lg.addColorStop(1, 'rgba(21,35,58,0)');
     c.fillStyle = lg; c.fillRect(0, 0, 26, h);
     const rg = c.createLinearGradient(w, 0, w - 26, 0);
-    rg.addColorStop(0, 'rgba(70,55,36,.20)');
-    rg.addColorStop(1, 'rgba(70,55,36,0)');
+    rg.addColorStop(0, 'rgba(21,35,58,.12)');
+    rg.addColorStop(1, 'rgba(21,35,58,0)');
     c.fillStyle = rg; c.fillRect(w - 26, 0, 26, h);
 
     const tg = c.createLinearGradient(0, 0, 0, 40);
-    tg.addColorStop(0, 'rgba(70,55,36,.16)');
-    tg.addColorStop(1, 'rgba(70,55,36,0)');
+    tg.addColorStop(0, 'rgba(21,35,58,.12)');
+    tg.addColorStop(1, 'rgba(21,35,58,0)');
     c.fillStyle = tg; c.fillRect(0, 0, w, 40);
   }
 
@@ -618,7 +619,7 @@
     const rnd = mulberry32(hashStr(o.seed));
     let x = o.x - o.w / 2;
     const end = o.x + o.w / 2;
-    c.fillStyle = '#1f1b17';
+    c.fillStyle = '#1c232b';
     while (x < end - 2) {
       const wBar = 1.2 + Math.floor(rnd() * 3) * 1.35;
       const gap = 1.1 + Math.floor(rnd() * 3) * 1.1;
@@ -634,7 +635,7 @@
     const sw = (o.w - gap * (n - 1)) / n;
     const filled = Math.round(o.pct / 100 * n);
     for (let i = 0; i < n; i++) {
-      c.fillStyle = i < filled ? '#3a332b' : '#ded2bd';
+      c.fillStyle = i < filled ? '#36424e' : '#dde3e7';
       roundRect(c, o.x + i * (sw + gap), o.y, sw, o.h, 3);
       c.fill();
     }
@@ -648,23 +649,23 @@
     const filled = Math.max(0, o.pct / 100 * inner);
 
     /* 轨道 */
-    c.fillStyle = '#e2d6c1';
+    c.fillStyle = '#e3e8eb';
     c.fillRect(x + pad, y + 5, inner, o.h - 10);
 
     /* 点阵纹理 */
-    c.fillStyle = 'rgba(120,105,82,.20)';
+    c.fillStyle = 'rgba(79,93,105,.18)';
     for (let i = 0; i < inner; i += 6) {
       for (let j = 0; j < o.h - 12; j += 6) c.fillRect(x + pad + i, y + 7 + j, 2, 2);
     }
 
     /* 已填充 */
     if (filled > 0) {
-      c.fillStyle = '#4a4238';
+      c.fillStyle = '#36424e';
       c.fillRect(x + pad, y + 5, filled, o.h - 10);
     }
 
     /* 方括号 */
-    c.strokeStyle = '#8a7d68';
+    c.strokeStyle = '#8e9aa4';
     c.lineWidth = 2;
     c.beginPath();
     c.moveTo(x + 9, y); c.lineTo(x, y); c.lineTo(x, y + o.h); c.lineTo(x + 9, y + o.h);
@@ -721,30 +722,23 @@
      ============================================================ */
   function drawHeader() {
     const x = 96;
-    /* 图标 */
-    roundRect(ctx, x, 78, 62, 62, 17);
-    ctx.fillStyle = 'rgba(251,248,239,.8)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(96,88,72,.18)';
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
-    roundRect(ctx, x + 19, 97, 24, 24, 6);
+    /* 小圆点（氛围色）+ 小字 */
+    ctx.beginPath();
+    ctx.arc(x + 8, 105, 8, 0, Math.PI * 2);
     ctx.fillStyle = state.accent;
     ctx.fill();
-
-    /* 小字 */
-    tracked(ctx, 'DAILY RECEIPT', x + 86, 112, `500 19px ${MONO}`, '#b3ad9d', 8, 'left');
+    tracked(ctx, 'DAILY RECEIPT', x + 30, 112, `500 19px ${MONO}`, '#8e9aa4', 8, 'left');
 
     /* 标题 */
     ctx.font = `600 76px ${SANS}`;
-    ctx.fillStyle = '#3b3a33';
+    ctx.fillStyle = '#1c232b';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('今日小票', x, 194);
 
     /* 副标题 */
     ctx.font = `400 26px ${SANS}`;
-    ctx.fillStyle = '#8b867a';
+    ctx.fillStyle = '#4f5d69';
     ctx.fillText('把今天的事打成一张热敏小票', x + 2, 238);
   }
 
@@ -753,11 +747,11 @@
      ============================================================ */
   function paintPrinter(c) {
     const bodyG = c.createLinearGradient(0, BODY.y, 0, BODY.y + BODY.h);
-    bodyG.addColorStop(0, '#f6edda');
-    bodyG.addColorStop(.55, '#efe4ce');
-    bodyG.addColorStop(1, '#e2d5bd');
+    bodyG.addColorStop(0, '#f8fafb');
+    bodyG.addColorStop(.55, '#eef2f4');
+    bodyG.addColorStop(1, '#dde3e8');
     c.save();
-    c.shadowColor = 'rgba(80,60,30,.32)';
+    c.shadowColor = 'rgba(21,35,58,.26)';
     c.shadowBlur = 60;
     c.shadowOffsetY = 26;
     roundRect(c, BODY.x, BODY.y, BODY.w, BODY.h, BODY.r);
@@ -772,7 +766,7 @@
     const rnd = mulberry32(3);
     c.globalAlpha = .05;
     for (let i = 0; i < 1600; i++) {
-      c.fillStyle = i % 2 ? '#7a6647' : '#fffdf6';
+      c.fillStyle = i % 2 ? '#6b7884' : '#ffffff';
       c.fillRect(BODY.x + rnd() * BODY.w, BODY.y + rnd() * BODY.h, 1.5, 1.5);
     }
     c.restore();
@@ -787,8 +781,8 @@
     c.fillStyle = hl;
     c.fillRect(BODY.x, BODY.y, BODY.w, 26);
     const sh = c.createLinearGradient(0, BODY.y + BODY.h - 70, 0, BODY.y + BODY.h);
-    sh.addColorStop(0, 'rgba(120,95,62,0)');
-    sh.addColorStop(1, 'rgba(120,95,62,.22)');
+    sh.addColorStop(0, 'rgba(54,66,78,0)');
+    sh.addColorStop(1, 'rgba(54,66,78,.16)');
     c.fillStyle = sh;
     c.fillRect(BODY.x, BODY.y + BODY.h - 70, BODY.w, 70);
     c.restore();
@@ -796,17 +790,17 @@
     /* 进纸窗（栅格） */
     c.save();
     roundRect(c, GRILLE.x, GRILLE.y, GRILLE.w, GRILLE.h, GRILLE.r);
-    c.fillStyle = '#e7dcc6';
+    c.fillStyle = '#e4e9ec';
     c.fill();
     c.clip();
     const gSh = c.createLinearGradient(0, GRILLE.y, 0, GRILLE.y + GRILLE.h);
-    gSh.addColorStop(0, 'rgba(120,100,70,.16)');
+    gSh.addColorStop(0, 'rgba(54,66,78,.16)');
     gSh.addColorStop(.25, 'rgba(255,255,255,.20)');
-    gSh.addColorStop(1, 'rgba(120,100,70,.08)');
+    gSh.addColorStop(1, 'rgba(54,66,78,.08)');
     c.fillStyle = gSh;
     c.fillRect(GRILLE.x, GRILLE.y, GRILLE.w, GRILLE.h);
     for (let x = GRILLE.x + 8; x < GRILLE.x + GRILLE.w - 4; x += 9) {
-      c.fillStyle = 'rgba(120,100,70,.20)';
+      c.fillStyle = 'rgba(54,66,78,.20)';
       c.fillRect(x, GRILLE.y + 10, 1.6, GRILLE.h - 20);
       c.fillStyle = 'rgba(255,255,255,.35)';
       c.fillRect(x + 1.6, GRILLE.y + 10, 1.2, GRILLE.h - 20);
@@ -817,7 +811,7 @@
     c.rect(GRILLE.x, GRILLE.y, 54, GRILLE.h);
     c.rect(GRILLE.x + GRILLE.w - 54, GRILLE.y, 54, GRILLE.h);
     c.clip();
-    c.strokeStyle = 'rgba(120,100,70,.16)';
+    c.strokeStyle = 'rgba(54,66,78,.16)';
     c.lineWidth = 2;
     for (let i = -GRILLE.h; i < GRILLE.w; i += 8) {
       c.beginPath();
@@ -827,19 +821,19 @@
     }
     c.restore();
     /* 窗口内阴影 */
-    c.strokeStyle = 'rgba(120,100,70,.22)';
+    c.strokeStyle = 'rgba(54,66,78,.22)';
     c.lineWidth = 3;
     roundRect(c, GRILLE.x + 1.5, GRILLE.y + 1.5, GRILLE.w - 3, GRILLE.h - 3, GRILLE.r - 1);
     c.stroke();
     c.restore();
 
     /* LIFE POS */
-    tracked(c, 'LIFE POS', 160, 396, `600 30px ${MONO}`, '#3c342b', 10, 'left');
-    tracked(c, 'THERMAL 58mm', 162, 428, `400 16px ${MONO}`, '#8d8069', 3.4, 'left');
+    tracked(c, 'LIFE POS', 160, 396, `600 30px ${MONO}`, '#36424e', 10, 'left');
+    tracked(c, 'THERMAL 58mm', 162, 428, `400 16px ${MONO}`, '#8e9aa4', 3.4, 'left');
 
     /* 按钮 */
-    paintButton(c, BTN_EDIT, '#2f5f49', '#3a7359', 'EDIT');
-    paintButton(c, BTN_PRINT, '#bf4f38', '#d4604a', 'PRINT');
+    paintButton(c, BTN_EDIT, '#36424e', '#4f5d69', 'EDIT');
+    paintButton(c, BTN_PRINT, '#2f4f73', '#41648f', 'PRINT');
 
     /* 出纸口：暗腔 */
     c.save();
@@ -851,21 +845,21 @@
     c.fill();
     c.clip();
     const cavHi = c.createLinearGradient(0, CAVITY.y + CAVITY.h - 8, 0, CAVITY.y + CAVITY.h);
-    cavHi.addColorStop(0, 'rgba(240,228,206,0)');
-    cavHi.addColorStop(1, 'rgba(240,228,206,.22)');
+    cavHi.addColorStop(0, 'rgba(230,236,240,0)');
+    cavHi.addColorStop(1, 'rgba(230,236,240,.22)');
     c.fillStyle = cavHi;
     c.fillRect(CAVITY.x, CAVITY.y + CAVITY.h - 8, CAVITY.w, 8);
     c.restore();
 
     /* 金属压条 */
     c.save();
-    c.shadowColor = 'rgba(80,60,30,.28)';
+    c.shadowColor = 'rgba(21,35,58,.22)';
     c.shadowBlur = 26;
     c.shadowOffsetY = 10;
     const lipG = c.createLinearGradient(0, LIP.y, 0, LIP.y + LIP.h);
-    lipG.addColorStop(0, '#f7efdd');
-    lipG.addColorStop(.35, '#e9ddc7');
-    lipG.addColorStop(1, '#cbbb9f');
+    lipG.addColorStop(0, '#f6f8f9');
+    lipG.addColorStop(.35, '#e3e8eb');
+    lipG.addColorStop(1, '#c2cbd2');
     roundRect(c, LIP.x, LIP.y, LIP.w, LIP.h, LIP.r);
     c.fillStyle = lipG;
     c.fill();
@@ -874,9 +868,9 @@
     /* 压条两侧的小凸耳 */
     [[LIP.x - 4, LIP.y + 10], [LIP.x + LIP.w - 56, LIP.y + 10]].forEach(([x, y]) => {
       roundRect(c, x, y, 60, LIP.h - 22, 10);
-      c.fillStyle = '#ddceb4';
+      c.fillStyle = '#d8dfe4';
       c.fill();
-      c.strokeStyle = 'rgba(120,100,70,.18)';
+      c.strokeStyle = 'rgba(54,66,78,.18)';
       c.lineWidth = 1;
       c.stroke();
     });
@@ -890,15 +884,15 @@
 
     /* 压条下方投影（压在小票上） */
     const drop = c.createLinearGradient(0, LIP.y + LIP.h, 0, LIP.y + LIP.h + 26);
-    drop.addColorStop(0, 'rgba(40,28,16,.30)');
-    drop.addColorStop(1, 'rgba(40,28,16,0)');
+    drop.addColorStop(0, 'rgba(21,35,58,.24)');
+    drop.addColorStop(1, 'rgba(21,35,58,0)');
     c.fillStyle = drop;
     c.fillRect(LIP.x + 30, LIP.y + LIP.h, LIP.w - 60, 26);
   }
 
   function paintButton(c, b, top, bottom, label) {
     c.save();
-    c.shadowColor = 'rgba(70,45,25,.45)';
+    c.shadowColor = 'rgba(21,35,58,.38)';
     c.shadowBlur = 18;
     c.shadowOffsetY = 7;
     const g = c.createLinearGradient(0, b.y, 0, b.y + b.h);
@@ -918,7 +912,7 @@
     c.fillStyle = inner;
     c.fill();
 
-    tracked(c, label, b.x + b.w / 2, b.y + b.h / 2 + 9, `600 26px ${MONO}`, '#f6efdd', 6, 'center');
+    tracked(c, label, b.x + b.w / 2, b.y + b.h / 2 + 9, `600 26px ${MONO}`, '#f8f9f7', 6, 'center');
   }
 
   function paintLED(c, x, y, r, color, on) {
@@ -932,7 +926,7 @@
     }
     c.beginPath();
     c.arc(x, y, r, 0, Math.PI * 2);
-    c.fillStyle = on ? color : 'rgba(60,52,42,.55)';
+    c.fillStyle = on ? color : 'rgba(54,66,78,.4)';
     c.fill();
     if (on) {
       const hl = c.createRadialGradient(x - r * .3, y - r * .35, 0, x, y, r);
@@ -952,61 +946,51 @@
     cv.width = W; cv.height = H;
     const c = cv.getContext('2d');
 
-    c.fillStyle = '#ece5d6';
+    /* 朝霧：和桌面同一种颜色 */
+    c.fillStyle = '#e3e8eb';
     c.fillRect(0, 0, W, H);
 
-    /* 暖光 */
+    /* 右上角斜照进来的一块光 */
     c.save();
-    c.translate(W / 2, 360);
-    c.scale(1, 1.28);
-    const glow = c.createRadialGradient(0, 0, 40, 0, 0, 980);
-    glow.addColorStop(0, 'rgba(255,250,236,.85)');
-    glow.addColorStop(.36, 'rgba(255,248,230,.45)');
-    glow.addColorStop(.72, 'rgba(255,248,230,.12)');
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = glow;
-    c.fillRect(-900, -1400, W + 1800, H + 2800);
+    const lit = c.createLinearGradient(W * .25, 0, W, H * .55);
+    lit.addColorStop(0, 'rgba(255,255,255,0)');
+    lit.addColorStop(.35, 'rgba(255,255,255,.55)');
+    lit.addColorStop(1, 'rgba(255,255,255,.2)');
+    c.fillStyle = lit;
+    c.beginPath();
+    c.moveTo(W * .38, 0); c.lineTo(W, 0); c.lineTo(W, H * .7); c.lineTo(W * .1, H);
+    c.lineTo(0, H); c.lineTo(0, H * .92);
+    c.closePath();
+    c.filter = 'blur(28px)';
+    c.fill();
     c.restore();
 
     /* 氛围色光晕（跟着色点变） */
     const ac = hexRGB(state.accent);
     c.save();
-    c.globalAlpha = .35;
-    c.translate(W / 2, 360);
+    c.globalAlpha = .22;
+    c.translate(W / 2, 520);
     c.scale(1, 1.1);
     const ag = c.createRadialGradient(0, 0, 60, 0, 0, 780);
     ag.addColorStop(0, `rgba(${ac},.30)`);
-    ag.addColorStop(.5, `rgba(${ac},.11)`);
+    ag.addColorStop(.5, `rgba(${ac},.10)`);
     ag.addColorStop(1, `rgba(${ac},0)`);
     c.fillStyle = ag;
     c.fillRect(-1200, -1700, W + 2400, H + 3400);
     c.restore();
 
-    /* 上下压暗 */
-    const shade = c.createLinearGradient(0, 0, 0, H);
-    shade.addColorStop(0, 'rgba(120,96,60,0)');
-    shade.addColorStop(.62, 'rgba(120,96,60,.04)');
-    shade.addColorStop(1, 'rgba(120,96,60,.14)');
-    c.fillStyle = shade;
+    /* 离窗远的一角落进阴影 */
+    const fall = c.createRadialGradient(W * .96, 0, 0, W * .96, 0, Math.max(W, H) * 1.3);
+    fall.addColorStop(.42, 'rgba(196,207,217,0)');
+    fall.addColorStop(1, 'rgba(196,207,217,.4)');
+    c.fillStyle = fall;
     c.fillRect(0, 0, W, H);
 
-    /* 暗角 */
-    c.save();
-    c.translate(W / 2, H * .42);
-    c.scale(1, 1.5);
-    const vig = c.createRadialGradient(0, 0, 0, 0, 0, 840);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(.5, 'rgba(120,96,60,.03)');
-    vig.addColorStop(1, 'rgba(120,96,60,.12)');
-    c.fillStyle = vig;
-    c.fillRect(-2200, -2200, 4400, 4400);
-    c.restore();
-
-    /* 颗粒 */
+    /* 纸面颗粒 */
     const rnd = mulberry32(11);
-    c.globalAlpha = .035;
+    c.globalAlpha = .03;
     for (let i = 0; i < 9000; i++) {
-      c.fillStyle = rnd() > .5 ? '#fff' : '#000';
+      c.fillStyle = rnd() > .5 ? '#fff' : '#1c232b';
       c.fillRect(rnd() * W, rnd() * H, 1.4, 1.4);
     }
     c.globalAlpha = 1;
@@ -1146,7 +1130,7 @@
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(layers.bg, 0, 0);
+    if (exporting) ctx.drawImage(layers.bg, 0, 0);
     drawHeader();
 
     const settle = printing ? 1 : (prog > .92 ? (1 - prog) / .08 : 0);
@@ -1167,8 +1151,8 @@
       ctx.drawImage(layers.paper, (W - PAPER_W) / 2, py);
       /* 撕边内侧阴影 */
       const inner = ctx.createLinearGradient(0, PAPER_TOP + ph - 34, 0, PAPER_TOP + ph);
-      inner.addColorStop(0, 'rgba(90,70,45,0)');
-      inner.addColorStop(1, 'rgba(90,70,45,.13)');
+      inner.addColorStop(0, 'rgba(21,35,58,0)');
+      inner.addColorStop(1, 'rgba(21,35,58,.10)');
       ctx.fillStyle = inner;
       ctx.fillRect((W - PAPER_W) / 2, PAPER_TOP + ph - 34, PAPER_W, 34);
       ctx.restore();
@@ -1220,13 +1204,17 @@
     toast('正在打印今天的小票…', 1400);
   }
 
+  let exporting = false;
   function exportDataURL() {
     const prev = print.active;
     print.active = false;
     puffs.length = 0;
+    exporting = true;
     drawFrame();
     const url = canvas.toDataURL('image/png');
+    exporting = false;
     print.active = prev;
+    drawFrame();
     return url;
   }
 
