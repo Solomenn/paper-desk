@@ -1658,7 +1658,11 @@
     timerEl.style.left = Math.min(innerWidth - 180, r.left + r.width / 2 - 84) + "px";
     timerEl.classList.toggle("show", on);
   }
-  tbtn.addEventListener("click", () => showTimer(!timerEl.classList.contains("show")));
+  // the timer is a train now: a trip on the 雪国线 (focus.html)
+  tbtn.addEventListener("click", () => { location.href = "focus.html"; });
+  tbtn.title = "专注：坐一趟雪国线";
+  { let tr = null; try { tr = JSON.parse(localStorage.getItem("paper-desk.trip.v1")); } catch {}
+    if (tr && tr.end > Date.now()) { tbtn.classList.add("run"); tbtn.title = `雪国线行驶中 · ${tr.name}`; $(".tclock", tbtn).style.setProperty("--deg", (Math.max(0, tr.end - Date.now()) / (tr.end - tr.start) * 360) + "deg"); } }
   addEventListener("pointerdown", e => { if (!e.target.closest("#timer, #timerBtn")) timerEl.classList.remove("show"); });
   $(".dial", timerEl).addEventListener("pointerdown", e => {
     const dial = e.currentTarget, r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;

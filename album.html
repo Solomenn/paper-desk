@@ -196,6 +196,40 @@
   #zcap .putback { border: 1px solid rgba(54,66,78,.25); background: rgba(255,255,255,.7); border-radius: 999px; padding: 6px 14px; font: 13px var(--hand); color: #2f4f73; cursor: pointer; }
   #zcap .putback:hover { background: #fff; }
 
+  /* a 雪国线 ticket in a sleeve, and held up */
+  .mc.mt { padding: 0; display: flex; background: none; box-shadow: none; overflow: visible; height: auto !important; align-self: center; }
+  .slv:has(.mt) { display: grid; align-items: stretch; padding: 5px 6px 7px; }
+  body.kind-ticket .grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .mc.mt { height: 100% !important; align-self: stretch; }
+  .mc.mt .tm { min-height: 0; }
+  .tm { position: relative; flex: 1; min-height: 118px; padding: 12px 12px 10px 14px; background: #eef0ed; border-radius: 3px 0 0 3px; color: #1c232b; box-shadow: 0 6px 12px -6px rgba(21,35,58,.4); }
+  .tm .tk { font-size: 8.5px; letter-spacing: .25em; color: #4f5d69; }
+  .tm .tn { margin-top: 6px; font-size: 14px; line-height: 1.3; max-width: 64%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tm .tr { margin-top: 2px; font-size: 10.5px; color: #4f5d69; }
+  .tm .tb { position: absolute; right: 12px; top: 12px; font-size: 34px; line-height: 1; text-align: right; }
+  .tm .tb small { display: block; font-size: 8px; letter-spacing: .3em; color: #4f5d69; }
+  .tm .tf { margin-top: 10px; display: flex; gap: 14px; font-size: 11px; }
+  .tm .tf b { display: block; font-weight: 400; font-size: 8px; letter-spacing: .3em; color: #6b7884; }
+  .tm .tst { position: absolute; right: 10px; bottom: 10px; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid #2f4f73; color: #2f4f73; font-size: 9.5px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-14deg); opacity: .8; box-shadow: inset 0 0 0 3px #eef0ed, inset 0 0 0 4px rgba(47,79,115,.6); }
+  .tm .tst i { font-style: normal; font-size: 8px; letter-spacing: .1em; }
+  .tm .tst.early { border-color: #8e9aa4; color: #6b7884; box-shadow: inset 0 0 0 3px #eef0ed, inset 0 0 0 4px rgba(142,154,164,.6); }
+  .tm .d { position: absolute; left: 14px; bottom: 8px; }
+  .tm .th { position: absolute; right: 70px; bottom: 14px; width: 8px; height: 8px; border-radius: 50%; background: #c7ced4; box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .ts { width: 26%; background: #2f4f73; border-radius: 0 3px 3px 0; display: grid; place-items: center; box-shadow: 0 6px 12px -6px rgba(21,35,58,.4);
+    background-image: radial-gradient(circle, #eef0ed 1px, transparent 1.4px); background-size: 3px 6px; background-repeat: repeat-y; background-position: 0 0;
+    clip-path: polygon(0 0, 100% 0, 96% 10%, 100% 20%, 96% 30%, 100% 40%, 96% 50%, 100% 60%, 96% 70%, 100% 80%, 96% 90%, 100% 100%, 0 100%); }
+  .ts span { writing-mode: vertical-rl; font-size: 11px; letter-spacing: .4em; color: #e8eef5; }
+  #zc.zt { width: 520px; height: 230px; }
+  #zc.zt .zf { display: flex; background: none; box-shadow: 0 30px 60px -20px rgba(21,35,58,.5); border-radius: 4px; overflow: visible; }
+  #zc.zt .tm { min-height: 0; padding: 22px 24px; }
+  #zc.zt .tm .tk { font-size: 11px; } #zc.zt .tm .tn { font-size: 24px; margin-top: 12px; } #zc.zt .tm .tr { font-size: 14px; }
+  #zc.zt .tm .tb { font-size: 72px; right: 22px; top: 20px; } #zc.zt .tm .tb small { font-size: 10px; }
+  #zc.zt .tm .tf { font-size: 15px; margin-top: 22px; gap: 26px; } #zc.zt .tm .tf b { font-size: 10px; }
+  #zc.zt .tm .tst { width: 84px; height: 84px; font-size: 13px; right: 22px; bottom: 18px; } #zc.zt .tm .tst i { font-size: 11px; }
+  #zc.zt .ts span { font-size: 15px; }
+  #zoom:has(#zc.zt) { grid-template-columns: minmax(0, 260px) 520px; }
+
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--muted); letter-spacing: .08em; display: none; }
 </style>
 <link rel="stylesheet" href="room.css">
@@ -230,15 +264,17 @@
   const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
   const PW = 400, PH = 540, K = 14, PER = 4;
   // three albums in one binder: stamped projects, archived sticky notes, printed receipts
-  const KIND = ({ note: "note", receipt: "receipt" })[new URLSearchParams(location.search).get("kind")] || "proj";
+  const KIND = ({ note: "note", receipt: "receipt", ticket: "ticket" })[new URLSearchParams(location.search).get("kind")] || "proj";
   const KINDS = { proj: { name: "项目卡册", n: "张 · 盖过章的项目都在这里", empty: "这些是示例。在黑板上做完一个项目并盖章，它就会收进这里。", run: "项目卡册　盖过章的都在这里" },
     note: { name: "便签卡册", n: "张 · 归档的便签都在这里", empty: "这些是示例。便签右键「归档」，或拖到工具栏的卡册上，就会收进这里。", run: "便签卡册　归档的都在这里" },
+    ticket: { name: "车票卡册", n: "张 · 坐过的每一程都在这里", empty: "还没有车票。点计时器，检票坐一趟雪国线，下车后车票就收进这里。", run: "车票卡册　雪国线" },
     receipt: { name: "小票卡册", n: "张 · 每天打印的小票都在这里", empty: "还没有小票。在小票页按 PRINT 打印一张，它就会收进这里。", run: "小票卡册　每天一张" } };
   document.documentElement.dataset.hashira = KINDS[KIND].run;
   window.setHashira && setHashira(KINDS[KIND].run);
   document.title = KINDS[KIND].name + " · 纸桌";
+  document.body.classList.add("kind-" + KIND);
   // each album belongs to its page: the arrow goes back there
-  { const h = $("#home"); h.href = { proj: "./#board", note: "./#notes", receipt: "receipt.html" }[KIND]; h.title = { proj: "回到黑板", note: "回到软木板", receipt: "回到小票" }[KIND]; }
+  { const h = $("#home"); h.href = { proj: "./#board", note: "./#notes", receipt: "receipt.html", ticket: "focus.html" }[KIND]; h.title = { proj: "回到黑板", note: "回到软木板", receipt: "回到小票", ticket: "回到站台" }[KIND]; }
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -248,8 +284,9 @@
   const getJ = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
   if (KIND === "proj") { const d = getJ("paper-desk.desk-tasks.v1"); if (d && Array.isArray(d.done)) cards = d.done.slice(); }
   if (KIND === "note") cards = (getJ("paper-desk.notes-archive.v1") || []).map(n => Object.assign({}, n, { doneAt: n.archivedAt || n.createdAt }));
+  if (KIND === "ticket") cards = (getJ("paper-desk.tickets.v1") || []).map(t => Object.assign({}, t, { doneAt: t.endAt || t.end }));
   if (KIND === "receipt") cards = (getJ("paper-desk.receipts.v1") || []).map(r => Object.assign({}, r, { doneAt: r.at }));
-  const demo = !cards.length && KIND !== "receipt" && !new URLSearchParams(location.search).get("m");
+  const demo = !cards.length && KIND !== "receipt" && KIND !== "ticket" && !new URLSearchParams(location.search).get("m");
   if (demo) cards = KIND === "note" ? demoNotes() : demoCards();
   // from the library: just one month
   const MONTH = new URLSearchParams(location.search).get("m");
@@ -264,6 +301,16 @@
   cards.sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0));
   $("#empty").style.display = demo ? "block" : "none";
 
+  // a ticket from the 雪国线, small enough for a sleeve (the same design as focus.html's)
+  const hmA = ts => { const d = new Date(ts); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+  function ticketHTML(t) {
+    const esc = x => String(x == null ? "" : x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const d = new Date(t.start), stops = t.stops || [];
+    return `<div class="tm"><div class="tk">雪国线　乘车券</div><div class="tn">${esc(t.name)}</div><div class="tr">${esc(stops[0] || "")} → ${esc(stops[stops.length - 1] || "")}</div>` +
+      `<div class="tb">${t.minutes}<small>分钟</small></div><div class="tf"><span><b>发车</b>${hmA(t.start)}</span><span><b>车厢</b>${esc(t.seat || "")}</span></div>` +
+      `<div class="tst ${t.done ? "" : "early"}"><i>${t.done ? "到站" : "中途下车"}</i>${esc(t.at || "")}</div><div class="d">${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}</div><i class="th"></i></div>` +
+      `<div class="ts"><span>乘车凭证</span></div>`;
+  }
   function demoNotes() {
     const day = 864e5, now = Date.now();
     return [["work", "周五前交稿\n先搭结构，再填内容。"], ["life", "买猫粮\n灯泡 3000K · 胶带"], ["idea", "便签收进右边缘\n像本子侧面的索引贴。"],
@@ -310,7 +357,11 @@
       if (KIND !== "proj") {
         const mc = el("div", "mc " + (KIND === "note" ? "mn" : "mr"));
         mc.dataset.i = (p - 1) * PER + i;
-        if (KIND === "note") {
+        if (KIND === "ticket") {
+          mc.className = "mc mt";
+          mc.innerHTML = ticketHTML(t);
+          $(".d", mc) || mc.insertAdjacentHTML("beforeend", '<div class="d"></div>');
+        } else if (KIND === "note") {
           mc.style.setProperty("--c", CAT_C[t.cat] || CAT_C.work);
           mc.innerHTML = `<div class="tx"></div><div class="d"></div>`;
           $(".tx", mc).textContent = t.text || "";
@@ -518,7 +569,13 @@
     if (KIND !== "proj") {
       const cap = $("#zcap");
       zc.className = KIND === "note" ? "zn" : "zr";
-      if (KIND === "note") {
+      if (KIND === "ticket") {
+        zc.className = "zt";
+        zc.innerHTML = `<div class="zf front">${ticketHTML(t)}</div>`;
+        $("h2", cap).textContent = t.name || "雪国线";
+        $(".when", cap).textContent = `${fmt(t.start)} · ${hmA(t.start)} — ${hmA(t.endAt || t.end)}`;
+        $(".steps", cap).textContent = (t.done ? `坐到终点 ${t.at}` : `在 ${t.at} 中途下车`) + ` · ${t.focused} 分钟`;
+      } else if (KIND === "note") {
         zc.innerHTML = `<div class="zf front"><div class="tx"></div></div>`;
         zc.style.setProperty("--c", CAT_C[t.cat] || CAT_C.work);
         $(".tx", zc).textContent = t.text || "";

@@ -64,7 +64,7 @@
   .case { position: relative; padding: 18px 22px 8px; border-radius: 4px;
     background: linear-gradient(90deg, #3a2618, #5a3a24 6%, #4a2f1d 50%, #5a3a24 94%, #3a2618);
     box-shadow: 0 40px 70px -30px rgba(21,35,58,.6), 0 0 0 1px rgba(30,18,8,.6), inset 0 1px 0 rgba(255,220,170,.25); }
-  .lrow { position: relative; height: min(160px, calc((100vh - 140px) / 4 - 26px)); display: flex; align-items: flex-end; gap: 2px; padding: 0 12px 0 92px; margin-bottom: 26px;
+  .lrow { position: relative; height: min(150px, calc((100vh - 120px) / 5 - 26px)); display: flex; align-items: flex-end; gap: 2px; padding: 0 12px 0 92px; margin-bottom: 26px;
     background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18) 28%, rgba(0,0,0,.28)),
       repeating-linear-gradient(90deg, rgba(255,220,170,.04) 0 1px, transparent 1px 9px), #2e1e12; }
   .lrow::after { content: ""; position: absolute; left: -22px; right: -22px; bottom: -22px; height: 22px; z-index: 3;
@@ -97,6 +97,8 @@
   .spine.k-receipt { --bc: #f1f2f0 !important; border-radius: 2px; }
   .spine.k-receipt .lbl, .spine.k-receipt .yr { color: #36424e; text-shadow: none; }
   .spine.k-receipt .band { background: repeating-linear-gradient(90deg, #36424e 0 2px, transparent 2px 4px); height: 6px; opacity: .55; }
+  .spine.k-ticket { --bc: #2f4f73 !important; }
+  .spine.k-ticket .band { background: radial-gradient(circle, #eef0ed 1px, transparent 1.4px) 0 0 / 5px 3px; height: 3px; }
   .spine.empty { filter: saturate(.5) brightness(.75); }
 
   /* ───────── a book flying out of the shelf (a small 3D box: spine in front, cover on its right side) ───────── */
@@ -311,6 +313,7 @@
     { id: "proj", name: "项目", hint: "盖过章的项目", months: byMonth(pd.done || [], t => t.doneAt), href: k => `album.html?kind=proj&m=${k}` },
     { id: "note", name: "便签", hint: "归档的便签", months: byMonth(get("paper-desk.notes-archive.v1") || [], n => n.archivedAt || n.createdAt), href: k => `album.html?kind=note&m=${k}` },
     { id: "receipt", name: "小票", hint: "每天的小票", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `album.html?kind=receipt&m=${k}` },
+    { id: "ticket", name: "车票", hint: "坐过的雪国线", months: byMonth(get("paper-desk.tickets.v1") || [], t => t.endAt || t.end), href: k => `album.html?kind=ticket&m=${k}` },
     { id: "jot", name: "碎碎念", hint: "每个月的手账", journal: true },
   ];
   const FILL = ["#5a3a26", "#6b4430", "#4a3424", "#7a4b2e", "#3f2c1f", "#80563a", "#5e4a36", "#6d3b2b", "#4d3a2a", "#8a6a44"];

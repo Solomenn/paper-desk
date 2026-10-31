@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>雪国线 · 纸桌</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
+<script src="sound.js"></script>
+<style>
+  :root { --hand: "LXGW WenKai", "霞鹜文楷", "KaiTi", "STKaiti", serif; --ai: #2f4f73; --ease: cubic-bezier(.22, 1, .36, 1); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070d18; font-family: var(--hand); color: #e8eef5; user-select: none; -webkit-user-select: none; }
+  body { line-break: strict; }
+
+  /* ═════════ the platform at night: where you choose the trip and have the ticket punched ═════════ */
+  #board { position: fixed; inset: 0; display: grid; place-items: center; z-index: 5; transition: opacity .9s, transform 1.2s var(--ease);
+    background: radial-gradient(70% 60% at 50% 30%, #1f3150, #0b1424 70%), #0b1424; }
+  #board.gone { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  #board .lamp { position: absolute; top: 0; width: 2px; height: 22vh; background: #3a4558; }
+  #board .lamp::after { content: ""; position: absolute; left: -16px; bottom: -6px; width: 34px; height: 12px; border-radius: 0 0 17px 17px; background: #d9c38c;
+    box-shadow: 0 0 40px 18px rgba(255, 214, 140, .25), 0 40px 160px 40px rgba(255, 214, 140, .08); }
+  #board .lamp.a { left: 22%; } #board .lamp.b { right: 22%; }
+  #snow0 { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    color: #9fb0c4; text-decoration: none; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: color .2s; }
+  .home:hover { color: #fff; }
+  .panel { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .panel h1 { margin: 0; font-weight: 400; font-size: 15px; letter-spacing: .8em; margin-right: -.8em; color: #9fb0c4; }
+  .choose { display: flex; flex-direction: column; gap: 14px; width: min(560px, 90vw); }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .row > span { flex: none; width: 4.5em; font-size: 13px; letter-spacing: .3em; color: #8193aa; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 0; border-radius: 999px; padding: 6px 13px; font: 14px var(--hand); color: #c9d5e3; background: rgba(255,255,255,.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); cursor: pointer; transition: background .2s, color .2s; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip:hover { background: rgba(255,255,255,.12); }
+  .chip.on { background: #e8eef5; color: #13213a; }
+  .row input { flex: 1; min-width: 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.2); background: none; outline: none; padding: 6px 2px; font: 16px var(--hand); color: #fff; }
+  .row input::placeholder { color: #5f7089; }
+  .go { margin-top: 6px; border: 0; border-radius: 999px; padding: 11px 34px; font: 16px var(--hand); letter-spacing: .5em; color: #13213a; background: #e8d9a8;
+    cursor: pointer; box-shadow: 0 10px 30px -10px rgba(232, 217, 168, .6); transition: transform .2s; }
+  .go:hover { transform: translateY(-2px); }
+
+  /* ═════════ the ticket (after sasshi's admission ticket): board on the left, the 藍 stub behind a perforation ═════════ */
+  .ticket { --w: 520px; position: relative; width: var(--w); height: calc(var(--w) * .43); display: flex; filter: drop-shadow(0 18px 26px rgba(0,0,0,.45)); color: #1c232b; transition: transform .6s var(--ease); }
+  .ticket .main { position: relative; flex: 1; background: #eef0ed; border-radius: 4px 0 0 4px; padding: 6% 6% 5%;
+    -webkit-mask: radial-gradient(circle at 100% 0, transparent 9px, #000 9.5px) top right / 20px 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 9px, #000 9.5px) bottom right / 20px 51% no-repeat, linear-gradient(#000, #000) left / calc(100% - 20px) 100% no-repeat;
+            mask: radial-gradient(circle at 100% 0, transparent 9px, #000 9.5px) top right / 20px 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 9px, #000 9.5px) bottom right / 20px 51% no-repeat, linear-gradient(#000, #000) left / calc(100% - 20px) 100% no-repeat; }
+  .ticket .main::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .34  0 0 0 0 .38  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .ticket .k { font-size: calc(var(--w) * .017); letter-spacing: .3em; color: #4f5d69; }
+  .ticket .top { display: flex; justify-content: space-between; }
+  .ticket .nm { margin-top: 5%; font-size: calc(var(--w) * .05); line-height: 1.3; max-width: 64%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ticket .route { margin-top: 2%; font-size: calc(var(--w) * .026); color: #4f5d69; }
+  .ticket .big { position: absolute; right: 7%; top: 16%; text-align: right; font-size: calc(var(--w) * .15); line-height: 1; letter-spacing: -.02em; }
+  .ticket .big small { display: block; margin-top: 4px; font-size: calc(var(--w) * .017); letter-spacing: .3em; color: #4f5d69; }
+  .ticket .fields { position: absolute; left: 6%; right: 6%; bottom: 13%; display: flex; gap: 8%; }
+  .ticket .fields div { font-size: calc(var(--w) * .028); }
+  .ticket .fields b { display: block; margin-bottom: 3px; font-weight: 400; font-size: calc(var(--w) * .016); letter-spacing: .3em; color: #6b7884; }
+  .ticket .foot { position: absolute; left: 6%; bottom: 5%; font-size: calc(var(--w) * .018); color: #6b7884; letter-spacing: .1em; }
+  .ticket .hole { position: absolute; right: 12%; bottom: 14%; width: calc(var(--w) * .03); height: calc(var(--w) * .03); border-radius: 50%; background: #0b1424;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.6); transform: scale(0); transition: transform .18s cubic-bezier(.5, 2, .5, 1); }
+  .ticket.punched .hole { transform: scale(1); }
+  .ticket .stub { position: relative; width: 23%; background: #2f4f73; border-radius: 0 3px 3px 0; display: grid; place-items: center;
+    -webkit-mask: radial-gradient(circle at 0 0, transparent 9px, #000 9.5px) top left / 20px 51% no-repeat, radial-gradient(circle at 0 100%, transparent 9px, #000 9.5px) bottom left / 20px 51% no-repeat, linear-gradient(#000, #000) right / calc(100% - 20px) 100% no-repeat;
+            mask: radial-gradient(circle at 0 0, transparent 9px, #000 9.5px) top left / 20px 51% no-repeat, radial-gradient(circle at 0 100%, transparent 9px, #000 9.5px) bottom left / 20px 51% no-repeat, linear-gradient(#000, #000) right / calc(100% - 20px) 100% no-repeat;
+    clip-path: polygon(0 0, 100% 0, 97% 6%, 100% 12%, 96% 19%, 100% 26%, 97% 33%, 100% 40%, 96% 47%, 100% 54%, 97% 61%, 100% 68%, 96% 75%, 100% 82%, 97% 89%, 100% 95%, 98% 100%, 0 100%); }
+  .ticket .stub::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; background: radial-gradient(circle, #eef0ed 1px, transparent 1.5px) 0 0 / 2px 6px; opacity: .8; }
+  .ticket .stub span { writing-mode: vertical-rl; font-size: calc(var(--w) * .03); letter-spacing: .5em; color: #e8eef5; }
+  .ticket .stub em { position: absolute; right: 12%; bottom: 10%; writing-mode: vertical-rl; font-style: normal; font-size: calc(var(--w) * .016); color: rgba(232,238,245,.7); letter-spacing: .1em; }
+  /* the stamp at the end of the line */
+  .ticket .arr { position: absolute; right: 22%; top: 46%; width: calc(var(--w) * .2); height: calc(var(--w) * .2); opacity: 0; transform: rotate(-14deg) scale(1.3); mix-blend-mode: multiply; transition: opacity .3s, transform .35s cubic-bezier(.5, 1.6, .5, 1); }
+  .ticket.stamped .arr { opacity: .85; transform: rotate(-14deg) scale(1); }
+
+  /* ═════════ the carriage: a window onto the snow at night ═════════ */
+  #car { position: fixed; inset: 0; opacity: 0; transition: opacity 1.6s; background: #1a1410; }
+  #car.on { opacity: 1; }
+  #scene { position: absolute; display: block; }
+  /* the window: a rounded pane set in the carriage wall */
+  #wall { position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(120% 60% at 50% 120%, rgba(255, 196, 120, .16), transparent 60%),
+      linear-gradient(180deg, #2a2019, #1d1611); }
+  #pane { position: absolute; left: 7vw; right: 7vw; top: 9vh; bottom: 19vh; border-radius: 34px; overflow: hidden;
+    box-shadow: 0 0 0 10px #3a2d22, 0 0 0 12px #4c3b2c, 0 0 0 22px #2c221a, 0 30px 80px rgba(0,0,0,.7), inset 0 0 40px rgba(0,0,0,.6); }
+  #pane::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+    background:
+      radial-gradient(60% 50% at 0% 100%, rgba(200, 215, 230, .22), transparent 70%),
+      radial-gradient(50% 40% at 100% 0%, rgba(200, 215, 230, .14), transparent 70%),
+      radial-gradient(30% 25% at 100% 100%, rgba(200, 215, 230, .18), transparent 70%),
+      linear-gradient(104deg, transparent 40%, rgba(255,255,255,.04) 46%, transparent 52%); }
+  #drops { position: absolute; inset: 0; pointer-events: none; }
+  #sill { position: absolute; left: 4vw; right: 4vw; bottom: 12vh; height: 3.4vh; border-radius: 6px; background: linear-gradient(180deg, #5a4633, #3a2d22); box-shadow: 0 10px 20px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,220,170,.2); }
+  /* the line along the bottom of the carriage */
+  #line { position: absolute; left: 12vw; right: 12vw; bottom: 4.6vh; height: 40px; }
+  #line .track { position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: rgba(232, 217, 168, .25); }
+  #line .done { position: absolute; left: 0; top: 13px; height: 2px; background: #e8d9a8; }
+  #line .st { position: absolute; top: 9px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #1d1611; box-shadow: inset 0 0 0 2px rgba(232,217,168,.45); }
+  #line .st.past { box-shadow: inset 0 0 0 2px #e8d9a8; background: #e8d9a8; }
+  #line .st i { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-style: normal; font-size: 12px; color: rgba(232,217,168,.55); white-space: nowrap; letter-spacing: .15em; }
+  #line .st.past i { color: #e8d9a8; }
+  #line .tr { position: absolute; top: 4px; width: 22px; height: 10px; margin-left: -11px; border-radius: 5px 7px 3px 3px; background: #f1e6c4; box-shadow: 0 0 12px rgba(255, 230, 170, .6); transition: left 1s linear; }
+  #line .tr::after { content: ""; position: absolute; right: -3px; top: 3px; width: 3px; height: 3px; border-radius: 50%; background: #fff6d8; }
+  /* the time: only when you look for it */
+  #hud { position: absolute; left: 50%; top: 2.6vh; transform: translateX(-50%); font-size: 13px; letter-spacing: .4em; color: rgba(232, 217, 168, .0); transition: color .4s; white-space: nowrap; }
+  #car:hover #hud, #hud.show { color: rgba(232, 217, 168, .8); }
+  #off { position: absolute; right: 2.4vw; top: 2.2vh; border: 0; background: none; font: 13px var(--hand); letter-spacing: .3em; color: rgba(232, 217, 168, .0); cursor: pointer; transition: color .4s; }
+  #car:hover #off { color: rgba(232, 217, 168, .55); }
+  #off:hover { color: #e8d9a8 !important; }
+  #sndT { position: absolute; left: 76px; top: 2.2vh; border: 0; background: none; font: 13px var(--hand); letter-spacing: .3em; color: rgba(232, 217, 168, .0); cursor: pointer; transition: color .4s; }
+  #car:hover #sndT { color: rgba(232, 217, 168, .55); }
+
+  /* ═════════ arriving: the ticket comes back with the station's stamp ═════════ */
+  #arrive { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 16, .72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .8s; }
+  #arrive.on { opacity: 1; pointer-events: auto; }
+  #arrive .box { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  #arrive p { margin: 0; font-size: 15px; letter-spacing: .3em; color: #c9d5e3; }
+  #arrive .btns { display: flex; gap: 14px; }
+  #arrive a, #arrive button { border: 0; border-radius: 999px; padding: 9px 22px; font: 14px var(--hand); letter-spacing: .3em; text-decoration: none; cursor: pointer;
+    color: #13213a; background: #e8d9a8; }
+  #arrive .ghost { color: #c9d5e3; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+  @media (prefers-reduced-motion: reduce) { #board, #car { transition: none; } }
+</style>
+</head>
+<body>
+<a class="home" href="./" title="回到桌子">←</a>
+
+<!-- the platform -->
+<section id="board">
+  <i class="lamp a"></i><i class="lamp b"></i>
+  <canvas id="snow0"></canvas>
+  <div class="panel">
+    <h1>雪 国 线 · 夜 行</h1>
+    <div class="ticket" id="tk">
+      <div class="main">
+        <div class="top"><span class="k">雪国线　乘车券</span><span class="k" id="tkMonth"></span></div>
+        <div class="nm" id="tkName">这一程，专注什么？</div>
+        <div class="route" id="tkRoute"></div>
+        <div class="big"><span id="tkMin">25</span><small>分 钟</small></div>
+        <div class="fields"><div><b>发 车</b><span id="tkDep"></span></div><div><b>车 厢</b><span id="tkSeat"></span></div><div><b>到 达</b><span id="tkArr"></span></div></div>
+        <div class="foot" id="tkFoot"></div>
+        <i class="hole"></i>
+        <svg class="arr" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="aArc" d="M21 52 A29 29 0 0 1 79 52"/></defs>
+          <g fill="none" stroke="#2f4f73"><circle cx="50" cy="50" r="40" stroke-width="2.4"/><circle cx="50" cy="50" r="30" stroke-width="1.2"/></g>
+          <g fill="#2f4f73"><text font-size="9" letter-spacing="2" font-family="LXGW WenKai, KaiTi, serif"><textPath href="#aArc" startOffset="50%" text-anchor="middle" id="arrName">到 站</textPath></text>
+          <text x="50" y="62" text-anchor="middle" font-size="10" font-family="LXGW WenKai, KaiTi, serif" id="arrDate"></text></g></svg>
+      </div>
+      <div class="stub"><span>乘 车 凭 证</span><em id="tkNo"></em></div>
+    </div>
+    <div class="choose">
+      <div class="row"><span>专 注</span><div class="chips" id="tasks"></div></div>
+      <div class="row"><span></span><input id="free" maxlength="40" placeholder="或者写一件别的事"></div>
+      <div class="row"><span>行 程</span><div class="chips" id="mins"></div></div>
+    </div>
+    <button class="go" id="go">检票上车</button>
+  </div>
+</section>
+
+<!-- the carriage -->
+<section id="car">
+  <div id="wall"></div>
+  <div id="pane"><canvas id="scene"></canvas><canvas id="drops"></canvas></div>
+  <div id="sill"></div>
+  <div id="line"><i class="track"></i><i class="done"></i></div>
+  <div id="hud"></div>
+  <button id="sndT">车 轮 声</button>
+  <button id="off">中 途 下 车</button>
+</section>
+
+<!-- arriving -->
+<section id="arrive"><div class="box"><div id="slot"></div><p id="arrMsg"></p><div class="btns"><a href="./">回到桌子</a><button class="ghost" id="again">再坐一程</button><a class="ghost" href="album.html?kind=ticket">车票卡册</a></div></div></section>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const get = (k, fb) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch { return fb; } };
+  const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const pad = n => String(n).padStart(2, "0");
+  const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const TRIP = "paper-desk.trip.v1", TICKETS = "paper-desk.tickets.v1";
+  // the 雪国线: made-up stations through snow country
+  const STATIONS = ["白川口", "雪见", "霜原", "静川", "松风", "月岭", "冬木", "鹿鸣", "灯台寺", "雪国"];
+  const LINE = "雪国线";
+
+  /* ───────── what to ride with: Doing projects, today's undone items, or anything ───────── */
+  const tasks = [];
+  ((get("paper-desk.desk-tasks.v1", {}) || {}).projects || []).filter(p => p.col === "doing" && (p.title || "").trim()).forEach(p => tasks.push({ name: p.title, proj: p.id }));
+  (get("paper-desk.today.v1", []) || []).filter(i => i && !i.done && (i.text || "").trim() && !i.sub).slice(0, 6).forEach(i => tasks.push({ name: i.text }));
+  let pick = tasks[0] || null, minutes = get("paper-desk.trip.min", 25);
+  const tEl = $("#tasks");
+  tasks.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; $("#free").value = ""; draw(); }; t.el = b; tEl.appendChild(b); });
+  if (!tasks.length) tEl.innerHTML = '<span style="color:#5f7089;font-size:13px">黑板 Doing 和今日台历上还没有事，写一件吧</span>';
+  $("#free").addEventListener("input", () => { pick = $("#free").value.trim() ? { name: $("#free").value.trim() } : (tasks[0] || null); draw(); });
+  [15, 25, 45, 60, 90].forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = `${m} 分`; b.dataset.m = m; b.onclick = () => { minutes = m; put("paper-desk.trip.min", m); draw(); }; $("#mins").appendChild(b); });
+  // stations for a trip of this length: one every 5 minutes or so, from 3 to 9 stops
+  const stopsFor = m => { const n = Math.max(3, Math.min(9, Math.round(m / 5) + 1)), off = (new Date().getDate() * 3) % (STATIONS.length - n + 1); return STATIONS.slice(off, off + n); };
+  const seatFor = () => { const r = Math.floor(Math.random() * 1e9); return `${1 + r % 8} 号车 ${1 + (r >> 3) % 16}${"ABCD"[(r >> 7) % 4]}`; };
+  let seat = seatFor(), no = String(1000 + Math.floor(Math.random() * 9000));
+  function fillTicket(tk, t) {
+    const d = new Date(t.start || Date.now());
+    $("#tkMonth", tk) && ($("#tkMonth", tk).textContent = `${d.getFullYear()} · ${d.getMonth() + 1} 月 ${d.getDate()} 日`);
+    tk.querySelector("#tkName").textContent = t.name || "这一程，专注什么？";
+    tk.querySelector("#tkRoute").textContent = `${t.stops[0]} → ${t.stops[t.stops.length - 1]} · ${t.stops.length - 1} 站`;
+    tk.querySelector("#tkMin").textContent = t.minutes;
+    tk.querySelector("#tkDep").textContent = hm(t.start || Date.now());
+    tk.querySelector("#tkSeat").textContent = t.seat;
+    tk.querySelector("#tkArr").textContent = hm((t.start || Date.now()) + t.minutes * 60000);
+    tk.querySelector("#tkFoot").textContent = `${LINE} · 夜行 · 车内请保持安静`;
+    tk.querySelector("#tkNo").textContent = `No. ${t.no}`;
+  }
+  function draw() {
+    tasks.forEach(t => t.el.classList.toggle("on", t === pick));
+    document.querySelectorAll("#mins .chip").forEach(b => b.classList.toggle("on", +b.dataset.m === minutes));
+    fillTicket($("#tk"), { name: pick ? pick.name : "", minutes, stops: stopsFor(minutes), seat, no });
+  }
+  draw();
+
+  /* ───────── snow on the platform ───────── */
+  function snowfall(cv, n, wind) {
+    const c = cv.getContext("2d"); let W, H, fl = [];
+    const fit = () => { W = cv.width = cv.clientWidth * devicePixelRatio; H = cv.height = cv.clientHeight * devicePixelRatio; };
+    fit(); addEventListener("resize", fit);
+    for (let i = 0; i < n; i++) fl.push({ x: Math.random(), y: Math.random(), r: .6 + Math.random() * 1.8, v: .02 + Math.random() * .05, p: Math.random() * 6 });
+    return dt => {
+      c.clearRect(0, 0, W, H); c.fillStyle = "rgba(235, 242, 250, .85)";
+      for (const f of fl) {
+        f.y += f.v * dt; f.x += (Math.sin(f.p += dt * .8) * .01 - wind()) * dt;
+        if (f.y > 1) { f.y = -.02; f.x = Math.random() * 1.2; } if (f.x < -.05) f.x = 1.05; if (f.x > 1.05) f.x = -.05;
+        c.globalAlpha = .35 + f.r / 3; c.beginPath(); c.arc(f.x * W, f.y * H, f.r * devicePixelRatio, 0, 7); c.fill();
+      }
+      c.globalAlpha = 1;
+    };
+  }
+  const platSnow = snowfall($("#snow0"), 140, () => .004);
+
+  /* ═════════ the window ═════════ */
+  const cv = $("#scene"), cx = cv.getContext("2d");
+  let W = 0, H = 0, D = 1;
+  function fit() {
+    const r = $("#pane").getBoundingClientRect(); D = devicePixelRatio || 1;
+    W = r.width; H = r.height; cv.width = W * D; cv.height = H * D; cv.style.width = W + "px"; cv.style.height = H + "px";
+    paintDrops();
+  }
+  // value noise, smooth
+  const hsh = n => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
+  const noise = x => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hsh(i) * (1 - u) + hsh(i + 1) * u; };
+  const ridge = (x, oct) => { let a = 0, amp = 1, fr = 1, n = 0; for (let k = 0; k < oct; k++) { a += noise(x * fr + k * 31) * amp; n += amp; amp *= .5; fr *= 2.1; } return a / n; };
+  const stars = Array.from({ length: 120 }, (_, i) => ({ x: hsh(i * 3.1), y: hsh(i * 7.7) * .5, r: .3 + hsh(i * 1.3) * 1.1, t: hsh(i * 9.1) * 6 }));
+  let world = 0, speed = 0, target = 0;          // px of the nearest layer travelled; px/s
+  const flakes = Array.from({ length: 260 }, () => ({ x: Math.random(), y: Math.random(), z: .25 + Math.random() * .75, p: Math.random() * 6 }));
+  let platform = null;                             // the station we stop at: world x where its middle comes to rest
+  function layer(par, base, amp, fr, oct, fill, snowcap) {
+    const off = world * par, step = 6;
+    cx.beginPath(); cx.moveTo(0, H);
+    for (let x = 0; x <= W + step; x += step) cx.lineTo(x, H * base - ridge((x + off) * fr, oct) * H * amp);
+    cx.lineTo(W, H); cx.closePath(); cx.fillStyle = fill; cx.fill();
+    if (snowcap) {   // a pale rim of snow along the ridge
+      cx.beginPath();
+      for (let x = 0; x <= W + step; x += step) { const y = H * base - ridge((x + off) * fr, oct) * H * amp; x ? cx.lineTo(x, y) : cx.moveTo(x, y); }
+      cx.strokeStyle = snowcap; cx.lineWidth = 2.2; cx.stroke();
+    }
+  }
+  function pines(par, base, size, gap, fill, tip) {
+    const off = world * par, first = Math.floor(off / gap) - 1;
+    for (let i = first; i < first + W / gap + 3; i++) {
+      if (hsh(i * 1.7 + par) < .25) continue;
+      const x = i * gap - off + hsh(i * 3.3) * gap * .8, s = size * (.6 + hsh(i * 5.1) * .7), y = H * base + hsh(i * 2.2) * 6;
+      cx.fillStyle = fill;
+      cx.beginPath(); cx.moveTo(x, y - s * 2.4);
+      for (let k = 0; k < 4; k++) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.lineTo(x + w, yy); cx.lineTo(x + w * .45, yy - s * .05); }
+      cx.lineTo(x + s * .08, y); cx.lineTo(x - s * .08, y);
+      for (let k = 3; k >= 0; k--) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.lineTo(x - w * .45, yy - s * .05); cx.lineTo(x - w, yy); }
+      cx.closePath(); cx.fill();
+      if (tip) { cx.fillStyle = tip; for (let k = 0; k < 4; k++) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.fillRect(x - w * .7, yy - s * .1, w * 1.1, s * .07); } }
+    }
+  }
+  function poles() {
+    const gap = W * .55, off = world, first = Math.floor(off / gap) - 1, top = H * .44, foot = H * .86;
+    const xs = [];
+    for (let i = first; i < first + W / gap + 3; i++) xs.push(i * gap - off);
+    // no poles on the platform
+    if (platform) { const px = platform.x - world + W / 2; for (let j = 0; j < xs.length; j++) if (Math.abs(xs[j] - px) < 700) xs[j] = null; }
+    const keep = xs.filter(x => x !== null); xs.length = 0; xs.push(...keep);
+    cx.strokeStyle = "rgba(8, 12, 20, .9)"; cx.lineWidth = 1.2;
+    for (let w = 0; w < 3; w++) {   // the wires sag between poles
+      cx.beginPath();
+      xs.forEach((x, j) => { const y = top + 10 + w * 9; if (!j) cx.moveTo(x, y); else cx.quadraticCurveTo((xs[j - 1] + x) / 2, y + 26, x, y); });
+      cx.stroke();
+    }
+    cx.fillStyle = "#070b13";
+    xs.forEach(x => { cx.fillRect(x - 3.5, top, 7, foot - top); cx.fillRect(x - 22, top + 8, 44, 4); cx.fillRect(x - 16, top + 22, 32, 3); });
+  }
+  function cabins(par, base) {
+    const gap = 900, off = world * par, first = Math.floor(off / gap) - 1;
+    for (let i = first; i < first + W / gap + 3; i++) {
+      if (hsh(i * 4.4) < .55) continue;
+      const x = i * gap - off + hsh(i * 8.8) * 400, y = H * base, w = 46, h = 26;
+      cx.fillStyle = "#0d1522"; cx.fillRect(x, y - h, w, h);
+      cx.beginPath(); cx.moveTo(x - 6, y - h); cx.lineTo(x + w / 2, y - h - 18); cx.lineTo(x + w + 6, y - h); cx.closePath(); cx.fill();
+      cx.fillStyle = "#cfdbe8"; cx.beginPath(); cx.moveTo(x - 6, y - h); cx.lineTo(x + w / 2, y - h - 18); cx.lineTo(x + w + 6, y - h); cx.lineTo(x + w + 2, y - h + 3); cx.lineTo(x + w / 2, y - h - 13); cx.lineTo(x - 2, y - h + 3); cx.closePath(); cx.fill();
+      const g = cx.createRadialGradient(x + 16, y - 12, 0, x + 16, y - 12, 40); g.addColorStop(0, "rgba(255, 200, 120, .45)"); g.addColorStop(1, "rgba(255, 200, 120, 0)");
+      cx.fillStyle = g; cx.fillRect(x - 30, y - 60, 100, 80);
+      cx.fillStyle = "#ffd28a"; cx.fillRect(x + 10, y - 17, 9, 8); cx.fillRect(x + 27, y - 17, 9, 8);
+    }
+  }
+  function drawPlatform() {
+    if (!platform) return;
+    const x = platform.x - world + W / 2, y = H * .86;
+    if (x < -900 || x > W + 900) return;
+    // the platform edge, the shelter, lamps and the station's name
+    cx.fillStyle = "#0a111c"; cx.fillRect(x - 600, y - 22, 1200, 26);
+    cx.fillStyle = "#d9e2ec"; cx.fillRect(x - 600, y - 24, 1200, 4);
+    cx.fillStyle = "#0b1320"; cx.fillRect(x - 160, y - 150, 320, 12); cx.fillRect(x - 150, y - 140, 6, 118); cx.fillRect(x + 144, y - 140, 6, 118);
+    cx.fillStyle = "#dfe7f0"; cx.fillRect(x - 168, y - 156, 336, 7);
+    [-420, -160, 160, 420].forEach(dx => {
+      const lx = x + dx, g = cx.createRadialGradient(lx, y - 132, 0, lx, y - 132, 120);
+      g.addColorStop(0, "rgba(255, 214, 140, .5)"); g.addColorStop(1, "rgba(255, 214, 140, 0)");
+      cx.fillStyle = g; cx.fillRect(lx - 120, y - 250, 240, 250);
+      cx.fillStyle = "#0b1320"; cx.fillRect(lx - 2, y - 130, 4, 108); cx.fillStyle = "#ffe0a0"; cx.fillRect(lx - 9, y - 136, 18, 6);
+    });
+    // the sign
+    cx.fillStyle = "#f2f5f8"; cx.fillRect(x - 110, y - 108, 220, 54);
+    cx.strokeStyle = "#2f4f73"; cx.lineWidth = 3; cx.strokeRect(x - 106, y - 104, 212, 46);
+    cx.fillStyle = "#1c232b"; cx.font = `600 26px ${getComputedStyle(document.body).fontFamily}`; cx.textAlign = "center"; cx.fillText(platform.name, x, y - 72);
+    cx.font = `12px ${getComputedStyle(document.body).fontFamily}`; cx.fillStyle = "#4f5d69"; cx.fillText(`${LINE} · ${platform.name} 站`, x, y - 59);
+  }
+  function scene(dt, t) {
+    const c = cx; c.setTransform(D, 0, 0, D, 0, 0);
+    // sky
+    const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#050a14"); sky.addColorStop(.55, "#122039"); sky.addColorStop(1, "#24375a");
+    c.fillStyle = sky; c.fillRect(0, 0, W, H);
+    stars.forEach(s => { c.globalAlpha = .35 + Math.sin(t * 1.3 + s.t) * .25; c.fillStyle = "#dfe8ff"; c.fillRect(s.x * W, s.y * H, s.r, s.r); });
+    c.globalAlpha = 1;
+    // the moon, far away and still
+    const mx = W * .78, my = H * .2, mg = c.createRadialGradient(mx, my, 0, mx, my, H * .35);
+    mg.addColorStop(0, "rgba(220, 230, 255, .35)"); mg.addColorStop(1, "rgba(220, 230, 255, 0)"); c.fillStyle = mg; c.fillRect(0, 0, W, H);
+    c.fillStyle = "#eef3ff"; c.beginPath(); c.arc(mx, my, H * .045, 0, 7); c.fill();
+    c.fillStyle = "#c9d4ea"; c.beginPath(); c.arc(mx - H * .012, my - H * .008, H * .009, 0, 7); c.arc(mx + H * .015, my + H * .012, H * .006, 0, 7); c.fill();
+    // far mountains, snow on their ridges, the moonlit snowfield, then the forest and the bank by the line
+    layer(.02, .58, .32, .0016, 4, "#1d2c47", "rgba(200, 215, 240, .55)");
+    layer(.05, .66, .2, .0028, 4, "#2a3d5e", "rgba(220, 230, 250, .5)");
+    layer(.12, .74, .08, .004, 3, "#8ea2bf");
+    pines(.12, .72, 9, 26, "#22324d");
+    cabins(.18, .76);
+    layer(.3, .8, .05, .006, 3, "#a9bbd2");
+    pines(.35, .8, 20, 46, "#121d30", "rgba(225, 235, 248, .8)");
+    layer(.7, .88, .04, .01, 2, "#c4d2e3");
+    drawPlatform();
+    if (speed > 2 || platform) poles();
+    layer(1.4, 1.0, .06, .012, 2, "#dde6f0");
+    // falling snow, swept back by the train's speed
+    const sweep = speed / 260;
+    c.fillStyle = "rgba(240, 245, 252, .9)";
+    for (const f of flakes) {
+      f.y += (.04 + .05 * f.z) * dt; f.x -= (.01 * Math.sin(f.p += dt) + sweep * .55 * f.z) * dt;
+      if (f.y > 1) { f.y = -.02; f.x = Math.random() * 1.3; } if (f.x < -.05) { f.x = 1.05 + Math.random() * .2; f.y = Math.random(); }
+      const len = 1 + sweep * 10 * f.z, r = .6 + f.z * 1.6;
+      c.globalAlpha = .3 + f.z * .6;
+      if (len > 2) { c.strokeStyle = "rgba(240,245,252,.8)"; c.lineWidth = r; c.beginPath(); c.moveTo(f.x * W, f.y * H); c.lineTo(f.x * W + len, f.y * H - len * .15); c.stroke(); }
+      else { c.beginPath(); c.arc(f.x * W, f.y * H, r, 0, 7); c.fill(); }
+    }
+    c.globalAlpha = 1;
+    // the carriage's own lights faint in the glass
+    const rf = c.createLinearGradient(0, H * .7, 0, H); rf.addColorStop(0, "rgba(255, 190, 120, 0)"); rf.addColorStop(1, "rgba(255, 190, 120, .08)");
+    c.fillStyle = rf; c.fillRect(0, 0, W, H);
+  }
+  // condensation and a few drops running down the glass
+  function paintDrops() {
+    const dc = $("#drops"); dc.width = W * D; dc.height = H * D; dc.style.width = W + "px"; dc.style.height = H + "px";
+    const g = dc.getContext("2d"); g.scale(D, D);
+    for (let i = 0; i < 16; i++) {
+      const x = hsh(i * 3.7) * W, y = H * .35 + hsh(i * 5.3) * H * .6, l = 6 + hsh(i * 2.1) * 22;
+      const gr = g.createLinearGradient(x, y, x, y + l); gr.addColorStop(0, "rgba(220,230,240,0)"); gr.addColorStop(1, "rgba(220,230,240,.14)");
+      g.strokeStyle = gr; g.lineWidth = 1 + hsh(i) * 1.2; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + (hsh(i * 9) - .5) * 6, y + l / 2, x + (hsh(i * 7) - .5) * 4, y + l); g.stroke();
+      g.fillStyle = "rgba(230,238,245,.28)"; g.beginPath(); g.arc(x + (hsh(i * 7) - .5) * 4, y + l, 1.6, 0, 7); g.fill();
+    }
+  }
+
+  /* ───────── the sound of the wheels: rumble (filtered noise) and the joints of the rails ───────── */
+  let ac = null, rumble = null, wheelsOn = get("paper-desk.trip.wheels", true), clackT = 0;
+  function audio() {
+    if (ac || !wheelsOn) return;
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const n = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate), d = n.getChannelData(0); let last = 0;
+      for (let i = 0; i < d.length; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+      const src = ac.createBufferSource(); src.buffer = n; src.loop = true;
+      const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 260;
+      const g = ac.createGain(); g.gain.value = 0;
+      src.connect(lp).connect(g).connect(ac.destination); src.start();
+      rumble = { g, lp };
+    } catch { ac = null; }
+  }
+  function clack(strength) {
+    if (!ac || !wheelsOn) return;
+    [0, .09].forEach((dl, k) => {
+      const o = ac.createBufferSource(), b = ac.createBuffer(1, ac.sampleRate * .08, ac.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ac.sampleRate * .012));
+      o.buffer = b; const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 900 - k * 300; f.Q.value = 1.4;
+      const g = ac.createGain(); g.gain.value = .22 * strength; o.connect(f).connect(g).connect(ac.destination); o.start(ac.currentTime + dl);
+    });
+  }
+  function chime() {
+    if (!ac) return;
+    [659, 523, 587, 392].forEach((fq, i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * .42;
+      o.type = "sine"; o.frequency.value = fq; g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.12, t0 + .03); g.gain.exponentialRampToValueAtTime(.0001, t0 + 1.4);
+      o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + 1.5);
+    });
+  }
+  $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
+  $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关";
+
+  /* ═════════ the trip ═════════ */
+  const CRUISE = 240, ACCEL = 7, BRAKE = 11;      // px/s of the nearest layer; seconds to speed up; seconds of braking
+  let trip = get(TRIP, null);
+  function lineUI() {
+    const L = $("#line"); L.querySelectorAll(".st, .tr").forEach(e => e.remove());
+    trip.stops.forEach((s, i) => { const e = document.createElement("i"); e.className = "st"; e.style.left = (i / (trip.stops.length - 1) * 100) + "%"; e.innerHTML = `<i></i>`; e.firstChild.textContent = s; L.appendChild(e); });
+    const tr = document.createElement("i"); tr.className = "tr"; L.appendChild(tr);
+  }
+  function board() {
+    if (!pick || !pick.name) { $("#free").focus(); $("#free").placeholder = "先写这一程要专注的事"; return; }
+    const dur = +new URLSearchParams(location.search).get("dur");   // seconds, for trying it out
+    trip = { id: Math.random().toString(36).slice(2, 9), name: pick.name, proj: pick.proj || null, minutes, stops: stopsFor(minutes), seat, no,
+      start: Date.now(), end: Date.now() + (dur > 0 ? dur * 1000 : minutes * 60000), line: LINE };
+    put(TRIP, trip);
+    audio();
+    window.Sound && Sound.play("tab", { vol: .9 });
+    $("#tk").classList.add("punched");
+    setTimeout(() => { $("#board").classList.add("gone"); ride(); }, 900);
+  }
+  $("#go").onclick = board;
+  $("#free").addEventListener("keydown", e => { if (e.key === "Enter") board(); });
+
+  let riding = false, arrived = false, lastClack = 0;
+  function ride() {
+    riding = true; arrived = false;
+    $("#car").classList.add("on"); fit(); lineUI();
+    const elapsed = (Date.now() - trip.start) / 1000;
+    speed = elapsed > ACCEL ? CRUISE : 0; target = CRUISE;
+  }
+  function progress() { return Math.min(1, (Date.now() - trip.start) / (trip.end - trip.start)); }
+  function updateLine() {
+    const p = progress(), n = trip.stops.length - 1;
+    $("#line .done").style.width = (p * 100) + "%";
+    $("#line .tr").style.left = (p * 100) + "%";
+    document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i / n <= p + 1e-6));
+    const left = Math.max(0, Math.ceil((trip.end - Date.now()) / 60000)), nextI = Math.min(n, Math.floor(p * n) + 1);
+    $("#hud").textContent = p < 1 ? `${trip.name} · 下一站 ${trip.stops[nextI]} · 还有 ${left} 分钟` : `终点 ${trip.stops[n]}`;
+  }
+  function finish(early) {
+    if (arrived) return;
+    arrived = true;
+    const p = progress(), n = trip.stops.length - 1, reached = early ? Math.floor(p * n) : n;
+    const stop = trip.stops[reached];
+    const rec = Object.assign({}, trip, { done: !early, endAt: Date.now(), reached, at: stop, focused: Math.round((Math.min(Date.now(), trip.end) - trip.start) / 60000) });
+    const all = get(TICKETS, []) || []; all.push(rec); put(TICKETS, all);
+    localStorage.removeItem(TRIP);
+    // a project you rode with counts the time
+    if (rec.proj) {
+      const S = get("paper-desk.desk-tasks.v1", null);
+      const p2 = S && (S.projects || []).find(x => x.id === rec.proj);
+      if (p2) { p2.sessions = (p2.sessions || 0) + 1; p2.focus = (p2.focus || 0) + rec.focused; put("paper-desk.desk-tasks.v1", S); }
+    }
+    // the ticket comes back, stamped
+    const tk = $("#tk").cloneNode(true); tk.id = ""; tk.classList.add("punched"); tk.style.setProperty("--w", "min(520px, 86vw)");
+    fillTicket(tk, trip);
+    tk.querySelector("#arrName").textContent = early ? `中途下车 · ${stop}` : `${stop} · 到站`;
+    tk.querySelector("#arrDate").textContent = `${hm(rec.endAt)}`;
+    $("#slot").replaceChildren(tk);
+    $("#arrMsg").textContent = early ? `在 ${stop} 下了车 · 坐了 ${rec.focused} 分钟` : `终点 ${stop} 到了 · ${trip.minutes} 分钟，一路辛苦`;
+    $("#arrive").classList.add("on");
+    if (!early) chime();
+    setTimeout(() => { tk.classList.add("stamped"); window.Sound && Sound.impact("card", .8); }, 700);
+  }
+  $("#off").onclick = () => { if (!arrived && confirm("在下一站下车？这张票会记下你坐到了哪里。")) { target = 0; setTimeout(() => finish(true), 600); } };
+  $("#again").onclick = () => { location.reload(); };
+
+  /* ───────── the loop ───────── */
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (!riding) platSnow(dt);
+    else {
+      const leftS = (trip.end - Date.now()) / 1000;
+      // brake into the last station: the platform is placed where the train will come to rest
+      // constant braking from v0 over T seconds covers v0·T/2: the platform is put exactly there
+      if (!arrived && leftS <= BRAKE && leftS > 0 && !platform) { const T = Math.max(.5, leftS); platform = { x: world + speed * T / 2, v0: speed, T, name: trip.stops[trip.stops.length - 1] }; }
+      if (platform) speed = platform.v0 * Math.max(0, Math.min(1, leftS / platform.T));
+      else speed += (target - speed) * (1 - Math.exp(-dt / (target > speed ? ACCEL / 3 : 1)));
+      world += speed * dt;
+      if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
+      // the rail joints: every 25 m or so
+      if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
+      scene(dt, now / 1000);
+      updateLine();
+      if (!arrived && leftS <= 0) finish(false);
+    }
+    requestAnimationFrame(frame);
+  }
+  addEventListener("resize", () => { if (riding) fit(); });
+  // back on the train if the page was closed mid-trip
+  if (trip && trip.end > Date.now() - 5000) { $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket($("#tk"), trip); ride();
+    addEventListener("pointerdown", () => audio(), { once: true }); }
+  else if (trip) { localStorage.removeItem(TRIP); trip = null; }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
