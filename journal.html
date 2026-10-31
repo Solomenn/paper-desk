@@ -59,6 +59,46 @@
   .spine.empty { filter: saturate(.55) brightness(.9); }
   .spine.now::after { content: ""; position: absolute; right: 7px; top: -1px; width: 7px; height: 26px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
 
+  /* ═════════ the library: a walnut bookcase, one shelf for each kind, a book for each month ═════════ */
+  #shelf { gap: 0; }
+  .case { position: relative; padding: 18px 22px 8px; border-radius: 4px;
+    background: linear-gradient(90deg, #3a2618, #5a3a24 6%, #4a2f1d 50%, #5a3a24 94%, #3a2618);
+    box-shadow: 0 40px 70px -30px rgba(21,35,58,.6), 0 0 0 1px rgba(30,18,8,.6), inset 0 1px 0 rgba(255,220,170,.25); }
+  .lrow { position: relative; height: min(160px, calc((100vh - 140px) / 4 - 26px)); display: flex; align-items: flex-end; gap: 2px; padding: 0 12px 0 92px; margin-bottom: 26px;
+    background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18) 28%, rgba(0,0,0,.28)),
+      repeating-linear-gradient(90deg, rgba(255,220,170,.04) 0 1px, transparent 1px 9px), #2e1e12; }
+  .lrow::after { content: ""; position: absolute; left: -22px; right: -22px; bottom: -22px; height: 22px; z-index: 3;
+    background: linear-gradient(180deg, #7a5233, #5e3d25 55%, #4a2f1d); box-shadow: 0 10px 14px -6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,170,.35); }
+  .plaque { position: absolute; left: 14px; bottom: 34%; z-index: 2; padding: 6px 8px; min-width: 58px; text-align: center; font-size: 13px; letter-spacing: .3em;
+    color: #3a2a14; background: linear-gradient(180deg, #e9d29a, #c9a45a 55%, #b08a42); border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(255,240,200,.6) inset, 0 2px 4px rgba(0,0,0,.5); }
+  .plaque::before, .plaque::after { content: ""; position: absolute; top: 50%; width: 3px; height: 3px; margin-top: -1.5px; border-radius: 50%; background: #7a5a2a; }
+  .plaque::before { left: 3px; } .plaque::after { right: 3px; }
+  .lrow .fbk { display: block; flex: none; border-radius: 2px 2px 0 0; opacity: .9;
+    background-image: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,255,255,.08) 25%, rgba(0,0,0,0) 50%, rgba(0,0,0,.3));
+    box-shadow: 1px 0 2px rgba(0,0,0,.45); transform-origin: 50% 100%; }
+  .lrow .fbk.gilt { background-image: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,255,255,.08) 25%, rgba(0,0,0,0) 50%, rgba(0,0,0,.3)),
+      linear-gradient(180deg, transparent 10%, #b9944c 10% 12%, transparent 12% 86%, #b9944c 86% 88%, transparent 88%); }
+  .lrow .stk { display: flex; flex-direction: column; justify-content: flex-end; flex: none; margin: 0 4px; }
+  .lrow .lay { display: block; height: 13px; border-radius: 1px; box-shadow: inset 0 2px 0 rgba(255,255,255,.1), 0 1px 1px rgba(0,0,0,.5); }
+  .lrow .bend { display: block; flex: none; width: 9px; height: 52%; margin: 0 3px; border-radius: 1px 1px 0 0; background: linear-gradient(90deg, #6b6058, #a89a88 40%, #5a4f48); }
+  .lrow .spine { text-decoration: none; }
+  .lrow .spine .band.t { top: 14px; } .lrow .spine .band.b { bottom: 22px; }
+  .lrow .spine .lbl { top: 24px; font-size: 13px; gap: 1px; }
+  .lrow .spine .yr { bottom: 6px; font-size: 9px; }
+  .lrow .spine:hover { transform: translateY(-10px) rotate(-1deg); }
+  /* each shelf its own binding: leather for projects, note-coloured cloth, white receipt rolls, cloth for the journal */
+  .spine.k-proj { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,255,255,.1) 18%, rgba(255,255,255,0) 40%, rgba(0,0,0,.18) 80%, rgba(0,0,0,.35)), var(--bc); }
+  .spine.k-proj .band { background: #c9a45a; height: 2px; }
+  .spine.k-note { --bc: #e9d58f !important; }
+  .spine.k-note:nth-child(4n+1) { --bc: #b9d6b9 !important; } .spine.k-note:nth-child(4n+2) { --bc: #ebb9a6 !important; } .spine.k-note:nth-child(4n+3) { --bc: #b8cadc !important; }
+  .spine.k-note .lbl, .spine.k-note .yr { color: rgba(46,40,30,.8); text-shadow: none; }
+  .spine.k-note .band { background: rgba(46,40,30,.2); }
+  .spine.k-receipt { --bc: #f1f2f0 !important; border-radius: 2px; }
+  .spine.k-receipt .lbl, .spine.k-receipt .yr { color: #36424e; text-shadow: none; }
+  .spine.k-receipt .band { background: repeating-linear-gradient(90deg, #36424e 0 2px, transparent 2px 4px); height: 6px; opacity: .55; }
+  .spine.empty { filter: saturate(.5) brightness(.75); }
+
   /* ───────── a book flying out of the shelf (a small 3D box: spine in front, cover on its right side) ───────── */
   #fly { position: fixed; inset: 0; z-index: 30; pointer-events: none; perspective: 1700px; display: none; }
   #fly.on { display: block; }
@@ -265,26 +305,69 @@
   /* ───────── the shelf ───────── */
   const shelf = $("#shelf");
   const hash = s => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+  // what each shelf holds, month by month: "y-m" → how many
+  const byMonth = (list, ts) => { const m = new Map(); list.forEach(x => { const t = ts(x); if (!t) return; const d = new Date(t), k = `${d.getFullYear()}-${d.getMonth() + 1}`; m.set(k, (m.get(k) || 0) + 1); }); return m; };
+  const SHELVES = [
+    { id: "proj", name: "项目", hint: "盖过章的项目", months: byMonth(pd.done || [], t => t.doneAt), href: k => `album.html?kind=proj&m=${k}` },
+    { id: "note", name: "便签", hint: "归档的便签", months: byMonth(get("paper-desk.notes-archive.v1") || [], n => n.archivedAt || n.createdAt), href: k => `album.html?kind=note&m=${k}` },
+    { id: "receipt", name: "小票", hint: "每天的小票", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `album.html?kind=receipt&m=${k}` },
+    { id: "jot", name: "碎碎念", hint: "每个月的手账", journal: true },
+  ];
+  const FILL = ["#5a3a26", "#6b4430", "#4a3424", "#7a4b2e", "#3f2c1f", "#80563a", "#5e4a36", "#6d3b2b", "#4d3a2a", "#8a6a44"];
+  function filler(r, w) {
+    let h = "", used = 0;
+    while (used < w - 16) {
+      const k = r();
+      if (k < .06 && w - used > 90) {                 // a few lying flat
+        const n = 2 + Math.floor(r() * 3); let st = "", mw = 0;
+        for (let i = 0; i < n; i++) { const bw = 70 + Math.floor(r() * 24); mw = Math.max(mw, bw); st = `<i class="lay" style="width:${bw}px;background:${FILL[Math.floor(r() * FILL.length)]}"></i>` + st; }
+        h += `<span class="stk">${st}</span>`; used += mw + 8; continue;
+      }
+      const bw = 12 + Math.floor(r() * 14), bh = 64 + Math.floor(r() * 30), lean = r() < .05 ? (r() < .5 ? -6 : 6) : 0;
+      h += `<i class="fbk${r() < .4 ? " gilt" : ""}" style="width:${bw}px;height:${bh}%;background-color:${FILL[Math.floor(r() * FILL.length)]}${lean ? `;transform:rotate(${lean}deg);margin:0 ${Math.abs(lean) * 2}px` : ""}"></i>`;
+      used += bw + 2 + (lean ? Math.abs(lean) * 4 : 0);
+    }
+    return h;
+  }
+  const rng = seed => { let t = seed >>> 0; return () => { t = (t + 0x6D2B79F5) >>> 0; let x = Math.imul(t ^ t >>> 15, t | 1); x ^= x + Math.imul(x ^ x >>> 7, x | 61); return ((x ^ x >>> 14) >>> 0) / 4294967296; }; };
   function renderShelf() {
     shelf.innerHTML = "";
-    const perRow = Math.max(6, Math.floor((innerWidth - 160) / 64));
-    for (let i = 0; i < books.length; i += perRow) {
-      const row = el("div", "row");
-      books.slice(i, i + perRow).forEach(b => {
-        const n = b.keys.filter(hasContent).length, h = hash(b.y + "-" + b.m);
-        const sp = el("div", "spine" + (n ? "" : " empty") + (b.now ? " now" : ""));
-        sp.style.setProperty("--bc", b.color);
-        sp.style.width = (40 + Math.min(26, n * 2.2)) + "px";
-        sp.style.height = (232 + h % 40) + "px";
-        sp.innerHTML = `<i class="band t"></i><i class="band b"></i><span class="lbl">${[...(CN[b.m - 1] + "月")].map(c => `<b>${c}</b>`).join("")}</span><span class="yr">${b.y}</span>`;
-        sp.title = `${b.y} 年 ${b.m} 月 · ${n} 天`;
-        sp.addEventListener("click", () => openBook(b, sp));
-        b.spine = sp;
+    const cas = el("div", "case");
+    const W = Math.min(1120, innerWidth - 120);
+    cas.style.width = W + "px";
+    const nowY = new Date().getFullYear();
+    SHELVES.forEach((S, si) => {
+      const row = el("div", "lrow"); row.dataset.k = S.id;
+      row.innerHTML = `<span class="plaque" title="${S.hint}">${S.name}</span>`;
+      const R = rng(si * 7919 + 17);
+      let list;
+      if (S.journal) list = books.map(b => ({ y: b.y, m: b.m, n: b.keys.filter(hasContent).length, b }));
+      else {
+        const ks = new Set([...S.months.keys()]);
+        for (let m = 1; m <= new Date().getMonth() + 1; m++) ks.add(`${nowY}-${m}`);
+        list = [...ks].map(k => { const [y, m] = k.split("-").map(Number); return { y, m, n: S.months.get(k) || 0 }; }).sort((a, b) => a.y - b.y || a.m - b.m);
+      }
+      const mineW = list.reduce((a, x) => a + 28 + Math.min(16, x.n * 2) + 2, 0);
+      const lead = Math.max(0, Math.floor((W - 120 - mineW) * (.08 + R() * .25)));
+      row.insertAdjacentHTML("beforeend", filler(R, lead) + (lead ? '<span class="bend"></span>' : ""));
+      list.forEach(x => {
+        const h = hash(S.id + x.y + "-" + x.m);
+        const sp = el(S.journal ? "div" : "a", "spine k-" + S.id + (x.n ? "" : " empty") + (x.y === nowY && x.m === new Date().getMonth() + 1 ? " now" : ""));
+        sp.style.setProperty("--bc", COLORS[(x.m - 1 + si * 3) % 12]);
+        sp.style.width = (28 + Math.min(16, x.n * 2)) + "px";
+        sp.style.height = (80 + h % 14) + "%";
+        sp.innerHTML = `<i class="band t"></i><i class="band b"></i><span class="lbl">${[...(CN[x.m - 1] + "月")].map(c => `<b>${c}</b>`).join("")}</span><span class="yr">${String(x.y).slice(2)}</span>`;
+        sp.title = `${S.name} · ${x.y} 年 ${x.m} 月 · ${x.n} ${S.journal ? "天" : "张"}`;
+        if (S.journal) { sp.addEventListener("click", () => openBook(x.b, sp)); x.b.spine = sp; }
+        else sp.href = S.href(`${x.y}-${x.m}`);
         row.appendChild(sp);
       });
-      shelf.appendChild(row);
-    }
+      row.insertAdjacentHTML("beforeend", '<span class="bend"></span>' + filler(R, W - 120 - lead - mineW - 30));
+      cas.appendChild(row);
+    });
+    shelf.appendChild(cas);
   }
+
 
   /* ───────── the book's pages ─────────
      a calendar, the month at a glance, then one section per kind (每日 · 项目 · 便签 · 碎碎念), each running on

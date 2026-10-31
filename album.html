@@ -249,9 +249,17 @@
   if (KIND === "proj") { const d = getJ("paper-desk.desk-tasks.v1"); if (d && Array.isArray(d.done)) cards = d.done.slice(); }
   if (KIND === "note") cards = (getJ("paper-desk.notes-archive.v1") || []).map(n => Object.assign({}, n, { doneAt: n.archivedAt || n.createdAt }));
   if (KIND === "receipt") cards = (getJ("paper-desk.receipts.v1") || []).map(r => Object.assign({}, r, { doneAt: r.at }));
-  const demo = !cards.length && KIND !== "receipt";
+  const demo = !cards.length && KIND !== "receipt" && !new URLSearchParams(location.search).get("m");
   if (demo) cards = KIND === "note" ? demoNotes() : demoCards();
-  $("#empty").textContent = KINDS[KIND].empty;
+  // from the library: just one month
+  const MONTH = new URLSearchParams(location.search).get("m");
+  if (MONTH) {
+    const [my, mm] = MONTH.split("-").map(Number);
+    cards = cards.filter(c => { const d = new Date(c.doneAt); return d.getFullYear() === my && d.getMonth() + 1 === mm; });
+    KINDS[KIND].name += ` · ${mm} 月`;
+    const h = $("#home"); h.href = "journal.html"; h.title = "回到书架";
+  }
+  $("#empty").textContent = MONTH && !cards.length ? "这个月这里还是空的。" : KINDS[KIND].empty;
   if (!cards.length) $("#empty").style.display = "block";
   cards.sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0));
   $("#empty").style.display = demo ? "block" : "none";
