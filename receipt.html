@@ -187,17 +187,17 @@
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
-  <p class="hint">点 <b>EDIT</b> 编辑今天 · 点 <b>PRINT</b> 打印并导出 <kbd>E</kbd> <kbd>P</kbd></p>
+  <p class="hint">事项跟着今日台历走 · 点 <b>PRINT</b> 打印并导出，<b>EDIT</b> 改样式 <kbd>P</kbd> <kbd>E</kbd></p>
 </div>
 
 <div class="scrim" id="scrim"></div>
 
-<aside class="panel" id="panel" aria-label="编辑小票">
+<aside class="panel" id="panel" aria-label="小票样式">
   <div class="panel-head">
     <div>
-      <p class="sub">EDIT RECEIPT</p>
-      <h2>编辑小票</h2>
-      <p>改完点「完成」，小票会重新打印一次。</p>
+      <p class="sub">RECEIPT STYLE</p>
+      <h2>小票样式</h2>
+      <p>事项、日期和寄语都跟着左边的今日台历走；这里只改小票的样子。</p>
     </div>
     <button class="icon-btn" id="close-panel" aria-label="关闭">×</button>
   </div>
@@ -206,34 +206,14 @@
       <span>小票店名</span>
       <input id="f-store" maxlength="10" placeholder="今天便利店">
     </label>
-
-    <div class="two">
-      <label class="field">
-        <span>日期</span>
-        <input id="f-date" type="date">
-      </label>
-      <label class="field">
-        <span>心情贴纸</span>
-        <input id="f-mood" maxlength="4" placeholder="专注">
-      </label>
-    </div>
-
     <label class="field">
-      <span>小票寄语</span>
-      <input id="f-quote" maxlength="18" placeholder="慢慢来，也比较快。">
+      <span>心情贴纸</span>
+      <input id="f-mood" maxlength="4" placeholder="专注">
     </label>
-
     <div class="field">
       <span>导出氛围</span>
       <div class="dots" id="palette"></div>
     </div>
-
-    <div class="sheet-sec">
-      <h3>今日事项</h3>
-      <div class="chips" id="presets"></div>
-    </div>
-    <div class="rows" id="rows"></div>
-    <button class="add" id="add-item">＋ 添加事项</button>
   </div>
   <div class="panel-foot">
     <button class="btn ghost" id="reset">恢复默认</button>
@@ -447,12 +427,21 @@
     catch (e) { return defaultState(); }
   }
   let state = loadState();
-  { const it = deskItems(); if (it.length) { state.items = it; state.date = todayISO(); } }
-  { // the back of today's card
+  // what goes on the receipt is today's calendar: its items, today's date, the first line on its back
+  function fromDesk() {
+    const it = deskItems();
+    state.items = it.length ? it : [{ time: '--:--', name: '台历上还没有事项', done: false }];
+    state.date = todayISO();
     let m = null; try { m = JSON.parse(localStorage.getItem('paper-desk.todaymemo.v1')); } catch (e) { /* ignore */ }
     const d = new Date(), line = m && (m[`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`] || '').split('\n').map(x => x.trim()).find(Boolean);
-    if (line) state.quote = line.slice(0, 18);
+    state.quote = line ? line.slice(0, 18) : '慢慢来，也比较快。';
   }
+  fromDesk();
+  // the desk changed in another tab: follow it
+  addEventListener('storage', e => {
+    if (!/^paper-desk\.(today|todaymemo|desk-tasks)/.test(e.key || '')) return;
+    fromDesk(); layout(); drawFrame();
+  });
   function persist() {
     try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch (e) { /* ignore */ }
   }
@@ -1107,7 +1096,7 @@
     const dt = print.last ? Math.min(t - print.last, 60) : 16;
     print.last = t;
 
-    let prog = 1;
+    let prog = print.printed ? 1 : 0;
     if (print.active) {
       prog = clamp((t - print.t0) / DUR, 0, 1);
       prog = easeInOutSine(prog);
@@ -1182,6 +1171,7 @@
      ============================================================ */
   function startPrint(onDone) {
     if (print.active) return false;
+    fromDesk(); layout();
     puffs.length = 0;
     lastSpawn = 0;
     print.active = true;
@@ -1189,6 +1179,7 @@
     clearTimeout(print.timer);
     print.timer = setTimeout(() => {
       print.active = false;
+      print.printed = true;
       drawFrame();
       if (onDone) setTimeout(onDone, 420);
     }, DUR + 40);
@@ -1210,7 +1201,9 @@
     print.active = false;
     puffs.length = 0;
     exporting = true;
+    const was = print.printed; print.printed = true;
     drawFrame();
+    print.printed = was;
     const url = canvas.toDataURL('image/png');
     exporting = false;
     print.active = prev;
@@ -1233,72 +1226,9 @@
      ============================================================ */
   const panel = document.getElementById('panel');
   const scrim = document.getElementById('scrim');
-  const rowsEl = document.getElementById('rows');
   const paletteEl = document.getElementById('palette');
-  const presetsEl = document.getElementById('presets');
   const fStore = document.getElementById('f-store');
-  const fDate = document.getElementById('f-date');
   const fMood = document.getElementById('f-mood');
-  const fQuote = document.getElementById('f-quote');
-
-  function renderRows() {
-    rowsEl.innerHTML = '';
-    state.items.forEach((it, i) => {
-      const row = document.createElement('div');
-      row.className = 'row';
-
-      const chk = document.createElement('button');
-      chk.className = 'check' + (it.done ? ' on' : '');
-      chk.type = 'button';
-      chk.setAttribute('aria-label', it.done ? '标记为未完成' : '标记为完成');
-      chk.addEventListener('click', () => {
-        it.done = !it.done;
-        chk.classList.toggle('on', it.done);
-        scheduleSheetUpdate();
-      });
-
-      const time = document.createElement('div');
-      time.className = 'time';
-      const hh = document.createElement('input');
-      const mm = document.createElement('input');
-      hh.maxLength = 2; mm.maxLength = 2;
-      hh.value = it.time.split(':')[0];
-      mm.value = it.time.split(':')[1];
-      const commit = () => {
-        const h = clamp(parseInt(hh.value, 10) || 0, 0, 23);
-        const m2 = clamp(parseInt(mm.value, 10) || 0, 0, 59);
-        it.time = `${String(h).padStart(2, '0')}:${String(m2).padStart(2, '0')}`;
-        hh.value = String(h).padStart(2, '0');
-        mm.value = String(m2).padStart(2, '0');
-        scheduleSheetUpdate();
-      };
-      hh.addEventListener('blur', commit);
-      mm.addEventListener('blur', commit);
-      time.append(hh, ':', mm);
-
-      const name = document.createElement('input');
-      name.className = 'name';
-      name.value = it.name;
-      name.maxLength = 40;
-      name.placeholder = '这件事叫什么';
-      name.addEventListener('input', () => { it.name = name.value; scheduleSheetUpdate(); });
-
-      const del = document.createElement('button');
-      del.className = 'del';
-      del.type = 'button';
-      del.textContent = '×';
-      del.setAttribute('aria-label', '删除');
-      del.addEventListener('click', () => {
-        if (state.items.length <= 1) return;
-        state.items.splice(i, 1);
-        renderRows();
-        scheduleSheetUpdate();
-      });
-
-      row.append(chk, time, name, del);
-      rowsEl.appendChild(row);
-    });
-  }
 
   function renderPalette() {
     paletteEl.innerHTML = '';
@@ -1317,31 +1247,10 @@
     });
   }
 
-  function renderPresets() {
-    presetsEl.innerHTML = '';
-    Object.keys(PRESETS).forEach(key => {
-      const b = document.createElement('button');
-      b.className = 'chip';
-      b.type = 'button';
-      b.textContent = PRESETS[key].label;
-      b.addEventListener('click', () => {
-        state.items = presetItems(key);
-        renderRows();
-        scheduleSheetUpdate();
-        toast(`已套用「${PRESETS[key].label}」`);
-      });
-      presetsEl.appendChild(b);
-    });
-  }
-
   function syncForm() {
     fStore.value = state.store;
-    fDate.value = state.date;
     fMood.value = state.mood;
-    fQuote.value = state.quote;
     renderPalette();
-    renderPresets();
-    renderRows();
   }
 
   let sheetTimer = 0;
@@ -1370,26 +1279,10 @@
   }
   bindText(fStore, 'store', '今天便利店');
   bindText(fMood, 'mood', '专注');
-  bindText(fQuote, 'quote', '慢慢来，也比较快。');
-  fDate.addEventListener('change', () => { if (fDate.value) { state.date = fDate.value; scheduleSheetUpdate(); } });
-
-  document.getElementById('add-item').addEventListener('click', () => {
-    if (state.items.length >= MAX_ITEMS) { toast('最多 8 条，够了'); return; }
-    const last = state.items[state.items.length - 1];
-    state.items.push({ time: last ? last.time : '09:00', name: '新的一件事', done: false });
-    renderRows();
-    scheduleSheetUpdate();
-    const rows = rowsEl.querySelectorAll('.row');
-    const lastRow = rows[rows.length - 1];
-    if (lastRow) {
-      lastRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      const input = lastRow.querySelector('.name');
-      if (input) { input.focus(); input.select(); }
-    }
-  });
 
   document.getElementById('reset').addEventListener('click', () => {
     state = defaultState();
+    fromDesk();
     syncForm();
     layout();
     drawFrame();
@@ -1399,9 +1292,7 @@
 
   document.getElementById('done').addEventListener('click', () => {
     closePanel();
-    setTimeout(() => {
-      if (!print.active) { startPrint(); toast('已更新，正在重新打印…'); }
-    }, 340);
+    layout(); drawFrame(); persist();
   });
 
   function openPanel() {
@@ -1492,7 +1383,6 @@
     layout();
     drawFrame();
     requestAnimationFrame(loop);
-    setTimeout(() => { startPrint(); }, 420);
   });
 })();
 </script>

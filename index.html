@@ -547,7 +547,7 @@
     <section class="page" id="chalk"><div class="frame"><div class="inner">
       <div class="lanes">
         <div class="lane" data-col="doing"><h3>Doing<small></small></h3><div class="cards"></div></div>
-        <div class="lane" data-col="todo"><h3>To do<small></small></h3><div class="cards"></div><button class="add">＋ 写一个</button></div>
+        <div class="lane" data-col="todo"><h3>To do<small></small></h3><div class="cards"></div><button class="add">＋ New</button></div>
         <div class="lane" data-col="done"><h3>Done<small></small></h3><div class="cards"></div></div>
       </div>
       <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
@@ -998,6 +998,7 @@
     changed: later => saveToday(later),
   });
   todayList.render(); renderTodayHead();
+  store(TKEY, items);   // the receipt and the journal read it from here
   // the back is today's jottings (the receipt prints them at the bottom)
   const MEMOKEY = "paper-desk.todaymemo.v1";
   const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
