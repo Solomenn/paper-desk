@@ -25,29 +25,42 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
   #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
   html:not([data-theme="day"]) #car3dLit { mix-blend-mode: multiply;
-    background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 246, 228, .95), rgba(255, 246, 228, 0) 100%),
-                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #fff3e0 0%, #f2d9b0 32%, #cfb393 64%, #ad9884 100%); }
+    background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 238, 205, .95), rgba(255, 246, 228, 0) 100%),
+                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fff8ec 20%, #f0cf9c 42%, #d4a878 68%, #a8805e 100%); }
   html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
     background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 170, 90, .12), transparent 70%),
                 radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
                 linear-gradient(0deg, rgba(255, 140, 60, .06), transparent 30%); }
-  html[data-theme="day"] #car3dLit { mix-blend-mode: soft-light;
-    background: radial-gradient(90% 100% at 92% 45%, #f4f9ff 0%, #c9dbee 60%, #a9bfd8 100%); }
+  /* day: sunlight off the snow comes in at the window — warm white there, a clean pale blue in the shade far from it */
+  html[data-theme="day"] #car3dLit { mix-blend-mode: multiply;
+    background: radial-gradient(85% 120% at 96% 40%, #ffffff 0%, #f6f8fb 45%, #e3eaf3 100%); }
   html[data-theme="day"] #car3dLit2 { mix-blend-mode: screen;
-    background: radial-gradient(60% 80% at 95% 45%, rgba(225, 238, 252, .30), rgba(205, 222, 240, .10) 70%); }
-  html[data-theme="day"] #car3dVig { background: radial-gradient(130% 110% at 70% 45%, transparent 60%, rgba(120, 145, 175, .25) 100%); }
+    background: radial-gradient(50% 80% at 97% 40%, rgba(255, 250, 238, .30), rgba(255, 250, 238, 0) 75%); }
+  /* the sun through the corridor windows behind you: two slanting panes of light across the wall and the boards */
+  #car3dSun, #car3dSun2 { position: fixed; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity 1.2s; mix-blend-mode: soft-light; }
+  #car3dSun2 { mix-blend-mode: screen; }
+  html[data-theme="day"] #car3dSun2 { opacity: .14; }
+  html[data-theme="day"] #car3dSun { opacity: 1; }
+  #car3dSun i, #car3dSun2 i { position: absolute; top: -20%; height: 140%; transform: skewX(-24deg); filter: blur(9px);
+    background: linear-gradient(180deg, rgba(255, 246, 225, .0), rgba(255, 244, 220, .95) 30%, rgba(255, 240, 210, .9) 75%, rgba(255, 240, 210, 0)); }
+  #car3dSun2 i:nth-child(1), #car3dSun i:nth-child(1) { left: 14%; width: 15%; }
+  #car3dSun2 i:nth-child(2), #car3dSun i:nth-child(2) { left: 33%; width: 15%; }
+  #car3dSun2 i:nth-child(3), #car3dSun i:nth-child(3) { left: 58%; width: 10%; opacity: .6; }
+  html[data-theme="day"] #car3dVig { background: radial-gradient(130% 110% at 70% 45%, transparent 65%, rgba(150, 175, 205, .14) 100%); }
 </style>`);
 document.body.classList.add("car3d");
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; document.body.prepend(canvas);
 const vig = document.createElement("i"); vig.id = "car3dVig"; canvas.after(vig);
 const lit = document.createElement("i"); lit.id = "car3dLit"; document.body.appendChild(lit);
 const lit2 = document.createElement("i"); lit2.id = "car3dLit2"; document.body.appendChild(lit2);
+const sunEl = document.createElement("div"); sunEl.id = "car3dSun"; sunEl.innerHTML = "<i></i><i></i><i></i>"; document.body.appendChild(sunEl);
+const sunEl2 = sunEl.cloneNode(true); sunEl2.id = "car3dSun2"; document.body.appendChild(sunEl2);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.shadowMap.enabled = !window.__CAR_LOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = !window.__CAR_LOW || !!window.__CAR_SHADOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 RectAreaLightUniformsLib.init();
 
 const scene = new THREE.Scene();
@@ -69,7 +82,7 @@ function plankTexture() {
   let sd = 7; const r = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
   for (let i = 0; i < N; i++) {
     const x0 = i * W / N, bw = W / N, k = .85 + r() * .3;
-    g.fillStyle = `rgb(${78 * k | 0},${38 * k | 0},${26 * k | 0})`; g.fillRect(x0, 0, bw, H);
+    g.fillStyle = `rgb(${84 * k | 0},${48 * k | 0},${28 * k | 0})`; g.fillRect(x0, 0, bw, H);
     for (let j = 0; j < 70; j++) {                       // grain: long wavy streaks
       const gx = x0 + r() * bw, a = .04 + r() * .09, dark = r() < .6;
       g.strokeStyle = dark ? `rgba(30,10,4,${a})` : `rgba(160,80,50,${a * .8})`; g.lineWidth = .6 + r() * 1.8; g.beginPath(); g.moveTo(gx, 0);
@@ -114,7 +127,7 @@ const M = {
   tabletop: new THREE.MeshStandardMaterial({ map: tex("lacquered_cherry_wood", "diff", [1.5, 1.5], true), color: 0x8a4a30, roughness: .2, envMapIntensity: .9, fog: false }),
   cord: new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: .8, fog: false }),
   globe: new THREE.MeshStandardMaterial({ color: 0xfff3e2, emissive: 0xffc890, emissiveIntensity: 1.6, roughness: .55, fog: false }),
-  glass: new THREE.MeshPhysicalMaterial({ color: 0x9fb4c8, roughness: .05, metalness: 0, transparent: true, opacity: .05, envMapIntensity: .15, fog: false, depthWrite: false }),
+  glass: new THREE.MeshBasicMaterial({ color: 0xa8c4e4, transparent: true, opacity: .06, depthWrite: false, fog: false }),
 };
 
 /* ───────── the carriage's side wall, with the window cut in it ───────── */
@@ -130,7 +143,7 @@ function buildRoom() {
   const s = new THREE.Shape(); s.moveTo(L, -.5); s.lineTo(R, -.5); s.lineTo(R, H); s.lineTo(L, H); s.lineTo(L, -.5);
   const hole = new THREE.Path(); rrect(hole, wx, win.y0, win.w, wh, .09); s.holes.push(hole);
   const wall = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .06, bevelEnabled: false }), M.panel);
-  wall.position.z = -.06; wall.receiveShadow = true; room.add(wall);
+  wall.position.z = -.06; wall.receiveShadow = true; wall.castShadow = true; room.add(wall);
   const bx = (w, h, x, y, z, d, m = M.mould) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.receiveShadow = true; room.add(b); return b; };
   // the chair rail over the wainscot, and the carved cornice up under the ceiling
   bx(R - L, .06, 0, .9, .014, .03);
@@ -207,6 +220,11 @@ function buildOutside() {
     vertexShader: "varying float vy; void main(){ vy = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }",
     fragmentShader: "uniform vec3 top; uniform vec3 bot; varying float vy; void main(){ gl_FragColor = vec4(mix(bot, top, smoothstep(.35,.9,vy)), 1.); }" }));
   sky.position.set(win.x, 10, -140); outside.add(sky); outside.userData.sky = sky;
+  // the low winter sun, a soft glare up and to the left of the window
+  const sc = document.createElement("canvas"); sc.width = sc.height = 128; const sx = sc.getContext("2d"), sgr = sx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  sgr.addColorStop(0, "rgba(255,255,250,1)"); sgr.addColorStop(.12, "rgba(255,250,235,.9)"); sgr.addColorStop(.4, "rgba(255,245,225,.25)"); sgr.addColorStop(1, "rgba(255,245,225,0)"); sx.fillStyle = sgr; sx.fillRect(0, 0, 128, 128);
+  const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(sc), blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  sun.scale.setScalar(60); sun.position.set(win.x - 30, 22, -135); outside.add(sun); outside.userData.sun = sun;
   ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 200), new THREE.MeshStandardMaterial({ color: 0xdfe7f0, roughness: .95, emissive: 0x1c2840, emissiveIntensity: .7 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(win.x, -2.2, -100); outside.add(ground);
   // pines: painted once into textures (drooping tiers, ragged edges, snow lying on each tier), stood up as cards facing the window
@@ -223,9 +241,9 @@ function buildOutside() {
     vertexShader: `uniform float t; uniform float cx; attribute float seed; varying float a; varying float near;
       void main(){ vec3 p = position; float sp = ${SPEED.toFixed(1)} * (.6 + .4 * seed);
         p.x = cx + mod(p.x - t * sp + 8., 16.) - 8.; p.y = mod(p.y - t * (.8 + seed * .9) + 1., 7.) - 1. + sin(t * 1.3 + seed * 40.) * .15;
-        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = (14. + 26. * seed) / -mv.z; a = smoothstep(16., 2., -mv.z); near = smoothstep(5.5, 3.2, -mv.z); }`,
+        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = (14. + 26. * seed) / -mv.z; a = smoothstep(16., 2., -mv.z); near = smoothstep(3.9, 3.15, -mv.z); }`,
     fragmentShader: `uniform float bright; uniform float warm; varying float a; varying float near; void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard;
-      vec3 c = mix(vec3(.82,.9,1.), vec3(1.,.78,.5), near * warm); gl_FragColor = vec4(c * bright * (1. + near * warm * .6), (1. - d * 2.) * .85 * a); }` }));
+      vec3 c = mix(vec3(.82,.9,1.), vec3(1.,.8,.55), near * warm * .7); gl_FragColor = vec4(c * bright * (1. + near * warm * .6), (1. - d * 2.) * .85 * a); }` }));
   snow.frustumCulled = false; outside.add(snow);
 }
 function placeTrees(t) {
@@ -261,7 +279,9 @@ function pineTexture(seed) {
 
 /* ───────── lights ───────── */
 const hemi = new THREE.HemisphereLight(0xffe6c4, 0x2a1c12, .25); scene.add(hemi);
-const moon = new THREE.DirectionalLight(0x9db6dd, .5); moon.position.set(-6, 10, -14); scene.add(moon);
+const moon = new THREE.DirectionalLight(0x9db6dd, .5); scene.add(moon); scene.add(moon.target);   // the moon by night, the sun by day: in at the window
+moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024); moon.shadow.bias = -.0015; moon.shadow.normalBias = .02; moon.shadow.radius = 4;
+Object.assign(moon.shadow.camera, { left: -2.5, right: 2.5, top: 2.5, bottom: -2.5, near: .5, far: 20 });
 const ceilLight = new THREE.RectAreaLight(0xffd9a0, 1.6, 5, .5); ceilLight.position.set(-.6, 2.3, 1.4); ceilLight.lookAt(-.6, 0, .4); scene.add(ceilLight);
 const winLight = new THREE.RectAreaLight(0x8fb0e0, 2, 1, 1); scene.add(winLight);
 const sconce = new THREE.SpotLight(0xffd6a8, 6, 4, .55, .9, 1.6); scene.add(sconce); scene.add(sconce.target);
@@ -290,19 +310,21 @@ function layoutLights() {
 function applyTheme() {
   const n = night(), sky = outside.userData.sky;
   // night: the carriage is lit only by the flames; outside it is cold blue snow.  day: high-key, white and pale blue, soft blue shadows
-  if (sky) { sky.material.uniforms.top.value.set(n ? 0x03070f : 0x98b6d8); sky.material.uniforms.bot.value.set(n ? 0x1a2c4c : 0xe8f0f8); }
+  if (sky) { sky.material.uniforms.top.value.set(n ? 0x0d1d3c : 0x6fa6e2); sky.material.uniforms.bot.value.set(n ? 0x30507e : 0xe6f1fc); }
+  if (outside.userData.sun) outside.userData.sun.visible = !n;
   scene.background = new THREE.Color(n ? 0x03060c : 0xe6eef6);
   scene.fog = n ? new THREE.FogExp2(0x122140, .011) : null;
-  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x7a6048 : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0x8a8480);
-  if (ground) { ground.material.color.set(n ? 0x9fb4d4 : 0xb4c3d4); ground.material.emissive.set(n ? 0x16264a : 0x9fb2c8); ground.material.emissiveIntensity = n ? .75 : .3; }
-  hemi.intensity = n ? .05 : 2.1; hemi.color.set(n ? 0xffe6c4 : 0xe4eefa); hemi.groundColor.set(n ? 0x1a120c : 0x9c8a78);
-  moon.intensity = n ? .9 : 2.2; moon.color.set(n ? 0x7d9ccc : 0xfff6e8);
-  ceilLight.intensity = n ? .18 : .5; ceilLight.color.set(n ? 0xffc890 : 0xf2f6ff);
-  winLight.intensity = n ? .9 : 16; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
+  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x7a6048 : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0xc8beb4);
+  if (ground) { ground.material.color.set(n ? 0x1a2230 : 0xf4f8fc); ground.material.emissive.set(n ? 0x3a5488 : 0x9db8da); ground.material.emissiveIntensity = n ? 1.1 : .45; }
+  hemi.intensity = n ? .35 : 2.2; hemi.color.set(n ? 0xffb070 : 0xe6eeff); hemi.groundColor.set(n ? 0x4a2410 : 0xf4e6d4);
+  moon.intensity = n ? .9 : 3.2; moon.color.set(n ? 0x7d9ccc : 0xfff0d6);
+  moon.target.position.set(win.x, .8, .45); moon.position.copy(moon.target.position).add(n ? new THREE.Vector3(1.5, 4, -5) : new THREE.Vector3(-2.4, 3, 4));
+  ceilLight.intensity = n ? .5 : .5; ceilLight.color.set(n ? 0xffb068 : 0xf2f6ff);
+  winLight.intensity = n ? .9 : 14; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
   sconce.intensity = n ? 5 : 0; sconce.color.set(0xffbe80); wallLamp.intensity = n ? 4.8 : 0; M.globe.emissiveIntensity = n ? 1.9 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
-  renderer.toneMappingExposure = n ? .95 : 1.35;
-  trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xd6e2ee)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
-  bloom.strength = n ? .5 : .18; bloom.threshold = n ? .82 : .95; bloom.radius = n ? .7 : .9;
+  renderer.toneMappingExposure = n ? .95 : 1.45;
+  trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xe8f0f8)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
+  bloom.strength = n ? .5 : .32; bloom.threshold = n ? .82 : .9; bloom.radius = n ? .7 : .85;
   placeLit();
 }
 // where the lamp is on screen: the board's light falls off from there
