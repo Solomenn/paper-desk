@@ -20,7 +20,7 @@
     --mono: var(--hand);
     --line: rgba(54, 66, 78, .14);
     --ease: cubic-bezier(.22, 1, .36, 1);
-    --calw: 300px; --gap: 22px; --trayh: 74px;
+    --calw: 300px; --gap: 22px; --trayh: 74px; --toph: 50px;
     --wood: #9a6e45;
   }
   * { box-sizing: border-box; }
@@ -45,7 +45,9 @@
   @media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
 
   /* ───────── left: today's tear-off calendar ───────── */
-  #cal { position: fixed; left: var(--gap); top: var(--gap); bottom: var(--gap); width: var(--calw); z-index: 20; }
+  #cal { position: fixed; left: var(--gap); top: calc(var(--toph) + 4px); bottom: var(--gap); width: var(--calw); z-index: 40500;
+    transition: opacity .25s, transform .35s var(--ease); }
+  body:not(.calOpen) #cal { opacity: 0; transform: translateY(-16px) scale(.98); pointer-events: none; }
   #cal .rings { position: absolute; left: 18px; right: 18px; top: -6px; height: 20px; z-index: 8; pointer-events: none;
     background: radial-gradient(circle at 50% 70%, #36424e 0 3.5px, transparent 4px) 0 0 / 26px 20px repeat-x; }
   #cal .rings::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12px;
@@ -65,7 +67,7 @@
   #todayCard .sheetc > .body > .chk { margin: 0 -22px; padding: 2px 22px 40px; }
 
   /* ───────── right: one board fills the space, slide to the next ───────── */
-  #stage { position: fixed; left: calc(var(--gap) * 2 + var(--calw)); right: var(--gap); top: var(--gap); bottom: calc(var(--trayh) + var(--gap)); overflow: hidden; z-index: 5; }
+  #stage { position: fixed; left: var(--gap); right: var(--gap); top: calc(var(--toph) + 4px); transition: left .4s var(--ease); bottom: calc(var(--trayh) + var(--gap)); overflow: hidden; z-index: 5; }
   #pages { position: absolute; inset: 0; display: flex; width: 200%; transition: transform .65s var(--ease); }
   .page { width: 50%; height: 100%; position: relative; padding: 0 2px; }
   .frame { position: absolute; inset: 0; border-radius: 6px; padding: 14px;
@@ -387,7 +389,7 @@
   #detail .pcard.fly { transition: transform .6s var(--ease), opacity .6s; }
 
   /* ───────── the toolbar, under the board ───────── */
-  #tray { position: fixed; left: calc(var(--gap) * 2 + var(--calw)); right: var(--gap); bottom: 14px; height: 58px; z-index: 40000;
+  #tray { position: fixed; left: var(--gap); right: var(--gap); transition: left .4s var(--ease); bottom: 14px; height: 58px; z-index: 40000;
     display: flex; align-items: center; gap: 4px; padding: 0 10px; }
   .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
     color: #7a6a52; font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s, opacity .25s; }
@@ -518,13 +520,61 @@
   .mini .mtog::before { content: ""; position: absolute; left: 8px; top: 6px; width: 5px; height: 5px; border: solid #4f5d69; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); transition: transform .2s; }
   .mini.open .mtog::before { top: 9px; transform: rotate(-135deg); }
   .mini.open { transform: none; }
+
+  /* ═════════ along the top: today's calendar as a small tab, and a cord of reminders across every page ═════════ */
+  body.calPinned #stage, body.calPinned #tray { left: calc(var(--gap) * 2 + var(--calw)); }
+  #top { position: fixed; left: var(--gap); right: calc(var(--gap) + 14px); top: 0; height: var(--toph); z-index: 41000; display: flex; align-items: flex-start; gap: 16px; pointer-events: none; }
+  #top > * { pointer-events: auto; }
+  #calTab { flex: none; height: 42px; padding: 8px 14px 0 12px; border: 0; border-radius: 0 0 9px 9px; cursor: pointer; touch-action: none;
+    display: flex; align-items: baseline; gap: 8px; background: var(--paper); color: var(--ink); font-family: var(--hand);
+    box-shadow: 0 0 0 .5px rgba(21, 35, 58, .14), 0 10px 18px -12px rgba(21, 35, 58, .45); transition: height .25s var(--ease); }
+  #calTab:hover { height: 46px; }
+  #calTab .d { font: 700 24px/1 var(--hand); color: var(--stamp); }
+  #calTab .w { font-size: 13px; color: var(--muted); letter-spacing: .1em; }
+  #calTab .pn { font-size: 12.5px; color: var(--accent); margin-left: 4px; }
+  #calTab .chev { width: 7px; height: 7px; margin-left: 4px; border: solid var(--muted); border-width: 0 1.5px 1.5px 0; transform: translateY(-3px) rotate(45deg); transition: transform .25s; }
+  body.calOpen #calTab .chev { transform: translateY(1px) rotate(-135deg); }
+  body.calPinned #calTab { background: #fbfaf6; }
+  #calPin { position: absolute; right: 12px; top: 16px; z-index: 9; width: 26px; height: 26px; border: 0; border-radius: 7px; background: none; cursor: pointer; }
+  #calPin:hover { background: rgba(54, 66, 78, .07); }
+  #calPin::before { content: ""; position: absolute; left: 8px; top: 6px; width: 10px; height: 10px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #e7e9ec 0 15%, #9aa4ad 50%, #6b7680 100%); transition: .2s; }
+  #calPin::after { content: ""; position: absolute; left: 12.5px; top: 15px; width: 1.5px; height: 6px; background: #8e9aa4; }
+  body.calPinned #calPin::before { background: radial-gradient(circle at 34% 30%, #f6b3a1 0 14%, #cc5c42 42%, #8c3220 100%); }
+  /* the cord: a length of twine with reminders clipped to it */
+  #bar { flex: 1; min-width: 0; height: var(--toph); position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 17px 14px 0;
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border-radius: 0 0 10px 10px; transition: background .2s; }
+  #bar::before { content: ""; position: absolute; left: 0; right: 0; top: 13px; height: 1.6px; border-radius: 1px;
+    background: repeating-linear-gradient(90deg, #9b8a6c 0 5px, #b9a888 5px 9px); box-shadow: 0 2px 2px rgba(21, 35, 58, .15); }
+  #bar.hot { background: rgba(47, 79, 115, .07); }
+  #bar.hot::before { background: #2f4f73; }
+  #bar .hint { position: relative; margin-top: 6px; font-size: 12.5px; color: var(--faint); letter-spacing: .06em; white-space: nowrap; }
+  #bar:not(.empty) .hint { display: none; }
+  .chip { position: relative; flex: none; max-width: 190px; height: 27px; margin-top: 2px; padding: 5px 11px 0; font-size: 13px; line-height: 1.3; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #fbfaf6; cursor: pointer; transform-origin: 50% 0; transform: rotate(var(--r, 0deg));
+    box-shadow: 0 0 0 .5px rgba(21, 35, 58, .1), 0 6px 10px -6px rgba(21, 35, 58, .45); transition: transform .2s var(--ease); }
+  .chip:hover { transform: rotate(0deg) translateY(2px); }
+  .chip::after { content: ""; position: absolute; left: 50%; top: -1px; width: 7px; height: 9px; margin-left: -3.5px; border-radius: 1px;
+    background: linear-gradient(90deg, #c9a77c, #b48d5f); box-shadow: 0 1px 1px rgba(21, 35, 58, .3); }
+  .chip.k-note { background: var(--c); }
+  .chip.k-proj { border-top: 2.5px solid var(--mg); padding-top: 3px; }
+  .chip.k-proj em { font-style: normal; font-size: 11.5px; color: var(--accent); margin-left: 6px; }
+  .chip.k-today { padding-left: 27px; }
+  .chip.k-today .cb { position: absolute; left: 9px; top: 7px; width: 12px; height: 12px; border: 1.5px solid #c2cbd2; border-radius: 3px; }
+  .chip.k-today.done .cb { background: var(--accent); border-color: var(--accent); }
+  .chip.k-today.done span { color: var(--faint); text-decoration: line-through; }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalky" x="-5%" y="-25%" width="110%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="d"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
 <div class="desk" id="room" aria-hidden="true"><i class="fl fl-a"></i><i class="fl fl-b"></i><i class="fl fl-c"></i><i class="fl fl-s"></i><i class="falloff"></i></div>
 
+<header id="top">
+  <button id="calTab" title="今日（点开 / 往下拉固定）"><b class="d"></b><span class="w"></span><span class="pn"></span><i class="chev"></i></button>
+  <div id="bar" class="empty"><span class="hint">把便签、项目卡或今天的事拖到这条绳上</span></div>
+</header>
 <aside id="cal">
+<button id="calPin" title="固定"></button>
 <div class="rings"></div>
 <div id="todayCard" class="pcard flipc">
   <div class="flipper">
@@ -608,6 +658,8 @@
 
 <div id="help">
   <b>翻页</b> 按 1 / 2，或触控板左右滑<br>
+  <b>今日</b> 左上角点开，往下拉或按图钉固定；C 开合<br>
+  <b>提醒</b> 便签、项目卡、今天的事拖到最上面的绳子上；点它打开 / 打勾，右键放回<br>
   <b>今日</b> 点方框打勾，回车下一条，Tab 变子任务；右下角翻到背面写碎碎念<br>
   <b>项目</b> 卡片在三列之间拖；点开看详情，勾完盖章收进卡册<br>
   <b>便签</b> 从下面拖出；拖角转动；图钉按上去就固定<br>
@@ -674,6 +726,77 @@
   $("#pages").style.transition = "none";
   go(page);
   $("#pages").getBoundingClientRect();
+
+  /* ───────── the cord along the top: reminders that stay on every page ─────────
+     Each kind (note, proj, today) registers how to draw its chip and what a click does; the order lives here. */
+  const BARKEY = "paper-desk.bar.v1";
+  const barEl = $("#bar");
+  let barList = load(BARKEY, []);
+  if (!Array.isArray(barList)) barList = [];
+  const Bar = {
+    kinds: {},
+    add(k, id) { if (!barList.some(x => x.k === k && x.id === id)) barList.push({ k, id }); store(BARKEY, barList); Bar.render(); },
+    remove(k, id) { barList = barList.filter(x => !(x.k === k && x.id === id)); store(BARKEY, barList); Bar.render(); },
+    render() {
+      $$(".chip", barEl).forEach(c => c.remove());
+      const keep = [];
+      for (const x of barList) {
+        const kd = Bar.kinds[x.k];
+        if (!kd) { keep.push(x); continue; }           // its script hasn't said how to draw it yet
+        const el = kd.chip(x.id);
+        if (!el) continue;                              // gone (stamped, thrown away, yesterday's)
+        el.classList.add("chip", "k-" + x.k); el._bar = x;
+        let h = 0; for (const ch of x.id) h = (h * 31 + ch.charCodeAt(0)) | 0;
+        el.style.setProperty("--r", ((Math.abs(h) % 7) - 3) * .7 + "deg");
+        barEl.appendChild(el); keep.push(x);
+      }
+      if (keep.length !== barList.length) { barList = keep; store(BARKEY, barList); }
+      barEl.classList.toggle("empty", !$(".chip", barEl));
+    },
+    over: y => y <= barEl.getBoundingClientRect().bottom + 6,
+    hot: v => barEl.classList.toggle("hot", !!v),
+  };
+  window.Bar = Bar;
+  barEl.addEventListener("click", e => { const c = e.target.closest(".chip"); if (!c) return; const kd = Bar.kinds[c._bar.k]; kd && kd.click(c._bar.id); });
+  barEl.addEventListener("contextmenu", e => {
+    const c = e.target.closest(".chip"); if (!c) return;
+    e.preventDefault();
+    const kd = Bar.kinds[c._bar.k]; kd && openCMenu(e.clientX, e.clientY, kd.menu(c._bar.id));
+  });
+  barEl.addEventListener("wheel", e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { barEl.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+
+  /* ───────── today's calendar: a tab at the top left; open it, or pull it down to pin it open ───────── */
+  const CALKEY = "paper-desk.cal.v1";
+  let calPinned = !!load(CALKEY, false);
+  function setCal(open, pinned) {
+    if (pinned !== undefined) { calPinned = pinned; store(CALKEY, calPinned); }
+    const was = document.body.classList.contains("calPinned");
+    document.body.classList.toggle("calPinned", calPinned);
+    document.body.classList.toggle("calOpen", !!open || calPinned);
+    if (was !== calPinned) { clearTimeout(setCal.t); setCal.t = setTimeout(() => dispatchEvent(new Event("resize")), 430); }
+  }
+  setCal(false);
+  $("#calTab").addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    const sy = e.clientY; let pulled = false;
+    const mv = ev => { if (!pulled && ev.clientY - sy > 46) { pulled = true; setCal(true, true); } };
+    const up = () => {
+      removeEventListener("pointermove", mv); removeEventListener("pointerup", up);
+      if (pulled) return;
+      if (calPinned) setCal(false, false);
+      else setCal(!document.body.classList.contains("calOpen"));
+    };
+    addEventListener("pointermove", mv); addEventListener("pointerup", up);
+    e.preventDefault();
+  });
+  $("#calPin").addEventListener("click", () => setCal(true, !calPinned));
+  addEventListener("pointerdown", e => {
+    if (!calPinned && document.body.classList.contains("calOpen") && !e.target.closest("#cal, #calTab, #cmenu")) setCal(false);
+  }, true);
+  addEventListener("keydown", e => {
+    if (typing() || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "c" || e.key === "C") { if (calPinned) setCal(false, false); else setCal(!document.body.classList.contains("calOpen")); }
+  });
   requestAnimationFrame(() => $("#pages").style.transition = "");
 
   /* ───────── ruled paper: click any line, even below the text, and the caret goes to that line ───────── */
@@ -796,10 +919,12 @@
       group.forEach(g => g.classList.add("lifted"));
       const line = document.createElement("div"); line.className = "dropline"; ul.appendChild(line);
       const top0 = (r0.top - ul.getBoundingClientRect().top) / Zk() + ul.scrollTop;
-      let slot = rows.indexOf(li), asSub = !!it.sub;
+      let slot = rows.indexOf(li), asSub = !!it.sub, lastY = null;
       hd.setPointerCapture(e.pointerId);
       const mv = ev => {
         const k = Zk(), dy = (ev.clientY - sy) / k, dx = (ev.clientX - sx) / k;
+        lastY = ev.clientY;
+        if (o.toBar) window.Bar.hot(window.Bar.over(ev.clientY));
         ghost.style.transform = `translate(${dx * .25}px, ${top0 + dy}px) rotate(${Math.max(-2, Math.min(2, dx * .02))}deg)`;
         // where would it land: before the first remaining row whose middle is below the pointer
         slot = rest.length;
@@ -816,6 +941,8 @@
       const up = () => {
         hd.removeEventListener("pointermove", mv); hd.removeEventListener("pointerup", up);
         ghost.remove(); line.remove(); group.forEach(g => g.classList.remove("lifted"));
+        if (o.toBar) window.Bar.hot(false);
+        if (o.toBar && lastY != null && window.Bar.over(lastY)) { o.toBar(group.map(g => g._it)); o.changed(); render(); return; }
         const items = group.map(g => g._it), before = rest[slot] ? rest[slot]._it : null;
         o.move(items, before);
         it.sub = asSub;
@@ -868,6 +995,7 @@
         !it.sub && { label: "加子任务", fn: () => addSub(it) },
         it.sub ? { label: "设为主任务", fn: () => setSub(it, false) } : !first && { label: "设为子任务", fn: () => setSub(it, true) },
         { label: it.done ? "取消完成" : "完成", fn: () => tickItem(it) },
+        o.toBar && { label: "放到顶部", fn: () => { o.toBar([it, ...(it.sub ? [] : kidsOf(it))]); o.changed(); render(); } },
         "-",
         { label: "删除", danger: true, fn: () => remove(it) },
       ]);
@@ -971,8 +1099,9 @@
     { id: uid(), text: "买猫粮、灯泡", addedAt: Date.now() },
     { id: uid(), text: "给猫剪指甲", addedAt: Date.now() },
   ];
-  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt, sub }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt, sub: !!sub }));
-  const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
+  items = items.filter(i => i && typeof i.text === "string").map(({ id, text, done, doneAt, addedAt, sub, bar }) => ({ id: id || uid(), text, done: !!done, doneAt, addedAt, sub: !!sub, bar: !!bar }));
+  const ofToday = () => items.filter(i => !i.done || isToday(i.doneAt));
+  const visible = () => ofToday().filter(i => !i.bar);
   const todayEl = $("#todayCard");
   let tSaveT = null;
   const saveToday = later => { clearTimeout(tSaveT); tSaveT = setTimeout(() => store(TKEY, items), later ? 400 : 0); renderTodayHead(); };
@@ -982,8 +1111,10 @@
     $(".mon", todayEl).textContent = `${d.getFullYear()} · ${d.getMonth() + 1} 月`;
     $(".wk .w", todayEl).textContent = `星期${wk}`;
     $(".face.b .ttl", todayEl).textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}  周${wk}`;
-    const v = visible().filter(i => !i.sub), k = v.filter(i => i.done).length;
+    const v = ofToday().filter(i => !i.sub), k = v.filter(i => i.done).length;
     $(".pn", todayEl).textContent = v.length ? `${k} / ${v.length}` : "";
+    $("#calTab .d").textContent = d.getDate(); $("#calTab .w").textContent = `周${wk}`;
+    $("#calTab .pn").textContent = v.length ? `${k}/${v.length}` : "";
     $(".bar i", todayEl).style.width = v.length ? (k / v.length * 100) + "%" : "0";
   }
   const todayList = Checklist($(".chk", todayEl), {
@@ -996,7 +1127,20 @@
     remove: it => { items = items.filter(i => i !== it); },
     tick: it => { it.doneAt = it.done ? Date.now() : 0; },
     changed: later => saveToday(later),
+    toBar: list => { list.forEach(it => { it.bar = true; Bar.add("today", it.id); }); },
   });
+  Bar.kinds.today = {
+    chip: id => {
+      const it = items.find(i => i.id === id);
+      if (!it || !it.bar || (it.done && !isToday(it.doneAt))) return null;
+      const el = document.createElement("div");
+      el.innerHTML = '<i class="cb"></i><span></span>'; el.lastChild.textContent = it.text; el.title = it.text + "（点一下打勾）";
+      el.classList.toggle("done", !!it.done);
+      return el;
+    },
+    click: id => { const it = items.find(i => i.id === id); if (!it) return; it.done = !it.done; it.doneAt = it.done ? Date.now() : 0; saveToday(); Bar.render(); },
+    menu: id => [{ label: "放回台历", fn: () => { const it = items.find(i => i.id === id); if (it) { it.bar = false; saveToday(); todayList.render(); } Bar.remove("today", id); } }],
+  };
   todayList.render(); renderTodayHead();
   store(TKEY, items);   // the receipt and the journal read it from here
   // the back is today's jottings (the receipt prints them at the bottom)
@@ -1111,13 +1255,14 @@
   function renderBoard() {
     COLS.forEach(col => {
       const lane = $(`.lane[data-col=${col}]`), box = $(".cards", lane);
-      const ps = S.projects.filter(p => p.col === col);
+      const ps = S.projects.filter(p => p.col === col && !p.bar);
       box.innerHTML = "";
       ps.forEach(p => box.appendChild(miniCard(p)));
       if (!ps.length) box.innerHTML = `<div class="empty">${col === "done" ? "勾完的放这里" : "空"}</div>`;
       $("h3 small", lane).textContent = ps.length || "";
     });
     $("#albumBtn .talbum").dataset.n = S.done.length;
+    Bar.render();
   }
   function moveProject(p, col, before) {
     S.projects = S.projects.filter(x => x !== p);
@@ -1132,7 +1277,7 @@
     if (!m || e.button !== 0 || e.target.closest(".mtog, .mstep")) return;
     e.preventDefault();
     const p = m._p, sx = e.clientX, sy = e.clientY, r = m.getBoundingClientRect();
-    let ghost = null, slot = null, target = null, lx = sx;
+    let ghost = null, slot = null, target = null, lx = sx, lastY = sy;
     const mv = ev => {
       if (!ghost) {
         if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
@@ -1143,6 +1288,7 @@
       const sw = Math.max(-7, Math.min(7, (ev.clientX - lx) * .6)); lx = ev.clientX;
       ghost.style.left = (r.left + ev.clientX - sx) + "px"; ghost.style.top = (r.top + ev.clientY - sy) + "px";
       ghost.style.transform = `rotate(${sw}deg) scale(1.03)`;
+      lastY = ev.clientY; Bar.hot(Bar.over(ev.clientY));
       const lane = document.elementsFromPoint(ev.clientX, ev.clientY).map(x => x.closest && x.closest(".lane")).find(Boolean);
       $$(".lane").forEach(l => l.classList.toggle("over", l === lane));
       if (!lane) { slot.remove(); target = null; return; }
@@ -1156,6 +1302,8 @@
       $$(".lane").forEach(l => l.classList.remove("over"));
       if (!ghost) { openDetail(p); return; }
       ghost.remove(); slot.remove(); m.classList.remove("lifted");
+      Bar.hot(false);
+      if (Bar.over(lastY)) { p.bar = true; saveP(); Bar.add("proj", p.id); renderBoard(); return; }
       if (target) moveProject(p, target.col, target.before);
     };
     addEventListener("pointermove", mv); addEventListener("pointerup", up);
@@ -1289,6 +1437,22 @@
     if (e.key === "f" || e.key === "F") { const c = flippers.find(c => document.contains(c.el) && c.el.matches(":hover")); c && c.flip(); }
     if ((e.key === "n" || e.key === "N") && page === 0 && !opened) newProject();
   });
+  Bar.kinds.proj = {
+    chip: id => {
+      const p = S.projects.find(x => x.id === id);
+      if (!p || !p.bar) return null;
+      const f = filled(p), k = f.filter(c => c.done).length;
+      const el = document.createElement("div");
+      el.innerHTML = "<span></span><em></em>"; el.firstChild.textContent = p.title || "未命名"; el.lastChild.textContent = f.length ? `${k}/${f.length}` : "";
+      el.style.setProperty("--mg", MAG[p.col]); el.title = (p.title || "") + "（点一下打开）";
+      return el;
+    },
+    click: id => { const p = S.projects.find(x => x.id === id); if (p) openDetail(p); },
+    menu: id => {
+      const p = S.projects.find(x => x.id === id);
+      return [{ label: "打开", fn: () => openDetail(p) }, { label: "放回黑板", fn: () => { p.bar = false; saveP(); Bar.remove("proj", id); if (page !== 0) go(0); renderBoard(); } }];
+    },
+  };
   renderBoard(); saveP();
 
   /* ───────── the timer: the green disc is the time left, one turn = an hour; no words ───────── */
@@ -1420,7 +1584,7 @@
   const KR = 90, CR = 13;           // pinned: spring toward the pointer, damping
   const YANK = 270;                 // pull this far from the pin and it pops out
   const SNAP = Math.PI / 12;        // Shift while twisting snaps to 15°
-  const DRAWER_W = 14, DOCK_ZONE = 46, TAB_TOP = 14, TAB_H = 40, TAB_GAP = 6, GROUP_GAP = 20;
+  const DRAWER_W = 14, DOCK_ZONE = 46, TAB_TOP = 62, TAB_H = 40, TAB_GAP = 6, GROUP_GAP = 20;
 
   const board = document.getElementById("notes");
   const bin = document.querySelector(".bin");
@@ -1464,7 +1628,7 @@
     el._note = n;
     el.classList.toggle("folded", !!n.folded);
     (n.docked ? fly : board).appendChild(el);
-    if (n.docked) el.classList.add("hidden");
+    if (n.docked || n.bar) el.classList.add("hidden");
     notes.push(n);
     paint(n); fitHeight(n, true); renderPin(n); draw(n);
     n.textEl.addEventListener("input", () => fitHeight(n));
@@ -1582,6 +1746,11 @@
   }
   function arrive(n) {
     n.x = n.t.x; n.y = n.t.y; n.s = n.t.s;
+    if (n.toBar) {
+      n.toBar = false; n.bar = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
+      Bar.add("note", n.id); save();
+      return;
+    }
     if (n.mode === "dock" || n.mode === "retract") {
       n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
       renderTabs(); save();
@@ -1592,6 +1761,49 @@
   /* ───────── drawer: index tabs on the right edge of the screen ───────── */
   const tabEls = new Map(), tabY = new Map();
   function inDrawer(n) { return n.docked || n.mode === "dock" || n.mode === "peek" || n.mode === "retract"; }
+  const off = n => n.bar || n.toBar || inDrawer(n);   // not lying on the board right now
+  const barEl = document.getElementById("bar");
+  // onto the cord along the top: it flies up and becomes a little tag there
+  function toBar(n) {
+    syncBoard(); endEdit(n);
+    if (n.pin) { n.pin = null; renderPin(n); }
+    fly.appendChild(n.el);
+    const r = barEl.getBoundingClientRect();
+    n.mode = "place"; n.toBar = true;
+    n.t = { x: Math.min(r.right - 80, r.left + 120 + barEl.querySelectorAll(".chip").length * 140) - BR.left, y: r.top + 22 - BR.top, a: 0, s: .18 };
+    n.liftT = .5;
+  }
+  // back from the cord onto the corkboard
+  function fromBar(n) {
+    const later = Desk.page() !== 1;
+    if (later) Desk.go(1);
+    setTimeout(() => {
+      syncBoard();
+      n.bar = false; Bar.remove("note", n.id);
+      n.el.classList.remove("hidden"); fly.appendChild(n.el);
+      const r = barEl.getBoundingClientRect();
+      n.x = clamp(r.left + 120 - BR.left, HW, W - HW); n.y = r.top + 20 - BR.top; n.a = 0; n.s = .3;
+      front(n);
+      n.mode = "place"; n.t = { x: clamp(n.x + 80, HW + 10, W - HW - 10), y: hh(n) + 40, a: 0, s: 1 }; n.liftT = .6;
+      save();
+    }, later ? 450 : 0);
+  }
+  Bar.kinds.note = {
+    chip: id => {
+      const n = notes.find(m => m.id === id);
+      if (!n || !n.bar) return null;
+      const el = document.createElement("div");
+      el.textContent = firstLine(n) || "空白便签"; el.title = (n.text || "") + "\n（点一下放回软木板）";
+      el.style.setProperty("--c", CATS[n.cat].c);
+      return el;
+    },
+    click: id => { const n = notes.find(m => m.id === id); if (n) fromBar(n); },
+    menu: id => {
+      const n = notes.find(m => m.id === id);
+      return [{ label: "放回软木板", fn: () => fromBar(n) }, "-",
+        { label: "扔掉", danger: true, fn: () => { n.el.remove(); notes = notes.filter(x => x !== n); Bar.remove("note", id); save(); } }];
+    },
+  };
   const firstLine = n => (n.text.split("\n")[0] || "").slice(0, 30);
   function renderTabs() {
     const list = notes.filter(inDrawer).sort((a, b) => ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat) || a.dockedAt - b.dockedAt);
@@ -1682,7 +1894,7 @@
     const d = (n.y + hh(n)) - bot0;
     if (Math.abs(d) > 1) {
       for (const m of notes) {
-        if (m === n || m.pin || inDrawer(m) || (m.mode !== "rest" && m.mode !== "place")) continue;
+        if (m === n || m.pin || off(m) || (m.mode !== "rest" && m.mode !== "place")) continue;
         if (Math.abs(m.x - n.x) > HW * .9 || m.y - hh(m) < bot0 - 6 || m.y - hh(m) < top0) continue;
         m.mode = "place";
         m.t = { x: m.x, y: Math.min(H - hh(m) - 6, m.y + d), a: m.a, s: 1 };
@@ -1695,10 +1907,10 @@
   }
   function tidy() {
     syncBoard();
-    const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && !inDrawer(n) && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
+    const cols = ORDER.map(c => notes.filter(n => n.cat === c && !n.pin && !off(n) && n.mode !== "trash" && n.mode !== "drag").sort((a, b) => a.createdAt - b.createdAt)).filter(l => l.length);
     const colW = Math.min(NW + 30, (W - 36) / Math.max(1, cols.length));
     // pinned notes stay where they are; the strips go round them
-    const pinned = notes.filter(n => n.pin && !inDrawer(n) && n.mode !== "trash").map(n => {
+    const pinned = notes.filter(n => n.pin && !off(n) && n.mode !== "trash").map(n => {
       const c = Math.abs(Math.cos(n.a)), sn = Math.abs(Math.sin(n.a));
       const ex = c * HW + sn * hh(n) + 8, ey = sn * HW + c * hh(n) + 8;
       return { l: n.x - ex, r: n.x + ex, t: n.y - ey, b: n.y + ey };
@@ -1794,6 +2006,7 @@
     if (n.mode === "rotate") { n.mode = "swing"; return; }
     if (n.mode !== "drag") return;
     if (overBin()) { trash(n); return; }
+    if (Bar.over(P.y + BR.top)) { toBar(n); return; }
     if (P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE) { dock(n); return; }
     n.vx = clamp(P.vx, -2600, 2600); n.vy = clamp(P.vy, -2600, 2600); n.mode = "toss";
     if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
@@ -1933,6 +2146,7 @@
       document.body.classList.add("carrying");
       bin.classList.toggle("hot", overBin());
       drawer.classList.toggle("hot", P.x + BR.left > innerWidth - DRAWER_W - DOCK_ZONE);
+      Bar.hot(Bar.over(P.y + BR.top));
     }
   });
 
@@ -2018,7 +2232,7 @@
     else if (a.type === "pin") dropPin();
     else if (a.type === "note" || a.type === "rotate") { act = a; releaseNote(a.n); act = null; }
     else if (a.type === "spin") { a.n.mode = "rest"; a.n.liftT = 0; a.n.el.classList.remove("spinning"); save(); }
-    bin.classList.remove("hot"); drawer.classList.remove("hot"); document.body.classList.remove("carrying");
+    bin.classList.remove("hot"); drawer.classList.remove("hot"); Bar.hot(false); document.body.classList.remove("carrying");
   });
 
   addEventListener("dblclick", e => {
@@ -2074,7 +2288,7 @@
   function keepIn() {
     syncBoard();
     for (const n of notes) {
-      if (n.mode !== "rest" || inDrawer(n)) continue;
+      if (n.mode !== "rest" || off(n)) continue;
       const x = clamp(n.x, HW * .5, W - HW * .5), y = clamp(n.y, hh(n) * .5, H - hh(n) * .5);
       if (n.pin && (x !== n.x || y !== n.y)) { n.pin = null; renderPin(n); }
       n.x = x; n.y = y; draw(n);
@@ -2089,7 +2303,7 @@
     saveT = setTimeout(() => {
       const data = notes.filter(n => n.mode !== "trash").map(n => ({
         id: n.id, cat: n.cat, text: n.el.classList.contains("editing") ? n.textEl.innerText : n.text,
-        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded, docked: inDrawer(n), dockedAt: n.dockedAt || 0,
+        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded, bar: !!(n.bar || n.toBar), docked: inDrawer(n), dockedAt: n.dockedAt || 0,
         z: n.z, createdAt: n.createdAt,
       }));
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
@@ -2106,7 +2320,7 @@
       delete d.task;
       makeNote(d);
     });
-    keepIn(); renderTabs();
+    keepIn(); renderTabs(); Bar.render();
     save();
   }
   function demo() {
