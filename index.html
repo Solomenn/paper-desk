@@ -110,7 +110,11 @@
   .empty { font: 15px var(--hand); color: rgba(244,240,228,.3); padding: 4px 2px; }
 
   /* the corkboard */
-  #cork .inner { background: radial-gradient(70% 60% at 30% 25%, rgba(214, 170, 120, .55), transparent 70%), radial-gradient(60% 60% at 80% 85%, rgba(170, 124, 80, .35), transparent 70%), #c99c69; }
+  #cork .inner { background:
+      radial-gradient(circle at 20% 30%, rgba(90,52,20,.25) 0 1px, transparent 1.6px) 0 0 / 9px 11px,
+      radial-gradient(circle at 70% 60%, rgba(255,230,190,.18) 0 1px, transparent 1.6px) 0 0 / 13px 7px,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32  0 0 0 0 .18  0 0 0 0 .06  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      #c99c69; }
   #notes { position: absolute; inset: 0; }
 </style>
 <style>
