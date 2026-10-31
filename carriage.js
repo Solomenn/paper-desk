@@ -59,7 +59,7 @@ const M = {
   brass: new THREE.MeshStandardMaterial({ color: 0xc9a25a, metalness: 1, roughness: .32, fog: false }),
   iron: new THREE.MeshStandardMaterial({ color: 0x2a2b2d, metalness: .6, roughness: .55, fog: false }),
   ceiling: new THREE.MeshStandardMaterial({ color: 0xe9dfc9, roughness: .9, fog: false }),
-  velvet: new THREE.MeshPhysicalMaterial({ color: 0x5e1622, roughness: .85, sheen: 1, sheenColor: new THREE.Color(0xd06070), sheenRoughness: .45, side: THREE.DoubleSide, fog: false }),
+  velvet: new THREE.MeshPhysicalMaterial({ color: 0x3e0f16, roughness: .9, sheen: .6, sheenColor: new THREE.Color(0x7a2a36), sheenRoughness: .6, side: THREE.DoubleSide, fog: false }),
   glass: new THREE.MeshPhysicalMaterial({ color: 0x9fb4c8, roughness: .08, metalness: 0, transparent: true, opacity: .12, fog: false, depthWrite: false }),
 };
 
@@ -118,8 +118,7 @@ function curtain(side) {
   g.computeVertexNormals();
   const m = new THREE.Mesh(g, M.velvet); m.castShadow = true; m.receiveShadow = true;
   m.position.set(win.x + side * (win.w / 2 + .1), win.y1 + .14 - h / 2, .1);
-  const tie = new THREE.Mesh(new THREE.TorusGeometry(.05, .012, 8, 20), M.brass); tie.scale.set(1, .5, 1); tie.position.set(m.position.x - side * .02, m.position.y - h / 2 + h * .38, .14);
-  const grp = new THREE.Group(); grp.add(m, tie); return grp;
+  const grp = new THREE.Group(); grp.add(m); return grp;
 }
 
 /* ───────── outside: the snowy forest going by ───────── */
@@ -138,7 +137,7 @@ function buildOutside() {
   const needles = new THREE.MeshStandardMaterial({ color: 0x1d3330, roughness: .9, flatShading: true }), snowM = new THREE.MeshStandardMaterial({ color: 0xf2f6fa, roughness: .8, flatShading: true });
   trees = new THREE.InstancedMesh(cone, needles, N * 3); caps = new THREE.InstancedMesh(cone, snowM, N * 3);
   treeData = [];
-  for (let i = 0; i < N; i++) { const z = -1.5 - Math.pow(Math.random(), 1.6) * 38, h = 3 + Math.random() * 7; treeData.push({ x: (Math.random() - .5) * 60, z, h, w: h * (.26 + Math.random() * .08) }); }
+  for (let i = 0; i < N; i++) { const h = 3 + Math.random() * 7, w = h * (.26 + Math.random() * .08), z = -2.5 - w - Math.pow(Math.random(), 1.6) * 36; treeData.push({ x: (Math.random() - .5) * 60, z, h, w }); }
   outside.add(trees, caps);
   // the snow outside, blown back by the train
   const SN = 2600, pos = new Float32Array(SN * 3), seed = new Float32Array(SN);
@@ -199,7 +198,7 @@ async function loadThings() {
     thing("books", "book_encyclopedia_set_01", h => { h.position.set(win.x + win.w / 2 - .22, tableY, .26); h.rotation.y = .35; h.scale.setScalar(.82); },
       o => { const n = parseInt((o.name.match(/Cube0(\d+)/) || [])[1] || "0", 10); return n === 4 || (n >= 49 && n <= 53); }),
     thing("glass", "magnifying_glass_01", h => { h.position.set(win.x - .1, tableY + .007, .33); h.rotation.set(-Math.PI / 2, 0, .5); }),
-    thing("suitcase", "vintage_suitcase", h => { h.position.set(win.x - .05, 2.13, .22); h.rotation.set(0, Math.PI / 2 + .04, -Math.PI / 2); h.scale.setScalar(.7); }, o => /suitcase_01/.test(o.name)),
+    thing("suitcase", "vintage_suitcase", h => { h.scale.setScalar(.62); h.rotation.set(-Math.PI / 2, 0, .05); h.position.set(win.x + .25, 2.13, .3); }, o => /suitcase_01/.test(o.name)),
     thing("lantern", "Lantern_01", h => { h.position.set(win.x - win.w / 2 - .28, 1.42, .1); h.scale.setScalar(1.15); }),
   ]);
   layoutLights();
