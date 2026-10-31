@@ -81,7 +81,7 @@
       radial-gradient(30% 40% at 75% 65%, rgba(255,255,255,.04), transparent 70%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
       #2f3f35; }
-  .lanes { position: absolute; inset: 0 0 26px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lanes { position: absolute; inset: 0 0 26px; display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr); }
   .lane { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 18px 18px 0; }
   .lane + .lane::before { content: ""; position: absolute; left: 0; top: 22px; bottom: 30px; width: 2px; background: rgba(240,236,222,.16); border-radius: 2px; filter: blur(.4px); }
   .lane h3 { margin: 0 0 14px; font: 400 24px var(--hand); color: rgba(244,240,228,.88); letter-spacing: .2em; text-shadow: 0 0 1px rgba(255,255,255,.4); display: flex; align-items: baseline; gap: 10px; }
@@ -563,6 +563,20 @@
   .chip.k-today .cb { position: absolute; left: 9px; top: 7px; width: 12px; height: 12px; border: 1.5px solid #c2cbd2; border-radius: 3px; }
   .chip.k-today.done .cb { background: var(--accent); border-color: var(--accent); }
   .chip.k-today.done span { color: var(--faint); text-decoration: line-through; }
+
+  /* the full project cards standing in the Doing column */
+  .pcard.inl { width: auto; flex: none; position: relative; cursor: grab; }
+  .pcard.inl .flipc .face.f > .sheetc, .pcard.inl .face.f > .sheetc { min-height: 0; max-height: none; }
+  .pcard.inl .sheetc { box-shadow: 0 1px 0 rgba(0, 0, 0, .15), 0 12px 22px -12px rgba(0, 0, 0, .65); }
+  .pcard.inl .sheetc > .body > .chk { overflow: visible; }
+  .pcard.inl .head { padding-top: 16px; }
+  .pcard.inl .grip { position: absolute; left: 50%; top: -7px; z-index: 8; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; cursor: grab;
+    background: radial-gradient(circle at 35% 30%, #fff8 0 15%, var(--mg, #c9573f) 45%, color-mix(in srgb, var(--mg, #c9573f) 60%, #000) 100%); box-shadow: 1px 2px 3px rgba(0, 0, 0, .4); }
+  .pcard.inl.lifted { opacity: .3; }
+  .pcard.inl .foot { padding-top: 2px; }
+  .pcard.inl:not(.ready) .face.f .foot { display: none; }
+  .pcard.ghost { position: fixed; z-index: 46000; pointer-events: none; transition: none; }
+  .pcard.inl.fly { transition: transform .6s var(--ease), opacity .6s; }
 </style>
 </head>
 <body>
@@ -1256,12 +1270,21 @@
     COLS.forEach(col => {
       const lane = $(`.lane[data-col=${col}]`), box = $(".cards", lane);
       const ps = S.projects.filter(p => p.col === col && !p.bar);
-      box.innerHTML = "";
-      ps.forEach(p => box.appendChild(miniCard(p)));
-      if (!ps.length) box.innerHTML = `<div class="empty">${col === "done" ? "勾完的放这里" : "空"}</div>`;
+      const want = ps.map(p => {
+        if (col !== "doing") return miniCard(p);
+        let el = inlineCards.get(p.id);
+        if (!el) { el = buildCard(p, true).el; inlineCards.set(p.id, el); }
+        el.style.setProperty("--mg", MAG[p.col]);
+        return el;
+      });
+      if (!ps.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = col === "done" ? "勾完的放这里" : "空"; want.push(e); }
+      // only move what has to move, so a card being typed in keeps its caret
+      [...box.children].forEach(c => { if (!want.includes(c)) c.remove(); });
+      want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });
       $("h3 small", lane).textContent = ps.length || "";
     });
     $("#albumBtn .talbum").dataset.n = S.done.length;
+    for (const [id] of inlineCards) if (!S.projects.some(p => p.id === id && p.col === "doing" && !p.bar)) inlineCards.delete(id);
     Bar.render();
   }
   function moveProject(p, col, before) {
@@ -1273,8 +1296,9 @@
   }
   // drag a card between the columns; a plain click opens it
   $("#chalk").addEventListener("pointerdown", e => {
-    const m = e.target.closest(".mini");
+    const m = e.target.closest(".mini, .pcard.inl");
     if (!m || e.button !== 0 || e.target.closest(".mtog, .mstep")) return;
+    if (m.classList.contains("inl") && e.target.closest("input, textarea, button, .chk, .curl, .memo, .stamp, .postmark")) return;
     e.preventDefault();
     const p = m._p, sx = e.clientX, sy = e.clientY, r = m.getBoundingClientRect();
     let ghost = null, slot = null, target = null, lx = sx, lastY = sy;
@@ -1292,7 +1316,7 @@
       const lane = document.elementsFromPoint(ev.clientX, ev.clientY).map(x => x.closest && x.closest(".lane")).find(Boolean);
       $$(".lane").forEach(l => l.classList.toggle("over", l === lane));
       if (!lane) { slot.remove(); target = null; return; }
-      const box = $(".cards", lane), cards = $$(".mini", box).filter(x => x !== m);
+      const box = $(".cards", lane), cards = $$(".mini, .pcard.inl", box).filter(x => x !== m);
       const before = cards.find(c => { const b = c.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; }) || null;
       if (before) box.insertBefore(slot, before); else box.appendChild(slot);
       target = { col: lane.dataset.col, before: before ? before._p : null };
@@ -1335,10 +1359,11 @@
   /* ───────── an opened project: the full card, front and back ───────── */
   const tpl = $("#projTpl"), detail = $("#detail"), holder = $(".holder", detail);
   let opened = null;
-  function openDetail(p, fresh) {
-    closeDetail(true);
+  const inlineCards = new Map();   // the full cards standing in the Doing column, kept between redraws so typing isn't lost
+  function buildCard(p, inline) {
     const el = tpl.content.firstElementChild.cloneNode(true);
-    holder.appendChild(el);
+    el._p = p;
+    if (inline) { el.classList.add("inl"); el.insertAdjacentHTML("afterbegin", '<i class="grip" title="拖到别的列"></i>'); el.style.setProperty("--mg", MAG[p.col]); }
     const ti = $("[data-k=title]", el), go = $("[data-k=goal]", el);
     const grow = () => { go.style.height = "auto"; go.style.height = go.scrollHeight + "px"; };
     function renderProgress() {
@@ -1364,9 +1389,9 @@
       add: t => p.conds.push({ t, done: false }),
       remove: it => { p.conds = p.conds.filter(c => c !== it); },
       tick: it => { it.at = it.done ? Date.now() : 0; },
-      changed: later => { saveP(later); renderProgress(); renderBoard(); },
+      changed: later => { saveP(later); renderProgress(); if (inline) Bar.render(); else renderBoard(); },
     });
-    ti.addEventListener("input", () => { p.title = ti.value; $(".face.b .ttl", el).textContent = ti.value || "项目"; saveP(true); renderBoard(); });
+    ti.addEventListener("input", () => { p.title = ti.value; $(".face.b .ttl", el).textContent = ti.value || "项目"; saveP(true); if (inline) Bar.render(); else renderBoard(); });
     ti.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); go.focus(); } });
     go.addEventListener("input", () => { p.goal = go.value; grow(); saveP(true); });
     go.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $(".chk li.new textarea", el).focus(); } });
@@ -1379,7 +1404,7 @@
         { label: "加一条", fn: () => { flip(false); $(".chk li.new textarea", el).focus(); } },
         el.classList.contains("ready") && { label: "盖章", fn: () => $(".stampBtn", el).click() },
         "-",
-        { label: "扔掉", danger: true, fn: () => { if (toss(p)) closeDetail(); } },
+        { label: "扔掉", danger: true, fn: () => { if (toss(p) && !inline) closeDetail(); } },
       ]);
     });
     // stamp it: the stamp comes down, the postmark is inked over its corner, and the card flies into the album
@@ -1399,21 +1424,28 @@
           el.classList.add("fly");
           el.style.transform = `translate(${ar.left + ar.width / 2 - er.left - er.width / 2}px, ${ar.top + ar.height / 2 - er.top - er.height / 2}px) scale(.06) rotate(8deg)`;
           el.style.opacity = "0";
-          detail.classList.remove("show");
+          if (!inline) detail.classList.remove("show");
           setTimeout(() => {
             S.done.push({ id: p.id, title: p.title, goal: p.goal, conds: p.conds, minutes: p.minutes, memo: p.memo || "",
               startedAt: p.startedAt, sessions: p.sessions || 0, focus: p.focus || 0, doneAt: Date.now() });
             S.projects = S.projects.filter(x => x !== p); saveP();
-            closeDetail(true); renderBoard();
+            if (inline) inlineCards.delete(p.id); else closeDetail(true);
+            renderBoard();
             const ab = $("#albumBtn"); ab.classList.remove("gulp"); void ab.offsetWidth; ab.classList.add("gulp");
           }, 620);
         }, 1400);
       }, el.classList.contains("back") ? 950 : 50);
     });
-    opened = { p, el };
     renderProgress(); list.render();
-    detail.classList.add("show");
     requestAnimationFrame(grow);
+    return { el, ti };
+  }
+  function openDetail(p, fresh) {
+    closeDetail(true);
+    const { el, ti } = buildCard(p, false);
+    holder.appendChild(el);
+    opened = { p, el };
+    detail.classList.add("show");
     if (fresh) setTimeout(() => ti.focus(), 60);
   }
   function closeDetail(now) {
@@ -1423,6 +1455,7 @@
     detail.classList.remove("show");
     const p = o.p;
     if (S.projects.includes(p) && !p.title.trim() && !p.goal.trim() && !p.conds.length) { S.projects = S.projects.filter(x => x !== p); saveP(); }
+    inlineCards.delete(p.id);
     renderBoard();
     if (now) o.el.remove(); else setTimeout(() => o.el.remove(), 320);
   }
