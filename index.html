@@ -600,6 +600,10 @@
   .mini b, .mini p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; -webkit-line-clamp: unset; }
   .mini .mstep span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .mini .mstep { min-width: 0; }
+
+  /* column titles in the middle, a chalk line either side */
+  .lane h3 { justify-content: center; }
+  .lane h3::before { content: ""; flex: 1; height: 2px; margin-right: 6px; align-self: center; background: rgba(240, 238, 228, .28); border-radius: 2px; filter: url(#chalky); }
 </style>
 </head>
 <body>
@@ -1256,8 +1260,7 @@
     el.classList.toggle("open", open);
     const next = steps.find(c => !c.done);
     const mn = $(".mnext", el);
-    if (open || !steps.length) mn.remove();
-    else mn.textContent = next ? "→ " + next.t : "都勾完了";
+    mn.remove();   // no "next step" line: the card stays short
     const ul = $(".msteps", el);
     if (open) p.conds.forEach((c, i) => {
       if (!c.t.trim()) return;
