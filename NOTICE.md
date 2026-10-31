@@ -14,3 +14,10 @@ Parts of it are adapted from **sasshi** by qzz0518 — <https://github.com/qzz05
   from the manifest; the leaves loop with birds dropped in now and then).
 
 The handwriting face is LXGW WenKai (SIL Open Font License 1.1), loaded from jsDelivr.
+
+The carriage in `focus.html` (雪国线) is a photograph, `assets/car.webp` — an AI-generated image from **ぱくたそ (PAKUTASO)**,
+"Vintage train compartment — purple velvet armchairs, round table, wall sconce, snowy window" (<https://www.pakutaso.com/en/20230345090post-28949.html>).
+PAKUTASO images are free for commercial and non-commercial use; because this repository is public, the file can be downloaded from it,
+which PAKUTASO counts as redistribution, so the source is named here — see the terms of use on <https://www.pakutaso.com/>.
+The file in `assets/` is the picture re-encoded as WebP; the window is cut out of it in code and the live scene is drawn behind it.
+
