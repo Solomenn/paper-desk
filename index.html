@@ -211,105 +211,98 @@
     .tab, .pad, .ibtn, #help { transition: none; }
   }
 
-  /* ═════════ current-task slot in the middle of the desk ═════════ */
-  #stage {
-    position: fixed; left: 50%; top: 50%; width: 340px; height: 460px;
-    margin: -250px 0 0 -170px; perspective: 1500px; z-index: 1;
-  }
-  #slotEmpty {
-    position: absolute; inset: 0; border-radius: 12px;
-    border: 1.5px dashed rgba(139, 134, 122, .38);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    color: var(--faint); font-size: 13px; letter-spacing: .12em;
-    transition: border-color .25s, background .25s, transform .3s var(--ease);
-  }
-  #slotEmpty b { font-family: var(--serif); font-size: 20px; color: rgba(139,134,122,.7); font-weight: 600; letter-spacing: .2em; }
-  #stage.hot #slotEmpty, #stage.hot .face { border-color: var(--accent); }
-  #stage.hot #slotEmpty { background: rgba(181, 82, 59, .05); transform: scale(1.02); }
-  #stage.hot #card { filter: drop-shadow(0 0 14px rgba(181, 82, 59, .35)); }
-  #stage.has #slotEmpty { opacity: 0; }
-  #shadow {
-    position: absolute; left: 6%; right: 6%; bottom: -10px; height: 40px; border-radius: 50%;
-    background: rgba(70, 52, 28, .32); filter: blur(16px); transform-origin: 50% 50%;
-  }
+  /* ═════════ today's card in the middle: a big sheet you can tuck away like a sticky note ═════════ */
+  #stage { position: fixed; left: 50%; top: 50%; width: 360px; height: 500px; margin: -270px 0 0 -180px; perspective: 1600px; z-index: 1; }
+  #stage.tucked { visibility: hidden; pointer-events: none; }
+  #slotEmpty { position: absolute; left: 50%; top: 50%; width: 220px; height: 110px; margin: -55px 0 0 -110px; border-radius: 12px;
+    border: 1.5px dashed rgba(139, 134, 122, .38); display: grid; place-items: center; cursor: pointer;
+    color: var(--muted); font-size: 14px; letter-spacing: .12em; transition: .25s var(--ease); }
+  #slotEmpty:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,82,59,.04); }
+  #stage.has #slotEmpty { display: none; }
+  #shadow { position: absolute; left: 6%; right: 6%; bottom: -10px; height: 40px; border-radius: 50%;
+    background: rgba(70, 52, 28, .32); filter: blur(16px); transform-origin: 50% 50%; }
   #stage:not(.has) #shadow, #stage:not(.has) #card { visibility: hidden; }
   #card { position: absolute; inset: 0; transform-style: preserve-3d; cursor: grab; will-change: transform; }
   #card.grabbing { cursor: grabbing; }
-  #card.fly { transition: transform .7s var(--ease), opacity .7s; }
-  .face {
-    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-    background: var(--paper); border-radius: 10px; overflow: hidden; border: 1px solid transparent;
-    box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 1px 2px rgba(70, 52, 28, .08);
-  }
-  .face::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  .face::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
+  #card.fly { transition: transform .6s var(--ease), opacity .6s; }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper);
+    border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 0 0 .5px rgba(80, 60, 30, .14), 0 1px 2px rgba(70, 52, 28, .08); }
+  .face::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .face::after { content: ""; position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(105deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 70%);
-    background-size: 300% 100%; background-position: var(--glint, 100%) 0; opacity: var(--glintA, 0);
-  }
+    background-size: 300% 100%; background-position: var(--glint, 100%) 0; opacity: var(--glintA, 0); }
   .back { transform: rotateY(180deg); }
-  /* a strip of the sticky note's colour, so you can tell where it came from */
-  .face .tint { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--c, transparent); }
-  .head { display: flex; align-items: center; gap: 10px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line, rgba(96,88,72,.16)); }
-  .grip { width: 16px; height: 10px; flex: none;
-    background: linear-gradient(var(--faint) 0 1.5px, transparent 0 4.25px, var(--faint) 0 5.75px, transparent 0 8.5px, var(--faint) 0 10px); }
+  .head { flex: none; display: flex; align-items: center; gap: 12px; padding: 18px 22px 15px; border-bottom: 1px solid var(--line); }
+  .grip { flex: none; width: 18px; height: 18px; border: 0; padding: 0; cursor: pointer; background:
+    linear-gradient(var(--faint) 0 0) 0 4px / 18px 1.5px no-repeat, linear-gradient(var(--faint) 0 0) 0 8.25px / 18px 1.5px no-repeat,
+    linear-gradient(var(--faint) 0 0) 0 12.5px / 18px 1.5px no-repeat; transition: opacity .2s; opacity: .8; }
+  .grip:hover { opacity: 1; filter: sepia(1) saturate(4) hue-rotate(-20deg); }
   .title { flex: 1; min-width: 0; font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.35; outline: none; }
-  .title:empty::before { content: "标题"; color: #d4cdbd; }
+  .title:empty::before { content: "这张卡叫什么？"; color: #d4cdbd; }
   .badge { flex: none; font-size: 12px; color: var(--accent); padding: 3px 10px; border: 1px solid rgba(181,82,59,.45); border-radius: 999px; letter-spacing: .08em; }
-  .body { padding: 18px 22px; }
-  .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 8px; }
-  .goal { font-family: var(--serif); font-size: 17px; line-height: 1.7; min-height: 3.4em; outline: none; }
+  .body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 16px 22px 0; }
+  .label { font-size: 12.5px; color: var(--faint); letter-spacing: .12em; margin-bottom: 6px; }
+  .goal { font-family: var(--serif); font-size: 16.5px; line-height: 1.65; outline: none; min-height: 1.65em; }
   .goal:empty::before { content: "这次要做到什么？"; color: #d4cdbd; }
-  .prog { margin-top: 26px; display: flex; align-items: baseline; gap: 12px; }
-  .prog .n { font-family: var(--mono); font-size: 22px; color: var(--accent); letter-spacing: .1em; }
-  .pips { display: flex; gap: 6px; margin-left: auto; }
+  .prog { flex: none; margin: 18px 0 4px; display: flex; align-items: baseline; gap: 12px; }
+  .prog .n { font-family: var(--mono); font-size: 21px; color: var(--accent); letter-spacing: .1em; }
+  .pips { display: flex; gap: 5px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
   .pip { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--faint); transition: .3s var(--ease); }
   .pip.on { background: var(--accent); border-color: var(--accent); }
-  .slot { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px; border: 1.5px dashed rgba(139, 134, 122, .35); border-radius: 3px; }
-  .turn { position: absolute; left: 22px; bottom: 22px; color: var(--faint); font-size: 18px; }
-  .conds { list-style: none; margin: 0; padding: 0; }
-  .cond { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; cursor: pointer; font-size: 15.5px; line-height: 1.5; }
+  .conds { list-style: none; margin: 0 -22px; padding: 0 22px; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .cond { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; cursor: pointer; font-size: 15px; line-height: 1.5; }
   .box { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 4px; border: 1.5px solid #cfc8b8; position: relative; transition: .2s var(--ease); }
+  .cond:hover .box { border-color: var(--accent); }
   .cond.done .box { border-color: var(--accent); background: var(--accent); }
   .cond.done .box::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
   .ct { flex: 1; outline: none; transition: color .3s; }
   .cond.done .ct { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(181,82,59,.5); }
-  .ct:empty::before { content: attr(data-ph); color: #d4cdbd; }
-  .cond.empty .box { opacity: .35; }
-  .dialwrap { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; justify-content: center; }
-  .dial { width: 128px; height: 128px; border-radius: 50%; position: relative; cursor: pointer; touch-action: none;
+  .cx { flex: none; color: var(--faint); font-size: 12px; opacity: 0; padding: 2px 4px; transition: opacity .15s; }
+  .cond:hover .cx { opacity: 1; } .cx:hover { color: var(--accent); }
+  .addc { flex: none; display: flex; gap: 12px; align-items: center; padding: 8px 0 14px; margin: 0; }
+  .addc span { width: 20px; text-align: center; color: var(--faint); font-size: 18px; }
+  .addc input { flex: 1; border: 0; background: none; outline: none; font: 15px var(--sans); color: var(--ink); padding: 4px 0; }
+  .addc input::placeholder { color: #c9c1b0; }
+  .foot { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 22px 16px; color: var(--faint); font-size: 12px; }
+  .turn { font-size: 17px; cursor: pointer; } .turn:hover { color: var(--accent); }
+  .dialwrap { flex: 1; display: grid; place-items: center; }
+  .dial { width: 176px; height: 176px; border-radius: 50%; position: relative; cursor: pointer; touch-action: none;
     background: radial-gradient(circle, var(--paper) 0 61%, transparent 62%),
       repeating-conic-gradient(from -1deg, rgba(139,134,122,.45) 0 2deg, transparent 2deg 30deg); }
-  .disc { position: absolute; inset: 10px; border-radius: 50%;
-    background: conic-gradient(var(--accent) 0 var(--deg, 0deg), rgba(181,82,59,.06) var(--deg, 0deg) 360deg);
-    box-shadow: inset 0 0 0 1px rgba(181,82,59,.15); }
-  .hub { position: absolute; inset: 39px; border-radius: 50%; background: var(--paper); display: grid; place-items: center;
-    font-family: var(--mono); font-size: 15px; color: var(--ink); box-shadow: 0 1px 3px rgba(70,52,28,.18); }
+  .disc { position: absolute; inset: 13px; border-radius: 50%;
+    background: conic-gradient(var(--accent) 0 var(--deg, 0deg), rgba(181,82,59,.06) var(--deg, 0deg) 360deg); box-shadow: inset 0 0 0 1px rgba(181,82,59,.15); }
+  .hub { position: absolute; inset: 56px; border-radius: 50%; background: var(--paper); display: grid; place-items: center;
+    font-family: var(--mono); font-size: 17px; color: var(--ink); box-shadow: 0 1px 3px rgba(70,52,28,.18); }
   .dial.run .hub { color: var(--accent); }
   .dial.ring { animation: ring .5s 4; }
   @keyframes ring { 50% { transform: scale(1.06); } }
-  .stamp { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px;
+  .stamp { position: absolute; right: 20px; bottom: 18px; width: 86px; height: 100px; z-index: 3;
     background: radial-gradient(circle, transparent 3px, #fffdf6 3.5px) -5px -5px / 10px 10px;
     filter: drop-shadow(0 2px 2px rgba(70,52,28,.25)); transform: rotate(-5deg); display: none; }
   .stamp.show { display: block; animation: slam .55s var(--ease) both; }
-  @keyframes slam {
-    0% { transform: translateY(-40px) scale(1.7) rotate(-22deg); opacity: 0; }
-    60% { transform: translateY(0) scale(.96) rotate(-4deg); opacity: 1; }
-    100% { transform: rotate(-5deg); } }
+  @keyframes slam { 0% { transform: translateY(-40px) scale(1.7) rotate(-22deg); opacity: 0; } 60% { transform: translateY(0) scale(.96) rotate(-4deg); opacity: 1; } 100% { transform: rotate(-5deg); } }
   .stamp .in { position: absolute; inset: 5px; background: #fffdf6; padding: 5px; }
   .stamp .art { width: 100%; height: 100%; border: 1.5px solid var(--accent); background: linear-gradient(180deg, #f4e3d2, #efd3bf);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--accent); }
   .stamp .big { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1; }
   .stamp .sm { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; }
-  .postmark { position: absolute; right: 62px; bottom: 44px; width: 96px; height: 96px; opacity: 0; pointer-events: none; z-index: 2; mix-blend-mode: multiply; }
+  .postmark { position: absolute; right: 60px; bottom: 40px; width: 96px; height: 96px; opacity: 0; pointer-events: none; z-index: 4; mix-blend-mode: multiply; }
   .postmark.show { animation: ink .4s .25s var(--ease) both; }
   @keyframes ink { from { opacity: 0; transform: scale(1.15) rotate(8deg); } to { opacity: .72; transform: rotate(12deg); } }
   #card.thud { animation: thud .35s var(--ease); }
   @keyframes thud { 40% { scale: .985; } }
   .tedit { background: rgba(181, 82, 59, .06); border-radius: 3px; user-select: text; -webkit-user-select: text; cursor: text; }
+
+  /* the card's own index tab on the right edge, above the sticky-note tabs */
+  #cardTab { position: absolute; right: 14px; top: 14px; width: 16px; height: 48px; border-radius: 5px 0 0 5px; cursor: pointer; display: none;
+    background: var(--paper); box-shadow: -1px 1px 3px rgba(70,52,28,.28), inset 3px 0 0 var(--accent); transition: width .22s var(--ease); }
+  #cardTab.show { display: block; }
+  #cardTab:hover { width: 28px; }
+  #cardTab::before { content: "今天的卡"; position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    font-size: 11px; letter-spacing: .1em; color: var(--accent); white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #drawer:hover #cardTab::before { opacity: 1; }
 
   /* done pile, bottom right */
   #done { position: fixed; right: 56px; bottom: 34px; width: 118px; height: 150px; z-index: 2; cursor: pointer; transition: transform .25s var(--ease); }
@@ -317,79 +310,28 @@
   #done .mini { position: absolute; inset: 0; background: var(--paper); border-radius: 6px; padding: 12px 11px;
     box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 4px 10px rgba(70,52,28,.12);
     font-family: var(--serif); font-size: 12px; font-weight: 600; line-height: 1.45; color: var(--ink); overflow: hidden; }
-  #done .mini::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c, transparent); }
   #done .ms { position: absolute; right: 8px; bottom: 8px; width: 26px; height: 31px;
     background: radial-gradient(circle, transparent 1.4px, #fffdf6 1.8px) -2px -2px / 4px 4px; transform: rotate(-6deg); }
   #done .ms::after { content: ""; position: absolute; inset: 3px; border: 1px solid var(--accent); background: #f2dccb; }
   #done .count { position: absolute; left: 0; right: 0; top: calc(100% + 8px); text-align: center; font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .2em; }
   #done .empty-hint { position: absolute; inset: 0; border: 1.5px dashed rgba(139,134,122,.28); border-radius: 6px; }
-
-  /* ═════════ today's list: things to tick off (sticky notes are just memos) ═════════ */
-  #today {
-    position: fixed; left: 28px; top: 28px; bottom: 124px; width: 272px; z-index: 2;
-    background: var(--paper); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;
-    box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 12px 26px -14px rgba(70,52,28,.35);
-  }
-  #today::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-  #today .th { padding: 20px 20px 14px; border-bottom: 1px solid var(--line); position: relative; }
-  #today .day { font-family: var(--serif); font-size: 21px; font-weight: 700; letter-spacing: .04em; }
-  #today .wk { font-size: 12px; color: var(--faint); letter-spacing: .14em; margin-left: 8px; font-weight: 400; font-family: var(--sans); }
-  #today .pr { position: absolute; right: 20px; top: 24px; font-family: var(--mono); font-size: 14px; color: var(--accent); letter-spacing: .1em; }
-  #today .bar { margin-top: 12px; height: 3px; border-radius: 2px; background: rgba(181,82,59,.12); overflow: hidden; }
-  #today .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s var(--ease); }
-  #today ul { list-style: none; margin: 0; padding: 4px 0; flex: 1; overflow-y: auto; overscroll-behavior: contain;
-    background-image: repeating-linear-gradient(transparent 0 43px, rgba(96,88,72,.08) 43px 44px); background-position: 0 4px; }
-  #today li { position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 12px 6px 20px; cursor: grab; }
-  #today li.flash { animation: flash .9s var(--ease); }
-  @keyframes flash { 0% { background: rgba(181,82,59,.16); } 100% { background: transparent; } }
-  #today .ck { flex: none; width: 19px; height: 19px; border-radius: 4px; border: 1.5px solid #cfc8b8; background: none; padding: 0; cursor: pointer; position: relative; transition: .2s var(--ease); }
-  #today .ck:hover { border-color: var(--accent); }
-  #today li.done .ck { background: var(--accent); border-color: var(--accent); }
-  #today li.done .ck::after { content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-  /* done through the card: a tiny stamp instead of a tick */
-  #today li.stamped .ck { width: 21px; height: 24px; border: 0; border-radius: 0; transform: rotate(-6deg);
-    background: radial-gradient(circle, transparent 1.2px, #fffdf6 1.6px) -2px -2px / 4px 4px; filter: drop-shadow(0 1px 1px rgba(70,52,28,.25)); }
-  #today li.stamped .ck::after { content: "成"; left: 2px; top: 2px; right: 2px; bottom: 2px; width: auto; height: auto; transform: none; border: 1px solid var(--accent);
-    background: #f2dccb; color: var(--accent); font: 700 11px/1 var(--serif); display: grid; place-items: center; }
-  #today .tx { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.45; outline: none; word-break: break-word; }
-  #today li.done .tx { color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(181,82,59,.45); }
-  #today li.oncard .tx { color: var(--faint); }
-  #today li.oncard::after { content: "进行中"; flex: none; font-size: 11px; color: var(--accent); letter-spacing: .1em; }
-  #today .tx.editing { background: rgba(181,82,59,.06); border-radius: 3px; cursor: text; user-select: text; -webkit-user-select: text; }
-  #today .go, #today .x { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; color: var(--faint); cursor: pointer; opacity: 0; transition: opacity .15s, color .15s; }
-  #today li:hover .go, #today li:hover .x { opacity: 1; }
-  #today .go:hover { color: var(--accent); } #today .x:hover { color: var(--accent); }
-  #today li.done .go, #today li.oncard .go, #today li.oncard .x { display: none; }
-  #today .add { border-top: 1px solid var(--line); padding: 10px 14px 12px 20px; display: flex; gap: 10px; align-items: center; position: relative; }
-  #today .add span { color: var(--faint); font-size: 18px; line-height: 1; }
-  #today .add input { flex: 1; border: 0; background: none; outline: none; font: 14px var(--sans); color: var(--ink); padding: 6px 0; }
-  #today .add input::placeholder { color: #c4bcab; }
-  .ghost { position: fixed; left: 0; top: 0; z-index: 60000; width: 200px; min-height: 64px; padding: 14px 16px; pointer-events: none;
-    background: var(--paper); border-radius: 7px; font-family: var(--serif); font-weight: 700; font-size: 15px; line-height: 1.45;
-    box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 18px 30px -10px rgba(70,52,28,.4); transition: opacity .3s; }
 </style>
 </head>
 <body>
-<aside id="today">
-  <div class="th"><span class="day"></span><span class="wk"></span><span class="pr"></span><div class="bar"><i></i></div></div>
-  <ul></ul>
-  <label class="add"><span>+</span><input placeholder="加一件今天要做完的事" maxlength="60"></label>
-</aside>
 <div id="stage">
-  <div id="slotEmpty"><b>当前任务</b>从左边拖一件事进来</div>
+  <div id="slotEmpty">＋ 新的一张</div>
   <div id="shadow"></div>
   <div id="card">
     <div class="face front">
-      <div class="tint"></div>
-      <div class="head"><div class="grip"></div><div class="title" data-k="title"></div><div class="badge">当前任务</div></div>
+      <div class="head"><button class="grip" title="收到右边"></button><div class="title" data-k="title"></div><div class="badge">今天</div></div>
       <div class="body">
         <div class="label">本次目标</div>
         <div class="goal" data-k="goal"></div>
         <div class="prog"><span class="label" style="margin:0">完成进度</span><span class="n"></span><div class="pips"></div></div>
+        <ul class="conds"></ul>
+        <label class="addc"><span>+</span><input placeholder="加一条要勾的事" maxlength="60"></label>
       </div>
-      <div class="turn" title="翻面">↻</div>
-      <div class="slot"></div>
+      <div class="foot"><span class="turn" title="翻到背面计时">↻</span></div>
       <div class="stamp"><div class="in"><div class="art"><div class="big">成</div><div class="sm" id="stDate"></div></div></div></div>
       <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
         <g fill="none" stroke="#4a4a5a" stroke-width="1.6"><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="25"/>
@@ -399,11 +341,9 @@
       </svg>
     </div>
     <div class="face back">
-      <div class="tint"></div>
-      <div class="head"><div class="grip"></div><div class="title" data-k="title" style="font-size:16px"></div>
-        <span class="n2" style="font-family:var(--mono);color:var(--accent);font-size:14px"></span></div>
-      <div class="body"><div class="label">完成条件</div><ul class="conds"></ul></div>
+      <div class="head"><button class="grip" title="收到右边"></button><div class="title" data-k="title" style="font-size:16px"></div><span class="n2" style="font-family:var(--mono);color:var(--accent);font-size:14px"></span></div>
       <div class="dialwrap"><div class="dial" title="拖一圈设分钟，点中间开始 / 暂停"><div class="disc"></div><div class="hub"></div></div></div>
+      <div class="foot"><span class="turn" title="翻回正面">↻</span></div>
     </div>
   </div>
 </div>
@@ -433,7 +373,7 @@
   <b>钉</b> 从小碟里拖图钉按上去；钉住后拖动只会绕钉子转，用力扯会把钉子扯掉<br>
   <b>收</b> 往右边缘一甩，变成索引贴；悬停偷看，点一下抽出来<br>
   <b>转</b> 拖便签四个角外侧的小点；或在便签上滚滚轮。按住 Shift 每次 15°，双击小点摆正<br>
-  <b>今日</b> 左边清单是要做完的事：直接打勾，或拖一条到中间专心做；往下拽卡片放回<br>
+  <b>卡</b> 中间是今天的卡：正面写目标和要勾的事，背面计时。点 ≡ 或往下拽，收到右边缘；点边上那张白色卡签拿回来<br>
   <b>便签</b> 只是备忘，随手记、贴、钉<br>
   <b>写</b> 双击便签　<b>换色</b> 右键　<b>扔</b> 丢进废纸篓
 </div>
@@ -441,37 +381,49 @@
 <div id="menu"></div>
 
 <script>
-/* ═════════ TaskDesk: the one card in the middle of the desk ═════════
-   A sticky note dropped on the slot becomes the current task; the task that was there goes back to being a note.
-   Pull the card down off the slot to put it back as a note. Tick every condition and it gets stamped and filed. */
-window.TaskDesk = (() => {
+/* ═════════ DeskCard: today's card in the middle of the desk ═════════
+   Front: what you're after and the things to tick. Back: the timer.
+   Pull it down (or tap ≡) and it tucks into a tab on the right edge, like a big sticky note; tap the tab to get it back.
+   Tick everything and it gets stamped and filed onto the done pile (and into the album). */
+window.DeskCard = (() => {
   "use strict";
   const KEY = "paper-desk.desk-tasks.v1";
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const stage = $("#stage"), card = $("#card"), shadow = $("#shadow");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
-  const api = { onReturn: null };
+  const uid = () => Math.random().toString(36).slice(2, 9);
 
-  let S = load();   // { current: task|null, done: [task] }
+  /* ───────── data ───────── */
+  let S = load();   // { v: 2, current: card|null, tucked: bool, done: [card] }
   const filled = t => t.conds.filter(c => c.t.trim());
   const nDone = t => filled(t).filter(c => c.done).length;
+  function demoCard() {
+    const c = t => ({ t, done: false });
+    return { id: uid(), title: "研究生产力爆款笔记", goal: "找出它的开头为什么能吸引读者继续看。",
+      conds: [c("记录标题和开头"), c("标出它吸引人的原因（反常识？提出问题？情绪？）"), c("用同样的原因模仿 5 句")], minutes: 25 };
+  }
   function load() {
-    try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.done)) return d; } catch {}
-    return { current: null, done: [] };
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(KEY)); } catch {}
+    if (!d || !Array.isArray(d.done)) d = { done: [] };
+    // cards from earlier versions in the middle were sticky notes turned into tasks; start this version with a fresh card
+    if (d.v !== 2) { d = { v: 2, current: demoCard(), tucked: false, done: d.done }; }
+    return d;
   }
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
-    if (S.current && api.onChange) api.onChange(S.current);
-  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 
   /* ───────── render ───────── */
+  const tab = document.createElement("div");
+  tab.id = "cardTab"; tab.title = "今天的卡";
+  $("#drawer").appendChild(tab);
+
   function render() {
     const t = S.current;
     stage.classList.toggle("has", !!t);
+    stage.classList.toggle("tucked", !!(t && S.tucked));
+    tab.classList.toggle("show", !!(t && S.tucked));
     if (t) {
-      card.style.setProperty("--c", CAT_C[t.cat] || "transparent");
       $$("[data-k=title]").forEach(e => { if (!e.classList.contains("tedit")) e.textContent = t.title; });
       const g = $("[data-k=goal]"); if (!g.classList.contains("tedit")) g.textContent = t.goal;
       const ul = $(".conds");
@@ -479,13 +431,13 @@ window.TaskDesk = (() => {
         ul.innerHTML = "";
         t.conds.forEach((c, i) => {
           const li = document.createElement("li");
-          li.className = "cond" + (c.done ? " done" : "") + (c.t.trim() ? "" : " empty");
+          li.className = "cond" + (c.done ? " done" : "");
           li.dataset.i = i;
-          li.innerHTML = `<div class="box"></div><div class="ct" data-ph="条件 ${i + 1}…"></div>`;
+          li.innerHTML = `<div class="box"></div><div class="ct"></div><span class="cx" title="删掉">✕</span>`;
           li.querySelector(".ct").textContent = c.t;
           ul.appendChild(li);
         });
-      } else $$(".cond", ul).forEach((li, i) => li.classList.toggle("done", !!t.conds[i].done));
+      } else $$(".cond", ul).forEach((li, i) => li.classList.toggle("done", !!(t.conds[i] && t.conds[i].done)));
       const total = filled(t).length, k = nDone(t);
       $(".prog .n").textContent = `${k} / ${total}`;
       $(".n2").textContent = `${k} / ${total}`;
@@ -493,8 +445,7 @@ window.TaskDesk = (() => {
       $(".stamp").classList.toggle("show", !!t.stamped);
       $(".postmark").classList.toggle("show", !!t.stamped);
     }
-    renderDone();
-    renderTimer();
+    renderDone(); renderTimer();
   }
   function renderDone() {
     const de = $("#done"), d = S.done;
@@ -503,7 +454,6 @@ window.TaskDesk = (() => {
       const m = document.createElement("div"); m.className = "mini";
       const r = ((t.id.charCodeAt(0) * 37 + i * 13) % 11) - 5;
       m.style.transform = `translate(${r}px, ${-i * 2}px) rotate(${r * 1.1}deg)`;
-      m.style.setProperty("--c", CAT_C[t.cat] || "transparent");
       m.innerHTML = `<div></div><div class="ms"></div>`;
       m.firstChild.textContent = t.title;
       de.appendChild(m);
@@ -515,6 +465,7 @@ window.TaskDesk = (() => {
   const F = { a: 0, v: 0, target: 0, drag: null, tilt: 0, tiltT: 0, pull: 0, pullT: 0 };
   const showingBack = () => (((Math.round(F.target / 180) % 2) + 2) % 2) === 1;
   function flipTo(side) { const base = Math.round(F.a / 360) * 360; F.target = base + (side ? 180 : 0); }
+  const flip = () => flipTo(showingBack() ? 0 : 1);
   function flipFrame(dt) {
     if (!F.drag) {
       const k = reduced ? 400 : 140, c = reduced ? 40 : 19;
@@ -572,69 +523,49 @@ window.TaskDesk = (() => {
     } catch {}
   }
 
-  /* ───────── taking a note in, giving it back ───────── */
+  /* ───────── tuck away / bring back / new card ───────── */
   let busy = false;
-  const uid = () => Math.random().toString(36).slice(2, 9);
-  function stageRect() { return stage.getBoundingClientRect(); }
-  function over(x, y) {
-    if (busy) return false;
-    const r = stageRect();
-    return x > r.left - 10 && x < r.right + 10 && y > r.top - 10 && y < r.bottom + 10;
-  }
-  function hover(on) { stage.classList.toggle("hot", !!on); }
-
-  // item from today's list: { id, text, task?, x, y, a }
-  function take(note) {
-    if (busy) return false;
-    if (S.current && S.current.itemId === note.id) return false;
-    endEdit();
-    const prev = S.current;
-    const keep = note.task || {};
-    S.current = {
-      id: uid(), itemId: note.id, cat: null,
-      title: (note.text || "").trim(),
-      goal: keep.goal || "",
-      conds: keep.conds || [{ t: "", done: false }, { t: "", done: false }, { t: "", done: false }],
-      minutes: keep.minutes || 25,
-    };
-    if (prev) giveBack(prev);
-    F.a = F.target = 0; F.v = 0; F.pull = F.pullT = 0;
-    resetTimer(); save(); render();
-    dealFrom(note.x, note.y, note.a || 0);
-    // nothing to tick yet: turn it over so the conditions can be written
-    if (!filled(S.current).length) setTimeout(() => { flipTo(1); setTimeout(() => beginEdit($(".back .ct")), 700); }, 650);
-    return true;
-  }
-  function giveBack(t) { api.onReturn && api.onReturn(t); }
-  // pulled down off the slot: the card shrinks back into its line on the list
-  function putBack() {
-    const t = S.current; if (!t || busy) return;
-    endEdit();
-    busy = true; T.run = false;
-    const to = api.itemRect && api.itemRect(t.itemId), s = stageRect();
+  const stageCenter = () => { const r = stage.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+  function tuck() {
+    if (!S.current || S.tucked || busy) return;
+    endEdit(); busy = true;
+    const r = tab.parentElement.getBoundingClientRect(), c = stageCenter();
     card.classList.add("fly");
-    if (to) card.style.transform = `translate(${to.left + to.width / 2 - (s.left + s.width / 2)}px, ${to.top + to.height / 2 - (s.top + s.height / 2)}px) scale(.18) rotate(-6deg)`;
-    card.style.opacity = "0";
-    shadow.style.opacity = 0;
+    card.style.transform = `translate(${r.left - 10 - c.x}px, ${38 - c.y}px) scale(.12) rotate(4deg)`;
+    card.style.opacity = "0"; shadow.style.opacity = 0;
     setTimeout(() => {
-      S.current = null; save(); render();
+      S.tucked = true; save(); render();
       card.classList.remove("fly"); card.style.opacity = "";
       F.a = F.target = 0; F.v = 0; F.pull = F.pullT = 0;
       busy = false;
-      giveBack(t);
-    }, 560);
+    }, 520);
   }
-  function dealFrom(x, y, a) {
-    const r = stageRect();
-    const dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height / 2);
+  function untuck() {
+    if (!S.current || !S.tucked || busy) return;
+    S.tucked = false; save(); render();
+    const r = tab.parentElement.getBoundingClientRect();
+    dealFrom(r.left - 10, 38, .07, .12);
+  }
+  function newCard() {
+    if (busy || S.current) return;
+    S.current = { id: uid(), title: "", goal: "", conds: [], minutes: 25 };
+    S.tucked = false; F.a = F.target = 0; F.v = 0;
+    resetTimer(); save(); render();
+    const c = stageCenter(); dealFrom(c.x, c.y + 40, 0, .6);
+    setTimeout(() => beginEdit($(".front [data-k=title]")), 500);
+  }
+  function dealFrom(x, y, a, s) {
+    const c = stageCenter();
     card.classList.remove("fly");
     card.style.transition = "none";
-    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${a}rad) scale(${196 / 340})`;
+    card.style.transform = `translate(${x - c.x}px, ${y - c.y}px) rotate(${a}rad) scale(${s})`;
+    card.style.opacity = "0";
     void card.offsetWidth;
     card.style.transition = "";
     card.classList.add("fly");
+    card.style.opacity = "";
     flipFrame(0);
-    setTimeout(() => card.classList.remove("fly"), 720);
+    setTimeout(() => card.classList.remove("fly"), 640);
   }
 
   /* ───────── stamping ───────── */
@@ -654,24 +585,22 @@ window.TaskDesk = (() => {
         render();
         card.classList.remove("thud"); void card.offsetWidth; card.classList.add("thud");
         setTimeout(() => fileAway(t), 1500);
-      }, reduced ? 50 : 650);
+      }, reduced ? 50 : 500);
     }, 350);
   }
   function fileAway(t) {
-    const r = $("#done").getBoundingClientRect(), s = stageRect();
-    const dx = r.left + r.width / 2 - (s.left + s.width / 2), dy = r.top + r.height / 2 - (s.top + s.height / 2);
+    const r = $("#done").getBoundingClientRect(), c = stageCenter();
     card.classList.add("fly");
-    card.style.transform = `translate(${dx}px, ${dy}px) scale(.35) rotate(8deg)`;
+    card.style.transform = `translate(${r.left + r.width / 2 - c.x}px, ${r.top + r.height / 2 - c.y}px) scale(.33) rotate(8deg)`;
     shadow.style.opacity = 0;
     setTimeout(() => {
       t.doneAt = Date.now(); delete t.stamped;
-      S.done.push(t); S.current = null;
-      api.onDone && api.onDone(t);
+      S.done.push(t); S.current = null; S.tucked = false;
       card.classList.remove("fly");
       F.a = F.target = 0; F.v = 0;
       busy = false;
       save(); resetTimer(); render();
-    }, 720);
+    }, 640);
   }
 
   /* ───────── editing ───────── */
@@ -696,25 +625,32 @@ window.TaskDesk = (() => {
     else if (el.dataset.k === "goal") t.goal = v;
     else if (el.classList.contains("ct")) {
       const i = +el.closest(".cond").dataset.i;
-      t.conds[i].t = v; if (!v) t.conds[i].done = false;
+      if (v) t.conds[i].t = v; else t.conds.splice(i, 1);
     }
     save(); render();
   }
+  const addInput = $(".addc input");
+  addInput.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || e.isComposing) return;
+    const v = addInput.value.trim(); if (!v || !S.current) return;
+    S.current.conds.push({ t: v, done: false }); addInput.value = "";
+    save(); render();
+    const ul = $(".conds"); ul.scrollTop = ul.scrollHeight;
+  });
   document.addEventListener("keydown", e => {
     if (editing) {
       if (e.key === "Escape") { e.preventDefault(); endEdit(); return; }
       if (e.key === "Enter" && !e.shiftKey && editing.dataset.k !== "goal") {
         e.preventDefault();
-        // Enter in a condition moves on to the next empty one
-        const li = editing.closest(".cond");
+        const wasTitle = editing.dataset.k === "title";
         endEdit();
-        if (li) { const nx = $$(".cond .ct").find((c, i) => i > +li.dataset.i && !c.textContent.trim()); if (nx) beginEdit(nx); }
+        if (wasTitle) beginEdit($("[data-k=goal]"));
       }
       return;
     }
-    if (document.activeElement && document.activeElement.isContentEditable) return;
-    if (!S.current) return;
-    if (e.key === " " || e.key === "f" || e.key === "F") { e.preventDefault(); flipTo(showingBack() ? 0 : 1); }
+    if (document.activeElement && (document.activeElement.isContentEditable || document.activeElement.tagName === "INPUT")) return;
+    if (!S.current || S.tucked) return;
+    if (e.key === " " || e.key === "f" || e.key === "F") { e.preventDefault(); flip(); }
   });
 
   /* ───────── pointer ───────── */
@@ -726,8 +662,9 @@ window.TaskDesk = (() => {
   });
   card.addEventListener("pointerdown", e => {
     if (e.button !== 0 || busy || !S.current) return;
-    if (e.target.closest(".tedit")) return;
+    if (e.target.closest(".tedit, .addc")) return;
     if (editing) endEdit();
+    if (e.target.closest(".grip")) { tuck(); return; }
     const dial = e.target.closest(".dial");
     if (dial) { dialDown(e, dial); return; }
     F.drag = { x: e.clientX, y: e.clientY, a: F.a, moved: false, lastA: F.a, lastT: performance.now(), vel: 0, target: e.target, axis: null };
@@ -739,11 +676,7 @@ window.TaskDesk = (() => {
     const dx = e.clientX - d.x, dy = e.clientY - d.y;
     if (!d.moved && Math.hypot(dx, dy) > 5) { d.moved = true; d.axis = Math.abs(dy) > Math.abs(dx) * 1.3 && dy > 0 ? "y" : "x"; }
     if (!d.moved) return;
-    if (d.axis === "y") {
-      // pulling the card down off the slot
-      F.pull = Math.max(0, dy * 0.85);
-      return;
-    }
+    if (d.axis === "y") { F.pull = Math.max(0, dy * 0.85); return; }
     const a = d.a + dx * 0.55;
     const now = performance.now(), dtt = Math.max(1, now - d.lastT);
     d.vel = d.vel * 0.6 + ((a - d.lastA) / dtt * 1000) * 0.4;
@@ -755,29 +688,24 @@ window.TaskDesk = (() => {
     const d = F.drag; if (!d) return;
     F.drag = null; F.tiltT = 0;
     card.classList.remove("grabbing");
-    if (d.moved && d.axis === "y") {
-      if (F.pull > 150) putBack(); else F.pullT = 0;
-      return;
-    }
-    if (d.moved) {
-      F.v = d.vel;
-      F.target = Math.round((F.a + d.vel * 0.18) / 180) * 180;
-      return;
-    }
-    const cond = d.target.closest(".cond");
+    if (d.moved && d.axis === "y") { if (F.pull > 140) tuck(); else F.pullT = 0; return; }
+    if (d.moved) { F.v = d.vel; F.target = Math.round((F.a + d.vel * 0.18) / 180) * 180; return; }
+    const t = d.target;
+    if (t.closest(".cx")) { const i = +t.closest(".cond").dataset.i; S.current.conds.splice(i, 1); save(); render(); checkComplete(); return; }
+    const cond = t.closest(".cond");
     if (cond) { clearTimeout(clickTimer); clickTimer = setTimeout(() => toggleCond(cond), 200); return; }
-    if (d.target.closest("[data-k]")) { clearTimeout(clickTimer); clickTimer = setTimeout(() => flipTo(showingBack() ? 0 : 1), 220); return; }
-    flipTo(showingBack() ? 0 : 1);
+    if (t.closest("[data-k]")) { clearTimeout(clickTimer); clickTimer = setTimeout(flip, 220); return; }
+    if (t.closest(".conds, .goal")) return;
+    flip();
   });
   function toggleCond(li) {
-    const t = S.current, i = +li.dataset.i;
-    if (!t.conds[i].t.trim()) { beginEdit(li.querySelector(".ct")); return; }
-    t.conds[i].done = !t.conds[i].done;
+    const c = S.current && S.current.conds[+li.dataset.i]; if (!c) return;
+    c.done = !c.done; c.at = c.done ? Date.now() : 0;
     save(); render(); checkComplete();
   }
   function dialDown(e, dial) {
     const r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < 26;
+    const onHub = Math.hypot(e.clientX - cx, e.clientY - cy) < 34;
     let moved = false;
     const set = ev => {
       let ang = Math.atan2(ev.clientX - cx, -(ev.clientY - cy)) * 180 / Math.PI;
@@ -799,171 +727,20 @@ window.TaskDesk = (() => {
     addEventListener("pointermove", mv); addEventListener("pointerup", up);
     e.stopPropagation();
   }
+  tab.addEventListener("click", untuck);
+  $("#slotEmpty").addEventListener("click", newCard);
+  $("#done").addEventListener("click", () => { location.href = "album.html"; });
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(.033, (now - last) / 1000); last = now;
-    if (S.current && !card.classList.contains("fly")) flipFrame(dt);
+    if (S.current && !S.tucked && !card.classList.contains("fly")) flipFrame(dt);
     timerFrame();
     requestAnimationFrame(frame);
   }
-  $("#done").addEventListener("click", () => { location.href = "album.html"; });
-  resetTimer(); render(); flipFrame(0);
+  resetTimer(); save(); render(); flipFrame(0);
   requestAnimationFrame(frame);
-
-  return Object.assign(api, { over, hover, take, hasCurrent: () => !!S.current, currentItemId: () => S.current && S.current.itemId });
-})();
-
-/* ═════════ TodayList: the things to tick off today ═════════
-   Tick an item right here, or send it to the middle of the desk to work on it as the current task card.
-   Unfinished items carry over to the next day; finished ones show only on the day they were finished. */
-window.TodayList = (() => {
-  "use strict";
-  const KEY = "paper-desk.today.v1";
-  const $ = (s, r = document) => r.querySelector(s);
-  const root = $("#today"), ul = $("ul", root), input = $(".add input", root);
-  const uid = () => Math.random().toString(36).slice(2, 9);
-  const dayOf = ts => { const d = new Date(ts); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
-  const isToday = ts => ts && dayOf(ts) === dayOf(Date.now());
-
-  let items = load();
-  function load() {
-    try { const d = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(d)) return d; } catch {}
-    const now = Date.now(), c = t => ({ t, done: false });
-    return [
-      { id: uid(), text: "回三封邮件", done: true, doneAt: now - 2 * 36e5, addedAt: now - 5 * 36e5 },
-      { id: uid(), text: "研究生产力爆款笔记", addedAt: now - 4 * 36e5,
-        task: { goal: "找出它的开头为什么能吸引读者继续看。", conds: [c("记录标题和开头"), c("标出它吸引人的原因（反常识？提出问题？情绪？）"), c("用同样的原因模仿 5 句")], minutes: 25 } },
-      { id: uid(), text: "整理便利贴原型反馈", addedAt: now - 3 * 36e5 },
-      { id: uid(), text: "写周报", addedAt: now - 2 * 36e5 },
-    ];
-  }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch {} }
-  const visible = () => items.filter(i => !i.done || isToday(i.doneAt));
-  const find = id => items.find(i => i.id === id);
-
-  function render() {
-    const d = new Date();
-    $(".day", root).textContent = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`;
-    $(".wk", root).textContent = "周" + "日一二三四五六"[d.getDay()];
-    const v = visible(), k = v.filter(i => i.done).length;
-    $(".pr", root).textContent = `${k} / ${v.length}`;
-    $(".bar i", root).style.width = v.length ? (k / v.length * 100) + "%" : "0";
-    const editing = ul.querySelector(".tx.editing");
-    if (editing) return;
-    ul.innerHTML = "";
-    // unfinished first (in the order added), then today's finished ones
-    const order = v.filter(i => !i.done).concat(v.filter(i => i.done).sort((a, b) => a.doneAt - b.doneAt));
-    for (const it of order) {
-      const li = document.createElement("li");
-      li.dataset.id = it.id;
-      li.className = (it.done ? "done" : "") + (it.stamped ? " stamped" : "") + (it.oncard ? " oncard" : "");
-      li.innerHTML = `<button class="ck" title="完成"></button><span class="tx"></span><span class="go" title="放到中间专心做">↗</span><span class="x" title="删掉">✕</span>`;
-      $(".tx", li).textContent = it.text;
-      ul.appendChild(li);
-    }
-  }
-  function flash(id) {
-    const li = ul.querySelector(`li[data-id="${id}"]`);
-    if (li) { li.classList.remove("flash"); void li.offsetWidth; li.classList.add("flash"); li.scrollIntoView({ block: "nearest" }); }
-  }
-  function add(text) {
-    text = text.trim(); if (!text) return;
-    const it = { id: uid(), text, addedAt: Date.now() };
-    items.push(it); save(); render(); flash(it.id);
-  }
-  function toggle(id) {
-    const it = find(id); if (!it || it.oncard) return;
-    it.done = !it.done; it.doneAt = it.done ? Date.now() : 0; if (!it.done) it.stamped = false;
-    save(); render();
-  }
-  function send(id, x, y, a = 0) {
-    const it = find(id); if (!it || it.done || it.oncard) return false;
-    const ok = TaskDesk.take({ id: it.id, text: it.text, task: it.task, x, y, a });
-    if (ok) {
-      items.forEach(i => { if (i !== it) i.oncard = false; });
-      it.oncard = true; save(); render();
-    }
-    return ok;
-  }
-
-  /* editing */
-  function beginEdit(tx) {
-    tx.classList.add("editing");
-    try { tx.contentEditable = "plaintext-only"; } catch { tx.contentEditable = "true"; }
-    if (tx.contentEditable !== "plaintext-only") tx.contentEditable = "true";
-    tx.focus(); const s = getSelection(); s.selectAllChildren(tx); s.collapseToEnd();
-  }
-  function endEdit(tx) {
-    if (!tx || !tx.classList.contains("editing")) return;
-    tx.classList.remove("editing"); tx.contentEditable = "false";
-    const it = find(tx.closest("li").dataset.id); if (!it) return;
-    const v = tx.innerText.replace(/\s+/g, " ").trim();
-    if (v) it.text = v;
-    save(); render();
-  }
-  ul.addEventListener("dblclick", e => { const tx = e.target.closest(".tx"); if (tx && !tx.closest("li").classList.contains("oncard")) beginEdit(tx); });
-  ul.addEventListener("keydown", e => { if (e.target.classList.contains("editing") && (e.key === "Enter" || e.key === "Escape")) { e.preventDefault(); endEdit(e.target); } });
-  ul.addEventListener("focusout", e => endEdit(e.target.closest && e.target.closest(".tx")));
-  input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { add(input.value); input.value = ""; } });
-
-  /* pointer: tick, send, delete, or drag a line out onto the middle of the desk */
-  let drag = null;
-  ul.addEventListener("pointerdown", e => {
-    if (e.button !== 0) return;
-    const li = e.target.closest("li"); if (!li) return;
-    if (e.target.closest(".editing")) return;
-    const id = li.dataset.id;
-    if (e.target.closest(".ck")) { toggle(id); return; }
-    if (e.target.closest(".x")) { items = items.filter(i => i.id !== id); save(); render(); return; }
-    if (e.target.closest(".go")) { const r = li.getBoundingClientRect(); send(id, r.left + r.width / 2, r.top + r.height / 2); return; }
-    if (li.classList.contains("done") || li.classList.contains("oncard")) return;
-    drag = { id, li, sx: e.clientX, sy: e.clientY, ghost: null, x: e.clientX, y: e.clientY, a: 0 };
-    e.preventDefault();
-  });
-  addEventListener("pointermove", e => {
-    if (!drag) return;
-    if (!drag.ghost) {
-      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
-      const g = document.createElement("div"); g.className = "ghost";
-      g.textContent = find(drag.id).text; document.body.appendChild(g);
-      drag.ghost = g; drag.li.style.opacity = ".35";
-    }
-    // the slip swings a little behind the hand
-    const vx = e.clientX - drag.x; drag.x = e.clientX; drag.y = e.clientY;
-    drag.a += (Math.max(-.25, Math.min(.25, vx * .012)) - drag.a) * .3;
-    drag.ghost.style.transform = `translate(${e.clientX - 100}px, ${e.clientY - 30}px) rotate(${drag.a}rad)`;
-    TaskDesk.hover(TaskDesk.over(e.clientX, e.clientY));
-  });
-  addEventListener("pointerup", e => {
-    const d = drag; drag = null;
-    if (!d || !d.ghost) return;
-    TaskDesk.hover(false);
-    d.li.style.opacity = "";
-    const over = TaskDesk.over(e.clientX, e.clientY);
-    if (over && send(d.id, e.clientX, e.clientY, d.a)) { d.ghost.remove(); return; }
-    const r = d.li.getBoundingClientRect();
-    d.ghost.style.transition = "transform .35s cubic-bezier(.22,1,.36,1), opacity .35s";
-    d.ghost.style.transform = `translate(${r.left + 20}px, ${r.top}px) scale(.8)`; d.ghost.style.opacity = "0";
-    setTimeout(() => d.ghost.remove(), 380);
-  });
-
-  /* the card in the middle reports back */
-  const keepTask = t => ({ goal: t.goal, conds: t.conds, minutes: t.minutes });
-  TaskDesk.onChange = t => { const it = find(t.itemId); if (!it) return; if (t.title) it.text = t.title; it.task = keepTask(t); save(); render(); };
-  TaskDesk.onReturn = t => { const it = find(t.itemId); if (!it) return; it.oncard = false; it.task = keepTask(t); if (t.title) it.text = t.title; save(); render(); flash(it.id); };
-  TaskDesk.onDone = t => {
-    const it = find(t.itemId); if (!it) return;
-    it.oncard = false; it.done = true; it.stamped = true; it.doneAt = Date.now(); it.task = keepTask(t);
-    save(); render(); flash(it.id);
-  };
-  TaskDesk.itemRect = id => { const li = ul.querySelector(`li[data-id="${id}"]`); return li && li.getBoundingClientRect(); };
-
-  // keep the list honest about which item is on the card
-  const onCard = TaskDesk.currentItemId();
-  items.forEach(i => { i.oncard = !!onCard && i.id === onCard && !i.done; });
-  render(); save();
-  return { render };
+  return { tuck, untuck, newCard, state: () => S };
 })();
 </script>
 <script>

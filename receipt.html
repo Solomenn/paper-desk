@@ -387,23 +387,26 @@
     const p = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
-  // today's list from the desk: finished items are OK (at the time they were ticked), the rest are ··
+  // today's ticks from the desk: what's on today's card, plus cards stamped today
   function deskItems() {
     let d = null;
-    try { d = JSON.parse(localStorage.getItem('paper-desk.today.v1')); } catch (e) { /* ignore */ }
-    if (!Array.isArray(d)) return [];
+    try { d = JSON.parse(localStorage.getItem('paper-desk.desk-tasks.v1')); } catch (e) { /* ignore */ }
+    if (!d) return [];
     const p = n => String(n).padStart(2, '0');
     const hm = ts => { const t = new Date(ts || Date.now()); return `${p(t.getHours())}:${p(t.getMinutes())}`; };
     const today = todayISO();
     const isToday = ts => { if (!ts) return false; const t = new Date(ts); return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}` === today; };
-    const done = d.filter(i => i.done && isToday(i.doneAt)).sort((a, b) => a.doneAt - b.doneAt)
-      .map(i => ({ time: hm(i.doneAt), name: String(i.text || '').slice(0, 40), done: true }));
-    const left = d.filter(i => !i.done)
-      .map(i => ({ time: hm(i.addedAt), name: String(i.text || '').slice(0, 40), done: false }));
-    return done.concat(left).slice(0, MAX_ITEMS);
+    const rows = [];
+    const take = (card, stampedAt) => (card.conds || []).filter(c => c.t && c.t.trim()).forEach(c => {
+      const at = c.done ? (c.at || stampedAt) : 0;
+      rows.push({ sort: at || Number.MAX_SAFE_INTEGER, time: hm(at || Date.now()), name: c.t.slice(0, 40), done: !!c.done });
+    });
+    (d.done || []).filter(t => isToday(t.doneAt)).forEach(t => take(t, t.doneAt));
+    if (d.current) take(d.current, 0);
+    return rows.sort((a, b) => a.sort - b.sort).slice(-MAX_ITEMS).map(({ time, name, done }) => ({ time, name, done }));
   }
   function presetItems(key) {
-    if (key === 'desk') { const it = deskItems(); return it.length ? it : [{ time: '09:00', name: '今天的清单还是空的', done: false }]; }
+    if (key === 'desk') { const it = deskItems(); return it.length ? it : [{ time: '09:00', name: '今天的卡上还没有要勾的事', done: false }]; }
     return PRESETS[key].items.map((s, i) => {
       const [time, name] = s.split('|');
       return { time, name, done: i === 0 };
@@ -735,7 +738,7 @@
     /* 副标题 */
     ctx.font = `400 26px ${SANS}`;
     ctx.fillStyle = '#8b867a';
-    ctx.fillText('把今天的清单打成一张热敏小票', x + 2, 238);
+    ctx.fillText('把今天勾过的事打成一张热敏小票', x + 2, 238);
   }
 
   /* ============================================================
