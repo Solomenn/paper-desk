@@ -159,6 +159,14 @@
     display: flex; align-items: center; gap: 4px; border-radius: 14px;
     background: rgba(251, 248, 239, .94); box-shadow: 0 0 0 .5px rgba(80,60,30,.16), 0 10px 26px -10px rgba(70, 52, 28, .45);
   }
+  #tray { transition: transform .4s var(--ease), opacity .3s; }
+  #tray.tucked { transform: translateX(calc(-100% - 40px)); opacity: 0; pointer-events: none; }
+  #trayTab { position: fixed; left: 0; bottom: 18px; width: 12px; height: 58px; z-index: 40000; cursor: pointer; display: none;
+    border-radius: 0 6px 6px 0; background: rgba(251, 248, 239, .94); box-shadow: 1px 0 0 rgba(80,60,30,.12), 2px 6px 14px -6px rgba(40, 24, 8, .55);
+    transition: width .22s var(--ease); }
+  #trayTab::after { content: ""; position: absolute; left: 4px; top: 50%; margin-top: -9px; width: 2px; height: 18px; border-radius: 1px; background: var(--accent); opacity: .6; }
+  #trayTab.show { display: block; }
+  #trayTab:hover { width: 22px; }
   .tb { width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; cursor: pointer;
     color: var(--muted); font: 17px var(--sans); text-decoration: none; position: relative; transition: background .15s, color .15s; }
   .tb:hover { background: rgba(96, 88, 72, .07); color: var(--accent); }
@@ -478,7 +486,10 @@
   <a class="tb" href="receipt.html" title="今日小票">⎙</a>
   <span class="zoomer"><button id="zoomOut" title="缩小">−</button><span id="zoomPct" title="回到 100%">100%</span><button id="zoomIn" title="放大">+</button></span>
   <button class="tb" id="helpBtn" title="怎么用">?</button>
+  <span class="tsep"></span>
+  <button class="tb" id="trayTuck" title="收到左边">‹</button>
 </div>
+<div id="trayTab" title="工具栏"></div>
 <div class="bin" title="扔掉"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9l1-12.5M10 11v6M14 11v6"/></svg></div>
 
 <div id="help">
@@ -1866,6 +1877,17 @@
     if (e.key === "Escape") { closeMenu(); document.getElementById("help").classList.remove("show"); }
   });
   document.getElementById("tidy").onclick = tidy;
+  // the toolbar tucks away to the left edge, like the notes do to the right
+  const trayEl = document.getElementById("tray"), trayTab = document.getElementById("trayTab");
+  const setTray = tucked => {
+    trayEl.classList.toggle("tucked", tucked);
+    setTimeout(() => trayTab.classList.toggle("show", tucked), tucked ? 300 : 0);
+    if (tucked) document.getElementById("help").classList.remove("show");
+    try { localStorage.setItem("paper-desk.tray.v1", tucked ? "1" : ""); } catch {}
+  };
+  document.getElementById("trayTuck").onclick = () => setTray(true);
+  trayTab.onclick = () => setTray(false);
+  try { if (localStorage.getItem("paper-desk.tray.v1")) { trayEl.classList.add("tucked"); trayTab.classList.add("show"); } } catch {}
   document.getElementById("helpBtn").onclick = () => document.getElementById("help").classList.toggle("show");
 
   addEventListener("resize", () => {
