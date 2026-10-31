@@ -96,7 +96,9 @@
 /* the carriage is a photograph (assets/car.webp); the window is cut out of it with a shape that follows the curtains, and what you see
      through the glass is the live scene below it. Day is the same photograph, lifted and cooled. */
   #wall { position: absolute; inset: 0; pointer-events: none; background: #120c09; }
-  #shot { position: absolute; pointer-events: none; background: url(assets/car.webp) 0 0 / 100% 100% no-repeat; transition: filter 1.2s; }
+  #shot { position: absolute; pointer-events: none; background: url(assets/car.webp) 0 0 / 100% 100% no-repeat; transition: filter 1.2s;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 9%, #000 91%, transparent); -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 9%, #000 91%, transparent); mask-composite: intersect; }
   html[data-theme="day"] #shot { filter: brightness(1.85) saturate(.6) contrast(.88) hue-rotate(-8deg); }
   #pane { position: absolute; overflow: hidden; box-shadow: inset 0 0 36px 6px rgba(0, 0, 0, .55); }
   #pane::after { content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -107,8 +109,6 @@
   /* the top of the carriage stays dark by day too, so the title and the route plate can be read */
   #topshade { position: absolute; left: 0; right: 0; top: 0; height: 16vh; pointer-events: none; background: linear-gradient(180deg, rgba(18, 11, 7, .78), rgba(18, 11, 7, .45) 55%, transparent); opacity: 0; transition: opacity 1.2s; }
   html[data-theme="day"] #topshade { opacity: 1; }
-  #scene { filter: blur(.7px) saturate(.85); }
-  html:not([data-theme="day"]) #scene { filter: blur(.7px) saturate(.85) brightness(.82); }
   #drops { position: absolute; inset: 0; pointer-events: none; }
   /* the sconce on the left wall breathes a little, and its warmth reaches the room */
   #lampglow { position: absolute; pointer-events: none; border-radius: 50%; mix-blend-mode: screen; transition: opacity 1.2s;
@@ -125,7 +125,7 @@
   #line .done { position: absolute; left: 0; top: 13px; height: 2px; background: #e8d9a8; }
   #line .st { position: absolute; top: 9px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #1d1611; box-shadow: inset 0 0 0 2px rgba(232,217,168,.45); }
   #line .st.past { box-shadow: inset 0 0 0 2px #e8d9a8; background: #e8d9a8; }
-  #line .st i { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-style: normal; font-size: 12px; color: rgba(232,217,168,.55); white-space: nowrap; letter-spacing: .15em; }
+  #line .st i { text-shadow: 0 1px 4px rgba(0,0,0,.9); position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-style: normal; font-size: 12px; color: rgba(232,217,168,.55); white-space: nowrap; letter-spacing: .15em; }
   #line .st.past i { color: #e8d9a8; }
   #line .tr { position: absolute; top: 4px; width: 22px; height: 10px; margin-left: -11px; border-radius: 5px 7px 3px 3px; background: #f1e6c4; box-shadow: 0 0 12px rgba(255, 230, 170, .6); transition: left 1s linear; }
   #line .tr::after { content: ""; position: absolute; right: -3px; top: 3px; width: 3px; height: 3px; border-radius: 50%; background: #fff6d8; }
@@ -426,12 +426,14 @@
     paintDrops();
   }
   /* ───────── the compartment: the photograph, scaled to cover the screen with the window kept in view ───────── */
+  const ZOOM = .8;
   const SHOT = { w: 1600, h: 914, fx: 895, fy: 330,                      // picture size; the window's middle in it
     glass: [[698, 120], [1097, 120], [1110, 260], [1136, 390], [1142, 480], [1136, 535], [1120, 548], [668, 548], [654, 535], [650, 480], [660, 390], [678, 260]],   // the visible glass, between the curtains
     lamp: [300, 262], table: [902, 668] };                               // the sconce; the middle of the table top
   function cabin() {
-    const VW = innerWidth, VH = innerHeight, s = Math.max(VW / SHOT.w, VH / SHOT.h);
-    const ox = Math.min(0, Math.max(VW - SHOT.w * s, VW / 2 - SHOT.fx * s)), oy = Math.min(0, Math.max(VH - SHOT.h * s, VH * .42 - SHOT.fy * s));
+    const VW = innerWidth, VH = innerHeight, s = Math.max(VW / SHOT.w, VH / SHOT.h) * ZOOM;   // a little smaller than the screen: the room recedes into the dark
+    const fit1 = (V, size, focus, at) => size <= V ? (V - size) / 2 : Math.min(0, Math.max(V - size, V * at - focus));
+    const ox = fit1(VW, SHOT.w * s, SHOT.fx * s, .5), oy = fit1(VH, SHOT.h * s, SHOT.fy * s, .42);
     const px = x => ox + x * s, py = y => oy + y * s, set = (el, o) => Object.assign($(el).style, o);
     set("#shot", { left: ox + "px", top: oy + "px", width: SHOT.w * s + "px", height: SHOT.h * s + "px" });
     const xs = SHOT.glass.map(p => p[0]), ys = SHOT.glass.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
@@ -439,7 +441,7 @@
       clipPath: "polygon(" + SHOT.glass.map(([x, y]) => `${((x - x0) / (x1 - x0) * 100).toFixed(2)}% ${((y - y0) / (y1 - y0) * 100).toFixed(2)}%`).join(",") + ")" });
     const lr = 300 * s; set("#lampglow", { left: px(SHOT.lamp[0]) - lr + "px", top: py(SHOT.lamp[1]) - lr + "px", width: lr * 2 + "px", height: lr * 2 + "px" });
     // the route plate in the dark frame above the window, and the stamp card on the table
-    const L = $("#line"); L.classList.add("plate"); set("#line", { left: px(712) + "px", right: (VW - px(1086)) + "px", top: py(60) + "px" });
+    const L = $("#line"); L.classList.add("plate"); set("#line", { left: px(712) + "px", right: (VW - px(1086)) + "px", top: py(47) + "px" });
     set("#book", { left: px(SHOT.table[0]) - 100 * Math.min(1, s * .9) + "px", bottom: (VH - py(SHOT.table[1] + 36)) + "px", transform: `rotate(-3deg) scale(${Math.min(1, s * .9)})` });
   }
 
@@ -467,159 +469,36 @@
   // flakes that land on the glass: they sit a moment, melt to a drop and run down
   const stuck = [];
   let platform = null;                             // the station we stop at: world x where its middle comes to rest
-  function layer(par, base, amp, fr, oct, fill, snowcap) {
-    const off = world * par, step = 6;
-    cx.beginPath(); cx.moveTo(0, H);
-    for (let x = 0; x <= W + step; x += step) cx.lineTo(x, H * base - ridge((x + off) * fr, oct) * H * amp);
-    cx.lineTo(W, H); cx.closePath(); cx.fillStyle = fill; cx.fill();
-    if (snowcap) {   // a pale rim of snow along the ridge
-      cx.beginPath();
-      for (let x = 0; x <= W + step; x += step) { const y = H * base - ridge((x + off) * fr, oct) * H * amp; x ? cx.lineTo(x, y) : cx.moveTo(x, y); }
-      cx.strokeStyle = snowcap; cx.lineWidth = 2.2; cx.stroke();
-    }
-  }
-  function pines(par, base, size, gap, fill, tip) {
-    const off = world * par, first = Math.floor(off / gap) - 1;
-    for (let i = first; i < first + W / gap + 3; i++) {
-      if (hsh(i * 1.7 + par) < .25) continue;
-      const x = i * gap - off + hsh(i * 3.3) * gap * .8, s = size * (.6 + hsh(i * 5.1) * .7), y = H * base + hsh(i * 2.2) * 6;
-      cx.fillStyle = fill;
-      cx.beginPath(); cx.moveTo(x, y - s * 2.4);
-      for (let k = 0; k < 4; k++) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.lineTo(x + w, yy); cx.lineTo(x + w * .45, yy - s * .05); }
-      cx.lineTo(x + s * .08, y); cx.lineTo(x - s * .08, y);
-      for (let k = 3; k >= 0; k--) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.lineTo(x - w * .45, yy - s * .05); cx.lineTo(x - w, yy); }
-      cx.closePath(); cx.fill();
-      if (tip) { cx.fillStyle = tip; for (let k = 0; k < 4; k++) { const w = s * (.35 + k * .22), yy = y - s * 2.4 + s * .62 * (k + 1); cx.fillRect(x - w * .7, yy - s * .1, w * 1.1, s * .07); } }
-    }
-  }
-  function poles() {
-    const gap = W * .55, off = world, first = Math.floor(off / gap) - 1, top = H * .44, foot = H * .86;
-    const xs = [];
-    for (let i = first; i < first + W / gap + 3; i++) xs.push(i * gap - off);
-    // no poles on the platform
-    if (platform) { const px = W / 2 + (platX() - W / 2) / PAR, half = 1400 * H / 640 / PAR + 120; for (let j = 0; j < xs.length; j++) if (Math.abs(xs[j] - px) < half) xs[j] = null; }
-    const keep = xs.filter(x => x !== null); xs.length = 0; xs.push(...keep);
-    cx.strokeStyle = "rgba(8, 12, 20, .9)"; cx.lineWidth = 1.2;
-    for (let w = 0; w < 3; w++) {   // the wires sag between poles
-      cx.beginPath();
-      xs.forEach((x, j) => { const y = top + 10 + w * 9; if (!j) cx.moveTo(x, y); else cx.quadraticCurveTo((xs[j - 1] + x) / 2, y + 26, x, y); });
-      cx.stroke();
-    }
-    cx.fillStyle = "#070b13";
-    xs.forEach(x => { cx.fillRect(x - 3.5, top, 7, foot - top); cx.fillRect(x - 22, top + 8, 44, 4); cx.fillRect(x - 16, top + 22, 32, 3); });
-  }
-  function cabins(par, base) {
-    const gap = 900, off = world * par, first = Math.floor(off / gap) - 1;
-    for (let i = first; i < first + W / gap + 3; i++) {
-      if (hsh(i * 4.4) < .55) continue;
-      const x = i * gap - off + hsh(i * 8.8) * 400, y = H * base, w = 46, h = 26;
-      cx.fillStyle = "#0d1522"; cx.fillRect(x, y - h, w, h);
-      cx.beginPath(); cx.moveTo(x - 6, y - h); cx.lineTo(x + w / 2, y - h - 18); cx.lineTo(x + w + 6, y - h); cx.closePath(); cx.fill();
-      cx.fillStyle = "#cfdbe8"; cx.beginPath(); cx.moveTo(x - 6, y - h); cx.lineTo(x + w / 2, y - h - 18); cx.lineTo(x + w + 6, y - h); cx.lineTo(x + w + 2, y - h + 3); cx.lineTo(x + w / 2, y - h - 13); cx.lineTo(x - 2, y - h + 3); cx.closePath(); cx.fill();
-      const g = cx.createRadialGradient(x + 16, y - 12, 0, x + 16, y - 12, 40); g.addColorStop(0, "rgba(255, 200, 120, .45)"); g.addColorStop(1, "rgba(255, 200, 120, 0)");
-      cx.fillStyle = g; cx.fillRect(x - 30, y - 60, 100, 80);
-      cx.fillStyle = DAY ? "#4a5566" : "#ffd28a"; cx.fillRect(x + 10, y - 17, 9, 8); cx.fillRect(x + 27, y - 17, 9, 8);
-    }
-  }
-  /* a small station in snow country, seen from the carriage: the platform runs right under the window, so its snowy surface fills
-     the bottom of the pane; on it the lamps, the station-name board (name large, the neighbours left and right on a 藍 band),
-     a wooden waiting room with a heavy snow roof and lit windows, a bench, a low fence along the far edge. It is the nearest thing
-     outside and goes by fastest. */
+  /* the station, seen through the glass: a warm light sweeps across the snow and the name board goes by (name large; the neighbours
+     on a 藍 band). The trees behind are the photograph's own. */
   const PAR = 1.5, SANS = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
   const platX = () => (platform.x - world) * PAR + W / 2;
-  function drawPlatform(t) {
+  function drawStation() {
     if (!platform) return;
-    const c = cx, s = H / 640, x = platX(), L = 1400 * s;
-    if (x + L < -300) { if (!platform.stop) platform = null; return; }
-    if (x - L > W + 300) return;
-    const a = x - L, b = x + L, back = H * .7, ramp = 70 * s;
-    // the surface: snow, darker toward the far edge; the ends slope down
-    const sg = c.createLinearGradient(0, back, 0, H); sg.addColorStop(0, "#8d9fb8"); sg.addColorStop(.35, "#b9c8da"); sg.addColorStop(1, "#e6edf5");
-    c.fillStyle = sg; c.beginPath(); c.moveTo(a + ramp, back); c.lineTo(b - ramp, back); c.lineTo(b, H); c.lineTo(a, H); c.closePath(); c.fill();
-    // the lamps' pools of light on the snow
-    const lamps = [-.86, -.3, .42, .9].map(k => x + k * L);
-    lamps.forEach(lx => { const g = c.createRadialGradient(lx, H * .86, 0, lx, H * .86, 220 * s); g.addColorStop(0, "rgba(255, 222, 160, .38)"); g.addColorStop(1, "rgba(255, 222, 160, 0)");
-      c.save(); c.translate(lx, H * .86); c.scale(1, .32); c.translate(-lx, -H * .86); c.fillStyle = g; c.fillRect(lx - 230 * s, H * .86 - 230 * s, 460 * s, 460 * s); c.restore(); });
-    // the edge: tactile paving half under snow, then the white line at the very edge
-    c.fillStyle = "rgba(196, 166, 92, .55)";
-    for (let k = a + 20 * s; k < b - 20 * s; k += 26 * s) if (hsh(Math.floor(k / s) * .13) > .3) c.fillRect(k, H * .925, 22 * s, 7 * s);
-    c.fillStyle = "#f4f7fa"; c.fillRect(a, H - 6 * s, b - a, 3 * s);
-    // the fence along the far edge
-    c.fillStyle = "#1a2433";
-    for (let k = a + ramp; k < b - ramp; k += 64 * s) c.fillRect(k, back - 30 * s, 4 * s, 32 * s);
-    c.fillRect(a + ramp, back - 26 * s, b - a - ramp * 2, 3 * s); c.fillRect(a + ramp, back - 12 * s, b - a - ramp * 2, 3 * s);
-    c.fillStyle = "#e3eaf2"; c.fillRect(a + ramp, back - 29 * s, b - a - ramp * 2, 3 * s);
-    // the waiting room: dark boards, lit windows, a roof deep in snow
-    const hx = x - L * .52, hw = 380 * s, hh = 130 * s, hb = back + 14 * s;
-    const glow = c.createRadialGradient(hx, hb - hh * .5, 0, hx, hb - hh * .5, 260 * s); glow.addColorStop(0, "rgba(255, 196, 120, .25)"); glow.addColorStop(1, "rgba(255, 196, 120, 0)");
-    c.fillStyle = glow; c.fillRect(hx - 300 * s, hb - 300 * s, 600 * s, 360 * s);
-    c.fillStyle = "#2b221d"; c.fillRect(hx - hw / 2, hb - hh, hw, hh);
-    c.fillStyle = "rgba(0,0,0,.25)"; for (let k = hx - hw / 2; k < hx + hw / 2; k += 14 * s) c.fillRect(k, hb - hh, 1.2 * s, hh);
-    [-.3, .08].forEach(k => { const wx = hx + k * hw, wy = hb - hh * .78, ww = 80 * s, wh = 56 * s;
-      c.fillStyle = "#ffd690"; c.fillRect(wx, wy, ww, wh); c.fillStyle = "#3b2c22"; c.fillRect(wx + ww / 2 - 2 * s, wy, 4 * s, wh); c.fillRect(wx, wy + wh / 2 - 2 * s, ww, 4 * s);
-      c.strokeStyle = "#3b2c22"; c.lineWidth = 5 * s; c.strokeRect(wx, wy, ww, wh); });
-    c.fillStyle = "#1a1411"; c.fillRect(hx + hw * .3, hb - hh * .82, 52 * s, hh * .82);
-    c.fillStyle = "#f2f5f8"; c.fillRect(hx - 58 * s, hb - hh - 2 * s - 26 * s, 116 * s, 24 * s);
-    c.fillStyle = "#2f4f73"; c.font = `500 ${15 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("候 车 室", hx, hb - hh - 15 * s);
-    c.fillStyle = "#1b1512"; c.beginPath(); c.moveTo(hx - hw / 2 - 30 * s, hb - hh); c.lineTo(hx, hb - hh - 70 * s); c.lineTo(hx + hw / 2 + 30 * s, hb - hh); c.closePath(); c.fill();
-    c.fillStyle = "#edf2f7"; c.beginPath(); c.moveTo(hx - hw / 2 - 36 * s, hb - hh + 6 * s);
-    c.quadraticCurveTo(hx - hw / 2 - 40 * s, hb - hh - 16 * s, hx - hw * .25, hb - hh - 48 * s); c.quadraticCurveTo(hx, hb - hh - 98 * s, hx + hw * .25, hb - hh - 48 * s);
-    c.quadraticCurveTo(hx + hw / 2 + 40 * s, hb - hh - 16 * s, hx + hw / 2 + 36 * s, hb - hh + 6 * s); c.quadraticCurveTo(hx, hb - hh - 24 * s, hx - hw / 2 - 36 * s, hb - hh + 6 * s); c.fill();
-    c.fillStyle = "#dfe7f0"; c.beginPath(); c.ellipse(hx - hw * .4, hb, 70 * s, 14 * s, 0, Math.PI, 0); c.ellipse(hx + hw * .45, hb, 50 * s, 10 * s, 0, Math.PI, 0); c.fill();
-    // a bench, snow on its seat
-    const bx = hx + hw * .78;
-    c.fillStyle = "#241c17"; c.fillRect(bx, H * .79 - 30 * s, 110 * s, 6 * s); c.fillRect(bx, H * .79 - 52 * s, 110 * s, 5 * s); c.fillRect(bx + 8 * s, H * .79 - 30 * s, 5 * s, 30 * s); c.fillRect(bx + 97 * s, H * .79 - 30 * s, 5 * s, 30 * s);
-    c.fillStyle = "#eef3f8"; c.fillRect(bx - 2 * s, H * .79 - 34 * s, 114 * s, 4 * s);
-    // lamps
-    lamps.forEach(lx => { const top = H * .86 - 330 * s;
-      c.fillStyle = "#121a26"; c.fillRect(lx - 3 * s, top, 6 * s, H * .86 - top); c.fillRect(lx - 3 * s, top, 36 * s, 5 * s);
-      const g = c.createRadialGradient(lx + 30 * s, top + 12 * s, 0, lx + 30 * s, top + 12 * s, 90 * s); g.addColorStop(0, "rgba(255, 226, 170, .55)"); g.addColorStop(1, "rgba(255, 226, 170, 0)");
-      c.fillStyle = g; c.fillRect(lx - 70 * s, top - 80 * s, 200 * s, 200 * s);
-      c.fillStyle = "#121a26"; c.beginPath(); c.moveTo(lx + 18 * s, top + 4 * s); c.lineTo(lx + 42 * s, top + 4 * s); c.lineTo(lx + 46 * s, top + 16 * s); c.lineTo(lx + 14 * s, top + 16 * s); c.closePath(); c.fill();
-      c.fillStyle = "#fff1cf"; c.fillRect(lx + 18 * s, top + 16 * s, 24 * s, 4 * s);
-      c.fillStyle = "#e9eff5"; c.fillRect(lx - 4 * s, top - 3 * s, 40 * s, 3 * s); });
-    // the station-name board
-    const nx = x + L * .1, nw = 330 * s, nh = 104 * s, nb = H * .88, nt = nb - 250 * s;
-    c.fillStyle = "#121a26"; c.fillRect(nx - nw * .4, nt, 7 * s, nb - nt); c.fillRect(nx + nw * .4 - 7 * s, nt, 7 * s, nb - nt);
-    c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(nx - nw / 2 + 4 * s, nt + 6 * s, nw, nh);
-    c.fillStyle = "#f6f8fa"; c.fillRect(nx - nw / 2, nt, nw, nh);
-    c.fillStyle = "#e7edf3"; c.fillRect(nx - nw / 2 - 3 * s, nt - 6 * s, nw + 6 * s, 7 * s);
-    c.fillStyle = "#1c232b"; c.font = `700 ${40 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(platform.name, nx, nt + 46 * s);
-    c.fillStyle = "#6b7682"; c.font = `500 ${11 * s}px ${SANS}`; c.fillText(`${LINE}　${platform.name} 站`, nx, nt + 64 * s);
-    c.fillStyle = "#2f4f73"; c.fillRect(nx - nw / 2, nt + nh - 30 * s, nw, 30 * s);
+    const x = platX();
+    if (x < -W * .9) { if (!platform.stop) platform = null; return; }
+    if (x > W * 1.9) return;
+    const c = cx, near = Math.max(0, Math.min(1, 1.15 - Math.abs(x - W / 2) / (W * 1.05)));
+    const gl = c.createRadialGradient(x, H * .62, 0, x, H * .62, H * .8);
+    gl.addColorStop(0, DAY ? "rgba(255,255,255,.22)" : "rgba(255,214,150,.34)"); gl.addColorStop(1, "rgba(255,214,150,0)");
+    c.globalAlpha = near; c.fillStyle = gl; c.fillRect(0, 0, W, H);
+    const s = Math.min(1.1, W / 640), nw = 330 * s, nh = 104 * s, nt = H * .17;
+    c.globalAlpha = near * (DAY ? .96 : .9);
+    c.fillStyle = "#121a26"; c.fillRect(x - nw * .4, nt, 6 * s, 120 * s); c.fillRect(x + nw * .4 - 6 * s, nt, 6 * s, 120 * s);
+    c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(x - nw / 2 + 4 * s, nt + 6 * s, nw, nh);
+    c.fillStyle = DAY ? "#f6f8fa" : "#e6e3d6"; c.fillRect(x - nw / 2, nt, nw, nh);
+    c.fillStyle = DAY ? "#e7edf3" : "#cfccbd"; c.fillRect(x - nw / 2 - 3 * s, nt - 6 * s, nw + 6 * s, 7 * s);
+    c.fillStyle = "#1c232b"; c.font = `700 ${40 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(platform.name, x, nt + 46 * s);
+    c.fillStyle = "#6b7682"; c.font = `500 ${11 * s}px ${SANS}`; c.fillText(`${LINE}　${platform.name} 站`, x, nt + 64 * s);
+    c.fillStyle = "#2f4f73"; c.fillRect(x - nw / 2, nt + nh - 30 * s, nw, 30 * s);
     c.fillStyle = "#eef3f8"; c.font = `500 ${13 * s}px ${SANS}`; c.textBaseline = "middle";
-    c.textAlign = "left"; c.fillText(`◀ ${platform.prev || ""}`, nx - nw / 2 + 12 * s, nt + nh - 15 * s);
-    c.textAlign = "right"; c.fillText(`${platform.next || ""} ▶`, nx + nw / 2 - 12 * s, nt + nh - 15 * s);
-    c.textAlign = "left"; c.textBaseline = "alphabetic";
+    c.textAlign = "left"; c.fillText(`◀ ${platform.prev || ""}`, x - nw / 2 + 12 * s, nt + nh - 15 * s);
+    c.textAlign = "right"; c.fillText(`${platform.next || ""} ▶`, x + nw / 2 - 12 * s, nt + nh - 15 * s);
+    c.textAlign = "left"; c.textBaseline = "alphabetic"; c.globalAlpha = 1;
   }
   function scene(dt, t) {
-    const c = cx; c.setTransform(D, 0, 0, D, 0, 0);
-    // sky
-    const sky = c.createLinearGradient(0, 0, 0, H);
-    if (DAY) { sky.addColorStop(0, "#9fb0c4"); sky.addColorStop(.55, "#c9d4e0"); sky.addColorStop(1, "#e3e9ef"); }
-    else { sky.addColorStop(0, "#050a14"); sky.addColorStop(.55, "#122039"); sky.addColorStop(1, "#24375a"); }
-    c.fillStyle = sky; c.fillRect(0, 0, W, H);
-    if (!DAY) stars.forEach(s => { c.globalAlpha = .35 + Math.sin(t * 1.3 + s.t) * .25; c.fillStyle = "#dfe8ff"; c.fillRect(s.x * W, s.y * H, s.r, s.r); });
-    c.globalAlpha = 1;
-    // the moon, far away and still
-    const mx = W * .78, my = H * .2, mg = c.createRadialGradient(mx, my, 0, mx, my, H * .35);
-    if (DAY) { mg.addColorStop(0, "rgba(255, 252, 240, .7)"); mg.addColorStop(1, "rgba(255, 252, 240, 0)"); c.fillStyle = mg; c.fillRect(0, 0, W, H); }   // a white sun behind the snow cloud
-    else {
-    mg.addColorStop(0, "rgba(220, 230, 255, .35)"); mg.addColorStop(1, "rgba(220, 230, 255, 0)"); c.fillStyle = mg; c.fillRect(0, 0, W, H);
-    c.fillStyle = "#eef3ff"; c.beginPath(); c.arc(mx, my, H * .045, 0, 7); c.fill();
-    c.fillStyle = "#c9d4ea"; c.beginPath(); c.arc(mx - H * .012, my - H * .008, H * .009, 0, 7); c.arc(mx + H * .015, my + H * .012, H * .006, 0, 7); c.fill(); }
-    // far mountains, snow on their ridges, the moonlit snowfield, then the forest and the bank by the line
-    layer(.02, .58, .32, .0016, 4, DAY ? "#8796ab" : "#1d2c47", DAY ? "rgba(255, 255, 255, .8)" : "rgba(200, 215, 240, .55)");
-    layer(.05, .66, .2, .0028, 4, DAY ? "#a3b1c2" : "#2a3d5e", DAY ? "rgba(255, 255, 255, .8)" : "rgba(220, 230, 250, .5)");
-    layer(.12, .74, .08, .004, 3, DAY ? "#dfe6ee" : "#8ea2bf");
-    pines(.12, .72, 9, 26, DAY ? "#55657a" : "#22324d");
-    cabins(.18, .76);
-    layer(.3, .8, .05, .006, 3, DAY ? "#eaf0f5" : "#a9bbd2");
-    pines(.35, .8, 20, 46, DAY ? "#2f3d4f" : "#121d30", "rgba(245, 248, 252, .9)");
-    layer(.7, .88, .04, .01, 2, DAY ? "#f1f5f8" : "#c4d2e3");
-    poles();
-    layer(1.4, 1.0, .06, .012, 2, DAY ? "#f6f8fa" : "#dde6f0");
-    drawPlatform(t);
+    const c = cx; c.setTransform(D, 0, 0, D, 0, 0); c.clearRect(0, 0, W, H);
+    drawStation();
     // falling snow, swept back by the train's speed
     const sweep = speed / 260, gust = .5 + .5 * Math.sin(t * .23) * Math.sin(t * .071 + 1);
     for (const f of flakes) {
