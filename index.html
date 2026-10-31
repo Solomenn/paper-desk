@@ -6,7 +6,25 @@
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
-<script src="scene.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script>
+/* load the 3D carriage; if it can't load, say why in a corner instead of failing silently */
+addEventListener("DOMContentLoaded", () => {
+  const say = m => { const d = document.createElement("div"); d.style.cssText = "position:fixed;right:70px;bottom:18px;z-index:60000;max-width:420px;padding:10px 14px;border-radius:6px;background:rgba(20,14,9,.9);color:#f3e7cf;font:13px/1.6 sans-serif;box-shadow:0 0 0 1px rgba(214,178,110,.4)"; d.textContent = "3D 车厢没有加载：" + m; document.body.appendChild(d); };
+  if (location.protocol === "file:") return say("现在是直接双击打开的文件（file://）。浏览器不允许这样加载 3D 模块，请在 paper-desk 文件夹里运行 py serve.py，再打开 http://localhost:8000");
+  const c = document.createElement("canvas"); if (!(c.getContext("webgl2") || c.getContext("webgl"))) return say("这个浏览器没有开启 WebGL（硬件加速可能被关掉了）。");
+  import("./carriage.js").catch(async e => {
+    let m = String(e && e.message || e);
+    if (/MIME|module script/i.test(m)) {
+      // locally the usual culprit: http.server serves .js as text/plain (Windows registry) and modules are refused
+      let ct = "";
+      try { ct = (await fetch("carriage.js", { method: "HEAD" })).headers.get("content-type") || ""; } catch {}
+      if (!/javascript/i.test(ct)) m = `本地服务器把 carriage.js 当成「${ct || "未知类型"}」发出了，浏览器不肯把它当模块执行。请改用 py serve.py（在 paper-desk 文件夹里），再打开 http://localhost:8000。`;
+    }
+    say(m);
+  });
+});
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
