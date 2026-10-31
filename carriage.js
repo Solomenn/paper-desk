@@ -25,9 +25,11 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
   #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
   html:not([data-theme="day"]) #car3dLit { mix-blend-mode: multiply;
-    background: radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #fff3e0 0%, #f2d9b0 32%, #c4a582 64%, #8e7a68 100%); }
+    background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 246, 228, .95), rgba(255, 246, 228, 0) 100%),
+                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #fff3e0 0%, #f2d9b0 32%, #cfb393 64%, #ad9884 100%); }
   html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
     background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 150, 60, .26), transparent 70%),
+                radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
                 linear-gradient(0deg, rgba(255, 140, 60, .06), transparent 30%); }
   html[data-theme="day"] #car3dLit { mix-blend-mode: soft-light;
     background: radial-gradient(90% 100% at 92% 45%, #f4f9ff 0%, #c9dbee 60%, #a9bfd8 100%); }
@@ -67,7 +69,8 @@ function tex(name, kind, rep, srgb) {
 }
 const wood = (name, rep, extra = {}) => new THREE.MeshStandardMaterial({ map: tex(name, "diff", rep, true), normalMap: tex(name, "nor", rep), roughnessMap: tex(name, "rough", rep), fog: false, ...extra });
 const M = {
-  panel: wood("dark_paneled_wood", [1 / 1.6, 1 / 1.6], { color: 0xb08a6a }),
+  panel: wood("american_walnut_veneer", [.7, .7], { color: 0x8a5e3e, roughness: .55 }),
+  mould: wood("lacquered_cherry_wood", [3, 3], { color: 0x6e4228, roughness: .4 }),
   walnut: wood("american_walnut_veneer", [1.5, 1.5], { color: 0x8a6448 }),
   cherry: wood("lacquered_cherry_wood", [2, 2], { color: 0x9a6a4a, roughness: .5 }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc9a25a, metalness: 1, roughness: .32, fog: false }),
@@ -92,6 +95,19 @@ function buildRoom() {
   const hole = new THREE.Path(); rrect(hole, wx, win.y0, win.w, wh, .09); s.holes.push(hole);
   const wall = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .06, bevelEnabled: false }), M.panel);
   wall.position.z = -.06; wall.receiveShadow = true; room.add(wall);
+  // the upper wall in neat raised panels: lacquered stiles and rails, a thin bead moulding inside each panel, a frieze under the rack
+  const bx = (w, h, x, y, z, d, m = M.mould) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.receiveShadow = true; room.add(b); return b; };
+  const yA = .9, yB = 2.02, PW = .58, wl = wx - .06, wr = wx + win.w + .06;
+  bx(R - L, .07, 0, yA + .035, .012, .024); bx(R - L, .09, 0, yB + .045, .012, .024); bx(R - L, .03, 0, H - .015, .02, .04, M.brass);
+  for (let x = L; x < R; x += PW) {
+    const inWin = x > wl - PW && x < wr;
+    if (!(x > wl && x < wr)) bx(.055, yB - yA, x, (yA + yB) / 2, .012, .024);
+    if (inWin) continue;
+    const x0 = x + .06, x1 = x + PW - .06, y0 = yA + .1, y1 = yB - .08;
+    bx(x1 - x0, .012, (x0 + x1) / 2, y0, .006, .012); bx(x1 - x0, .012, (x0 + x1) / 2, y1, .006, .012);
+    bx(.012, y1 - y0, x0, (y0 + y1) / 2, .006, .012); bx(.012, y1 - y0, x1, (y0 + y1) / 2, .006, .012);
+  }
+  bx(.055, yB - yA, wl, (yA + yB) / 2, .012, .024); bx(.055, yB - yA, wr, (yA + yB) / 2, .012, .024);
   // the wainscot below the chair rail: walnut, then a brass rail
   const ws = new THREE.Shape(); ws.moveTo(L, -.5); ws.lineTo(R, -.5); ws.lineTo(R, .86); ws.lineTo(L, .86); ws.lineTo(L, -.5);
   const wain = new THREE.Mesh(new THREE.ExtrudeGeometry(ws, { depth: .015, bevelEnabled: false }), M.walnut); wain.receiveShadow = true; room.add(wain);
