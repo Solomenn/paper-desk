@@ -181,7 +181,7 @@
 </style>
 </head>
 <body>
-<a class="back" href="desk.html" title="回到桌子">←</a>
+<a class="back" href="./" title="回到桌子">←</a>
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
@@ -387,23 +387,23 @@
     const p = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
-  // today's cards from the desk: stamped ones are OK, the one in the middle is still ··
+  // today's list from the desk: finished items are OK (at the time they were ticked), the rest are ··
   function deskItems() {
     let d = null;
-    try { d = JSON.parse(localStorage.getItem('paper-desk.desk-tasks.v1')); } catch (e) { /* ignore */ }
-    if (!d) return [];
+    try { d = JSON.parse(localStorage.getItem('paper-desk.today.v1')); } catch (e) { /* ignore */ }
+    if (!Array.isArray(d)) return [];
     const p = n => String(n).padStart(2, '0');
-    const hm = ts => { const t = new Date(ts); return `${p(t.getHours())}:${p(t.getMinutes())}`; };
+    const hm = ts => { const t = new Date(ts || Date.now()); return `${p(t.getHours())}:${p(t.getMinutes())}`; };
     const today = todayISO();
-    const isToday = ts => { const t = new Date(ts); return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}` === today; };
-    const items = (d.done || []).filter(t => t.doneAt && isToday(t.doneAt))
-      .sort((a, b) => a.doneAt - b.doneAt)
-      .map(t => ({ time: hm(t.doneAt), name: (t.title || '（未命名）').slice(0, 40), done: true }));
-    if (d.current && d.current.title) items.push({ time: hm(Date.now()), name: d.current.title.slice(0, 40), done: false });
-    return items.slice(-MAX_ITEMS);
+    const isToday = ts => { if (!ts) return false; const t = new Date(ts); return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}` === today; };
+    const done = d.filter(i => i.done && isToday(i.doneAt)).sort((a, b) => a.doneAt - b.doneAt)
+      .map(i => ({ time: hm(i.doneAt), name: String(i.text || '').slice(0, 40), done: true }));
+    const left = d.filter(i => !i.done)
+      .map(i => ({ time: hm(i.addedAt), name: String(i.text || '').slice(0, 40), done: false }));
+    return done.concat(left).slice(0, MAX_ITEMS);
   }
   function presetItems(key) {
-    if (key === 'desk') { const it = deskItems(); return it.length ? it : [{ time: '09:00', name: '今天还没有盖章的卡', done: false }]; }
+    if (key === 'desk') { const it = deskItems(); return it.length ? it : [{ time: '09:00', name: '今天的清单还是空的', done: false }]; }
     return PRESETS[key].items.map((s, i) => {
       const [time, name] = s.split('|');
       return { time, name, done: i === 0 };
@@ -735,7 +735,7 @@
     /* 副标题 */
     ctx.font = `400 26px ${SANS}`;
     ctx.fillStyle = '#8b867a';
-    ctx.fillText('把今天盖过章的卡打成一张热敏小票', x + 2, 238);
+    ctx.fillText('把今天的清单打成一张热敏小票', x + 2, 238);
   }
 
   /* ============================================================
