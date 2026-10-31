@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纸桌 · 便利贴</title>
+<style>
+  :root {
+    --ink: #3b3a33;
+    --muted: #8b867a;
+    --faint: #b3ad9d;
+    --paper: #fbf8ef;
+    --desk: #ece5d6;
+    --accent: #b5523b;
+    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
+    --hand: "LXGW WenKai", "霞鹜文楷", "Klee One", "KaiTi", "STKaiti", var(--serif);
+    --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(120% 90% at 12% 0%, rgba(255, 250, 236, .95), rgba(255, 250, 236, 0) 60%),
+      radial-gradient(90% 70% at 100% 100%, rgba(120, 96, 60, .10), rgba(120, 96, 60, 0) 70%),
+      var(--desk);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  /* paper fibre over the whole desk */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .55; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #desk { position: fixed; inset: 0; }
+
+  /* ───────── sticky note ───────── */
+  .note {
+    position: absolute; left: 0; top: 0;
+    width: 196px; height: 196px;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    --lift: 0; --sx: 0px; --sy: 2px; --sb: 3px; --sa: .2;
+    --psx: 1px; --psy: 2px;
+  }
+  .note.hidden { display: none; }
+  .sheet {
+    position: absolute; inset: 0;
+    background: var(--c);
+    transform-origin: 50% 0;
+    transform: perspective(700px) rotateX(calc(var(--lift) * 10deg));
+    box-shadow:
+      var(--sx) var(--sy) var(--sb) rgba(70, 52, 28, var(--sa)),
+      0 0 0 .5px rgba(80, 60, 30, .10);
+    cursor: grab;
+    overflow: hidden;
+  }
+  .note.grabbing .sheet { cursor: grabbing; }
+  /* fibre + adhesive strip + curvature toward the lifted bottom edge */
+  .sheet::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,.22), rgba(255,255,255,0) 20%, rgba(0,0,0,0) 21%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .sheet::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0) 45%,
+      rgba(60,40,10, calc(.025 + var(--lift) * .07)) 88%,
+      rgba(255,255,255, calc(var(--lift) * .25)) 100%);
+  }
+  .text {
+    position: absolute; inset: 0; padding: 26px 20px 18px;
+    font-family: var(--hand); font-size: 16px; line-height: 1.55;
+    color: rgba(46, 40, 30, .88);
+    white-space: pre-wrap; word-break: break-word; overflow: hidden;
+    outline: none;
+  }
+  .text::first-line { font-size: 19px; font-weight: 600; }
+  .note.editing .sheet { cursor: text; }
+  .note.editing .text { user-select: text; -webkit-user-select: text; }
+  .text:empty::before { content: "写点什么…"; color: rgba(46, 40, 30, .32); }
+
+  /* ───────── push pin ───────── */
+  .pin {
+    position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #f6b3a1 0 14%, #cc5c42 42%, #8c3220 100%);
+    box-shadow: var(--psx) var(--psy) 3px rgba(60, 28, 16, .38), inset 0 -1px 2px rgba(0,0,0,.25);
+    cursor: grab; z-index: 2;
+  }
+  .pin.free {
+    position: fixed; left: 0; top: 0; margin: 0; pointer-events: none; z-index: 100000;
+    transition: transform .45s var(--ease), opacity .45s;
+  }
+  .pin.free.held { transition: none; --psx: 6px; --psy: 12px; box-shadow: 6px 12px 10px rgba(60,28,16,.28), inset 0 -1px 2px rgba(0,0,0,.25); }
+  .pin.press { animation: press .22s var(--ease); }
+  @keyframes press { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+  /* ───────── right-edge drawer: the screen edge is a notebook edge, notes become index tabs ───────── */
+  #drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 14px; z-index: 50000;
+    background: repeating-linear-gradient(to right, #e4dccb 0 1px, #f7f2e7 1px 3px);
+    box-shadow: inset 1px 0 0 rgba(90, 70, 40, .18), -2px 0 8px rgba(90, 70, 40, .08);
+    transition: box-shadow .25s;
+  }
+  #drawer.hot { box-shadow: inset 1px 0 0 rgba(181, 82, 59, .6), -6px 0 22px rgba(181, 82, 59, .28); }
+  .tab {
+    position: absolute; right: 14px; width: 12px; height: 40px;
+    background: var(--c); border-radius: 4px 0 0 4px;
+    box-shadow: -1px 1px 2px rgba(70, 52, 28, .22), inset 0 0 0 .5px rgba(80,60,30,.12);
+    cursor: pointer;
+    transition: width .22s var(--ease), top .4s var(--ease), transform .4s var(--ease);
+  }
+  .tab.enter { transform: translateX(14px); }
+  .tab:hover, .tab.peeking { width: 20px; }
+  .tab[data-label]::before {
+    content: attr(data-label); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    font-size: 11px; letter-spacing: .1em; color: var(--muted); white-space: nowrap;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  #drawer:hover:not(.peeking) .tab[data-label]::before { opacity: 1; }
+
+  /* ───────── tray: pads, pin dish, bin ───────── */
+  #tray {
+    position: fixed; left: 28px; bottom: 22px; z-index: 40000;
+    display: flex; align-items: flex-end; gap: 18px;
+  }
+  .pad {
+    width: 62px; height: 62px; background: var(--c); cursor: grab; position: relative;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.5),
+      0 2px 0 color-mix(in srgb, var(--c) 82%, #6b5a3a),
+      0 3px 0 var(--c),
+      0 4px 0 color-mix(in srgb, var(--c) 82%, #6b5a3a),
+      0 5px 0 var(--c),
+      0 7px 0 color-mix(in srgb, var(--c) 75%, #6b5a3a),
+      0 10px 14px rgba(70, 52, 28, .22);
+    transition: transform .2s var(--ease);
+  }
+  .pad:hover { transform: translateY(-3px) rotate(-1.5deg); }
+  .pad[data-cat=work]  { --c: #f3e2a1; }
+  .pad[data-cat=life]  { --c: #cfe4cf; }
+  .pad[data-cat=idea]  { --c: #f3cabb; }
+  .pad[data-cat=study] { --c: #cddbe9; }
+  .dish {
+    width: 74px; height: 40px; border-radius: 50%; position: relative; cursor: grab;
+    background: radial-gradient(ellipse at 50% 40%, #f8f4ea 0 45%, #e2d9c6 75%, #cfc3aa 100%);
+    box-shadow: 0 6px 10px rgba(70, 52, 28, .18), inset 0 2px 4px rgba(80, 60, 30, .18);
+  }
+  .dish .pin { position: absolute; cursor: grab; }
+  .bin {
+    width: 46px; height: 52px; position: relative;
+    background:
+      linear-gradient(to bottom, #c9bca1 0 5px, transparent 5px),
+      repeating-linear-gradient(to right, #d9cfba 0 2px, #ece5d4 2px 7px);
+    clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+    transition: transform .2s var(--ease), filter .2s;
+  }
+  .bin.hot { transform: scale(1.12); filter: drop-shadow(0 0 6px rgba(181,82,59,.6)) saturate(1.4); }
+  .ibtn {
+    width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(251, 248, 239, .85); color: var(--muted); font-size: 15px;
+    box-shadow: 0 2px 6px rgba(70, 52, 28, .16);
+    transition: color .2s, transform .2s var(--ease);
+  }
+  .ibtn:hover { color: var(--accent); transform: translateY(-2px); }
+
+  #help {
+    position: fixed; left: 28px; bottom: 100px; z-index: 40001; width: 248px;
+    background: var(--paper); border-radius: 6px; padding: 14px 16px; font-size: 12.5px; line-height: 1.9;
+    color: var(--muted); box-shadow: 0 10px 30px rgba(70, 52, 28, .2);
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: .25s var(--ease);
+  }
+  #help.show { opacity: 1; transform: none; pointer-events: auto; }
+  #help b { color: var(--ink); font-weight: 600; }
+
+  #menu {
+    position: fixed; z-index: 100001; display: none; gap: 8px; align-items: center;
+    background: var(--paper); padding: 8px 10px; border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(70, 52, 28, .22);
+  }
+  #menu.show { display: flex; }
+  #menu .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(80,60,30,.15); }
+  #menu .dot.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--accent); }
+  #menu .del { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 14px; padding: 0 2px; }
+  #menu .del:hover { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab, .pad, .ibtn, #help { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="desk"></div>
+<div id="drawer" title="甩到这里收起"></div>
+
+<div id="tray">
+  <div class="pad" data-cat="work" title="工作"></div>
+  <div class="pad" data-cat="life" title="生活"></div>
+  <div class="pad" data-cat="idea" title="灵感"></div>
+  <div class="pad" data-cat="study" title="学习"></div>
+  <div class="dish" title="图钉">
+    <div class="pin" style="left:24px;top:18px"></div>
+    <div class="pin" style="left:42px;top:14px"></div>
+    <div class="pin" style="left:52px;top:24px"></div>
+  </div>
+  <div class="bin" title="废纸篓"></div>
+  <button class="ibtn" id="tidy" title="全部收进边缘（T）">⇥</button>
+  <button class="ibtn" id="helpBtn" title="怎么用">?</button>
+</div>
+
+<div id="help">
+  <b>撕</b> 从便签本上拖一张出来<br>
+  <b>拿</b> 抓哪儿就从哪儿晃，松手会滑一下<br>
+  <b>钉</b> 从小碟里拖图钉按上去；钉住后拖动只会绕钉子转，用力扯会把钉子扯掉<br>
+  <b>收</b> 往右边缘一甩，变成索引贴；悬停偷看，点一下抽出来<br>
+  <b>写</b> 双击便签　<b>换色</b> 右键　<b>扔</b> 丢进废纸篓
+</div>
+
+<div id="menu"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ───────── constants ───────── */
+  const NW = 196, NH = 196, HW = NW / 2, HH = NH / 2;
+  const CATS = {
+    work:  { c: "#f3e2a1", name: "工作" },
+    life:  { c: "#cfe4cf", name: "生活" },
+    idea:  { c: "#f3cabb", name: "灵感" },
+    study: { c: "#cddbe9", name: "学习" },
+  };
+  const ORDER = ["work", "life", "idea", "study"];
+  const KEY = "paper-desk.sticky.v1";
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // physics (px, s). Gravity pulls the held sheet to hang below your fingers; stiffness is the paper resisting the twist.
+  const G = reduced ? 300 : 1600;   // gravity
+  const KS = 300000;                // rotational stiffness of a sheet held between fingers
+  const DAMP = 4.2;                 // angular damping
+  const KACC = 0.85;                // how much hand acceleration swings the sheet
+  const KR = 90, CR = 13;           // pinned: spring toward the pointer, damping
+  const YANK = 270;                 // pull this far from the pin and it pops out
+  const DRAWER_W = 14, DOCK_ZONE = 110;
+  const TAB_TOP = 72, TAB_H = 40, TAB_GAP = 6, GROUP_GAP = 20;
+
+  const desk = document.getElementById("desk");
+  const drawer = document.getElementById("drawer");
+  const bin = document.querySelector(".bin");
+  const dish = document.querySelector(".dish");
+  const menu = document.getElementById("menu");
+  let W = innerWidth, H = innerHeight;
+  let notes = [];
+  let zTop = 10;
+
+  const rot = (x, y, a) => { const c = Math.cos(a), s = Math.sin(a); return { x: x * c - y * s, y: x * s + y * c }; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const ease = (dt, k) => 1 - Math.exp(-dt * k);
+
+  /* ───────── pointer, with smoothed velocity and acceleration ───────── */
+  const P = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, ax: 0, ay: 0 };
+  function trackPointer(dt) {
+    const rvx = (P.x - P.px) / dt, rvy = (P.y - P.py) / dt;
+    const ovx = P.vx, ovy = P.vy;
+    P.vx += (rvx - P.vx) * 0.45; P.vy += (rvy - P.vy) * 0.45;
+    P.ax += ((P.vx - ovx) / dt - P.ax) * 0.3; P.ay += ((P.vy - ovy) / dt - P.ay) * 0.3;
+    P.ax = clamp(P.ax, -26000, 26000); P.ay = clamp(P.ay, -26000, 26000);
+    P.px = P.x; P.py = P.y;
+  }
+
+  /* ───────── notes ───────── */
+  function makeNote(o) {
+    const n = Object.assign({
+      id: uid(), cat: "work", text: "", x: W / 2, y: H / 2, a: 0, w: 0, vx: 0, vy: 0,
+      s: 1, sT: 1, lift: 0, liftT: 0, pin: null, docked: false, dockedAt: 0, mode: "rest", z: ++zTop,
+    }, o);
+    const el = document.createElement("div");
+    el.className = "note";
+    el.innerHTML = '<div class="sheet"><div class="text" spellcheck="false"></div></div>';
+    n.el = el; n.sheet = el.firstChild; n.textEl = n.sheet.firstChild;
+    n.textEl.textContent = n.text;
+    el._note = n;
+    desk.appendChild(el);
+    notes.push(n);
+    paint(n); renderPin(n); draw(n);
+    if (n.docked) el.classList.add("hidden");
+    zTop = Math.max(zTop, n.z);
+    return n;
+  }
+  function paint(n) { n.el.style.setProperty("--c", CATS[n.cat].c); }
+  function renderPin(n) {
+    let pin = n.el.querySelector(":scope > .pin");
+    if (!n.pin) { if (pin) pin.remove(); return; }
+    if (!pin) { pin = document.createElement("div"); pin.className = "pin"; n.el.appendChild(pin); }
+    pin.style.left = (HW + n.pin.u) + "px";
+    pin.style.top = (HH + n.pin.v) + "px";
+  }
+  function front(n) { n.z = ++zTop; n.el.style.zIndex = n.z; }
+
+  function draw(n) {
+    const el = n.el;
+    el.style.transform = `translate(${n.x - HW}px,${n.y - HH}px) rotate(${n.a}rad) scale(${n.s})`;
+    el.style.zIndex = n.z;
+    // light comes from above the screen, so shadows are offset in screen space, not note space
+    const L = Math.max(0, n.lift), d = 1.5 + L * 18, b = 2 + L * 30;
+    el.style.setProperty("--lift", L.toFixed(3));
+    el.style.setProperty("--sx", (d * Math.sin(n.a)).toFixed(1) + "px");
+    el.style.setProperty("--sy", (d * Math.cos(n.a)).toFixed(1) + "px");
+    el.style.setProperty("--sb", b.toFixed(1) + "px");
+    el.style.setProperty("--sa", (0.2 + L * 0.06).toFixed(3));
+    const ps = rot(1.5, 2.5, -n.a);
+    el.style.setProperty("--psx", ps.x.toFixed(1) + "px");
+    el.style.setProperty("--psy", ps.y.toFixed(1) + "px");
+  }
+
+  /* ───────── simulation ───────── */
+  function step(n, dt) {
+    const k = ease(dt, 12);
+    let moving = true;
+    switch (n.mode) {
+      case "drag": {
+        // a rigid sheet hanging from the grab point: gravity + hand acceleration + paper stiffness
+        const r = rot(-n.gx * n.s, -n.gy * n.s, n.a);       // grab point → centre
+        const I = r.x * r.x + r.y * r.y + (NW * NW + NH * NH) / 12;
+        let tau = r.x * G;
+        tau += (r.x * -P.ay - r.y * -P.ax) * KACC;
+        tau += -KS * (n.a - n.a0);
+        n.w += tau / I * dt; n.w *= Math.exp(-DAMP * dt); n.a += n.w * dt;
+        const r2 = rot(-n.gx * n.s, -n.gy * n.s, n.a);
+        n.x = P.x + r2.x; n.y = P.y + r2.y;
+        n.liftT = 1;
+        break;
+      }
+      case "rotate": {
+        // pinned: the sheet can only turn around the pin
+        const dx = P.x - n.px, dy = P.y - n.py;
+        if (Math.hypot(dx, dy) > YANK) { popPin(n); break; }
+        if (n.arm > 22) {
+          const target = Math.atan2(dy, dx) - n.armA;
+          n.w += (angDiff(target, n.a) * KR - n.w * CR) * dt;
+        } else n.w *= Math.exp(-CR * dt);
+        n.a += n.w * dt;
+        placeAroundPin(n);
+        n.liftT = 0.18;
+        break;
+      }
+      case "swing": {
+        n.w *= Math.exp(-7 * dt); n.a += n.w * dt; placeAroundPin(n);
+        n.liftT = 0;
+        if (Math.abs(n.w) < 0.02) { n.mode = "rest"; save(); }
+        break;
+      }
+      case "toss": {
+        n.x += n.vx * dt; n.y += n.vy * dt;
+        const f = Math.exp(-5.5 * dt); n.vx *= f; n.vy *= f;
+        // pressing a note onto the screen, the hand straightens it a little; a slight tilt stays
+        n.w += -(n.a - clamp(n.a, -0.13, 0.13)) * 9 * dt;
+        n.a += n.w * dt; n.w *= Math.exp(-6 * dt);
+        if (n.x < HW * 0.5) { n.x = HW * 0.5; n.vx = Math.abs(n.vx) * 0.35; n.w *= -0.5; }
+        if (n.y < HH * 0.5) { n.y = HH * 0.5; n.vy = Math.abs(n.vy) * 0.35; n.w *= -0.5; }
+        if (n.y > H - HH * 0.5) { n.y = H - HH * 0.5; n.vy = -Math.abs(n.vy) * 0.35; n.w *= -0.5; }
+        if (n.x + HW * 0.35 > W - DRAWER_W) { dock(n); break; }
+        const sp = Math.hypot(n.vx, n.vy);
+        n.liftT = Math.min(0.9, sp / 700);
+        if (sp < 35 && Math.abs(n.a) < 0.16) { n.mode = "rest"; n.liftT = 0; n.s = 0.985; save(); }
+        break;
+      }
+      case "dock": case "peek": case "retract": case "place": case "trash": {
+        const t = n.t;
+        n.x += (t.x - n.x) * k; n.y += (t.y - n.y) * k;
+        n.a += angDiff(t.a, n.a) * k; n.s += (t.s - n.s) * k;
+        if (n.mode === "trash") n.el.style.opacity = clamp(n.s * 1.6, 0, 1);
+        if (Math.hypot(t.x - n.x, t.y - n.y) < 1.5 && Math.abs(t.s - n.s) < 0.01) arrive(n);
+        break;
+      }
+      default: moving = false;
+    }
+    n.lift += (n.liftT - n.lift) * ease(dt, 12);
+    if (n.mode === "rest" || n.mode === "swing" || n.mode === "drag") n.s += (n.sT - n.s) * ease(dt, 16);
+    const settling = Math.abs(n.liftT - n.lift) > 0.002 || Math.abs(n.sT - n.s) > 0.001;
+    return moving || settling;
+  }
+
+  function placeAroundPin(n) {
+    const pv = rot(n.pin.u, n.pin.v, n.a);
+    n.x = n.px - pv.x; n.y = n.py - pv.y;
+  }
+
+  function arrive(n) {
+    const m = n.mode;
+    n.x = n.t.x; n.y = n.t.y; n.s = n.t.s;
+    if (m === "dock" || m === "retract") {
+      n.docked = true; n.mode = "rest"; n.el.classList.add("hidden"); n.lift = n.liftT = 0;
+      renderTabs(); save();
+    } else if (m === "place") { n.mode = "rest"; n.liftT = 0; save(); }
+    else if (m === "trash") {
+      n.el.remove(); notes = notes.filter(x => x !== n); save();
+    }
+    // "peek" just stays peeking
+  }
+
+  /* ───────── drawer: index tabs on the right edge ───────── */
+  const tabEls = new Map();
+  const tabY = new Map();
+  function inDrawer(n) { return n.docked || n.mode === "dock" || n.mode === "peek" || n.mode === "retract"; }
+  function renderTabs() {
+    const list = notes.filter(inDrawer).sort((a, b) =>
+      ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat) || a.dockedAt - b.dockedAt);
+    const counts = {};
+    list.forEach(n => counts[n.cat] = (counts[n.cat] || 0) + 1);
+    let y = TAB_TOP, prev = null;
+    const room = H - TAB_TOP - 40;
+    const need = list.length * (TAB_H + TAB_GAP) + Object.keys(counts).length * GROUP_GAP;
+    const squeeze = need > room ? room / need : 1;
+    const seen = new Set();
+    for (const n of list) {
+      if (prev && prev !== n.cat) y += GROUP_GAP * squeeze;
+      let el = tabEls.get(n.id);
+      if (!el) {
+        el = document.createElement("div"); el.className = "tab enter"; el._note = n;
+        drawer.appendChild(el); tabEls.set(n.id, el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("enter")));
+      }
+      el.style.setProperty("--c", CATS[n.cat].c);
+      el.style.top = y + "px";
+      el.style.height = (TAB_H * Math.max(.6, squeeze)) + "px";
+      el.title = firstLine(n);
+      if (prev !== n.cat) el.dataset.label = CATS[n.cat].name + " · " + counts[n.cat];
+      else delete el.dataset.label;
+      tabY.set(n.id, y + TAB_H * Math.max(.6, squeeze) / 2);
+      seen.add(n.id);
+      prev = n.cat;
+      y += (TAB_H + TAB_GAP) * squeeze;
+    }
+    for (const [id, el] of tabEls) if (!seen.has(id)) { el.remove(); tabEls.delete(id); }
+  }
+  const firstLine = n => (n.text.split("\n")[0] || "").slice(0, 30);
+  const clampY = y => clamp(y, HH + 10, H - HH - 10);
+
+  function dock(n) {
+    if (n.pin) { n.pin = null; renderPin(n); }
+    endEdit(n);
+    n.mode = "dock"; n.dockedAt = Date.now();
+    renderTabs();
+    n.t = { x: W + 60, y: tabY.get(n.id) || H / 2, a: 0, s: 0.5 };
+    n.liftT = 0.4;
+  }
+  function peek(n) {
+    if (n.mode !== "rest" && n.mode !== "retract" && n.mode !== "peek") return;
+    if (n.el.classList.contains("hidden")) {
+      n.el.classList.remove("hidden");
+      n.x = W + 110; n.y = clampY(tabY.get(n.id)); n.a = 0; n.s = 1;
+    }
+    front(n);
+    n.mode = "peek";
+    n.t = { x: W - DRAWER_W - 46, y: clampY(tabY.get(n.id)), a: -0.03, s: 1 };
+    n.liftT = 0.25;
+    tabEls.get(n.id)?.classList.add("peeking");
+    drawer.classList.add("peeking");
+  }
+  function retract(n) {
+    if (n.mode !== "peek") return;
+    n.mode = "retract";
+    n.t = { x: W + 110, y: n.y, a: 0, s: 1 };
+    n.liftT = 0;
+    tabEls.get(n.id)?.classList.remove("peeking");
+    if (!notes.some(m => m.mode === "peek")) drawer.classList.remove("peeking");
+  }
+  function undock(n, drag) {
+    n.docked = false;
+    tabEls.get(n.id)?.classList.remove("peeking");
+    drawer.classList.remove("peeking");
+    n.el.classList.remove("hidden");
+    if (n.mode !== "peek") { n.x = W - 40; n.y = clampY(tabY.get(n.id)); n.a = 0; n.s = 1; }
+    front(n);
+    renderTabs();
+    if (drag) { startDrag(n); return; }
+    n.mode = "place";
+    n.t = { x: W - DRAWER_W - 250 - Math.random() * 90, y: n.y, a: (Math.random() - .5) * .12, s: 1 };
+    n.liftT = 0.6;
+  }
+  function tidy() {
+    let i = 0;
+    for (const n of notes) {
+      if (n.docked || n.pin || inDrawer(n) || n.mode === "trash") continue;
+      setTimeout(() => { if (!n.pin && !inDrawer(n) && n.mode !== "drag") dock(n); }, i++ * 55);
+    }
+  }
+
+  /* ───────── interactions ───────── */
+  let act = null;           // current gesture
+  let retractTimer = null;
+
+  function startDrag(n) {
+    endEdit(n);
+    const l = rot(P.x - n.x, P.y - n.y, -n.a);
+    n.gx = clamp(l.x / n.s, -HW + 4, HW - 4);
+    n.gy = clamp(l.y / n.s, -HH + 4, HH - 4);
+    n.a0 = n.a * 0.6;
+    n.w = 0; n.mode = "drag";
+    front(n);
+    n.el.classList.add("grabbing");
+    act = { type: "note", n };
+  }
+  function startRotate(n) {
+    const pv = rot(n.pin.u, n.pin.v, n.a);
+    n.px = n.x + pv.x; n.py = n.y + pv.y;
+    const l = rot(P.x - n.x, P.y - n.y, -n.a);
+    const ax = l.x - n.pin.u, ay = l.y - n.pin.v;
+    n.arm = Math.hypot(ax, ay); n.armA = Math.atan2(ay, ax);
+    n.w = 0; n.mode = "rotate";
+    front(n);
+    n.el.classList.add("grabbing");
+    act = { type: "rotate", n };
+  }
+  function popPin(n) {
+    flyPin(n.px, n.py, true);
+    n.pin = null; renderPin(n);
+    startDrag(n);
+  }
+  function releaseNote(n) {
+    n.el.classList.remove("grabbing");
+    if (n.mode === "rotate") { n.mode = "swing"; return; }
+    if (n.mode !== "drag") return;
+    if (overBin()) { trash(n); return; }
+    const vx = clamp(P.vx, -2600, 2600), vy = clamp(P.vy, -2600, 2600);
+    if (n.x > W - DRAWER_W - DOCK_ZONE || (vx > 900 && n.x + vx / 5.5 > W - DRAWER_W)) { dock(n); return; }
+    n.vx = vx; n.vy = vy; n.mode = "toss";
+    if (!n.text && act && act.fresh) setTimeout(() => beginEdit(n), 260);
+  }
+  function trash(n) {
+    endEdit(n);
+    const r = bin.getBoundingClientRect();
+    n.mode = "trash";
+    n.t = { x: r.left + r.width / 2, y: r.top + r.height / 2, a: n.a + 2.4, s: 0.05 };
+  }
+  function overBin() {
+    const r = bin.getBoundingClientRect();
+    return P.x > r.left - 16 && P.x < r.right + 16 && P.y > r.top - 16 && P.y < r.bottom + 16;
+  }
+
+  /* pins */
+  let floatPin = null;
+  function grabPin(x, y) {
+    floatPin = document.createElement("div");
+    floatPin.className = "pin free held";
+    document.body.appendChild(floatPin);
+    movePin(x, y);
+    act = { type: "pin" };
+  }
+  function movePin(x, y) { floatPin.style.transform = `translate(${x - 10}px,${y - 14}px) scale(1.25)`; }
+  function dropPin() {
+    floatPin.style.visibility = "hidden";
+    const hit = document.elementsFromPoint(P.x, P.y).find(e => e.classList && e.classList.contains("note"));
+    floatPin.style.visibility = "";
+    const n = hit && hit._note;
+    if (n && !inDrawer(n) && n.mode !== "trash") {
+      const l = rot(P.x - n.x, P.y - n.y, -n.a);
+      if (Math.abs(l.x) < HW - 8 && Math.abs(l.y) < HH - 8) {
+        floatPin.remove(); floatPin = null;
+        if (n.mode === "toss" || n.mode === "place") { n.mode = "rest"; n.liftT = 0; }
+        n.pin = { u: l.x / n.s, v: l.y / n.s };
+        renderPin(n); front(n);
+        n.el.querySelector(":scope > .pin").classList.add("press");
+        n.s = 0.975; draw(n); save();
+        return;
+      }
+    }
+    const fp = floatPin; floatPin = null;
+    flyPinEl(fp);
+  }
+  function flyPin(x, y, popped) {
+    const el = document.createElement("div");
+    el.className = "pin free held";
+    document.body.appendChild(el);
+    el.style.transform = `translate(${x - 10}px,${y - 10}px) scale(${popped ? 1.4 : 1.2})`;
+    requestAnimationFrame(() => flyPinEl(el));
+  }
+  function flyPinEl(el) {
+    const r = dish.getBoundingClientRect();
+    el.classList.remove("held");
+    requestAnimationFrame(() => {
+      el.style.transform = `translate(${r.left + r.width / 2 - 10}px,${r.top + r.height / 2 - 10}px) scale(.8)`;
+      el.style.opacity = "0";
+      setTimeout(() => el.remove(), 480);
+    });
+  }
+
+  /* editing */
+  function beginEdit(n) {
+    if (inDrawer(n)) return;
+    n.el.classList.add("editing");
+    const t = n.textEl;
+    try { t.contentEditable = "plaintext-only"; } catch { t.contentEditable = "true"; }
+    if (t.contentEditable !== "plaintext-only") t.contentEditable = "true";
+    t.focus();
+    const sel = getSelection(); sel.selectAllChildren(t); sel.collapseToEnd();
+  }
+  function endEdit(n) {
+    if (!n.el.classList.contains("editing")) return;
+    n.el.classList.remove("editing");
+    n.textEl.contentEditable = "false";
+    n.text = n.textEl.innerText.replace(/\n$/, "");
+    save();
+  }
+
+  /* menu */
+  function openMenu(n, x, y) {
+    menu.innerHTML = "";
+    for (const c of ORDER) {
+      const d = document.createElement("div");
+      d.className = "dot" + (c === n.cat ? " on" : "");
+      d.style.setProperty("--c", CATS[c].c); d.title = CATS[c].name;
+      d.onclick = () => { n.cat = c; paint(n); closeMenu(); save(); };
+      menu.appendChild(d);
+    }
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "✕"; del.title = "扔掉";
+    del.onclick = () => { closeMenu(); trash(n); };
+    menu.appendChild(del);
+    menu.classList.add("show");
+    menu.style.left = Math.min(x, W - 180) + "px"; menu.style.top = Math.min(y, H - 50) + "px";
+  }
+  function closeMenu() { menu.classList.remove("show"); }
+
+  /* pointer routing */
+  addEventListener("pointermove", e => {
+    P.x = e.clientX; P.y = e.clientY;
+    if (!act) return;
+    if (act.type === "pin") movePin(P.x, P.y);
+    if (act.type === "pending") {
+      if (Math.hypot(P.x - act.sx, P.y - act.sy) > 5) act.onDrag();
+    }
+    if (act && act.type === "note") {
+      drawer.classList.toggle("hot", act.n.x > W - DRAWER_W - DOCK_ZONE);
+      bin.classList.toggle("hot", overBin());
+    }
+  });
+
+  addEventListener("pointerdown", e => {
+    P.x = P.px = e.clientX; P.y = P.py = e.clientY; P.vx = P.vy = P.ax = P.ay = 0;
+    if (e.button !== 0) return;
+    if (!e.target.closest("#menu")) closeMenu();
+    const t = e.target;
+
+    // a pin in the dish, or a pin on a note
+    if (t.classList.contains("pin")) {
+      const ne = t.closest(".note");
+      if (ne) { const n = ne._note; n.pin = null; renderPin(n); save(); }
+      grabPin(P.x, P.y);
+      e.preventDefault();
+      return;
+    }
+    if (t.closest(".dish")) { grabPin(P.x, P.y); e.preventDefault(); return; }
+
+    // tear a fresh sheet off a pad
+    const pad = t.closest(".pad");
+    if (pad) {
+      const cat = pad.dataset.cat;
+      const r = pad.getBoundingClientRect();
+      act = {
+        type: "pending", sx: P.x, sy: P.y,
+        onDrag: () => {
+          const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top + r.height / 2, s: 0.32, sT: 1, a: (Math.random() - .5) * .1 });
+          startDrag(n); act.fresh = true;
+        },
+        onClick: () => {
+          const n = makeNote({ cat, x: r.left + r.width / 2, y: r.top, s: 0.32, a: 0 });
+          front(n);
+          n.mode = "place";
+          n.t = { x: W * (0.35 + Math.random() * 0.25), y: H * (0.3 + Math.random() * 0.25), a: (Math.random() - .5) * .14, s: 1 };
+          n.liftT = 0.8;
+          setTimeout(() => beginEdit(n), 520);
+        },
+      };
+      e.preventDefault();
+      return;
+    }
+
+    // index tab: click to pull out, drag to pull it straight into your hand
+    const tab = t.closest(".tab");
+    if (tab) {
+      const n = tab._note;
+      act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
+      e.preventDefault();
+      return;
+    }
+
+    const ne = t.closest(".note");
+    if (ne) {
+      const n = ne._note;
+      if (n.el.classList.contains("editing") && t.closest(".text")) return;
+      if (n.mode === "peek") {
+        act = { type: "pending", sx: P.x, sy: P.y, onDrag: () => undock(n, true), onClick: () => undock(n, false) };
+        e.preventDefault();
+        return;
+      }
+      if (n.mode === "trash" || n.mode === "dock" || n.mode === "retract") return;
+      for (const m of notes) if (m !== n) endEdit(m);
+      if (n.pin) startRotate(n); else startDrag(n);
+      e.preventDefault();
+      return;
+    }
+    for (const m of notes) endEdit(m);
+  });
+
+  addEventListener("pointerup", () => {
+    if (!act) return;
+    const a = act; act = null;
+    if (a.type === "pending") a.onClick && a.onClick();
+    else if (a.type === "pin") dropPin();
+    else if (a.type === "note" || a.type === "rotate") { act = a; releaseNote(a.n); act = null; }
+    drawer.classList.remove("hot"); bin.classList.remove("hot");
+  });
+
+  addEventListener("dblclick", e => {
+    const ne = e.target.closest(".note");
+    if (ne && !ne.classList.contains("editing")) beginEdit(ne._note);
+  });
+  addEventListener("contextmenu", e => {
+    const ne = e.target.closest(".note");
+    if (!ne) return;
+    e.preventDefault();
+    openMenu(ne._note, e.clientX, e.clientY);
+  });
+
+  // hover a tab to peek, leave to tuck it back
+  drawer.addEventListener("pointerover", e => {
+    const tab = e.target.closest(".tab");
+    if (!tab || act) return;
+    clearTimeout(retractTimer);
+    for (const n of notes) if (n.mode === "peek" && n !== tab._note) retract(n);
+    peek(tab._note);
+  });
+  addEventListener("pointerover", e => {
+    if (act) return;
+    if (e.target.closest(".tab")) return;
+    const ne = e.target.closest(".note");
+    if (ne && ne._note.mode === "peek") { clearTimeout(retractTimer); return; }
+    const peeking = notes.filter(n => n.mode === "peek");
+    if (!peeking.length) return;
+    clearTimeout(retractTimer);
+    retractTimer = setTimeout(() => peeking.forEach(retract), 140);
+  });
+
+  addEventListener("keydown", e => {
+    if (document.activeElement && document.activeElement.isContentEditable) {
+      if (e.key === "Escape") notes.forEach(endEdit);
+      return;
+    }
+    if (e.key === "t" || e.key === "T") tidy();
+    if (e.key === "Escape") { closeMenu(); document.getElementById("help").classList.remove("show"); }
+  });
+  document.getElementById("tidy").onclick = tidy;
+  document.getElementById("helpBtn").onclick = () => document.getElementById("help").classList.toggle("show");
+
+  addEventListener("resize", () => {
+    W = innerWidth; H = innerHeight;
+    for (const n of notes) if (!inDrawer(n) && n.x > W - DRAWER_W - 20) { n.x = W - DRAWER_W - HW - 20; draw(n); }
+    renderTabs();
+  });
+
+  /* ───────── persistence ───────── */
+  let saveT = null;
+  function save() {
+    clearTimeout(saveT);
+    saveT = setTimeout(() => {
+      const data = notes.filter(n => n.mode !== "trash").map(n => ({
+        id: n.id, cat: n.cat, text: n.el.classList.contains("editing") ? n.textEl.innerText : n.text,
+        x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin,
+        docked: inDrawer(n), dockedAt: n.dockedAt, z: n.z,
+      }));
+      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+    }, 300);
+  }
+  function load() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(KEY)); } catch {}
+    if (!Array.isArray(data)) data = demo();
+    data.sort((a, b) => a.z - b.z).forEach(d => makeNote(d));
+    renderTabs();
+  }
+  function demo() {
+    const t = Date.now();
+    return [
+      { cat: "work", text: "周五前交稿\n先搭结构，再填内容。", x: W * .30, y: H * .30, a: -.05, pin: { u: 0, v: -76 } },
+      { cat: "idea", text: "便签收进右边缘\n像本子侧面的索引贴。", x: W * .50, y: H * .36, a: .045 },
+      { cat: "life", text: "买猫粮\n灯泡 3000K · 胶带", x: W * .40, y: H * .62, a: -.025 },
+      { cat: "work", text: "回三封邮件", docked: true, dockedAt: t - 5 },
+      { cat: "work", text: "会议纪要 10/26\n结论：先做性能基线", docked: true, dockedAt: t - 4 },
+      { cat: "life", text: "周末去植物园\n下雨就改拼图", docked: true, dockedAt: t - 3 },
+      { cat: "idea", text: "任务卡做成正反面\n正面目标，背面条件", docked: true, dockedAt: t - 2 },
+      { cat: "study", text: "《深度工作》第 3 章\n记下三个可执行的点", docked: true, dockedAt: t - 1 },
+    ].map((d, i) => Object.assign({ z: 10 + i }, d));
+  }
+
+  /* ───────── main loop ───────── */
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.033, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    trackPointer(dt);
+    for (const n of notes.slice()) if (step(n, dt)) draw(n);
+    requestAnimationFrame(frame);
+  }
+
+  load();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

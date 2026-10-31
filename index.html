@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纸桌</title>
+<style>
+  :root { --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --desk: #ece5d6; --accent: #b5523b;
+    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif; color: var(--ink);
+    background: radial-gradient(120% 90% at 12% 0%, rgba(255,250,236,.95), rgba(255,250,236,0) 60%), var(--desk);
+    display: grid; place-items: center; min-height: 100vh; }
+  main { width: min(640px, 90vw); }
+  h1 { font-family: var(--serif); font-size: 34px; margin: 0 0 6px; }
+  p { color: var(--muted); margin: 0 0 36px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  a { display: block; text-decoration: none; color: inherit; background: var(--paper); border-radius: 8px; padding: 22px 20px 26px;
+    box-shadow: 0 0 0 .5px rgba(80,60,30,.14), 0 6px 16px rgba(70,52,28,.12); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+  a:hover { transform: translateY(-4px) rotate(-.6deg); }
+  a b { font-family: var(--serif); font-size: 19px; display: block; margin-bottom: 8px; }
+  a span { color: var(--muted); font-size: 13.5px; line-height: 1.7; }
+  a:first-child { background: #f3e2a1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>纸桌</h1>
+  <p>一切都是纸。</p>
+  <div class="row">
+    <a href="sticky-desk.html"><b>便利贴</b><span>撕、晃、钉、甩进边缘变索引贴</span></a>
+    <a href="task-card.html"><b>当前任务</b><span>主战场只留一张卡：正面目标，背面条件和计时，集齐盖邮票</span></a>
+  </div>
+</main>
+</body>
+</html>
