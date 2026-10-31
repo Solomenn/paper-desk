@@ -56,4 +56,44 @@
   })();
   };
   if (document.body) start(); else addEventListener("DOMContentLoaded", start);
+
+  /* ───────── a name seal (印): your name cut in a red square, read top to bottom, right to left.
+     Click any seal to change what it says (1–4 characters). ───────── */
+  const SEALKEY = "paper-desk.seal.v1";
+  const sealName = () => { try { return (JSON.parse(localStorage.getItem(SEALKEY)) || "纸桌").slice(0, 4); } catch { return "纸桌"; } };
+  function sealSVG(name) {
+    const ch = [...(name || "纸桌")].slice(0, 4), n = ch.length;
+    const cols = n <= 2 ? 1 : 2, perCol = Math.ceil(n / cols);
+    const fs = cols === 1 ? (n === 1 ? 58 : 38) : 34, cw = 76 / cols, ch0 = 76 / perCol;
+    let t = "";
+    ch.forEach((c, i) => {
+      const col = Math.floor(i / perCol), row = i % perCol;
+      const x = 88 - cw * col - cw / 2, y = 12 + ch0 * row + ch0 / 2 + fs * .36;
+      t += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-size="${fs}">${c}</text>`;
+    });
+    return `<svg viewBox="0 0 100 100" aria-label="印：${ch.join("")}"><defs><filter id="sealInk" x="-5%" y="-5%" width="110%" height="110%">` +
+      `<feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="t"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.4 1.25" result="m"/>` +
+      `<feComposite in="SourceGraphic" in2="m" operator="in" result="c"/><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="w"/>` +
+      `<feDisplacementMap in="c" in2="w" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter></defs>` +
+      `<g filter="url(#sealInk)"><rect x="4" y="4" width="92" height="92" rx="5" fill="#b5523b"/><g fill="#f6efe6" font-family="LXGW WenKai, KaiTi, serif" font-weight="700">${t}</g>` +
+      `<rect x="9" y="9" width="82" height="82" rx="3" fill="none" stroke="#f6efe6" stroke-width="1.6" opacity=".55"/></g></svg>`;
+  }
+  function paintSeals() { document.querySelectorAll(".seal").forEach(e => { e.innerHTML = sealSVG(sealName()); e.title = "点一下改印章上的字"; }); }
+  addEventListener("click", e => {
+    const se = e.target.closest && e.target.closest(".seal"); if (!se) return;
+    e.stopPropagation(); e.preventDefault();
+    const v = prompt("印章上刻什么字？（1–4 个字）", sealName());
+    if (v && v.trim()) { try { localStorage.setItem(SEALKEY, JSON.stringify(v.trim().slice(0, 4))); } catch {} paintSeals(); }
+  }, true);
+  new MutationObserver(() => { document.querySelectorAll(".seal:empty").forEach(() => paintSeals()); }).observe(document.documentElement, { childList: true, subtree: true });
+  window.Seal = { svg: sealSVG, name: sealName, paint: paintSeals };
+
+  /* ───────── the running title in the margin (柱), set vertically, like a book's ───────── */
+  function hashira() {
+    let h = document.getElementById("hashira");
+    if (!h) { h = document.createElement("div"); h.id = "hashira"; h.setAttribute("aria-hidden", "true"); document.body.appendChild(h); }
+    h.textContent = document.documentElement.dataset.hashira || "";
+  }
+  window.setHashira = t => { document.documentElement.dataset.hashira = t; if (document.body) hashira(); };
+  if (document.body) hashira(); else addEventListener("DOMContentLoaded", hashira);
 })();

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-hashira="黑板　项目">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
+<link rel="stylesheet" href="room.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
@@ -750,6 +751,10 @@
   const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const Z = 1;
 
+  // the running title in the left margin (room.js does this on the other pages)
+  window.setHashira = t => { let h = document.getElementById("hashira"); if (!h) { h = document.createElement("div"); h.id = "hashira"; h.setAttribute("aria-hidden", "true"); document.body.appendChild(h); } h.textContent = t; };
+  setHashira(document.documentElement.dataset.hashira);
+
   /* ───────── pages: 1 项目 · 2 便签, keys or a sideways swipe ───────── */
   const PAGEKEY = "paper-desk.page.v1";
   let page = load(PAGEKEY, 0) === 1 ? 1 : 0;
@@ -761,6 +766,7 @@
     $$(".pg").forEach(b => b.classList.toggle("on", +b.dataset.p === page));
     store(PAGEKEY, page);
     dispatchEvent(new CustomEvent("deskpage", { detail: page }));
+    window.setHashira && setHashira(page === 0 ? "黑板　项目" : "软木板　便签");
   }
   window.Desk = { go, page: () => page };
   $$(".pg").forEach(b => b.addEventListener("click", () => go(+b.dataset.p)));
@@ -1842,7 +1848,7 @@
     // the paper trails the hand, then springs back flat when the hand stops or lets go
     {
       const held = n.mode === "drag", loc = held ? rot(P.ax || 0, P.ay || 0, -n.a) : { x: 0, y: 0 };
-      const tx = clamp(-loc.x * .0016, -12, 12), ty = clamp(loc.y * .0016, -12, 12);
+      const tx = clamp(-loc.x * .0011, -7, 7), ty = clamp(loc.y * .0011, -7, 7);
       n.bvx = (n.bvx || 0) + ((tx - (n.bx || 0)) * 170 - (n.bvx || 0) * 11) * dt; n.bx = (n.bx || 0) + n.bvx * dt;
       n.bvy = (n.bvy || 0) + ((ty - (n.by || 0)) * 170 - (n.bvy || 0) * 11) * dt; n.by = (n.by || 0) + n.bvy * dt;
       n.flush = false;

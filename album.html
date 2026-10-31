@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-hashira="卡册　盖过章的都在这里">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -243,7 +243,7 @@
     if (p === 0) {
       pg.classList.add("title-pg");
       const first = cards[0], last = cards[cards.length - 1];
-      pg.innerHTML = `<h1>卡册</h1><div class="sub"></div><div class="rule"></div><div class="n"></div>`;
+      pg.innerHTML = `<h1>卡册</h1><div class="sub"></div><div class="rule"></div><div class="n"></div><span class="seal" style="position:absolute;right:52px;bottom:64px;width:54px;height:54px"></span>`;
       $(".sub", pg).textContent = first ? `${fmt(first.doneAt)} — ${fmt(last.doneAt)}` : "";
       $(".n", pg).textContent = `${cards.length} 张 · 盖过章的都在这里`;
       return pg;

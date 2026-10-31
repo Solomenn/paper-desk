@@ -28,3 +28,12 @@ body, body * { font-family: var(--hand) !important; }
 /* the shadow falls over everything on the desk, as the 3D engine casts it over the book */
 .cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; mix-blend-mode: multiply; opacity: calc(.2 * var(--day, 1)); transition: opacity 1.6s ease-out; }
 @media (prefers-reduced-transparency: reduce) { .lift, .desk .fl { display: none; } }
+
+/* 禁则: no closing punctuation at the start of a line, no opening one at the end */
+body { line-break: strict; word-break: normal; hanging-punctuation: allow-end; }
+/* the running title in the margin */
+#hashira { position: fixed; left: 6px; top: 50%; transform: translateY(-50%); z-index: 2; writing-mode: vertical-rl; pointer-events: none;
+  font-size: 11px; letter-spacing: .6em; color: rgba(79, 93, 105, .6); white-space: nowrap; }
+.seal { display: inline-block; width: 46px; height: 46px; cursor: pointer; transform: rotate(-3deg); opacity: .9; transition: transform .2s; }
+.seal:hover { transform: rotate(-3deg) scale(1.06); }
+.seal svg { width: 100%; height: 100%; display: block; mix-blend-mode: multiply; }

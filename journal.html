@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-hashira="手账　每个月一本">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -352,7 +352,7 @@
     if (!P) return null;
     if (P.kind === "cover") {
       pg.classList.add("cover"); pg.style.setProperty("--bc", B.color);
-      pg.innerHTML = `<div class="plate"><div class="y">${B.y}</div><div class="m">${CN[B.m - 1]}月</div><div class="s">手 账</div></div><div class="ribbon"></div>`;
+      pg.innerHTML = `<div class="plate"><div class="y">${B.y}</div><div class="m">${CN[B.m - 1]}月</div><div class="s">手 账</div><span class="seal" style="position:absolute;right:-14px;bottom:-16px;width:44px;height:44px"></span></div><div class="ribbon"></div>`;
       return pg;
     }
     if (P.kind === "end") { pg.classList.add("end"); return pg; }
@@ -605,7 +605,7 @@
     sp.style.cssText = b.spine.style.cssText + `;position:absolute;left:0;top:0;width:${D}px;height:${H}px;transform:translateZ(${Wc / 2}px);transition:none`;
     const cv = face("cv pg cover", Wc, H, `translateX(${(D - Wc) / 2}px) rotateY(90deg) translateZ(${D / 2}px)`, `--bc:${b.color}`);
     const inner = el("div"); inner.style.cssText = `position:absolute;left:0;top:0;width:${PW}px;height:${PH}px;transform:scale(${H / PH});transform-origin:0 0`;
-    inner.innerHTML = `<div class="plate"><div class="y">${b.y}</div><div class="m">${CN[b.m - 1]}月</div><div class="s">手 账</div></div>`;
+    inner.innerHTML = `<div class="plate"><div class="y">${b.y}</div><div class="m">${CN[b.m - 1]}月</div><div class="s">手 账</div><span class="seal" style="position:absolute;right:-14px;bottom:-16px;width:44px;height:44px"></span></div>`;
     cv.appendChild(inner);
     const bk = face("bk", Wc, H, `translateX(${(D - Wc) / 2}px) rotateY(-90deg) translateZ(${D / 2}px)`, `background:${b.color}`);
     const tp = face("tp", D, Wc, `translateY(${-Wc / 2}px) rotateX(90deg)`, `--bc:${b.color}`);
