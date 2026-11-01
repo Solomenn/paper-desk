@@ -36,7 +36,7 @@ try {
   const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
   if (debugInfo) gpuName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
 } catch (_) {}
-const integratedGpu = /intel|uhd graphics|iris|mali|adreno|swiftshader|llvmpipe|basic render/i.test(gpuName);
+const integratedGpu = /intel.*(?:uhd|iris|hd graphics)|mali|adreno|swiftshader|llvmpipe|basic render/i.test(gpuName);
 const lowPower = hardwareLowPower || integratedGpu;
 // Keep the scene at or below native resolution. The adaptive scaler can lower it further.
 renderer.setPixelRatio(lowPower ? .72 : Math.min(devicePixelRatio, .9));
@@ -281,6 +281,7 @@ composer.addPass(new OutputPass());
 let qualityLevel = lowPower ? 0 : 1; // 0: light, 1: balanced, 2: full
 let averageFrameMs = 0, sampleFrames = 0, sampleTotal = 0;
 let slowWindows = 0, fastWindows = 0;
+let maxStableQuality = lowPower ? 0 : 2;
 function applyQuality(level) {
   qualityLevel = Math.max(0, Math.min(2, level));
   if (ssr) ssr.enabled = qualityLevel >= 2;
@@ -310,10 +311,11 @@ function sampleFrameTime(dt) {
     fastWindows = 0;
   }
   if (slowWindows >= 1 && qualityLevel > 0) {
+    maxStableQuality = Math.min(maxStableQuality, qualityLevel - 1);
     applyQuality(qualityLevel - 1);
     slowWindows = 0;
     fastWindows = 0;
-  } else if (fastWindows >= 4 && qualityLevel < 2 && !lowPower) {
+  } else if (fastWindows >= 4 && qualityLevel < maxStableQuality && !lowPower) {
     applyQuality(qualityLevel + 1);
     slowWindows = 0;
     fastWindows = 0;
@@ -450,6 +452,7 @@ window.__carPerf = () => ({
   gpu: gpuName || "unreported",
   lowPower,
   qualityLevel,
+  maxStableQuality,
   pixelRatio: renderer.getPixelRatio(),
   averageFrameMs,
   averageFps: averageFrameMs ? +(1000 / averageFrameMs).toFixed(1) : null,
