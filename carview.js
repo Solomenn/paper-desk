@@ -68,7 +68,7 @@
   const [low, l] = mk(), [glow, gl] = mk();
   let A = null, ready = false;
   Promise.all(["far", "ground", "pine0", "pine1", "pine2", "pine3", "trunk0"].map(n => img(`assets/view/${n}.png`)))
-    .then(([far, ground, ...sp]) => { A = { far, ground, pines: [sp[0], sp[2], sp[3]].filter(Boolean), trunk: sp[4] }; ready = !!far; });   // pine1 (mostly a bare pole) left out
+    .then(([far, ground, ...sp]) => { A = { far, ground, pines: [sp[2], sp[3]].filter(Boolean), trunk: sp[4] }; ready = !!far; });   // only the whole pines (the others are half hidden behind a trunk)
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const LOOP = 1600, pines = [], trunks = [];
   for (let x = 0; x < LOOP;) { pines.push({ x, i: Math.floor(rnd() * 4), k: .8 + rnd() * .35, f: rnd() < .5, d: rnd() }); x += 34 + rnd() * 120; }
@@ -105,8 +105,8 @@
       const k = p.k * (.9 + p.d * .2), b = base + 4 + p.d * 6, w = im.width * S * k;
       sprite(im, x, b, k, p.f);
       // where it stands: a soft bank of snow over the cut, and a faint blue shadow
-      l.fillStyle = "rgba(150,165,195,.25)"; l.beginPath(); l.ellipse(x + w * .5, b + 1, w * .55, 2.2, 0, 0, 7); l.fill();
-      l.fillStyle = "rgba(246,249,253,.95)"; l.beginPath(); l.ellipse(x + w * .5, b - .5, w * .42, 2.4, 0, 0, 7); l.fill(); }
+      const sh = l.createRadialGradient(x + w * .5, b, 0, x + w * .5, b, w * .5); sh.addColorStop(0, "rgba(150,165,195,.28)"); sh.addColorStop(1, "rgba(150,165,195,0)");
+      l.save(); l.translate(0, b); l.scale(1, .12); l.translate(0, -b); l.fillStyle = sh; l.fillRect(x - w * .1, b - w * .5, w * 1.2, w); l.restore(); }
     // the near trunks: fast, big, out of focus
     if (A.trunk) { const tx = (run * 300) % LOOP; l.filter = `blur(${(1.2 + vel * 1.4).toFixed(2)}px)`;
       for (const t of trunks) { let x = t.x - tx; if (x < -60) x += LOOP; if (x > LW + 10) continue; sprite(A.trunk, x, LH + 10, t.k, t.f); }
