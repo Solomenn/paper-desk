@@ -4,7 +4,7 @@
                            assets/ride/glass.png    white where the window glass is
                            assets/ride/wood.png     the wood behind the glass as one strip that tiles sideways"""
 import os, numpy as np
-from PIL import Image, ImageFilter, ImageDraw
+from PIL import Image, ImageFilter
 from scipy import ndimage
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); O = os.path.join(R, "assets", "ride"); os.makedirs(O, exist_ok=True)
 src = Image.open(os.path.join(R, "tools", "src", "cabin-illustration.png")).convert("RGB")
@@ -20,30 +20,22 @@ r, g, b = cab[..., 0], cab[..., 1], cab[..., 2]
 glass = win & (b >= r - 4) & (.3 * r + .59 * g + .11 * b > 70)
 lb, n = ndimage.label(glass); sz = ndimage.sum(glass, lb, range(1, n + 1))
 glass = np.isin(lb, np.argsort(sz)[-2:] + 1); glass = ndimage.binary_fill_holes(glass)
-original_glass = glass.copy()
-# Keep the original glass selection and its snowy edge. Only exclude the
-# foreground pixels that share the snow's blue palette after hole filling.
-foreground = Image.new("1", (W, H)); guard = ImageDraw.Draw(foreground)
-guard.polygon([(250, 181), (296, 197), (288, 245), (231, 225)], fill=1)  # laptop lid
-guard.polygon([(88, 69), (94, 69), (94, 108), (95, 165), (97, 206), (88, 206)], fill=1)  # left curtain hem
-guard.polygon([(373, 69), (379, 69), (379, 206), (368, 206), (371, 154), (372, 106)], fill=1)  # right curtain hem
-glass &= ~np.asarray(foreground, dtype=bool)
-# The pale snow/frost at the glass perimeter belongs to the fixed foreground.
-# Retain only near-white original pixels within eight native pixels of the edge;
-# retaining the whole window instead would leave stationary trees as ghosts.
-edge_distance = ndimage.distance_transform_cdt(glass, metric="chessboard")
-frost = glass & (edge_distance <= 8) & (r >= 215) & (g >= 225) & (b >= 230) & ((b - r) <= 32)
-moving_glass = glass & ~frost
-# The right curtain's pale blue fringe is scenery, not fixed frost. Keep the
-# warm fabric protected while allowing the outdoor scene up to its real edge.
 yy, xx = np.mgrid[0:H, 0:W]
-right_hem = (xx >= 360) & (xx <= 375) & (yy >= 69) & (yy <= 205)
-moving_glass[right_hem] = (original_glass & (b >= r))[right_hem]
-Image.fromarray((moving_glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
+def inside(poly):   # pixels inside a convex polygon (clockwise)
+    m = np.ones((H, W), bool)
+    for (x0, y0), (x1, y1) in zip(poly, poly[1:] + poly[:1]): m &= (x1 - x0) * (yy + .5 - y0) - (y1 - y0) * (xx + .5 - x0) >= 0
+    return m
+glass &= ~inside([(250, 180), (297, 196), (291, 232), (235, 232)])     # the laptop lid stands in front of the right pane
+# the frost and snow heaped along the glass edges stay painted: near the frame, bright white pixels keep the picture
+l = .3 * r + .59 * g + .11 * b
+d = ndimage.distance_transform_edt(glass)
+frost = np.clip((l - 205) / 30, 0, 1) * np.clip(1 - (d - 1) / 9, 0, 1)
+alpha = np.where(glass, 1 - frost, 0)
+alpha = np.round(alpha * 4) / 4                                        # a few steps, so the edge stays pixel-crisp
+Image.fromarray((alpha * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
 Image.fromarray(cab.astype(np.uint8)).save(f"{O}/cabin.png", optimize=True)
 
 # where the sun lands inside (table, paper, seat tops): those pixels get a cool shaded twin
-l = .3 * r + .59 * g + .11 * b; yy, xx = np.mgrid[0:H, 0:W]
 screen = (xx > 235) & (xx < 300) & (yy > 175) & (yy < 255) & (b > r)          # the laptop's own glow isn't sun
 sun = ~glass & (l > 150) & (yy > 196) & (r - b < 22) & ~screen                   # below the sill: table, paper, seat tops
 sun = ndimage.binary_opening(sun, iterations=1)

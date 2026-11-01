@@ -132,18 +132,9 @@ function pixelRide(host) {
   const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); x.imageSmoothingEnabled = false; return [c, x]; };
   const [low, g] = mk(), [oc, o] = mk(), [sc, sg] = mk();
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
-  let cab, shade, glass, wood, shadowWood, ready = false;
-  Promise.all(["cabin", "shade", "glass", "wood"].map(n => img(`assets/ride/${n}.png${n === "glass" ? "?curtain-edge-2" : ""}`)))
+  let cab, shade, glass, wood, ready = false;
+  Promise.all(["cabin", "shade", "glass", "wood"].map(n => img(`assets/ride/${n}.png`)))
     .then(([a, b, c, d]) => { cab = a; shade = b; wood = d;
-      shadowWood = document.createElement("canvas"); shadowWood.width = d.width; shadowWood.height = d.height;
-      const sx = shadowWood.getContext("2d"); sx.drawImage(d, 0, 0);
-      const pixels = sx.getImageData(0, 0, d.width, d.height);
-      for (let i = 0; i < pixels.data.length; i += 4) {
-        const l = pixels.data[i] * .3 + pixels.data[i + 1] * .59 + pixels.data[i + 2] * .11;
-        pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = 0;
-        pixels.data[i + 3] = Math.round(Math.max(0, Math.min(.65, (180 - l) / 65)) * 255);
-      }
-      sx.putImageData(pixels, 0, 0);
       const [m, mx] = mk(); mx.drawImage(c, 0, 0); const id = mx.getImageData(0, 0, W, H);   // glass.png (white = glass) → alpha mask
       for (let i = 0; i < id.data.length; i += 4) { id.data[i + 3] = id.data[i]; } mx.putImageData(id, 0, 0); glass = m;
       ready = true; host.classList.add("ride2d"); });
@@ -158,8 +149,16 @@ function pixelRide(host) {
     tx_.fillStyle = "#e9eef8"; for (let y = 20 + rnd() * 60; y < H; y += 50 + rnd() * 70) tx_.fillRect(x, Math.floor(y), Math.ceil(w * .5), 1);   // snow on the bark
     x += w + 60 + Math.floor(rnd() * 160); }
 
-  // Keep the snow's random sequence stable when replacing the old four trees.
-  for (let i = 0; i < 4; i++) rnd();
+  // tree shadows: leaning trunks and needle clumps, hard-edged (thresholded), tiling every SW px
+  const SW = 720, pat = document.createElement("canvas"); pat.width = SW; pat.height = H;
+  { const p = pat.getContext("2d"); p.fillStyle = "#000"; const slant = .45;
+    for (let i = 0; i < 5; i++) { const x0 = i / 5 * SW + rnd() * 40, w = 8 + rnd() * 14;
+      for (const dx of [0, SW, -SW]) {
+        p.beginPath(); p.moveTo(x0 + dx, 0); p.lineTo(x0 + dx + w, 0); p.lineTo(x0 + dx + w + H * slant, H); p.lineTo(x0 + dx + H * slant, H); p.fill();
+        let sd = i * 31 + 7; const q = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+        for (let b = 0; b < 16; b++) { const y = q() * H, xx = x0 + dx + y * slant + (q() - .5) * 110;
+          p.beginPath(); p.ellipse(xx, y, 5 + q() * 14, 3 + q() * 7, slant + (q() - .5), 0, 7); p.fill(); } } }
+    const id = p.getImageData(0, 0, SW, H); for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] > 110 ? 255 : 0; p.putImageData(id, 0, 0); }
 
   // steam off the coffee: a few pale pixels rising, curling, thinning out
   const CUP = { x: 316, y: 262 }, puffs = []; let puffT = 0;
@@ -194,19 +193,9 @@ function pixelRide(host) {
         o.fillRect(Math.round(f.x), Math.round(f.y), f.z > .8 ? 2 : 1, 1); }
       o.globalCompositeOperation = "destination-in"; o.drawImage(glass, 0, 0);
       g.globalAlpha = a; g.drawImage(oc, 0, 0); g.globalAlpha = 1;
-      // Use the actual outdoor tree texture at the same phase as the view.
-      // Project down onto the tabletop: the high canopy reaches toward the
-      // viewer, while the trunk bases land near the back edge of the table.
-      sg.setTransform(1, 0, 0, 1, 0, 0);
+      // tree shadows over the sunlit table and seats
       sg.globalCompositeOperation = "source-over"; sg.clearRect(0, 0, W, H);
-      sg.save(); sg.beginPath();
-      sg.moveTo(160, 228); sg.lineTo(275, 223); sg.lineTo(369, 300); sg.lineTo(113, 300); sg.closePath(); sg.clip();
-      sg.setTransform(.85, 0, -.4, -.65, 40, 310); sg.filter = "blur(1px)";
-      for (let x = fx - wood.width; x < W + wood.width; x += wood.width) sg.drawImage(shadowWood, x, 0);
-      // Near trunks use the same world offset as their visible counterparts.
-      sg.globalAlpha = .55;
-      for (let x = tx - TW; x < W + TW; x += TW) sg.drawImage(trunks, x, -WY);
-      sg.restore(); sg.globalAlpha = 1; sg.filter = "none";
+      const px = -Math.floor((run * 270) % SW); for (let x = px; x < W; x += SW) sg.drawImage(pat, x, 0);
       sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0);
       g.globalAlpha = a; g.drawImage(sc, 0, 0); g.globalAlpha = 1;
     }
