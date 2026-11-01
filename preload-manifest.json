@@ -1,0 +1,132 @@
+{
+  "version": 5,
+  "pages": [
+    "index.html",
+    "focus.html",
+    "album.html",
+    "journal.html",
+    "receipt.html",
+    "desk.html"
+  ],
+  "fontPages": [
+    "index.html",
+    "focus.html",
+    "album.html",
+    "journal.html",
+    "receipt.html"
+  ],
+  "fontFaces": [
+    "400 16px \"LXGW WenKai\"",
+    "700 16px \"LXGW WenKai\"",
+    "400 16px \"Noto Serif SC\"",
+    "500 16px \"Noto Serif SC\"",
+    "700 16px \"Noto Serif SC\"",
+    "400 16px \"Noto Sans SC\"",
+    "500 16px \"Noto Sans SC\""
+  ],
+  "decodeImages": [
+    "assets/car.webp",
+    "assets/snow-day.webp",
+    "assets/tyl/mechanical-head.webp",
+    "assets/tyl/snow-background.webp",
+    "assets/3d/snow_forest.jpg"
+  ],
+  "groups": [
+    {
+      "name": "site-shell",
+      "concurrency": 4,
+      "paths": [
+        "index.html",
+        "focus.html",
+        "album.html",
+        "journal.html",
+        "receipt.html",
+        "desk.html",
+        "room.css",
+        "fonts.css",
+        "room.js",
+        "sound.js",
+        "ticket.js",
+        "preload.js",
+        "carriage.js",
+        "vendor/three.bundle.min.js",
+        "sounds/manifest.json"
+      ]
+    },
+    {
+      "name": "images",
+      "concurrency": 3,
+      "paths": [
+        "assets/car.webp",
+        "assets/snow-day.webp",
+        "assets/tyl/mechanical-head.webp",
+        "assets/tyl/snow-background.webp"
+      ]
+    },
+    {
+      "name": "audio",
+      "concurrency": 4,
+      "paths": [
+        "sounds/cardUnfold-1.m4a",
+        "sounds/cardUnfold-2.m4a",
+        "sounds/copy-1.m4a",
+        "sounds/coverClose-1.m4a",
+        "sounds/coverClose-2.m4a",
+        "sounds/coverClose-3.m4a",
+        "sounds/coverOpen-1.m4a",
+        "sounds/coverOpen-2.m4a",
+        "sounds/drop-1.m4a",
+        "sounds/drop-2.m4a",
+        "sounds/drop-3.m4a",
+        "sounds/impact-card-hard-1.m4a",
+        "sounds/impact-card-hard-2.m4a",
+        "sounds/impact-card-hard-3.m4a",
+        "sounds/impact-card-medium-1.m4a",
+        "sounds/impact-card-medium-2.m4a",
+        "sounds/impact-card-medium-3.m4a",
+        "sounds/impact-card-soft-1.m4a",
+        "sounds/impact-card-soft-2.m4a",
+        "sounds/impact-card-soft-3.m4a",
+        "sounds/impact-paper-hard-1.m4a",
+        "sounds/impact-paper-hard-2.m4a",
+        "sounds/impact-paper-hard-3.m4a",
+        "sounds/impact-paper-medium-1.m4a",
+        "sounds/impact-paper-medium-2.m4a",
+        "sounds/impact-paper-medium-3.m4a",
+        "sounds/impact-paper-soft-1.m4a",
+        "sounds/impact-paper-soft-2.m4a",
+        "sounds/impact-paper-soft-3.m4a",
+        "sounds/pageLand-1.m4a",
+        "sounds/pageLand-2.m4a",
+        "sounds/pageLand-3.m4a",
+        "sounds/pageLand-4.m4a",
+        "sounds/pageTurn-1.m4a",
+        "sounds/pageTurn-2.m4a",
+        "sounds/pageTurn-3.m4a",
+        "sounds/paperRustle-1.m4a",
+        "sounds/paperRustle-2.m4a",
+        "sounds/paperRustle-3.m4a",
+        "sounds/pickUp-1.m4a",
+        "sounds/pickUp-2.m4a",
+        "sounds/pickUp-3.m4a",
+        "sounds/shake-1.m4a",
+        "sounds/shake-2.m4a",
+        "sounds/shake-3.m4a",
+        "sounds/tab-1.m4a",
+        "sounds/tab-2.m4a",
+        "sounds/tab-3.m4a",
+        "sounds/zip-1.m4a",
+        "sounds/zip-2.m4a"
+      ]
+    },
+    {
+      "name": "3d-scene",
+      "concurrency": 2,
+      "paths": [
+        "assets/3d/cabin.glb",
+        "assets/3d/sky_day.hdr",
+        "assets/3d/snow_forest.jpg"
+      ]
+    }
+  ]
+}

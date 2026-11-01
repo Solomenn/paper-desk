@@ -22,8 +22,15 @@
   function buffer(file) {
     if (buffers.has(file)) return Promise.resolve(buffers.get(file));
     if (loading.has(file)) return loading.get(file);
-    const p = fetch(base + file).then(r => r.arrayBuffer()).then(a => new Promise((res, rej) => ctx().decodeAudioData(a, res, rej)))
-      .then(b => { buffers.set(file, b); return b; }).catch(() => null);
+    const p = fetch(base + file).then(r => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.arrayBuffer();
+    }).then(a => new Promise((res, rej) => {
+      const c = ctx();
+      if (!c) return rej(new Error("AudioContext unavailable"));
+      c.decodeAudioData(a, res, rej);
+    })).then(b => { buffers.set(file, b); return b; })
+      .catch(() => null).finally(() => loading.delete(file));
     loading.set(file, p); return p;
   }
   // takes for a kind: "drop", "pageTurn" … or "impact.paper.soft"
@@ -117,5 +124,28 @@
     if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable) || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "m" || e.key === "M") { ctx(); if (e.shiftKey) setAmb(!amb); else setOn(!on); }
   });
-  window.Sound = { play, impact, setOn, setAmb, get on() { return on; }, get amb() { return amb; } };
+  async function preloadSounds() {
+    const m = await manifest;
+    if (!m) return 0;
+
+    const files = new Set();
+    Object.values(m.sounds || {}).forEach(list => {
+      if (Array.isArray(list)) list.forEach(take => take && take.file && files.add(take.file));
+    });
+    Object.values(m.impacts || {}).forEach(materials => {
+      Object.values(materials || {}).forEach(list => {
+        if (Array.isArray(list)) list.forEach(take => take && take.file && files.add(take.file));
+      });
+    });
+
+    const queue = Array.from(files);
+    let cursor = 0;
+    async function worker() {
+      while (cursor < queue.length) await buffer(queue[cursor++]);
+    }
+    await Promise.all(Array.from({length:Math.min(4, queue.length)}, worker));
+    return buffers.size;
+  }
+
+  window.Sound = { play, impact, setOn, setAmb, preload: preloadSounds, get on() { return on; }, get amb() { return amb; } };
 })();
