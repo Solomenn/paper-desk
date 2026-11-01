@@ -4,7 +4,7 @@
                            assets/ride/glass.png    white where the window glass is
                            assets/ride/wood.png     the wood behind the glass as one strip that tiles sideways"""
 import os, numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 from scipy import ndimage
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); O = os.path.join(R, "assets", "ride"); os.makedirs(O, exist_ok=True)
 src = Image.open(os.path.join(R, "tools", "src", "cabin-illustration.png")).convert("RGB")
@@ -20,6 +20,13 @@ r, g, b = cab[..., 0], cab[..., 1], cab[..., 2]
 glass = win & (b >= r - 4) & (.3 * r + .59 * g + .11 * b > 70)
 lb, n = ndimage.label(glass); sz = ndimage.sum(glass, lb, range(1, n + 1))
 glass = np.isin(lb, np.argsort(sz)[-2:] + 1); glass = ndimage.binary_fill_holes(glass)
+# Keep the original glass selection and its snowy edge. Only exclude the
+# foreground pixels that share the snow's blue palette after hole filling.
+foreground = Image.new("1", (W, H)); guard = ImageDraw.Draw(foreground)
+guard.polygon([(250, 181), (296, 197), (288, 245), (231, 225)], fill=1)  # laptop lid
+guard.polygon([(88, 69), (94, 69), (94, 108), (95, 165), (97, 206), (88, 206)], fill=1)  # left curtain hem
+guard.polygon([(373, 69), (379, 69), (379, 206), (368, 206), (371, 154), (372, 106)], fill=1)  # right curtain hem
+glass &= ~np.asarray(foreground, dtype=bool)
 Image.fromarray((glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
 Image.fromarray(cab.astype(np.uint8)).save(f"{O}/cabin.png", optimize=True)
 
