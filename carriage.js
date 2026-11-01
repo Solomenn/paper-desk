@@ -26,7 +26,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
   html:not([data-theme="day"]) #car3dLit { mix-blend-mode: multiply;
     background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 238, 205, .95), rgba(255, 246, 228, 0) 100%),
-                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fff8ec 20%, #f0cf9c 42%, #d4a878 68%, #a8805e 100%); }
+                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fff8ec 20%, #f6dcb0 42%, #e2bc8c 68%, #c49a72 100%); }
   html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
     background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 170, 90, .12), transparent 70%),
                 radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
@@ -322,7 +322,7 @@ function applyTheme() {
   ceilLight.intensity = n ? .5 : .5; ceilLight.color.set(n ? 0xffb068 : 0xf2f6ff);
   winLight.intensity = n ? .9 : 14; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
   sconce.intensity = n ? 5 : 0; sconce.color.set(0xffbe80); wallLamp.intensity = n ? 4.8 : 0; M.globe.emissiveIntensity = n ? 1.9 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
-  renderer.toneMappingExposure = n ? .95 : 1.45;
+  renderer.toneMappingExposure = n ? 1.12 : 1.45;
   trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xe8f0f8)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
   bloom.strength = n ? .5 : .32; bloom.threshold = n ? .82 : .9; bloom.radius = n ? .7 : .85;
   placeLit();

@@ -654,8 +654,13 @@ addEventListener("DOMContentLoaded", () => {
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .8  0 0 0 0 .9  0 0 0 0 .8  0 0 0 .22 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 220px 220px,
       radial-gradient(40% 50% at 22% 62%, rgba(0, 0, 0, .10), transparent 70%), radial-gradient(35% 45% at 78% 30%, rgba(255, 255, 255, .03), transparent 70%),
       linear-gradient(180deg, #2f4a37, #29422f 70%, #243a2a); }
-  html:not([data-theme="day"]) #chalk .inner::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-      background: radial-gradient(70% 95% at 50% -4%, rgba(255, 222, 160, .22), rgba(255, 210, 140, .08) 55%, transparent 85%); }
+  html:not([data-theme="day"]) #chalk .inner { background-color: #163d27; background-image:
+      radial-gradient(40% 50% at 22% 62%, rgba(0, 0, 0, .12), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .8  0 0 0 0 .9  0 0 0 0 .8  0 0 0 .22 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, #24573a, #1c4a30 60%, #163d27); background-size: auto, 220px 220px, auto; }
+  /* the picture lamp's pool: brighter and warmer at the top, falling away down the baize */
+  html:not([data-theme="day"]) #chalk .inner::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; mix-blend-mode: soft-light;
+      background: radial-gradient(75% 85% at 50% -6%, rgba(255, 214, 140, .95), rgba(255, 200, 120, .45) 45%, rgba(255, 190, 110, 0) 85%); }
   html[data-theme="day"] #chalk .inner { background:
       radial-gradient(70% 70% at 90% 40%, rgba(235, 245, 255, .12), transparent 75%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .8  0 0 0 0 .9  0 0 0 0 .8  0 0 0 .22 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 220px 220px, linear-gradient(180deg, #34503f, #2b4535 70%, #263d30); }
