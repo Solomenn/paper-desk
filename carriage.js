@@ -21,7 +21,8 @@ const host = document.getElementById("car");
 document.head.insertAdjacentHTML("beforeend", `<style>
   #car3d { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.2s ease; }
   #car.car3d #car3d { opacity: 1; }
-  #car.car3d #line, #car.car3d #hud, #car.car3d #book, #car.car3d #sndT, #car.car3d #off { z-index: 2; }
+  #car #line, #car #hud, #car #sndT, #car #off { z-index: 2; }
+  #car.car3d #line, #car.car3d #hud, #car.car3d #sndT, #car.car3d #off { z-index: 2; }
 </style>`);
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; host.prepend(canvas);
 const hardwareLowPower = !!window.__CAR_LOW ||
