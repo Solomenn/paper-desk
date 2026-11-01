@@ -656,7 +656,7 @@ function scheduleCarriageWarmup() {
   if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 4000 });
   else setTimeout(start, 900);
 }
-document.addEventListener("carriageStart", loadCarriage, { once: true });
+window.addEventListener("carriageStart", loadCarriage, { once: true });
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) scheduleCarriageWarmup();
 });
