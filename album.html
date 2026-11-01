@@ -54,6 +54,7 @@
   /* the turning leaf carries plain copies of its pages: no blur, no paper grain, no shadows-on-shadows (each strip holds a full copy) */
   .turner *, .turner *::before, .turner *::after { filter: none !important; transition: none !important; animation: none !important; }
   .turner .tk-shadow, .turner .pg::before { display: none !important; }
+  .turner .tkt svg rect[filter] { display: none; }   /* the tickets' paper grain is an SVG noise filter: left off the copies on the turning leaf only */
   .shade { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
   #cast { position: absolute; top: 0; height: 100%; pointer-events: none; z-index: 9; display: none; }
 
