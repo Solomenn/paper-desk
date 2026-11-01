@@ -60,24 +60,19 @@
   addEventListener("resize", layout);
 
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
-  /* the view, after HD-2D: the snowy wood of the carriage picture split by depth (a depth model on the picture's own window)
-     into a misty far wood, the snow, single pines and a near trunk; each at its own distance, speed and focus, drawn small
-     and shown big (fine, crisp pixels), with mist between the layers and a soft glow over the bright snow */
-  const LH = 200, LW = Math.round(LH * 1.74), S = LH / 400;          // the source panes are 400 px tall
-  const mk = () => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; return [c, x]; };
+  /* the view, after HD-2D, from real snow (Poly Haven, CC0): a snowfield with forest on the far hills (a whole 360° panorama,
+     so it never ends) sliding slowly; birch groves cut out of a second photo by depth, passing nearer; single birches right by
+     the line, fast and out of focus; snow in the air. Drawn small and shown big, in fine crisp pixels, a soft glow on the snow. */
+  const LH = 270, LW = Math.round(LH * 1.74);
+  const mk = () => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; };
   const [low, l] = mk(), [glow, gl] = mk();
   let A = null, ready = false;
-  Promise.all(["far", "ground", "pine0", "pine1", "pine2", "pine3", "trunk0"].map(n => img(`assets/view/${n}.png`)))
-    .then(([far, ground, ...sp]) => { A = { far, ground, pines: [sp[2], sp[3]].filter(Boolean), trunk: sp[4] }; ready = !!far; });   // only the whole pines (the others are half hidden behind a trunk)
+  Promise.all(["field", "birch"].map(n => img(`assets/view/${n}.webp`))).then(([field, birch]) => { A = { field, grove: null, birch }; ready = !!field; });   // the cut-out grove read as a pasted box: left out
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const LOOP = 1600, pines = [], trunks = [];
-  for (let x = 0; x < LOOP;) { pines.push({ x, i: Math.floor(rnd() * 4), k: .8 + rnd() * .35, f: rnd() < .5, d: rnd() }); x += 34 + rnd() * 120; }
-  for (let x = 120; x < LOOP;) { trunks.push({ x, k: 1.5 + rnd() * .5, f: rnd() < .5 }); x += 260 + rnd() * 420; }
-  const flakes = Array.from({ length: 70 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
-  function sprite(im, x, base, k, flip) {
-    const w = im.width * S * k, h = im.height * S * k;
-    l.save(); l.translate(Math.round(x), Math.round(base - h)); if (flip) { l.translate(w, 0); l.scale(-1, 1); } l.drawImage(im, 0, 0, w, h); l.restore();
-  }
+  const LOOP = 3000, groves = [], birches = [];
+  for (let x = 200; x < LOOP;) { groves.push({ x, k: .8 + rnd() * .3, f: rnd() < .5 }); x += 700 + rnd() * 900; }
+  for (let x = 80; x < LOOP;) { birches.push({ x, k: 1 + rnd() * .3, f: rnd() < .5 }); x += 180 + rnd() * 520; }
+  const flakes = Array.from({ length: 90 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
   let last = performance.now(), vel = 0, run = 0, sized = false;
   function frame(now) {
     requestAnimationFrame(frame);
@@ -86,41 +81,33 @@
     if (!sized) { layout(); sized = true; }
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2); run += dt * vel;
-    const base = LH * .74;
     l.filter = "none"; l.globalAlpha = 1;
-    // far wood: slow, a touch out of focus, in the mist
-    const fw = A.far.width * S, fh = A.far.height * S; l.filter = "blur(.7px)";
-    for (let x = -((run * 7) % fw); x < LW; x += fw) l.drawImage(A.far, x, 0, fw, fh);
-    l.filter = "none";
-    // the snow: fast, smeared by the speed
-    const gw = A.ground.width * S, gh = LH - LH * .66, gy = LH * .66;
-    l.filter = vel > .05 ? `blur(${(vel * 1.6).toFixed(2)}px)` : "none";
-    for (let x = -((run * 70) % gw); x < LW; x += gw) l.drawImage(A.ground, x, gy, gw, gh);
-    l.filter = "none";
-    let fog = l.createLinearGradient(0, 0, 0, LH); fog.addColorStop(0, "rgba(232,238,246,.22)"); fog.addColorStop(.7, "rgba(232,238,246,.1)"); fog.addColorStop(1, "rgba(232,238,246,0)");
+    // the field and the far hills: the panorama's horizon sits at 47% of its height; put it a little below the middle
+    const fh = LH * 1.15, fw = A.field.width * fh / A.field.height, hz = LH * .5, fy = hz - fh * .467;
+    for (let x = -((run * 12) % fw); x < LW; x += fw) l.drawImage(A.field, x, fy, fw, fh);
+    // the near snow rushes: the lower field smeared by the speed
+    if (vel > .05) { l.save(); l.beginPath(); l.rect(0, hz + LH * .1, LW, LH); l.clip(); l.globalAlpha = Math.min(.8, vel);
+      l.filter = `blur(${(vel * 3).toFixed(1)}px)`; const fx2 = -((run * 140) % fw); for (let x = fx2; x < LW; x += fw) l.drawImage(A.field, x, fy, fw, fh); l.restore(); l.filter = "none"; l.globalAlpha = 1; }
+    // birch groves passing nearer, standing on the field
+    if (A.grove) { const gh = LH * .36, gw = A.grove.width * gh / A.grove.height, gx = (run * 55) % LOOP;
+      for (const g0 of groves) { let x = g0.x - gx; if (x < -gw) x += LOOP; if (x > LW) continue; const h = gh * g0.k, w = gw * g0.k;
+        l.save(); l.translate(x, hz + LH * .12 - h); if (g0.f) { l.translate(w, 0); l.scale(-1, 1); } l.drawImage(A.grove, 0, 0, w, h); l.restore(); } }
+    // a breath of mist over the distance
+    const fog = l.createLinearGradient(0, 0, 0, LH); fog.addColorStop(0, "rgba(226,234,244,.10)"); fog.addColorStop(.5, "rgba(226,234,244,.18)"); fog.addColorStop(1, "rgba(226,234,244,0)");
     l.fillStyle = fog; l.fillRect(0, 0, LW, LH);
-    // the pines: in focus, the speed of the line
-    const px = (run * 46) % LOOP;
-    for (const p of pines) { let x = p.x - px; if (x < -80) x += LOOP; if (x > LW + 10) continue; const im = A.pines[p.i % A.pines.length];
-      const k = p.k * (.9 + p.d * .2), b = base + 4 + p.d * 6, w = im.width * S * k;
-      sprite(im, x, b, k, p.f);
-      // where it stands: a soft bank of snow over the cut, and a faint blue shadow
-      const sh = l.createRadialGradient(x + w * .5, b, 0, x + w * .5, b, w * .5); sh.addColorStop(0, "rgba(150,165,195,.28)"); sh.addColorStop(1, "rgba(150,165,195,0)");
-      l.save(); l.translate(0, b); l.scale(1, .12); l.translate(0, -b); l.fillStyle = sh; l.fillRect(x - w * .1, b - w * .5, w * 1.2, w); l.restore(); }
-    // the near trunks: fast, big, out of focus
-    if (A.trunk) { const tx = (run * 300) % LOOP; l.filter = `blur(${(1.2 + vel * 1.4).toFixed(2)}px)`;
-      for (const t of trunks) { let x = t.x - tx; if (x < -60) x += LOOP; if (x > LW + 10) continue; sprite(A.trunk, x, LH + 10, t.k, t.f); }
+    // single birches right by the line: fast, big, out of focus
+    if (A.birch) { const bh = LH * 1.3, bw = A.birch.width * bh / A.birch.height * 1.6, bx = (run * 420) % LOOP; l.filter = `blur(${(1.4 + vel * 2).toFixed(1)}px)`;
+      for (const b of birches) { let x = b.x - bx; if (x < -bw * 2) x += LOOP; if (x > LW) continue; const h = bh * b.k, w = bw * b.k;
+        l.save(); l.translate(x, LH + LH * .1 - h); if (b.f) { l.translate(w, 0); l.scale(-1, 1); } l.drawImage(A.birch, 0, 0, w, h); l.restore(); }
       l.filter = "none"; }
-    // snow in the air: small crisp flakes far, big soft ones close
-    for (const f of flakes) { f.x -= dt * (6 + vel * (40 + f.z * 260)); f.y += dt * (6 + f.z * 10); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
-      const r = f.z > .85 ? 1.6 : f.z > .5 ? .8 : .5; l.globalAlpha = f.z > .85 ? .55 : .9; l.fillStyle = "#fbfdff";
-      if (f.z > .85) { l.beginPath(); l.arc(f.x, f.y, r, 0, 7); l.fill(); } else l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); }
+    // snow in the air
+    for (const f of flakes) { f.x -= dt * (6 + vel * (40 + f.z * 300)); f.y += dt * (8 + f.z * 12); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
+      l.fillStyle = "#fbfdff"; if (f.z > .85) { l.globalAlpha = .5; l.beginPath(); l.arc(f.x, f.y, 2, 0, 7); l.fill(); } else { l.globalAlpha = .9; l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); } }
     l.globalAlpha = 1;
-    // up to the window: crisp pixels, then the glow of the bright snow laid over softly
     g.imageSmoothingEnabled = false; g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.filter = "none";
     g.drawImage(low, 0, 0, cv.width, cv.height);
-    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(5px) brightness(1.15)"; gl.drawImage(low, 0, 0); gl.filter = "none";
-    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .16; g.drawImage(glow, 0, 0, cv.width, cv.height);
+    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(6px) brightness(1.1)"; gl.drawImage(low, 0, 0); gl.filter = "none";
+    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .14; g.drawImage(glow, 0, 0, cv.width, cv.height);
     g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
   }
   requestAnimationFrame(frame);
