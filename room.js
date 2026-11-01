@@ -29,20 +29,27 @@
       const b = document.createElement("button"); b.className = "themeBtn"; b.type = "button"; b.onclick = () => Theme.toggle(); document.body.appendChild(b);
     }
     setTheme(root.dataset.theme); root.classList.remove("theming");
-    // by day one clear patch of morning sun falls on what you're working on: the element marked [data-sunlit]
-    // (on the desk, the 在做 column). No window frame in it — there is no window on screen to explain one.
+    // by day the morning sun comes through a window up and to the right and falls on what you're working on (the element
+    // marked [data-sunlit] — on the desk, the 在做 column): a patch in the window's shape, leaning with the light, with the
+    // window's bars (two panes across, three down) as clean shadow lines in it. Nothing else — the board stays quiet.
     let sun = null;
     function paint() {
       if (sun) { sun.remove(); sun = null; }
       const t = document.querySelector("[data-sunlit]"); if (!t) return;
       const r = t.getBoundingClientRect(), W = innerWidth, H = innerHeight;
       if (r.width < 40 || r.right < 0 || r.left > W) return;
-      const p = 6, sk = 0;                                       // square to the column, so the light stays on it
-      const pts = [[r.left - p + sk, r.top - p], [r.right + p + sk, r.top - p], [r.right + p, r.bottom + p], [r.left - p, r.bottom + p]]
-        .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+      const top = r.top + 8, bot = r.bottom - 8, h = bot - top, lean = Math.min(h * .14, r.width * .22);
+      const x0 = r.left + 10, x1 = r.right - 10 - lean;                 // leaning right as it goes up, kept inside the column
+      const at = (u, v) => [x0 + (x1 - x0) * u + lean * (1 - v), top + h * v];   // u across, v down
+      const poly = pts => pts.map(([u, v]) => at(u, v).map(n => n.toFixed(1)).join(",")).join(" ");
+      const bw = Math.max(6, Math.min(12, r.width * .018));             // the bars' shadow width
+      const bars = [[.5, 0, .5, 1], [0, 1 / 3, 1, 1 / 3], [0, 2 / 3, 1, 2 / 3]].map(([u0, v0, u1, v1]) => {
+        const [ax, ay] = at(u0, v0), [bx, by] = at(u1, v1); return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#000" stroke-width="${bw}"/>`; }).join("");
       document.body.insertAdjacentHTML("beforeend", `<svg class="cast sun" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-        <filter id="room-sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${W < 900 ? 8 : 14}"/></filter></defs>
-        <polygon points="${pts}" fill="#fffefa" filter="url(#room-sb)"/></svg>`);
+        <filter id="room-sb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${W < 900 ? 2.5 : 4}"/></filter>
+        <mask id="room-sm" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+          <polygon points="${poly([[0, 0], [1, 0], [1, 1], [0, 1]])}" fill="#fff"/>${bars}</mask></defs>
+        <g filter="url(#room-sb)"><rect width="${W}" height="${H}" fill="#fffefa" mask="url(#room-sm)"/></g></svg>`);
       sun = document.body.lastElementChild;
     }
     window.roomRelight = paint;
