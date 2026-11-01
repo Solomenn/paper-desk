@@ -26,17 +26,32 @@
   let manifest = null;
   let scheduled = false;
   let warming = false;
+  let registration = null;
   let registrationPromise = null;
+  let lastWorker = null;
+
+  function requestWorkerPreload() {
+    const worker = navigator.serviceWorker.controller || (registration && registration.active);
+    if (!worker || worker.state !== "activated" || worker === lastWorker) return false;
+    lastWorker = worker;
+    status.state = "loading";
+    worker.postMessage({type:"PRELOAD_SITE"});
+    return true;
+  }
 
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     registrationPromise = navigator.serviceWorker.register(new URL("sw.js", BASE).href, {
       scope:BASE.pathname,
       updateViaCache:"none"
-    }).then(() => navigator.serviceWorker.ready).catch(error => {
+    }).then(() => navigator.serviceWorker.ready).then(ready => {
+      registration = ready;
+      return ready;
+    }).catch(error => {
       console.warn("[paper-desk] Service Worker registration failed:", error);
       return null;
     });
 
+    navigator.serviceWorker.addEventListener("controllerchange", requestWorkerPreload);
     navigator.serviceWorker.addEventListener("message", event => {
       const data = event.data;
       if (!data || data.type !== "SITE_PRELOAD_DONE") return;
@@ -186,11 +201,8 @@
       }, 0);
 
       if (registrationPromise) {
-        const registration = await registrationPromise;
-        const worker = registration && registration.active;
-        if (!worker) throw new Error("Service Worker is not active");
-        status.state = "loading";
-        worker.postMessage({type:"PRELOAD_SITE"});
+        registration = await registrationPromise;
+        if (!requestWorkerPreload()) throw new Error("Service Worker is not active");
         return;
       }
 
