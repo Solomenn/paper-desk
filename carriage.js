@@ -98,6 +98,27 @@ new THREE.TextureLoader().load(A + "snow_forest.jpg", t => {
   forest.scale.y = H; forest.position.set(0.3235, eye + H * .667 - H / 2, PANO_Z);   // the band's horizon at eye height
   forest.material.uniforms.map.value = t; forest.visible = true;
 });
+// the near trees: trunks just outside the glass, flashing past with motion blur — this is what makes it a train.
+// Drawn in the shader: one trunk (or a gap) per cell, its edges softened by how far it moves in a frame.
+const near = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .5), new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+  uniforms: { pos: { value: 0 }, blur: { value: 0 }, night: { value: 0 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+  fragmentShader: `uniform float pos; uniform float blur; uniform float night; varying vec2 vUv;
+    float h(float n){ return fract(sin(n * 127.1) * 43758.5453); }
+    void main(){
+      float u = vUv.x * 12. + pos, cell = floor(u), f = fract(u);
+      float on = step(h(cell), .72), cx = .25 + .5 * h(cell + 7.), w = .16 + .3 * h(cell + 13.);
+      float d = abs(f - cx) - w * .5, e = .015 + blur;
+      float m = on * (1. - smoothstep(-e, e, d));
+      float shade = .75 + .25 * smoothstep(-w * .5, w * .5, f - cx);            // lit on one side
+      float snow = step(.82, h(floor(vUv.y * 40.) + cell * 3.1)) * (1. - smoothstep(0., .05, f - cx + w * .5));   // snow caught on the bark
+      vec3 col = mix(vec3(.06, .05, .04) * shade, vec3(.92, .95, 1.), snow * .8);
+      col *= mix(1., .2, night);
+      gl_FragColor = vec4(col, m);
+      #include <colorspace_fragment>
+    }` }));
+near.position.set(.3235, .07, -.22); scene.add(near);
+
 const SN = 900, sp = new Float32Array(SN * 3), ss = new Float32Array(SN);
 for (let i = 0; i < SN; i++) { sp[i * 3] = Math.random(); sp[i * 3 + 1] = Math.random(); sp[i * 3 + 2] = Math.random(); ss[i] = Math.random(); }
 const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3)); sg.setAttribute("seed", new THREE.BufferAttribute(ss, 1));
@@ -137,7 +158,7 @@ function applyTheme() {
   bulbLight.intensity = n ? bulbLight.userData.base * 1.4 : bulbLight.userData.base;
   suns.forEach(s => s.intensity = n ? 0 : 1.2);
   if (bulb) { bulb.emissive = new THREE.Color(0xffd9a0); bulb.emissiveIntensity = n ? 4 : 1.5; }
-  forest.material.uniforms.night.value = n ? 1 : 0;
+  forest.material.uniforms.night.value = n ? 1 : 0; near.material.uniforms.night.value = n ? 1 : 0;
   snow.material.uniforms.bright.value = n ? .5 : 1;
   renderer.toneMappingExposure = n ? .6 : .65;
   grade.uniforms.sat.value = n ? .9 : .82;
@@ -164,8 +185,10 @@ function frame(now) {
   const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
   const goal = Math.min(1, (+window.trainSpeed || 0) * 6);   // under way → full speed; only the last of the braking slows it
   vel += (goal - vel) * Math.min(1, dt * 1.6); const v = vel, m = reduce ? 0 : v;
-  run += dt * v;
-  forest.material.uniforms.off.value = (run * .045) % 1;   // the forest slides back past the window, as fast as the train runs
+  if (!window.__carHold) run += dt * v;
+  forest.material.uniforms.off.value = (run * .12) % 1;          // the far wood drifts back…
+  near.material.uniforms.pos.value = run * 8.;            // …the near trunks flash past
+  near.material.uniforms.blur.value = v * .07;   // about one frame of travel
   snow.material.uniforms.t.value = t; snow.material.uniforms.run.value = run;
   if (t > nextJolt) { jolt = v; nextJolt = t + 5 + Math.random() * 7; }
   jolt *= .93;
@@ -178,5 +201,5 @@ function frame(now) {
 }
 // test hooks: render on demand without a GPU
 window.__carDbg = () => ({ cam: camera.position.toArray() });
-if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded && forest.visible }; }
+if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded && forest.visible, setRun: r => { run = r; vel = 1; } }; }
 else requestAnimationFrame(frame);
