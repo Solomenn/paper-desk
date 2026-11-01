@@ -12,10 +12,13 @@
   const cv = document.createElement("canvas"); cv.id = "ride";
   cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block";
   host.prepend(cv);
-  const g = cv.getContext("2d");
+  const PX = !/[?&]real\b/.test(location.search);   // pixel art by default; ?real for the photographic still
+  const out = cv.getContext("2d"), low = document.createElement("canvas"); low.width = 400; low.height = 250;
+  const g = PX ? low.getContext("2d") : out;
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
   let sun, shade, wood, ready = false;
-  Promise.all([img("assets/cabin-day.webp"), img("assets/cabin-day-shade.webp"), img("assets/3d/snow_forest.jpg")])
+  Promise.all(PX ? [img("assets/cabin-day-px.png"), img("assets/cabin-day-shade-px.png"), img("assets/snow-forest-px.png")]
+               : [img("assets/cabin-day.webp"), img("assets/cabin-day-shade.webp"), img("assets/3d/snow_forest.jpg")])
     .then(([a, b, c]) => { sun = a; shade = b; wood = c; ready = true; host.classList.add("ride2d"); });
 
   // near trunks just outside the glass: soft-edged dark stems with snow on the bark, tiling every TW px
@@ -63,7 +66,8 @@
   let W = 0, H = 0, k = 1, ox = 0, oy = 0;
   function fit() {
     const d = Math.min(devicePixelRatio || 1, 1.5); W = cv.width = Math.round(cv.clientWidth * d); H = cv.height = Math.round(cv.clientHeight * d);
-    sc.width = W; sc.height = H; k = Math.max(W / IW, H / IH); ox = (W - IW * k) / 2; oy = (H - IH * k) / 2;
+    if (PX) { sc.width = 400; sc.height = 250; k = .25; ox = oy = 0; [g, sg].forEach(c => c.imageSmoothingEnabled = false); }
+    else { sc.width = W; sc.height = H; k = Math.max(W / IW, H / IH); ox = (W - IW * k) / 2; oy = (H - IH * k) / 2; }
   }
   addEventListener("resize", fit);
 
@@ -84,7 +88,7 @@
     for (let x = tx; x < IW; x += TW) g.drawImage(trunks, x, 0);
     g.fillStyle = "#f2f6fa";
     for (const f of flakes) { f.x -= dt * (60 + vel * 900) * f.z; f.y += dt * 40 * f.z; if (f.x < 0) f.x += IW; if (f.y > IH) f.y -= IH;
-      g.globalAlpha = .5 + f.z * .4; g.beginPath(); g.arc(f.x, f.y, 1.2 + f.z * 2.2, 0, 7); g.fill(); }
+      g.globalAlpha = .5 + f.z * .4; if (PX) g.fillRect(Math.round(f.x / 4) * 4, Math.round(f.y / 4) * 4, f.z > .75 ? 8 : 4, f.z > .75 ? 8 : 4); else { g.beginPath(); g.arc(f.x, f.y, 1.2 + f.z * 2.2, 0, 7); g.fill(); } }
     g.globalAlpha = 1;
     // the compartment in sun
     g.drawImage(sun, 0, 0, IW, IH);
@@ -95,6 +99,10 @@
     sg.globalAlpha = 1; sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0, IW, IH);
     g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(sc, 0, 0);
     g.setTransform(k, 0, 0, k, ox, oy); steam(dt, now / 1000);
+    if (PX) {   // up to the screen, crisp: the whole picture fills the window like the still did
+      const s = Math.max(W / 400, H / 250); out.setTransform(1, 0, 0, 1, 0, 0); out.imageSmoothingEnabled = false;
+      out.drawImage(low, (W - 400 * s) / 2, (H - 250 * s) / 2, 400 * s, 250 * s);
+    }
   }
   requestAnimationFrame(frame);
   window.__ride = { set: r => { run = r; vel = 1; }, ready: () => ready };
