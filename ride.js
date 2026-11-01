@@ -183,11 +183,11 @@ function pixelRide(host) {
     vel += (goal - vel) * Math.min(1, dt * 1.6); run += dt * vel;
     g.globalCompositeOperation = "source-over"; g.drawImage(cab, 0, 0);
     // the moving view, faded in with the speed so the picture at rest is untouched
-    // Keep the illustration's snow on the glass visible while the wood moves.
-    const a = Math.min(.35, vel * 1.05);
+    const a = Math.min(1, vel * 3);
     if (a > .01) {
       o.globalCompositeOperation = "source-over"; o.clearRect(0, 0, W, H);
       const fx = -Math.floor((run * 78) % wood.width); for (let x = fx; x < W; x += wood.width) o.drawImage(wood, x, WY);
+      const tx = -Math.floor((run * 780) % TW); for (let x = tx; x < W; x += TW) o.drawImage(trunks, x, 0);
       o.fillStyle = "#f7f9fd";
       for (const f of flakes) { f.x -= dt * (12 + vel * 260) * f.z; f.y += dt * 10 * f.z; if (f.x < 0) f.x += W; if (f.y > WY + WH) f.y -= WH;
         o.fillRect(Math.round(f.x), Math.round(f.y), f.z > .8 ? 2 : 1, 1); }
