@@ -32,7 +32,10 @@
     registrationPromise = navigator.serviceWorker.register(new URL("sw.js", BASE).href, {
       scope:BASE.pathname,
       updateViaCache:"none"
-    }).then(() => navigator.serviceWorker.ready);
+    }).then(() => navigator.serviceWorker.ready).catch(error => {
+      console.warn("[paper-desk] Service Worker registration failed:", error);
+      return null;
+    });
 
     navigator.serviceWorker.addEventListener("message", event => {
       const data = event.data;
@@ -184,7 +187,7 @@
 
       if (registrationPromise) {
         const registration = await registrationPromise;
-        const worker = registration.active;
+        const worker = registration && registration.active;
         if (!worker) throw new Error("Service Worker is not active");
         status.state = "loading";
         worker.postMessage({type:"PRELOAD_SITE"});
@@ -227,6 +230,7 @@
       return;
     }
 
+    if (status.state === "partial") status.warmed = false;
     scheduled = true;
     const start = () => {
       scheduled = false;
@@ -245,7 +249,7 @@
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
-    if (status.state === "downloaded" || status.state === "partial") warmAfterDownload();
+    if (status.state === "downloaded") warmAfterDownload();
     else schedule();
   });
 
