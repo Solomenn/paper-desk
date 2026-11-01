@@ -2,9 +2,10 @@
    Downloads continue in the service worker even if the user changes pages. */
 "use strict";
 
-const CACHE_NAME = "paper-desk-carriage-v3";
+const CACHE_NAME = "paper-desk-carriage-v4";
 const CACHE_PREFIX = "paper-desk-carriage-";
 const ASSET_PATHS = [
+  "assets/snow-day.webp",
   "carriage.js",
   "vendor/three.bundle.min.js",
   "assets/3d/cabin.glb",
