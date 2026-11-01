@@ -33,3 +33,12 @@ On the table in the ride still: **"PC DELL G5 5590" by CONTxE** (<https://sketch
 - Fusion Pixel Font 12px Proportional SC by TakWolf — SIL Open Font License 1.1 (assets/fonts/fusion-pixel-12-sc.woff2, subset to GB2312 + ASCII). Used for the words on the 雪国线 ride.
 
 - "4920 Dumbleton Hall" by ThomasBeerens on Sketchfab — CC BY-NC 4.0 (https://sketchfab.com/3d-models/21d15cc8adde4fd6b138dfd46727c2ff). Repainted deep blue for the 雪国线, textures resized, compressed (assets/3d/loco-4920.glb). Non-commercial use only.
+
+The window in `focus.html` (`carview.js`, `assets/cabin.webp`) is cut from a reference photograph supplied by the
+site's author; whatever rights exist in that photograph stay with its owner. Changed: the watermark removed, the
+wall extended sideways to 16:9, the glass punched out so the footage below plays through the opening.
+
+The footage outside the window (`assets/train/`) comes from Pexels, free for commercial use, attribution not required:
+lake — Zheltenko Oleksandr (<https://www.pexels.com/video/12769872/>), forest — Mike Bird
+(<https://www.pexels.com/video/9175018/>), valley — Bárbara Villardo (<https://www.pexels.com/video/16580206/>),
+river — Yura Forrat (<https://www.pexels.com/video/29626546/>). Re-encoded to 1600×900 H.264 for the web, no other changes.
