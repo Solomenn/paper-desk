@@ -83,8 +83,8 @@
   html[data-theme="day"] .foot { background: #c3ccd6e8; } html[data-theme="day"] .controls { background: #c9d2dc40; }
   html[data-theme="day"] .beam { opacity: calc(var(--light) * 1.6); mix-blend-mode: screen; filter: blur(12px); }
   html[data-theme="day"] .beam::before { background: radial-gradient(ellipse at 50% 100%, #ffffff 0, #fffdf6ee 22%, #fff8eaa0 50%, #ffffff30 68%, transparent 80%); }
-  html[data-theme="day"] .beam::after { content: ""; position: absolute; left: 50%; bottom: -26px; width: 90px; height: 90px; transform: translateX(-50%); border-radius: 50%;
-    background: radial-gradient(circle, #ffffff 0, #ffffffcc 12%, #e8f4ff55 40%, transparent 70%); }
+  html[data-theme="day"] .beam::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 150px; height: 70px; transform: translate(-50%, 35%); border-radius: 50%;
+    background: radial-gradient(closest-side, #ffffff 0, #ffffff 14%, #fffaf0bb 32%, #e6f2ff44 62%, transparent 100%); }
   html[data-theme="day"] .controls label > span { color: #6c715f; } html[data-theme="day"] .controls { background: #00000008; }
   html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
   html[data-theme="day"] .foot { background: #bfc9d4e8; color: #4f5a66; } html[data-theme="day"] .foot .q { color: #4f5444; }
@@ -189,6 +189,10 @@
   #loco { visibility: hidden; }
   #head { position: absolute; left: var(--hx, 30%); top: -29px; width: 126px; height: 98px; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 4px 3px #0008); }
   #steam { display: none; }
+  #flare { position: absolute; left: var(--hx, 30%); top: -34px; width: 0; height: 0; pointer-events: none; display: none; }
+  html[data-theme="day"] #flare { display: block; }
+  #flare::before { content: ""; position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #fff 35%, #ffffff00 70%); box-shadow: 0 0 18px 6px #ffffffcc, 0 0 40px 14px #e8f4ff88; }
+  #flare::after { content: ""; position: absolute; left: -60px; top: -1px; width: 120px; height: 2px; background: linear-gradient(90deg, transparent, #ffffffdd, transparent); filter: blur(.6px); }
 </style>
 </head>
 <body>
@@ -211,7 +215,7 @@
         <input id="free" maxlength="40" placeholder="这一程，专注什么？" spellcheck="false" autocomplete="off">
         <div id="tasks"></div>
       </div>
-      <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
+      <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""><i id="flare"></i></div>
       <div class="controls">
         <label><span>LIGHT <output id="lightO">柔光</output></span><input id="light" type="range" min="15" max="100" value="70"></label>
         <label><span>SPREAD <output id="spreadO">72°</output></span><input id="spread" type="range" min="30" max="100" value="72"></label>
@@ -372,7 +376,7 @@
     $("#rod").setAttribute("d", `M${(110 + ox).toFixed(1)} ${(86 + oy).toFixed(1)}H${(142 + ox).toFixed(1)}`);
     LOCO.style.left = loco.x + "px";
     // the beam leaves from the headlamp
-    const lampX = loco.x, lampY = $(".mechanism").offsetTop - 22; $("#head").style.left = loco.x + "px";
+    const lampX = loco.x, lampY = $(".mechanism").offsetTop - 22; $("#head").style.left = $("#flare").style.left = loco.x + "px";
     BD.style.setProperty("--lx", lampX + "px"); BD.style.setProperty("--bh", lampY + "px");
     if ((idle -= dt) < 0) { idle = 2.5 + Math.random() * 3; if (!loco.leave) puff(1, false); }
     // steam
