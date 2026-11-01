@@ -23,7 +23,7 @@ html body::before { display: none !important; }
 
 /* ───────── the wall: boards, grain, and the light on them ───────── */
 .desk { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; background: #2b2119; transition: background 1.2s; }
-html[data-theme="day"] .desk { background: #e7e3db; }
+html[data-theme="day"] .desk { background: #e9e8e4; }   /* day = the train's morning: neutral, cool, clear */
 .desk > i { position: absolute; inset: 0; transition: opacity 1.2s; }
 .desk .boards { background:
   repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 1px, rgba(255,240,220,.05) 1px 2px, transparent 2px 128px),
@@ -36,13 +36,13 @@ html[data-theme="day"] .desk .boards { background:
 html[data-theme="day"] .desk .grain { opacity: .35; mix-blend-mode: multiply; }
 /* the lamp: a warm pool from above the desk */
 .desk .lamp { background: radial-gradient(62% 58% at 50% 6%, rgba(255, 207, 134, .26), rgba(255, 207, 134, .08) 45%, transparent 72%); }
-html[data-theme="day"] .desk .lamp { opacity: .25; }
+html[data-theme="day"] .desk .lamp { opacity: 0; }
 /* the stove, down in the left corner: it breathes */
 .desk .stove { background: radial-gradient(46% 52% at 0% 100%, rgba(217, 120, 63, .38), rgba(217, 120, 63, .1) 50%, transparent 75%); animation: ember 5.2s ease-in-out infinite; }
-html[data-theme="day"] .desk .stove { opacity: .3; }
+html[data-theme="day"] .desk .stove { opacity: 0; }
 /* the window, off to the right: cold — moonlight and snow at night, a broad patch of snow light by day */
 .desk .win { background: linear-gradient(270deg, rgba(150, 175, 215, .14), transparent 38%); }
-html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 20%, rgba(255, 255, 255, .85), rgba(244, 248, 252, .4) 45%, transparent 75%); }
+html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 15%, rgba(255, 255, 255, .8), rgba(240, 245, 252, .35) 45%, transparent 75%); }
 .desk .tooth { opacity: .07; mix-blend-mode: multiply; background-size: 240px;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>"); }
 @keyframes ember { 0%, 100% { opacity: 1; } 18% { opacity: .86; } 33% { opacity: .97; } 51% { opacity: .82; } 70% { opacity: .95; } 84% { opacity: .88; } }
@@ -52,11 +52,13 @@ html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 
 .cast { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30000; pointer-events: none; transition: opacity 1.2s; }
 .cast.shade { mix-blend-mode: multiply; background: radial-gradient(85% 80% at 50% 28%, #fff6ea 0%, #f0e2cc 42%, #b9a38a 82%, #8f7a64 100%); opacity: .82; }
 .cast.glow { mix-blend-mode: screen; background: radial-gradient(40% 45% at 0% 100%, rgba(217, 120, 63, .16), transparent 70%); animation: ember 5.2s ease-in-out infinite; }
-html[data-theme="day"] .cast.shade { background: radial-gradient(120% 110% at 92% 8%, transparent 40%, rgba(190, 200, 212, .6) 100%); opacity: .7; }
+html[data-theme="day"] .cast.shade { background: radial-gradient(120% 110% at 92% 8%, transparent 42%, rgba(172, 188, 214, .62) 100%); opacity: .75; }   /* the shade is sky-blue, not grey */
 html[data-theme="day"] .cast.glow { opacity: 0; }
-/* day: the window bars, soft, laid across the desk */
+/* day: the morning sun through the window — a clear patch of white light with the frame's shadow in it, as on the train's table */
 .cast.bars { mix-blend-mode: multiply; opacity: 0; }
-html[data-theme="day"] .cast.bars { opacity: .16; }
+html[data-theme="day"] .cast.bars { opacity: .2; }
+.cast.sun { mix-blend-mode: soft-light; opacity: 0; }
+html[data-theme="day"] .cast.sun { opacity: .55; }
 @media (prefers-reduced-motion: reduce) { .desk .stove, .cast.glow { animation: none; } }
 
 /* ───────── the day / night switch: a little brass knob, bottom right ───────── */
