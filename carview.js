@@ -70,7 +70,7 @@
   const [low, l] = mk(), [glow, gl] = mk();
   let A = null, ready = false;
   Promise.all(["bg", "mid", "near"].map(n => img(`assets/view/${n}.webp`))).then(([bg, mid, near]) => { A = { bg, mid, near }; ready = !!bg; });
-  const VF = 6, VB = 150;                                            // far and nearest ground speed, low-res px per second at full speed
+  const VF = 14, VB = 420;                                            // far and nearest ground speed, low-res px per second at full speed
   const speedAt = y => y <= HZ ? VF : VF + (y - HZ) / (BH - HZ) * (VB - VF);
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const flakes = Array.from({ length: 90 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
