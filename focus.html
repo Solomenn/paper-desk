@@ -768,7 +768,7 @@
       window.trainSpeed = speed / CRUISE;   // carriage.js: how fast the forest goes by
       if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
       if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
-      scene(dt, now / 1000);
+      if (!$("#car").classList.contains("car3dDone")) scene(dt, now / 1000);   // the 2D window only while the 3D carriage is not showing
       updateLine();
     }
     requestAnimationFrame(frame);

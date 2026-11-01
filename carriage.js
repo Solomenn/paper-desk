@@ -26,7 +26,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 </style>`);
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; host.prepend(canvas);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75));
+renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.25));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.LinearToneMapping;   // as Sketchfab
 renderer.shadowMap.enabled = !window.__CAR_LOW || !!window.__CAR_SHADOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -156,13 +156,14 @@ addEventListener("resize", layout);
 /* ───────── the loop: the forest goes by, the carriage sways ───────── */
 const lean = { x: 0, y: 0, tx: 0, ty: 0 };
 addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
-let t0 = performance.now(), last = t0, run = 0, jolt = 0, nextJolt = 4, shown = false, loaded = false;
+let t0 = performance.now(), last = t0, run = 0, vel = 0, jolt = 0, nextJolt = 4, shown = false, loaded = false;
 THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
 function frame(now) {
   requestAnimationFrame(frame);
   if (!host.classList.contains("on") && shown && !window.__car) { last = now; return; }   // nothing to draw while the ride view is closed
   const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
-  const v = Math.max(0, Math.min(1, +window.trainSpeed || 0)), m = reduce ? 0 : v;
+  const goal = Math.min(1, (+window.trainSpeed || 0) * 6);   // under way → full speed; only the last of the braking slows it
+  vel += (goal - vel) * Math.min(1, dt * 1.6); const v = vel, m = reduce ? 0 : v;
   run += dt * v;
   forest.material.uniforms.off.value = (run * .045) % 1;   // the forest slides back past the window, as fast as the train runs
   snow.material.uniforms.t.value = t; snow.material.uniforms.run.value = run;
