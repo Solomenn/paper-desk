@@ -77,6 +77,20 @@
   .go { border: 0; border-radius: 7px; padding: 11px 22px; font: 15px var(--hand); letter-spacing: .3em; color: #293128; background: #d2d6bd; cursor: pointer; transition: background .2s; }
   .go:hover { background: #e5e7d4; }
   /* the ticket, once you set off: it comes up out of the night and is punched */
+  /* the ride dial: a fine ruler you drag (with a flick it coasts), one tick a station; it settles on a ride length with a heavier click */
+  #board input#ride, .controls #rideO { display: none; }   /* the dial's own numbers say it */
+  html[data-theme="day"] .controls label > span { margin: 0; }
+  #dial { position: relative; height: 46px; overflow: hidden; cursor: grab; touch-action: none; outline: none;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+  #dial:active { cursor: grabbing; }
+  #dial .dt { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
+  #dial .dt i { position: absolute; top: 6px; width: 1px; height: 9px; background: rgba(28, 35, 43, .28); }
+  #dial .dt i.f { height: 5px; top: 8px; background: rgba(28, 35, 43, .16); }
+  #dial .dt i.m { height: 17px; top: 2px; width: 1.5px; background: rgba(28, 35, 43, .55); }
+  #dial .dt b { position: absolute; top: 25px; transform: translateX(-50%); font: 400 11px var(--sans); color: #5d6873; letter-spacing: .04em; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
+  #dial .dt b.on { color: #1c232b; font-weight: 500; }
+  #dial .needle { position: absolute; left: 50%; top: 0; width: 2px; height: 22px; margin-left: -1px; border-radius: 1px; background: #2f4f73; box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
+  #dial:focus-visible .needle { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(47, 79, 115, .35); }
   #tkStage { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; opacity: 0; transform: translateY(26px); transition: opacity .7s, transform .9s var(--ease); }
   #board.sent #tkStage { opacity: 1; transform: none; }
   html[data-theme="day"] .paper { background: linear-gradient(180deg, #e9e4d4, #e3ddcb); }
@@ -177,6 +191,8 @@
   #car #line .tr b { display: none; }
   #car #line .track { top: 13px; height: 1px; background: rgba(28, 35, 43, .16); }
   #car #line .done { top: 13px; height: 1px; background: var(--acc); }
+  #car #line .track::after { content: ""; position: absolute; left: 0; right: 0; top: -3px; height: 7px;   /* a fine tick every km */
+    background: repeating-linear-gradient(90deg, rgba(28, 35, 43, .26) 0 1px, transparent 1px calc(100% / var(--km, 10))); }
   #car #line .st { top: 10px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #f6f8f9; box-shadow: inset 0 0 0 1px rgba(28, 35, 43, .35); }
   #car #line .st.past { background: var(--acc); box-shadow: none; }
   #car #line .st i { top: 18px; font: 400 12px/1.4 var(--sans); letter-spacing: .1em; color: var(--mute2); text-shadow: none; }
@@ -234,14 +250,14 @@
       <canvas id="steam"></canvas>
       <div class="writing">
         <span id="mirror"></span>
-        <input id="free" maxlength="40" placeholder="这一程，专注什么？" spellcheck="false" autocomplete="off">
+        <input id="free" maxlength="40" spellcheck="false" autocomplete="off" aria-label="这一程，专注什么">
         <div id="tasks"></div>
       </div>
       <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
       <div class="controls">
         <label><span></span><input id="light" type="range" min="15" max="100" value="70"></label>
         <label><span></span><input id="spread" type="range" min="30" max="100" value="72"></label>
-        <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
+        <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"><div id="dial" tabindex="0" role="slider" aria-label="行程"><div class="dt"></div><i class="needle"></i></div></label>
       </div>
     </div>
     <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">上车</button></footer>
@@ -327,6 +343,7 @@
   $("#ride").addEventListener("input", e => { minutes = RIDES[+e.target.value]; put("paper-desk.trip.min", minutes); draw(); });
   lampUI();
 
+
   /* ───────── the little engine: a tank engine on a rail under the words, its headlamp lighting them ───────── */
   $("#loco").innerHTML = `<svg viewBox="0 0 200 100" aria-hidden="true"><defs>
     <linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5d4c"/><stop offset=".45" stop-color="#3b3d33"/><stop offset="1" stop-color="#202219"/></linearGradient>
@@ -387,6 +404,78 @@
       g.gain.value = .05 * v; o.connect(f).connect(g).connect(ac2.destination); o.start();
     } catch {}
   }
+  /* ───────── the ride dial: drag the ruler (it coasts if flicked), a click at every station it passes, and it settles on a
+     ride length (先坐一站, 15, 25, 45, 60, 90) with a heavier click ───────── */
+  const DIAL = $("#dial"), DT = $(".dt", DIAL), SP = 44, MAXM = 90;    // px per station (5 minutes); a fine tick every minute
+  const xOf = m => (m - 5) / KM * SP;
+  for (let m = 5; m <= MAXM; m++) { const t = document.createElement("i"); t.style.left = xOf(m) + "px"; t.className = RIDES.includes(m) ? "m" : m % KM ? "f" : ""; DT.appendChild(t); }
+  RIDES.forEach(m => { const b = document.createElement("b"); b.textContent = m === 5 ? "一站" : m; b.style.left = xOf(m) + "px"; b.dataset.m = m; DT.appendChild(b); });
+  let dpos = xOf(minutes), dvel = 0, dragging = false, lastX = 0, lastT = 0, settleTo = null, lastTick = Math.round(dpos / SP);
+  const nearest = p => RIDES.reduce((a, m) => Math.abs(xOf(m) - p) < Math.abs(xOf(a) - p) ? m : a, RIDES[0]);
+  function tickSound(heavy) {
+    try {
+      ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)(); if (!wheelsOn) return;
+      const t0 = ac2.currentTime, n = Math.floor(ac2.sampleRate * .012), b = ac2.createBuffer(1, n, ac2.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * .18));
+      const o = ac2.createBufferSource(), f = ac2.createBiquadFilter(), g = ac2.createGain(); o.buffer = b; f.type = "highpass"; f.frequency.value = heavy ? 1800 : 3200;
+      g.gain.value = heavy ? .16 : .07; o.connect(f).connect(g).connect(ac2.destination); o.start(t0);
+      if (heavy) { const s = ac2.createOscillator(), sg2 = ac2.createGain(); s.frequency.setValueAtTime(190, t0); s.frequency.exponentialRampToValueAtTime(90, t0 + .06);
+        sg2.gain.setValueAtTime(.12, t0); sg2.gain.exponentialRampToValueAtTime(.001, t0 + .08); s.connect(sg2).connect(ac2.destination); s.start(t0); s.stop(t0 + .09); }
+    } catch {}
+  }
+  function placeDial() {
+    DT.style.transform = `translateX(${(DIAL.clientWidth / 2 - dpos).toFixed(1)}px)`;
+    const k = Math.round(dpos / SP); if (k !== lastTick) { lastTick = k; if (!settleTo || Math.abs(dvel) > 40) tickSound(false); }
+    const m = nearest(dpos); DT.querySelectorAll("b").forEach(b => b.classList.toggle("on", +b.dataset.m === m));
+  }
+  function setRide(m) { if (m === minutes) return; minutes = m; put("paper-desk.trip.min", minutes); draw(); }
+  let dl = performance.now();
+  (function dialLoop(now) {
+    requestAnimationFrame(dialLoop); const dt = Math.min(.05, (now - dl) / 1000); dl = now;
+    if (dragging) return;
+    if (Math.abs(dvel) > 30) { dpos += dvel * dt; dvel *= Math.exp(-dt * 4.2); }          // coasting
+    else if (settleTo == null) { dvel = 0; settleTo = nearest(dpos); }
+    if (settleTo != null && Math.abs(dvel) <= 30) {                                        // easing into the notch
+      const goal = xOf(settleTo), d = goal - dpos; dpos += d * Math.min(1, dt * 14);
+      if (Math.abs(d) < .4) { dpos = goal; if (minutes !== settleTo) { tickSound(true); setRide(settleTo); } settleTo = null; dvel = 0; placeDial(); return; }
+    }
+    dpos = Math.max(0, Math.min(xOf(MAXM), dpos)); placeDial();
+  })(dl);
+  DIAL.addEventListener("pointerdown", e => { const b = e.target.closest("b"); if (b) { settleTo = +b.dataset.m; dvel = 0; return; }
+    dragging = true; DIAL.setPointerCapture(e.pointerId); lastX = e.clientX; lastT = performance.now(); dvel = 0; settleTo = null; });
+  DIAL.addEventListener("pointermove", e => { if (!dragging) return; const now = performance.now(), dx = e.clientX - lastX;
+    dpos = Math.max(-20, Math.min(xOf(MAXM) + 20, dpos - dx)); dvel = -dx / Math.max(.008, (now - lastT) / 1000) * .6 + dvel * .4; lastX = e.clientX; lastT = now; placeDial(); });
+  const drop = () => { if (!dragging) return; dragging = false; if (performance.now() - lastT > 80) dvel = 0; settleTo = null; };
+  DIAL.addEventListener("pointerup", drop); DIAL.addEventListener("pointercancel", drop);
+  DIAL.addEventListener("wheel", e => { e.preventDefault(); const i = RIDES.indexOf(nearest(dpos)) + (e.deltaY + e.deltaX > 0 ? 1 : -1); settleTo = RIDES[Math.max(0, Math.min(RIDES.length - 1, i))]; dvel = 0; }, { passive: false });
+  DIAL.addEventListener("keydown", e => { const s = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (!s) return; e.preventDefault();
+    const i = RIDES.indexOf(minutes) + s; settleTo = RIDES[Math.max(0, Math.min(RIDES.length - 1, i))]; dvel = 0; });
+  addEventListener("resize", placeDial);
+
+  /* ───────── picking a project: the typewriter types its name in, a clack a letter, and a little bell at the end ───────── */
+  let typing = null;
+  function keyClack() {
+    try {
+      ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)(); if (!wheelsOn) return;
+      const t0 = ac2.currentTime, n = Math.floor(ac2.sampleRate * .03), b = ac2.createBuffer(1, n, ac2.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (Math.exp(-i / (n * .08)) + .35 * Math.exp(-Math.abs(i - n * .45) / (n * .05)));   // strike + the type bar landing
+      const o = ac2.createBufferSource(), f = ac2.createBiquadFilter(), g = ac2.createGain(); o.buffer = b; f.type = "bandpass"; f.frequency.value = 2400 + Math.random() * 900; f.Q.value = 1.1;
+      g.gain.value = .12; o.connect(f).connect(g).connect(ac2.destination); o.start(t0);
+    } catch {}
+  }
+  function bell() {
+    try { if (!ac2 || !wheelsOn) return; const t0 = ac2.currentTime, o = ac2.createOscillator(), g = ac2.createGain(); o.type = "sine"; o.frequency.value = 2350;
+      g.gain.setValueAtTime(.05, t0); g.gain.exponentialRampToValueAtTime(.0008, t0 + .9); o.connect(g).connect(ac2.destination); o.start(t0); o.stop(t0 + 1); } catch {}
+  }
+  function typeIn(t) {
+    clearInterval(typing); const chars = [...t.name]; let i = 0;
+    FREE.value = ""; pick = t; tasks.forEach(x => x.el.classList.toggle("on", x === t)); FREE.focus();
+    typing = setInterval(() => {
+      if (i >= chars.length) { clearInterval(typing); typing = null; bell(); draw(); return; }
+      FREE.value += chars[i++]; FREE.setSelectionRange(FREE.value.length, FREE.value.length); aimLoco(); keyClack(); if (i % 2) puff(1, false);
+    }, 75);
+  }
+  tasks.forEach(t => { t.el.onclick = () => typeIn(t); });
   FREE.addEventListener("keydown", e => { if (e.key.length === 1 || e.key === "Backspace" || e.key === "Process") chuff(e.key === "Backspace" ? .5 : 1); });
   let idle = 0;
   function deck(dt) {
@@ -562,7 +651,7 @@
   function lineUI() {
     const k = Math.floor(kmNow() / KM);
     lineTotal = trip.open ? (k + 2) * KM : trip.minutes;
-    const L = $("#line"), n = lineTotal / KM, wide = L.clientWidth, every = Math.max(1, Math.ceil(64 / (wide / n)));
+    const L = $("#line"), n = lineTotal / KM, wide = L.clientWidth, every = Math.max(1, Math.ceil(64 / (wide / n))); L.style.setProperty("--km", lineTotal);
     L.querySelectorAll(".st").forEach(e => e.remove());
     for (let i = 0; i <= n; i++) {
       const e = document.createElement("i"); e.className = "st"; e.style.left = (i / n * 100) + "%";
@@ -604,7 +693,7 @@
   // a station goes by: its stamp
   function pass(k) {
     trip.passed = k; trip.stamps.push({ k, name: nm(k), at: Date.now() }); put(TRIP, trip);
-    bookUI(true); stampChime(); window.Sound && setTimeout(() => Sound.impact("card", .45), 120);
+    bookUI(true); tickSound(true);   // a station goes by: one firm click, like the dial's notch window.Sound && setTimeout(() => Sound.impact("card", .45), 120);
   }
 
   function finish(early) {
