@@ -668,6 +668,7 @@
   html:not([data-theme="day"]) .picLamp::after { background: #fff2cf; box-shadow: 0 2px 6px 1px rgba(255, 214, 140, .9), 0 6px 26px 6px rgba(255, 190, 110, .45); }
 </style>
 <script src="sound.js"></script>
+<script src="preload.js" defer></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalky" x="-5%" y="-25%" width="110%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="d"/><feColorMatrix in="t" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
