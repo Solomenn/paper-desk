@@ -133,7 +133,8 @@ def band(g, q, m, v):
     if v == WALL: base_c = base_c * 1.25
     if v in SEATS: base_c = base_c * np.array([1.08, 1.0, .9])   # wood colour, never the grey smudge
     L = LIGHT_SUN if lit else LIGHT_SHADE                        # shading from a flat-colour render: light and form only, no texture dirt
-    r = L[m] / max(np.median(LIGHT_SHADE[m]), 1e-3); r = LEVELS[np.abs(r[:, None] - LEVELS[None]).argmin(1)]
+    mf = m.astype(np.float32); Ls = ndimage.gaussian_filter(L * mf, 1.6) / np.maximum(ndimage.gaussian_filter(mf, 1.6), 1e-3)
+    r = np.clip(Ls[m] / max(np.median(LIGHT_SHADE[m]), 1e-3), .55, 1.6)
     q[m] = (np.clip(base_c[None] * r[:, None], 0, 1) * 255).astype(np.uint8)
 def px(g):
     global SEAMS
@@ -145,10 +146,10 @@ def px(g):
         l = f32(sh) @ [.3, .59, .11]; d = l - ndimage.uniform_filter(l, 7)
         SEAMS = wall & (d < -.035); SEAMS = ndimage.binary_opening(SEAMS, structure=np.ones((5, 1)))
     q[SEAMS] = (q[SEAMS].astype(np.float32) * .62).astype(np.uint8)
-    q[kb] = (104, 110, 128); q[key] = (196, 202, 218); q[code == PAD] = (170, 176, 192)
-    q = despeck(q, ~glass & ~np.isin(code, PROPS)).astype(np.float32)
+    q[kb] = (150, 156, 174); q[kb & ((((t_ - .12) / .46 * 5) % 1) < .34)] = (122, 128, 148); q[code == PAD] = (170, 176, 192)
+    q = despeck(q, np.isin(code, (PAPER,))).astype(np.float32)
     q = despeck(q.astype(np.uint8), np.isin(code, PROPS), n=2).astype(np.float32)
-    q[edge] *= .66
+    q[edge] *= .78
     q[rim] *= .55
     return q.astype(np.uint8)
 
@@ -158,5 +159,4 @@ frost = (a > 70) & (a <= 110) & (xx % 3 == 0) & (yy % 3 == 1)
 alpha = np.where(glass, np.where(BARS, np.where(frost, 200, 0), np.where(a > 110, 255, np.where(frost, 200, 0))), 255).astype(np.uint8)
 for g, name, lit in [(g_sun, "cabin-day-px.png", True), (g_sh, "cabin-day-shade-px.png", False)]:
     Image.fromarray(np.dstack([px(g), alpha]), "RGBA").save(f"{A}/{name}", optimize=True)
-qw = np.asarray(Image.fromarray((g_wood * 255).astype(np.uint8)).quantize(palette=pal, dither=Image.Dither.NONE).convert("RGB"))
-Image.fromarray(qw).save(f"{A}/snow-forest-px.png", optimize=True)
+# the wood outside is drawn, not photographed: tools/forest_px.py

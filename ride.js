@@ -27,11 +27,10 @@
     for (let x = 0; x < TW - 200;) { x += 120 + r() * 420; const w = 50 + r() * 120;
       if (PX) {   // pixel bark: flat tones on the 4-px grid, a snow-lit edge, a few dark notches — no gradients
         const X = Math.round(x / 4) * 4, Wd = Math.round(w / 4) * 4;
-        t.fillStyle = "#3a3028"; t.fillRect(X, 0, Wd, IH);
-        t.fillStyle = "#261f1a"; t.fillRect(X + Math.round(Wd * .62 / 4) * 4, 0, Wd - Math.round(Wd * .62 / 4) * 4, IH);
-        t.fillStyle = "#c9d3de"; t.fillRect(X + 4, 0, 8, IH);
-        t.fillStyle = "#5a4a3e"; t.fillRect(X + 12, 0, 4, IH);
-        t.fillStyle = "#1a1512"; for (let y = 0; y < IH; y += 60 + Math.floor(r() * 90)) t.fillRect(X + 16 + Math.floor(r() * Wd / 8) * 4, Math.round(y / 4) * 4, 8 + Math.floor(r() * 3) * 4, 4);
+        t.fillStyle = "#3a4458"; t.fillRect(X, 0, Wd, IH);          // cool, like the trees in the snow outside
+        t.fillStyle = "#2b3346"; t.fillRect(X + Math.round(Wd * .6 / 4) * 4, 0, Wd - Math.round(Wd * .6 / 4) * 4, IH);
+        t.fillStyle = "#56627a"; t.fillRect(X + 4, 0, 8, IH);
+        t.fillStyle = "#222838"; for (let y = 0; y < IH; y += 60 + Math.floor(r() * 90)) t.fillRect(X + 16 + Math.floor(r() * Wd / 8) * 4, Math.round(y / 4) * 4, 8 + Math.floor(r() * 3) * 4, 4);
         x += w; continue; }
       const gr = t.createLinearGradient(x, 0, x + w, 0); gr.addColorStop(0, "rgba(28,23,18,0)"); gr.addColorStop(.18, "rgba(28,23,18,.97)"); gr.addColorStop(.6, "rgba(48,40,32,.97)"); gr.addColorStop(.82, "rgba(20,16,12,.97)"); gr.addColorStop(1, "rgba(20,16,12,0)");
       t.fillStyle = gr; t.fillRect(x, 0, w, IH);
