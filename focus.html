@@ -131,23 +131,31 @@
   #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { color: rgba(232, 217, 168, .8); }
   #line .st i.hid { visibility: hidden; }
 
-  /* the ride's words in a pixel face, on the same pixel grid as the picture (Fusion Pixel 12px, OFL; shown at 2×, never blurred),
-     with hard pixel shadows instead of glows */
-  @font-face { font-family: "Pixel SC"; src: url(assets/fonts/fusion-pixel-12-sc.woff2) format("woff2"); font-display: swap; }
-  #car #hud, #car #off, #car #sndT, #car #line .st i, #car #line .tr b {
-    font-family: "Pixel SC", var(--sans); font-size: 24px; line-height: 24px; letter-spacing: 0; font-weight: 400;
-    -webkit-font-smoothing: none; -moz-osx-font-smoothing: grayscale; font-smooth: never; text-shadow: 2px 2px 0 rgba(36, 24, 20, .85); }
-  #car #line .st { border-radius: 0; width: 10px; height: 10px; margin-left: -5px; top: 9px; box-shadow: inset 0 0 0 2px rgba(244, 232, 196, .6), 2px 2px 0 rgba(36, 24, 20, .6); }
-  #car #line .st.past { background: #f4e8c4; box-shadow: inset 0 0 0 2px #f4e8c4, 2px 2px 0 rgba(36, 24, 20, .6); }
-  #car #line .st i { color: rgba(244, 232, 196, .6); top: 20px; }
-  #car #line .st.past i { color: #f4e8c4; }
-  #car #line .tr b { bottom: 18px; color: #fff3cf; font-style: normal; }
-  #car #line .track { height: 4px; top: 12px; background: rgba(244, 232, 196, .45); box-shadow: 2px 2px 0 rgba(36, 24, 20, .6); }
-  #car #line .tr { width: 20px; height: 10px; margin-left: -10px; border-radius: 0; background: #f4e8c4; box-shadow: 0 0 0 2px #3a2a24, 2px 2px 0 2px rgba(36, 24, 20, .6); }
+  /* the ride's controls: white frosted glass over the picture, quiet type (after sasshi.zezn.dev's folio nav and tips):
+     blur 12 + saturate, a hairline ring, a soft drop; ink #1c232b, one accent #2f4f73 */
+  #car { --glass: rgba(246, 248, 249, .74); --ink2: #1c232b; --mute2: #5d6873; --acc: #2f4f73;
+    --ring: 0 0 0 .5px rgba(21, 35, 58, .16), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(21, 35, 58, .05), 0 10px 26px -14px rgba(21, 35, 58, .45); }
+  #car #hud, #car #off, #car #sndT, #car #line::before { background: var(--glass); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); box-shadow: var(--ring); }
+  #car #hud { top: 2.2vh; padding: 9px 20px 10px; border-radius: 999px; font: 400 12.5px/1 var(--sans); letter-spacing: .06em; color: var(--mute2) !important;
+    font-variant-numeric: tabular-nums; opacity: .92; transition: opacity .3s; }
+  #car #hud:hover { opacity: 1; }
+  #car #hudName { font: 500 13.5px/1 var(--serif); letter-spacing: .04em; color: var(--ink2); border-bottom: 0; margin-right: 4px; }
+  #car #hudName:empty::before { color: var(--mute2); font-weight: 400; }
+  #car #off, #car #sndT { top: 2.2vh; height: 32px; padding: 0 14px; border-radius: 999px; font: 400 12px/32px var(--sans); letter-spacing: .08em; color: var(--mute2) !important; opacity: .0; transition: opacity .3s, color .2s; }
+  #car:hover #off, #car:hover #sndT { opacity: .92; }
+  #car #off:hover, #car #sndT:hover { color: var(--ink2) !important; opacity: 1; }
+  /* the line: a long glass slip along the bottom, a hairline track, small dots, names in quiet type */
+  #car #line { bottom: 5vh; }
+  #car #line::before { content: ""; position: absolute; inset: -14px -24px -12px; border-radius: 14px; }
+  #car #line .track { top: 13px; height: 1px; background: rgba(28, 35, 43, .16); }
+  #car #line .done { top: 13px; height: 1px; background: var(--acc); }
+  #car #line .st { top: 10px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #f6f8f9; box-shadow: inset 0 0 0 1px rgba(28, 35, 43, .35); }
+  #car #line .st.past { background: var(--acc); box-shadow: none; }
+  #car #line .st i { top: 18px; font: 400 12px/1.4 var(--sans); letter-spacing: .1em; color: var(--mute2); text-shadow: none; }
+  #car #line .st.past i { color: var(--ink2); }
+  #car #line .tr { top: 8.5px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 2.5px #fff, 0 2px 6px rgba(21, 35, 58, .35); }
   #car #line .tr::after { display: none; }
-  #car #hud { top: 1.6vh; padding: 6px 14px 8px; background: rgba(36, 24, 20, 0); transition: color .4s, background .4s; }
-  #car:hover #hud, #car #hud.show, #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { background: rgba(36, 24, 20, .5); }   /* a dark slip behind the words over the bright window */
-  @media (max-width: 900px) { #car #hud, #car #off, #car #sndT, #car #line .st i, #car #line .tr b { font-size: 12px; line-height: 12px; text-shadow: 1px 1px 0 rgba(36, 24, 20, .85); } }
+  #car #line .tr b { bottom: 14px; font: 500 11.5px/1 var(--sans); letter-spacing: .04em; color: var(--acc); font-variant-numeric: tabular-nums; text-shadow: none; }
 
   /* ═════════ arriving: the ticket comes back with the station's stamp ═════════ */
   #arrive { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 16, .72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .8s; }
@@ -218,8 +226,8 @@
 <section id="car">
   <div id="line"><i class="track"></i><i class="done"></i></div>
   <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
-  <button id="sndT">车 轮 声</button>
-  <button id="off">中 途 下 车</button>
+  <button id="sndT">车轮声</button>
+  <button id="off">中途下车</button>
 </section>
 
 <!-- arriving -->
@@ -477,10 +485,10 @@
       o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + 1.5);
     });
   }
-  $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
-  $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关";
+  $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车轮声" : "车轮声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
+  $("#sndT").textContent = wheelsOn ? "车轮声" : "车轮声 · 关";
   const sndB = () => { $("#sndB").innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${wheelsOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>`; $("#sndB").title = wheelsOn ? "声音：开" : "声音：关"; };
-  $("#sndB").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); sndB(); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) chuff(.6); };
+  $("#sndB").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); sndB(); $("#sndT").textContent = wheelsOn ? "车轮声" : "车轮声 · 关"; if (wheelsOn) chuff(.6); };
   sndB();
 
   /* ═════════ the trip ═════════
@@ -519,7 +527,7 @@
     dispatchEvent(new Event("carriageStart"));
     lineUI(); bookUI();
     $("#hudName").textContent = trip.name || "";
-    $("#off").textContent = trip.open ? "下 车" : "中 途 下 车";
+    $("#off").textContent = trip.open ? "下车" : "中途下车";
     const elapsed = (Date.now() - trip.start) / 1000;
     speed = elapsed > ACCEL ? CRUISE : 0; target = CRUISE;
   }
