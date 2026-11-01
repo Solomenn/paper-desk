@@ -2,7 +2,7 @@
    页面保持可交互；Service Worker 在后台分批下载所有页面、图片、音效和 3D 资源。 */
 "use strict";
 
-const CACHE_NAME = "paper-desk-site-v6";
+const CACHE_NAME = "paper-desk-site-v7";
 const CACHE_PREFIX = "paper-desk-site-";
 const OLD_CACHE_PREFIX = "paper-desk-carriage-";
 const FONT_ORIGIN = "https://cdn.jsdelivr.net";
@@ -197,18 +197,22 @@ self.addEventListener("fetch", event => {
       })
     );
 
-    // Use the already-prefetched page immediately; refresh it in the background.
-    event.waitUntil(refreshPromise.catch(() => {}));
-    event.respondWith(
-      cachePromise
-        .then(cache => cache.match(key))
-        .then(cached => cached || refreshPromise)
-        .catch(() => refreshPromise)
-    );
+    // Network first, so a new deploy shows on the next refresh; the cached page only when offline.
+    event.respondWith(refreshPromise.catch(() => cachePromise.then(cache => cache.match(key))));
     return;
   }
 
   if (!isCacheableRequest(request)) return;
+
+  // The site's own code and pictures change between deploys: always try the network first, fall back to the cache offline.
+  // Fonts, sounds and other heavy files that never change stay cache-first.
+  if (inScope(url) && /\.(?:html|css|js|json|webp|png|jpe?g|svg)$/i.test(url.pathname)) {
+    event.respondWith(caches.open(CACHE_NAME).then(cache => fetch(request).then(response => {
+      if (response.status === 200) cache.put(request, response.clone()).catch(() => {});
+      return response;
+    }).catch(() => cache.match(request).then(c => c || Promise.reject(new Error("offline"))))));
+    return;
+  }
 
   event.respondWith(
     fetchAndCache(request).catch(async error => {
