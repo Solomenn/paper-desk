@@ -16,12 +16,11 @@ const A = "assets/3d/";
 const night = () => document.documentElement.dataset.theme !== "day";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ───────── the canvas, in the ride view (#car); the 2D carriage under it stays as the fallback ───────── */
+/* The snow-day photograph in #car remains visible until the warmed 3D scene fades in. */
 const host = document.getElementById("car");
 document.head.insertAdjacentHTML("beforeend", `<style>
-  #car3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.2s ease; }
+  #car3d { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.2s ease; }
   #car.car3d #car3d { opacity: 1; }
-  #car.car3dDone #wall, #car.car3dDone #shot, #car.car3dDone #pane, #car.car3dDone #lampglow, #car.car3dDone #topshade { display: none; }
   #car.car3d #line, #car.car3d #hud, #car.car3d #book, #car.car3d #sndT, #car.car3d #off { z-index: 2; }
 </style>`);
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; host.prepend(canvas);
@@ -434,7 +433,7 @@ function frame(now) {
   const roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * m;
   look(lean.x * .003, lean.y * .002 + sy, roll);
   if (sceneWarm) composer.render();
-  if (!shown && loaded && forest.visible && sceneWarm) { shown = true; host.classList.add("car3d"); setTimeout(() => host.classList.add("car3dDone"), 1300); }
+  if (!shown && loaded && forest.visible && sceneWarm) { shown = true; host.classList.add("car3d"); }
   raf = requestAnimationFrame(frame);
 }
 function syncRenderLoop() {
