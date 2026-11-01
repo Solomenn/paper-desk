@@ -21,3 +21,9 @@ PAKUTASO images are free for commercial and non-commercial use; because this rep
 which PAKUTASO counts as redistribution, so the source is named here — see the terms of use on <https://www.pakutaso.com/>.
 The file in `assets/` is the picture re-encoded as WebP; the window is cut out of it in code and the live scene is drawn behind it.
 
+
+The carriage on the desk (`carriage.js`, `assets/3d/cabin.glb`) is **"1930s Train Cabin"** by thomas.rynne,
+<https://sketchfab.com/3d-models/2f109ba713fe455b959e4d79676b5c2d>, licensed CC BY 4.0. Changed: the landscape plane and the
+animation removed, textures converted to WebP, the mesh compressed (meshopt). Its lighting and post-processing follow the model's
+own Sketchfab scene settings; `assets/3d/sky_day.hdr` is decoded from Sketchfab's default environment "Gareoult" for that purpose.
+The forest outside the window (`assets/3d/snow_forest.jpg`) is cut from **snowy_forest_path_01** by Poly Haven (CC0).

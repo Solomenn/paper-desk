@@ -1,10 +1,16 @@
-/* 雪国列车 · the carriage (index.html): you sit in a compartment of the snow-country train. The boards hang on its mahogany wall;
-   to their right a window onto the snowy forest going by, curtains tied back with cord, a brass sconce with a frosted globe,
-   the luggage rack and a carved cornice overhead, a polished fold-down table under the window. Only a scene — nothing to click;
-   the carriage sways as it runs and the view leans a touch with the mouse.
-   three.js (MIT), bundled locally in vendor/; wood textures from Poly Haven (CC0). */
-import * as THREE from "./vendor/three.bundle.min.js";   // three.js r170 (MIT) and the few addons used here, bundled: one local file, no CDN
-const { EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RectAreaLightUniformsLib, RoomEnvironment } = THREE;
+/* 雪国列车 · the carriage (index.html): you sit in a 1930s train compartment, on the left-hand seat by the table. The boards
+   hang over the near wall; to their right the compartment's window, the table with a camera, a journal and a pocket watch, and
+   outside a snowy pine forest going by. By day the snow light fills the compartment; by night the ceiling lamp is lit.
+   Only a scene — nothing to click; the view leans a touch with the mouse and the carriage sways a little.
+
+   The daylight is a reproduction of the model's own Sketchfab scene (its environment "Gareoult", its three lights, AO, bloom,
+   vignette, the blue lift in the shadows), checked frame against frame; to that come sun through the window and floor reflections.
+
+   The compartment is "1930s Train Cabin" by thomas.rynne (CC BY 4.0, https://sketchfab.com/3d-models/2f109ba713fe455b959e4d79676b5c2d),
+   its textures converted to WebP and the mesh compressed; the forest outside is "snowy_forest_path_01" from Poly Haven (CC0).
+   three.js (MIT), bundled locally in vendor/. */
+import * as THREE from "./vendor/three.bundle.min.js";
+const { GLTFLoader, MeshoptDecoder, RGBELoader, EffectComposer, RenderPass, GTAOPass, SSRPass, UnrealBloomPass, ShaderPass, OutputPass } = THREE;
 
 const A = "assets/3d/";
 const night = () => document.documentElement.dataset.theme !== "day";
@@ -13,356 +19,173 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 /* ───────── the canvas, behind the boards ───────── */
 document.head.insertAdjacentHTML("beforeend", `<style>
   body.car3dDone #room, body.car3dDone .cast, body.car3dDone #side { display: none !important; }   /* the 2D room stays under the canvas until it has faded in */
-  #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
-  #car3d { opacity: 0; transition: opacity .8s ease; } body.car3d #car3d { opacity: 1; }
-  body:not(.car3d) #car3dVig, body:not(.car3d) #car3dLit, body:not(.car3d) #car3dLit2, body:not(.car3d) #car3dSun, body:not(.car3d) #car3dSun2 { display: none; }
-  html:not([data-theme="day"]) #car3d { filter: none; }
-  #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 100% at 62% 42%, transparent 60%, rgba(8, 6, 4, .3) 100%); }
-  /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
-  #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
-  html:not([data-theme="day"]) #car3dLit { mix-blend-mode: multiply;
-    background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 238, 205, .95), rgba(255, 246, 228, 0) 100%),
-                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fffaf2 25%, #f8e8cc 50%, #ecd6b6 75%, #dcc2a0 100%); }
-  html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
-    background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 170, 90, .12), transparent 70%),
-                radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
-                linear-gradient(0deg, rgba(255, 140, 60, .06), transparent 30%); }
-  /* day: sunlight off the snow comes in at the window — warm white there, a clean pale blue in the shade far from it */
-  html[data-theme="day"] #car3dLit { mix-blend-mode: multiply;
-    background: radial-gradient(85% 120% at 96% 40%, #ffffff 0%, #f6f8fb 45%, #e3eaf3 100%); }
-  html[data-theme="day"] #car3dLit2 { mix-blend-mode: screen;
-    background: radial-gradient(50% 80% at 97% 40%, rgba(255, 250, 238, .30), rgba(255, 250, 238, 0) 75%); }
-  /* the sun through the corridor windows behind you: two slanting panes of light across the wall and the boards */
-  #car3dSun, #car3dSun2 { position: fixed; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity 1.2s; mix-blend-mode: soft-light; }
-  #car3dSun2 { mix-blend-mode: screen; }
-  html[data-theme="day"] #car3dSun2 { opacity: .14; }
-  html[data-theme="day"] #car3dSun { opacity: 1; }
-  #car3dSun i, #car3dSun2 i { position: absolute; top: -20%; height: 140%; transform: skewX(-24deg); filter: blur(9px);
-    background: linear-gradient(180deg, rgba(255, 246, 225, .0), rgba(255, 244, 220, .95) 30%, rgba(255, 240, 210, .9) 75%, rgba(255, 240, 210, 0)); }
-  #car3dSun2 i:nth-child(1), #car3dSun i:nth-child(1) { left: 14%; width: 15%; }
-  #car3dSun2 i:nth-child(2), #car3dSun i:nth-child(2) { left: 33%; width: 15%; }
-  #car3dSun2 i:nth-child(3), #car3dSun i:nth-child(3) { left: 58%; width: 10%; opacity: .6; }
-  html[data-theme="day"] #car3dVig { background: radial-gradient(130% 110% at 70% 45%, transparent 65%, rgba(150, 175, 205, .14) 100%); }
+  #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; opacity: 0; transition: opacity .9s ease; }
+  body.car3d #car3d { opacity: 1; }
+  #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(130% 110% at 70% 45%, transparent 62%, rgba(6, 4, 3, .32) 100%); opacity: 0; transition: opacity .9s; }
+  body.car3d #car3dVig { opacity: 1; }
 </style>`);
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; document.body.prepend(canvas);
 const vig = document.createElement("i"); vig.id = "car3dVig"; canvas.after(vig);
-const lit = document.createElement("i"); lit.id = "car3dLit"; document.body.appendChild(lit);
-const lit2 = document.createElement("i"); lit2.id = "car3dLit2"; document.body.appendChild(lit2);
-const sunEl = document.createElement("div"); sunEl.id = "car3dSun"; sunEl.innerHTML = "<i></i><i></i><i></i>"; document.body.appendChild(sunEl);
-const sunEl2 = sunEl.cloneNode(true); sunEl2.id = "car3dSun2"; document.body.appendChild(sunEl2);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMapping = THREE.LinearToneMapping;   // as Sketchfab
 renderer.shadowMap.enabled = !window.__CAR_LOW || !!window.__CAR_SHADOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.shadowMap.autoUpdate = false;   // nothing that casts a shadow moves (the camera doesn't matter): redraw the shadows only when the light or the layout changes
-RectAreaLightUniformsLib.init();
+renderer.shadowMap.autoUpdate = false;   // nothing that casts a shadow moves: draw the shadows once per change of light
 
-const scene = new THREE.Scene();
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;   // soft reflections for brass and glass
-scene.environmentIntensity = .35;
-const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 120);
-const EYE = new THREE.Vector3(0, 1.35, 3.0), LOOK = new THREE.Vector3(0, 1.35, 0);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x130b0b);
+scene.environmentRotation.set(0, 3.478, 0);
+new RGBELoader().load(A + "sky_day.hdr", t => { t.mapping = THREE.EquirectangularReflectionMapping; scene.environment = t; });
+const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.002, 20);
 
-/* ───────── materials ───────── */
-const tl = new THREE.TextureLoader();
-function tex(name, kind, rep, srgb) {
-  const t = tl.load(`${A}tex/${name}/${kind}.jpg`); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]);
-  if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+/* ───────── where you sit: the left seat, facing the window wall; the right-hand window is turned into the strip beside the boards ───────── */
+const EYE = new THREE.Vector3(0.25, 0.085, 0.05);
+const WINDOW = new THREE.Vector3(0.361, 0.073, -0.078);   // the middle of the right-hand window
+const PITCH = Math.atan2(0.078 - 0.085, 0.128);
+let yaw = 0;
+function aim() {
+  const W = innerWidth, H = innerHeight, side = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidew")) || 300;
+  const ndc = (1 - side / 2 / W) * 2 - 1;                       // the strip's middle, in clip space
+  const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), halfW = halfH * camera.aspect;
+  const theta = Math.atan2(WINDOW.x - EYE.x, -(WINDOW.z - EYE.z));
+  yaw = theta - Math.atan(ndc * halfW);
 }
-// mahogany tongue-and-groove: narrow vertical boards, each a little different, fine grain, a dark groove and a lit edge between them
-function plankTexture() {
-  const W = 1024, H = 1024, N = 8, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
-  let sd = 7; const r = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
-  for (let i = 0; i < N; i++) {
-    const x0 = i * W / N, bw = W / N, k = .85 + r() * .3;
-    g.fillStyle = `rgb(${84 * k | 0},${48 * k | 0},${28 * k | 0})`; g.fillRect(x0, 0, bw, H);
-    for (let j = 0; j < 70; j++) {                       // grain: long wavy streaks
-      const gx = x0 + r() * bw, a = .04 + r() * .09, dark = r() < .6;
-      g.strokeStyle = dark ? `rgba(30,10,4,${a})` : `rgba(160,80,50,${a * .8})`; g.lineWidth = .6 + r() * 1.8; g.beginPath(); g.moveTo(gx, 0);
-      for (let y = 0; y <= H; y += 32) g.lineTo(gx + Math.sin(y * .006 + j) * (2 + r() * 2), y); g.stroke();
-    }
-    const sh = g.createLinearGradient(x0, 0, x0 + bw, 0); sh.addColorStop(0, "rgba(255,200,160,.06)"); sh.addColorStop(.5, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.18)");
-    g.fillStyle = sh; g.fillRect(x0, 0, bw, H);
-    g.fillStyle = "rgba(12,4,2,.9)"; g.fillRect(x0, 0, 3, H); g.fillStyle = "rgba(220,150,110,.25)"; g.fillRect(x0 + 3, 0, 1.5, H);
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / .56, 1 / .56); t.anisotropy = 8; return t;
-}
-// the carved cornice: scrolls and leaves in old gilt on dark wood
-function corniceTexture() {
-  const W = 512, H = 128, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
-  g.fillStyle = "#2a120a"; g.fillRect(0, 0, W, H);
-  const gold = (a) => `rgba(150,112,64,${a * .6})`;
-  g.fillStyle = gold(.55); g.fillRect(0, 8, W, 4); g.fillRect(0, H - 12, W, 4);
-  g.lineCap = "round";
-  for (const [x, f] of [[128, 1], [384, -1]]) {
-    for (const [lw, col, dy] of [[9, "rgba(0,0,0,.55)", 3], [7, gold(.85), 0], [2, "rgba(255,226,170,.5)", -2]]) {
-      g.strokeStyle = col; g.lineWidth = lw; g.beginPath();
-      g.moveTo(x - 120, 64 + dy); g.bezierCurveTo(x - 80, 18 + dy, x - 20, 30 + dy, x - 30 * f, 64 + dy);
-      g.arc(x - 12 * f, 64 + dy, 18, Math.PI, Math.PI * (f > 0 ? 2.6 : -.6), f < 0);
-      g.moveTo(x + 120, 64 + dy); g.bezierCurveTo(x + 80, 110 + dy, x + 20, 98 + dy, x + 30 * f, 64 + dy);
-      g.stroke();
-    }
-    g.fillStyle = gold(.8); g.beginPath(); g.ellipse(x, 64, 10, 14, 0, 0, Math.PI * 2); g.fill();
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; return t;
-}
-const wood = (name, rep, extra = {}) => new THREE.MeshStandardMaterial({ map: tex(name, "diff", rep, true), normalMap: tex(name, "nor", rep), roughnessMap: tex(name, "rough", rep), fog: false, ...extra });
-const M = {
-  panel: new THREE.MeshStandardMaterial({ map: plankTexture(), roughness: .36, envMapIntensity: .6, fog: false }),
-  cornice: new THREE.MeshStandardMaterial({ map: corniceTexture(), roughness: .5, metalness: .15, fog: false }),
-  mould: wood("lacquered_cherry_wood", [3, 3], { color: 0x6e4228, roughness: .4 }),
-  cherry: wood("lacquered_cherry_wood", [2, 2], { color: 0x9a6a4a, roughness: .5 }),
-  brass: new THREE.MeshStandardMaterial({ color: 0xc9a25a, metalness: 1, roughness: .32, fog: false }),
-  iron: new THREE.MeshStandardMaterial({ color: 0x2a2b2d, metalness: .6, roughness: .55, fog: false }),
-  ceiling: new THREE.MeshStandardMaterial({ color: 0xe9dfc9, roughness: .9, fog: false }),
-  velvet: new THREE.MeshPhysicalMaterial({ color: 0x3e2a1e, roughness: .9, sheen: .4, sheenColor: new THREE.Color(0xb08a68), sheenRoughness: .7, envMapIntensity: .2, side: THREE.DoubleSide, fog: false }),
-  tabletop: new THREE.MeshStandardMaterial({ map: tex("lacquered_cherry_wood", "diff", [1.5, 1.5], true), color: 0x8a4a30, roughness: .2, envMapIntensity: .9, fog: false }),
-  cord: new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: .8, fog: false }),
-  globe: new THREE.MeshStandardMaterial({ color: 0xfff6ea, emissive: 0xffe2bc, emissiveIntensity: 1.1, roughness: .55, fog: false }),
-  glass: new THREE.MeshBasicMaterial({ color: 0xa8c4e4, transparent: true, opacity: .06, depthWrite: false, fog: false }),
-};
-
-/* ───────── the carriage's side wall, with the window cut in it ───────── */
-const room = new THREE.Group(); scene.add(room);
-let win = { x: 1.3, y0: 1.0, y1: 1.85, w: .7 };   // set from the viewport in layout()
-const outside = new THREE.Group(); scene.add(outside);
-function rrect(s, x, y, w, h, r) { s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r);
-  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); }
-function buildRoom() {
-  room.clear();
-  const L = -8, R = 8, H = 2.42, wx = win.x - win.w / 2, wh = win.y1 - win.y0;
-  // the wall itself
-  const s = new THREE.Shape(); s.moveTo(L, -.5); s.lineTo(R, -.5); s.lineTo(R, H); s.lineTo(L, H); s.lineTo(L, -.5);
-  const hole = new THREE.Path(); rrect(hole, wx, win.y0, win.w, wh, .09); s.holes.push(hole);
-  const wall = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .06, bevelEnabled: false }), M.panel);
-  wall.position.z = -.06; wall.receiveShadow = true; wall.castShadow = true; room.add(wall);
-  const bx = (w, h, x, y, z, d, m = M.mould) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.receiveShadow = true; room.add(b); return b; };
-  // the chair rail over the wainscot, and the carved cornice up under the ceiling
-  bx(R - L, .06, 0, .9, .014, .03);
-  const cor = bx(R - L, .1, 0, 2.31, .03, .06, M.cornice); M.cornice.map.repeat.set((R - L) / .2, 1);
-  bx(R - L, .025, 0, 2.225, .05, .09); bx(R - L, .03, 0, H - .015, .04, .08);
-  // the wainscot below the chair rail: walnut, then a brass rail
-  const ws = new THREE.Shape(); ws.moveTo(L, -.5); ws.lineTo(R, -.5); ws.lineTo(R, .86); ws.lineTo(L, .86); ws.lineTo(L, -.5);
-  const wain = new THREE.Mesh(new THREE.ExtrudeGeometry(ws, { depth: .015, bevelEnabled: false }), M.mould); wain.receiveShadow = true; room.add(wain);
-  for (let x = L; x < R; x += .5) { bx(.05, .8, x, .45, .02, .012); bx(.36, .012, x + .25, .74, .02, .01); bx(.36, .012, x + .25, .16, .02, .01); bx(.012, .58, x + .07, .45, .02, .01); bx(.012, .58, x + .43, .45, .02, .01); }
-  const rail = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, R - L, 12), M.brass); rail.rotation.z = Math.PI / 2; rail.position.set(0, .875, .03); room.add(rail);
-  // the window frame (walnut, rounded), its sill and the glass
-  const fs = new THREE.Shape(); rrect(fs, wx - .07, win.y0 - .07, win.w + .14, wh + .14, .14);
-  const fh = new THREE.Path(); rrect(fh, wx, win.y0, win.w, wh, .09); fs.holes.push(fh);
-  const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(fs, { depth: .05, bevelEnabled: true, bevelSize: .012, bevelThickness: .012, bevelSegments: 3 }), M.cherry);
-  frame.castShadow = frame.receiveShadow = true; room.add(frame);
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(win.w, wh), M.glass); glass.position.set(win.x, (win.y0 + win.y1) / 2, -.03); room.add(glass);
-  // the ceiling: a cream curve over the top, a brass luggage rack along under it
-  const ceil = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, R - L, 32, 1, true, Math.PI * .5, Math.PI * .32), M.ceiling);
-  ceil.rotation.z = Math.PI / 2; ceil.position.set(0, H - 1.38, 1.4); room.add(ceil);
-  const rackY = 2.12;
-  for (const z of [.08, .22, .36]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(.009, .009, R - L, 10), M.brass); r.rotation.z = Math.PI / 2; r.position.set(0, rackY, z); room.add(r); }
-  for (let x = L + .4; x < R; x += 1.1) {
-    const br = new THREE.Mesh(new THREE.BoxGeometry(.012, .012, .42), M.brass); br.position.set(x, rackY, .2); room.add(br);
-    const up = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .2, 8), M.brass); up.position.set(x, rackY + .1, .01); room.add(up);
-  }
-  // velvet curtains, tied back, on a brass rod
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(.011, .011, win.w + .7, 12), M.brass); rod.rotation.z = Math.PI / 2; rod.position.set(win.x, win.y1 + .14, .09); room.add(rod);
-  for (const side of [-1, 1]) room.add(curtain(side));
-  // the fold-down table under the window, on two brass brackets
-  const tw = win.w + .1, ts = new THREE.Shape(); ts.moveTo(-tw / 2, 0); ts.lineTo(tw / 2, 0); ts.absellipse(0, 0, tw / 2, .26, 0, Math.PI, false);
-  const top = new THREE.Mesh(new THREE.ExtrudeGeometry(ts, { depth: .03, bevelEnabled: true, bevelSize: .008, bevelThickness: .008, bevelSegments: 4, curveSegments: 40 }), M.tabletop);
-  top.rotation.x = Math.PI / 2; top.position.set(win.x, .8, .01); top.castShadow = top.receiveShadow = true; room.add(top);
-  const col = new THREE.Mesh(new THREE.LatheGeometry([[.07, 0], [.07, .02], [.03, .05], [.022, .12], [.03, .3], [.02, .5], [.026, .7], [.05, .77], [.05, .785]].map(([r, y]) => new THREE.Vector2(r, y)), 24), M.tabletop);
-  col.position.set(win.x, 0, .14); col.castShadow = col.receiveShadow = true; room.add(col);
-  buildSconce();
-}
-function curtain(side) {
-  const w = .26, h = win.y1 - win.y0 + .62, g = new THREE.PlaneGeometry(w, h, 36, 40), p = g.attributes.position, tieY = .38;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i), u = (x / w + .5), v = (y / h + .5);       // v: 0 bottom … 1 top
-    const gather = 1 - .62 * Math.exp(-Math.pow((v - tieY) / .16, 2));                 // pinched at the tie-back
-    const inner = side < 0 ? u : 1 - u;                                                // the inner edge swings toward the wall's edge
-    const nx = (x * gather) - side * (1 - gather) * w * .25 * inner;
-    p.setXYZ(i, nx, y, Math.sin(u * Math.PI * 9) * .022 * (.6 + .4 * gather) + .04 * (1 - gather));
-  }
-  g.computeVertexNormals();
-  const m = new THREE.Mesh(g, M.velvet); m.castShadow = true; m.receiveShadow = true;
-  m.position.set(win.x + side * (win.w / 2 + .06), win.y1 + .14 - h / 2, .1);
-  const grp = new THREE.Group(); grp.add(m);
-  const ty = m.position.y - h / 2 + tieY * h, tx = m.position.x - side * .03;
-  const cord = new THREE.Mesh(new THREE.TorusGeometry(.05, .007, 8, 24), M.cord); cord.rotation.x = Math.PI / 2; cord.scale.set(1, .55, 1); cord.position.set(tx, ty, .13); grp.add(cord);
-  const tas = new THREE.Mesh(new THREE.ConeGeometry(.016, .07, 10), M.cord); tas.position.set(tx + side * .045, ty - .05, .17); grp.add(tas);
-  return grp;
+function look(dx = 0, dy = 0, roll = 0) {
+  camera.position.set(EYE.x + dx, EYE.y + dy, EYE.z);
+  const d = new THREE.Vector3(Math.sin(yaw) * Math.cos(PITCH), Math.sin(PITCH), -Math.cos(yaw) * Math.cos(PITCH));
+  camera.up.set(Math.sin(roll), Math.cos(roll), 0); camera.lookAt(camera.position.clone().add(d));
 }
 
-// the sconce on the pier between the boards and the window: a brass back-plate, a curled arm, a frosted globe
-let globe = null, boardEdge = .97;
-function buildSconce() {
-  const g = new THREE.Group(), x = Math.max(boardEdge + .09, win.x - win.w / 2 - .2);
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .012, 24), M.brass); plate.rotation.x = Math.PI / 2; plate.scale.set(1, 1, 1.9); plate.position.set(0, -.02, .006); g.add(plate);
-  const arm = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, -.04, .01), new THREE.Vector3(0, -.09, .13), new THREE.Vector3(0, .02, .14)), 20, .006, 8), M.brass); g.add(arm);
-  const cup = new THREE.Mesh(new THREE.CylinderGeometry(.03, .016, .03, 20), M.brass); cup.position.set(0, .035, .14); g.add(cup);
-  globe = new THREE.Mesh(new THREE.SphereGeometry(.062, 32, 24), M.globe); globe.position.set(0, .1, .14); g.add(globe);
-  g.position.set(x, 1.55, .0); room.add(g);
-  wallLamp.position.set(x, 1.65, .2);
+/* ───────── the compartment, lit as on Sketchfab ───────── */
+// Sketchfab's light matrices are Z-up; the glTF is Y-up: (x, y, z) → (x, z, −y). Its intensities are ×π in three.js units.
+const g2 = v => new THREE.Vector3(v[0], v[2], -v[1]);
+function sfLight(type, color, int, m, angle, hard) {
+  const pos = g2(m.slice(12, 15)), z = g2(m.slice(8, 11)).normalize(); let l;
+  if (type === "SPOT") { l = new THREE.SpotLight(new THREE.Color(...color), int * Math.PI, 0, THREE.MathUtils.degToRad(angle / 2), 1 - hard, 0); l.target.position.copy(pos.clone().sub(z)); scene.add(l.target); }
+  else l = new THREE.PointLight(new THREE.Color(...color), int * Math.PI, 0, 0);
+  l.position.copy(pos); l.userData.base = int * Math.PI; scene.add(l); return l;
 }
-
-/* ───────── outside: the snowy forest going by ───────── */
-const SPEED = 9;   // m/s past the window
-let trees = [], caps = null, treeData = [], snow = null, ground = null;
-function buildOutside() {
-  outside.clear();
-  const sky = new THREE.Mesh(new THREE.PlaneGeometry(200, 80), new THREE.ShaderMaterial({ uniforms: { top: { value: new THREE.Color() }, bot: { value: new THREE.Color() } }, depthWrite: false,
-    vertexShader: "varying float vy; void main(){ vy = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }",
-    fragmentShader: "uniform vec3 top; uniform vec3 bot; varying float vy; void main(){ gl_FragColor = vec4(mix(bot, top, smoothstep(.35,.9,vy)), 1.); }" }));
-  sky.position.set(win.x, 10, -140); outside.add(sky); outside.userData.sky = sky;
-  // the low winter sun, a soft glare up and to the left of the window
-  const sc = document.createElement("canvas"); sc.width = sc.height = 128; const sx = sc.getContext("2d"), sgr = sx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  sgr.addColorStop(0, "rgba(255,255,250,1)"); sgr.addColorStop(.12, "rgba(255,250,235,.9)"); sgr.addColorStop(.4, "rgba(255,245,225,.25)"); sgr.addColorStop(1, "rgba(255,245,225,0)"); sx.fillStyle = sgr; sx.fillRect(0, 0, 128, 128);
-  const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(sc), blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-  sun.scale.setScalar(60); sun.position.set(win.x - 30, 22, -135); outside.add(sun); outside.userData.sun = sun;
-  ground = new THREE.Mesh(new THREE.PlaneGeometry(300, 200), new THREE.MeshStandardMaterial({ color: 0xdfe7f0, roughness: .95, emissive: 0x1c2840, emissiveIntensity: .7 }));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(win.x, -2.2, -100); outside.add(ground);
-  // pines: painted once into textures (drooping tiers, ragged edges, snow lying on each tier), stood up as cards facing the window
-  const N = 260; trees = []; treeData = [];
-  const texs = [0, 1, 2, 3].map(pineTexture);
-  texs.forEach((tx, v) => { const m = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tx, alphaTest: .45, color: 0xffffff }), N / 4); m.frustumCulled = false; trees.push(m); outside.add(m); });
-  for (let i = 0; i < N; i++) { const z = -38 - Math.pow(Math.random(), 1.1) * 80, h = 5 + Math.random() * 5; treeData.push({ x: (Math.random() - .5) * 90, z, h, w: h * (.48 + Math.random() * .14), v: i % 4, k: Math.floor(i / 4) }); }
-  caps = null;
-  // the snow outside, blown back by the train
-  const SN = 2600, pos = new Float32Array(SN * 3), seed = new Float32Array(SN);
-  for (let i = 0; i < SN; i++) { pos[i * 3] = (Math.random() - .5) * 16; pos[i * 3 + 1] = Math.random() * 7 - 1; pos[i * 3 + 2] = -.4 - Math.random() * 14; seed[i] = Math.random(); }
-  const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); sg.setAttribute("seed", new THREE.BufferAttribute(seed, 1));
-  snow = new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { t: { value: 0 }, cx: { value: win.x }, bright: { value: 1 }, warm: { value: 0 } },
-    vertexShader: `uniform float t; uniform float cx; attribute float seed; varying float a; varying float near;
-      void main(){ vec3 p = position; float sp = ${SPEED.toFixed(1)} * (.6 + .4 * seed);
-        p.x = cx + mod(p.x - t * sp + 8., 16.) - 8.; p.y = mod(p.y - t * (.8 + seed * .9) + 1., 7.) - 1. + sin(t * 1.3 + seed * 40.) * .15;
-        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = (14. + 26. * seed) / -mv.z; a = smoothstep(16., 2., -mv.z); near = smoothstep(3.9, 3.15, -mv.z); }`,
-    fragmentShader: `uniform float bright; uniform float warm; varying float a; varying float near; void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard;
-      vec3 c = mix(vec3(.82,.9,1.), vec3(1.,.8,.55), near * warm * .7); gl_FragColor = vec4(c * bright * (1. + near * warm * .6), (1. - d * 2.) * .85 * a); }` }));
-  snow.frustumCulled = false; outside.add(snow);
+const warm = sfLight("SPOT", [1, .8118, .7804], 8.151, [.9986,.0486,-.0196,0,.0118,.1574,.9875,0,.0511,-.9863,.1566,0,.3119,.0857,.1549,1], 79.8, .5);
+const cool = sfLight("SPOT", [.5216, .6941, .8431], 10, [.0517,-.4692,.8816,0,.9953,.0971,-.0066,0,-.0825,.8777,.472,0,.2848,.2022,.2173,1], 68.8, .4687);
+cool.castShadow = true; cool.shadow.mapSize.set(1024, 1024); cool.shadow.bias = -.0003; cool.shadow.camera.near = .01; cool.shadow.camera.far = 2;
+const bulbLight = sfLight("POINT", [1, .8784, .7098], .9761, [1,0,0,0,0,1,0,0,0,0,1,0,.3271,.0116,.1012,1]);
+// the sun through the window: a few slightly different directions together give the patch on the floor a soft edge
+const SUN = new THREE.Vector3(-.25, .3, -.8).normalize(), suns = [];
+for (let k = 0; k < 3; k++) {
+  const a = k / 3 * Math.PI * 2, d = SUN.clone().add(new THREE.Vector3(Math.cos(a) * .08, Math.sin(a) * .08, 0)).normalize().multiplyScalar(1.2);
+  const s = new THREE.DirectionalLight(new THREE.Color(1, .92, .78), 2); s.position.set(.3235 + d.x, d.y, d.z); s.target.position.set(.3235, 0, 0); scene.add(s.target);
+  s.castShadow = true; s.shadow.mapSize.set(1024, 1024); Object.assign(s.shadow.camera, { left: -.3, right: .3, top: .3, bottom: -.3, near: .2, far: 3 }); s.shadow.bias = -.0004; s.shadow.normalBias = .002;
+  scene.add(s); suns.push(s);
 }
-function placeTrees(t) {
-  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3();
-  treeData.forEach(d => {
-    let x = d.x - t * SPEED; x = ((x % 90) + 135) % 90 - 45 + win.x;
-    m.compose(p.set(x, -2.2 + d.h / 2, d.z), q, sc.set(d.w, d.h, 1)); trees[d.v].setMatrixAt(d.k, m);
+let bulb = null, floor = [];
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+loader.load(A + "cabin.glb", gltf => {
+  const g = gltf.scene;
+  g.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = !/^(windows|curtain1|curtain2)$/.test(o.material.name); o.receiveShadow = true;   // glass and thin curtains let the sun through
+    if (/StingrayPBS17/.test(o.material.name)) floor.push(o);
+    if (/lightBulb/.test(o.material.name)) bulb = o.material;
   });
-  trees.forEach(tm => tm.instanceMatrix.needsUpdate = true);
-}
-// a pine, painted: a thin trunk, tiers of drooping needle-mass with ragged undersides, snow heaped on each tier's top
-function pineTexture(seed) {
-  const W = 256, H = 512, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
-  let s = seed * 9301 + 49297; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
-  g.fillStyle = "#2a2018"; g.fillRect(W / 2 - 5, H * .84, 10, H * .16);
-  const tiers = 7 + Math.floor(r() * 3);
-  for (let k = 0; k < tiers; k++) {
-    const f = k / (tiers - 1), y = H * (.06 + f * .78), w = W * (.08 + f * .42) * (.9 + r() * .2), drop = H * (.07 + f * .05);
-    // the needle mass of this tier
-    g.beginPath(); g.moveTo(W / 2, y - drop * .9);
-    const n = 14;
-    for (let i = 0; i <= n; i++) { const u = i / n, x = W / 2 + w * (u * 2 - 1) * (u < .5 ? 1 : 1), yy = y + drop * .4 * Math.sin(u * Math.PI) + (i % 2 ? drop * (.25 + r() * .35) : 0); g.lineTo(x, yy); }
-    g.closePath();
-    const gr = g.createLinearGradient(0, y - drop, 0, y + drop); gr.addColorStop(0, "#2c4a42"); gr.addColorStop(1, "#0f211e"); g.fillStyle = gr; g.fill();
-    // snow heaped on top, in lumps
-    g.fillStyle = "#eef3f8";
-    for (let i = 0; i < 9; i++) { const u = .12 + r() * .76, x = W / 2 + w * (u * 2 - 1) * .92, yy = y - drop * .55 + Math.abs(u - .5) * drop * .5;
-      g.beginPath(); g.ellipse(x, yy, w * (.1 + r() * .12), drop * (.09 + r() * .08), 0, 0, Math.PI * 2); g.fill(); }
-    g.beginPath(); g.ellipse(W / 2, y - drop * .8, w * .22, drop * .12, 0, 0, Math.PI * 2); g.fill();
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
+  scene.add(g); if (ssr) ssr.selects = floor; applyTheme();
+});
 
-/* ───────── lights ───────── */
-const hemi = new THREE.HemisphereLight(0xffe6c4, 0x2a1c12, .25); scene.add(hemi);
-const moon = new THREE.DirectionalLight(0x9db6dd, .5); scene.add(moon); scene.add(moon.target);   // the moon by night, the sun by day: in at the window
-moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024); moon.shadow.bias = -.0015; moon.shadow.normalBias = .02; moon.shadow.radius = 4;
-Object.assign(moon.shadow.camera, { left: -2.5, right: 2.5, top: 2.5, bottom: -2.5, near: .5, far: 20 });
-const ceilLight = new THREE.RectAreaLight(0xffd9a0, 1.6, 5, .5); ceilLight.position.set(-.6, 2.3, 1.4); ceilLight.lookAt(-.6, 0, .4); scene.add(ceilLight);
-const winLight = new THREE.RectAreaLight(0x8fb0e0, 2, 1, 1); scene.add(winLight);
-const sconce = new THREE.SpotLight(0xffd6a8, 6, 4, .55, .9, 1.6); scene.add(sconce); scene.add(sconce.target);
-const wallLamp = new THREE.PointLight(0xffd8a8, 3, 3.4, 2); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
+/* ───────── outside: the snowy forest going by — a real panorama, sliding past, with snow falling in front of it ───────── */
+const PANO_W = 7, PANO_Z = -1.4;
+const forest = new THREE.Mesh(new THREE.PlaneGeometry(PANO_W, 1), new THREE.ShaderMaterial({
+  uniforms: { map: { value: null }, off: { value: 0 }, night: { value: 0 }, gain: { value: 1.6 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+  fragmentShader: `uniform sampler2D map; uniform float off; uniform float night; uniform float gain; varying vec2 vUv;
+    void main(){
+      vec3 c = texture2D(map, vec2(vUv.x + off, vUv.y)).rgb;
+      vec3 n = c * vec3(.07, .09, .15); n = mix(n, vec3(dot(n, vec3(.3, .5, .2))) * vec3(.6, .75, 1.1), .35);   // the same forest under a snowy night sky
+      gl_FragColor = vec4(mix(c * gain, n, night), 1.);
+      #include <colorspace_fragment>
+    }`,
+  depthWrite: false }));
+forest.visible = false; scene.add(forest);
+new THREE.TextureLoader().load(A + "snow_forest.jpg", t => {
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8;
+  const H = PANO_W / (t.image.width / t.image.height), eye = 0.06;
+  forest.scale.y = H; forest.position.set(0.3235, eye + H * .667 - H / 2, PANO_Z);   // the band's horizon at eye height
+  forest.material.uniforms.map.value = t; forest.visible = true;
+});
+const SN = 900, sp = new Float32Array(SN * 3), ss = new Float32Array(SN);
+for (let i = 0; i < SN; i++) { sp[i * 3] = Math.random(); sp[i * 3 + 1] = Math.random(); sp[i * 3 + 2] = Math.random(); ss[i] = Math.random(); }
+const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3)); sg.setAttribute("seed", new THREE.BufferAttribute(ss, 1));
+const snow = new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+  uniforms: { t: { value: 0 }, bright: { value: 1 } },
+  vertexShader: `uniform float t; attribute float seed; varying float a;
+    void main(){
+      // a box of snow outside the window: x across the glass, y up, z away; it drifts down and streams back past the train
+      vec3 p = vec3(fract(position.x - t * (.05 + .05 * seed)) * .5 + .08, fract(position.y - t * (.012 + .012 * seed)) * .22 - .02, -.09 - position.z * .5);
+      p.x += sin(t * 1.3 + seed * 40.) * .003;
+      vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
+      gl_PointSize = (.8 + 1.4 * seed) * (.12 / -mv.z) * 4.; a = .55 + .45 * seed; }`,
+  fragmentShader: `uniform float bright; varying float a; void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard; gl_FragColor = vec4(vec3(.93, .96, 1.) * bright, (1. - d * 2.) * a * .8); }` }));
+snow.frustumCulled = false; scene.add(snow);
 
-/* ───────── fit the window to the strip right of the boards ───────── */
-function layout() {
-  const W = innerWidth, H = innerHeight; renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); composer.setSize(W, H);
-  const halfW = EYE.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
-  const side = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidew")) || 300;
-  const fx = 1 - side / 2 / W;                               // the strip's middle
-  boardEdge = ((1 - (side + 4) / W) * 2 - 1) * halfW;
-  const strip = halfW - boardEdge;                           // the wall showing right of the boards
-  win.w = Math.max(.36, strip * .5); win.x = boardEdge + strip * .55;
-  buildRoom(); buildOutside();
-  layoutLights();
-}
-function layoutLights() {
-  winLight.position.set(win.x, (win.y0 + win.y1) / 2, -.02); winLight.width = win.w; winLight.height = win.y1 - win.y0; winLight.lookAt(win.x, (win.y0 + win.y1) / 2, 3);
-  sconce.position.set(win.x - .1, 2.35, 1.1); sconce.target.position.set(win.x, .8, .25);
-
-  layout.lastX = win.x;
-}
+/* ───────── post, as on Sketchfab: AO, reflections on the floor, then tone mapping, then bloom, vignette and grade ───────── */
+const composer = new EffectComposer(renderer);
+const ssr = window.__CAR_LOW && !window.__CAR_SHADOW ? null : new SSRPass({ renderer, scene, camera, width: innerWidth, height: innerHeight, groundReflector: null, selects: [] });
+if (ssr) { Object.assign(ssr, { maxDistance: .12, thickness: .003, opacity: .22, blur: true, distanceAttenuation: true, fresnel: true, infiniteThick: false }); composer.addPass(ssr); }
+else composer.addPass(new RenderPass(scene, camera));
+const gtao = new GTAOPass(scene, camera, innerWidth, innerHeight); gtao.updateGtaoMaterial({ radius: .053, distanceExponent: 1, thickness: .02, scale: 1 }); gtao.blendIntensity = .588; composer.addPass(gtao);
+composer.addPass(new OutputPass());
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .444, .455, .585); composer.addPass(bloom);
+const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, amt: { value: .533 }, hard: { value: .725 }, blue: { value: .045 }, sat: { value: .82 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float amt; uniform float hard; uniform float blue; uniform float sat; varying vec2 vUv;
+    void main(){ vec4 c = texture2D(tDiffuse, vUv); float lum = dot(c.rgb, vec3(.3, .59, .11)); c.rgb = mix(vec3(lum), c.rgb, sat); c.b += blue * (1. - smoothstep(0., .5, lum));
+      vec2 d = vUv - .5; float v = smoothstep(.75 * (1. - hard * .5), .75 + (1. - hard) * .5, length(d) * 1.4142 * (.5 + amt * .5) * 1.414); c.rgb *= 1. - amt * v; gl_FragColor = c; }` });
+composer.addPass(grade);
 
 /* ───────── day and night ───────── */
 function applyTheme() {
-  const n = night(), sky = outside.userData.sky;
-  // night: the carriage is lit only by the flames; outside it is cold blue snow.  day: high-key, white and pale blue, soft blue shadows
-  if (sky) { sky.material.uniforms.top.value.set(n ? 0x0d1d3c : 0x6fa6e2); sky.material.uniforms.bot.value.set(n ? 0x30507e : 0xe6f1fc); }
-  if (outside.userData.sun) outside.userData.sun.visible = !n;
-  scene.background = new THREE.Color(n ? 0x03060c : 0xe6eef6);
-  scene.fog = n ? new THREE.FogExp2(0x122140, .011) : null;
-  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x5e4a3a : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0xc8beb4);
-  if (ground) { ground.material.color.set(n ? 0x1a2230 : 0xf4f8fc); ground.material.emissive.set(n ? 0x3a5488 : 0x9db8da); ground.material.emissiveIntensity = n ? 1.1 : .45; }
-  hemi.intensity = n ? .55 : 2.2; hemi.color.set(n ? 0xffdcb4 : 0xe6eeff); hemi.groundColor.set(n ? 0x3a2a1e : 0xf4e6d4);
-  moon.intensity = n ? .9 : 3.2; moon.color.set(n ? 0x7d9ccc : 0xfff0d6);
-  moon.target.position.set(win.x, .8, .45); moon.position.copy(moon.target.position).add(n ? new THREE.Vector3(1.5, 4, -5) : new THREE.Vector3(-2.4, 3, 4));
-  ceilLight.intensity = n ? 1.1 : .5; ceilLight.color.set(n ? 0xffdcb0 : 0xf2f6ff);
-  winLight.intensity = n ? .9 : 14; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
-  sconce.intensity = n ? 3 : 0; sconce.color.set(0xffdcb0); wallLamp.intensity = n ? 3.2 : 0; M.globe.emissiveIntensity = n ? 1.1 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
-  renderer.toneMappingExposure = n ? 1.25 : 1.45;
-  trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xe8f0f8)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
-  bloom.strength = n ? .28 : .32; bloom.threshold = n ? .9 : .9; bloom.radius = n ? .35 : .85;
-  placeLit(); renderer.shadowMap.needsUpdate = true;
-}
-// where the lamp is on screen: the board's light falls off from there
-function placeLit() {
-  if (!globe) return;
-  const v = globe.getWorldPosition(new THREE.Vector3()).project(camera);
-  document.documentElement.style.setProperty("--lx", ((v.x + 1) / 2 * 100).toFixed(1) + "%");
-  document.documentElement.style.setProperty("--ly", ((1 - v.y) / 2 * 100).toFixed(1) + "%");
+  const n = night();
+  scene.environmentIntensity = n ? .05 : 2.2;
+  warm.intensity = n ? warm.userData.base * .35 : warm.userData.base;
+  cool.intensity = n ? 0 : cool.userData.base;
+  bulbLight.intensity = n ? bulbLight.userData.base * 3 : bulbLight.userData.base;
+  suns.forEach(s => s.intensity = n ? 0 : 2);
+  if (bulb) { bulb.emissive = new THREE.Color(0xffd9a0); bulb.emissiveIntensity = n ? 4 : 1.5; }
+  forest.material.uniforms.night.value = n ? 1 : 0;
+  snow.material.uniforms.bright.value = n ? .5 : 1;
+  renderer.toneMappingExposure = n ? .9 : .65;
+  grade.uniforms.sat.value = n ? .9 : .82;
+  renderer.shadowMap.needsUpdate = true;
 }
 addEventListener("deskTheme", applyTheme);
 
-/* ───────── post: a little bloom on the flames and windows ───────── */
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .45, .6, .82); composer.addPass(bloom);
-composer.addPass(new OutputPass());
-
-/* ───────── the view leans a touch with the mouse ───────── */
-const lean = { x: 0, y: 0, tx: 0, ty: 0 };
-addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
+/* ───────── layout ───────── */
+function layout() {
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  aim(); look();
+}
+layout(); applyTheme();
+addEventListener("resize", layout);
 
 /* ───────── the loop: the forest goes by, the carriage sways ───────── */
-let t0 = performance.now(), jolt = 0, nextJolt = 4;
+const lean = { x: 0, y: 0, tx: 0, ty: 0 };
+addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
+let t0 = performance.now(), jolt = 0, nextJolt = 4, shown = false, loaded = false;
+THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
 function frame(now) {
-  const t = (now - t0) / 1000;
-  placeTrees(t); if (snow) snow.material.uniforms.t.value = t;
-  // sway: a slow rock, a quicker shiver, now and then a jolt over a rail joint
+  const t = (now - t0) / 1000, m = reduce ? 0 : 1;
+  forest.material.uniforms.off.value = (t * .006) % 1;   // the forest slides back past the window
+  snow.material.uniforms.t.value = t;
   if (t > nextJolt) { jolt = 1; nextJolt = t + 5 + Math.random() * 7; }
   jolt *= .93;
-  const sway = reduce ? 0 : 1, sy = (Math.sin(t * 1.9) * .003 + Math.sin(t * .63) * .004 + jolt * Math.sin(t * 38) * .006) * sway, roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * sway;
   lean.x += (lean.tx - lean.x) * .05; lean.y += (lean.ty - lean.y) * .05;
-  camera.position.set(EYE.x + lean.x * .07, EYE.y + lean.y * .04 + sy, EYE.z);
-  camera.lookAt(LOOK); camera.rotation.z += roll;
-  // the hovered thing rises a little
+  const sy = (Math.sin(t * 1.9) * .00025 + Math.sin(t * .63) * .0003 + jolt * Math.sin(t * 38) * .0004) * m;
+  const roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * m;
+  look(lean.x * .003, lean.y * .002 + sy, roll);
   composer.render();
-  if (!shown && loaded) { shown = true; document.body.classList.add("car3d"); setTimeout(() => document.body.classList.add("car3dDone"), 900); }   // the 2D room stays until the carriage is ready, then it fades in
+  if (!shown && loaded && forest.visible) { shown = true; document.body.classList.add("car3d"); setTimeout(() => document.body.classList.add("car3dDone"), 1000); }
   requestAnimationFrame(frame);
 }
-
-layout(); applyTheme();
-addEventListener("resize", () => { layout(); applyTheme(); });
-let loaded = false, shown = false; THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
-// ?still: no loop — render on demand (for checking frames without a GPU)
-window.__carDbg = () => ({ win, boardEdge, cam: camera.position.toArray() });
-if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded }; }
+// test hooks: render on demand without a GPU
+window.__carDbg = () => ({ yaw, cam: camera.position.toArray() });
+if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded && forest.visible }; }
 else requestAnimationFrame(frame);
