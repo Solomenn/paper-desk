@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css?v=8">
-<script src="room.js?v=9"></script>
+<script src="room.js?v=10"></script>
 <style>
   :root {
     --ink: #2a323a;
@@ -661,9 +661,10 @@
   #chalk .lane .add:hover { color: #ecc983; }
   #chalk .lane.over .cards { background: rgba(216, 180, 108, .06); }
   /* the chalk ledge becomes a brass rail on a walnut lip */
-  #chalk .ledge { height: 16px; background: linear-gradient(180deg, #f2d898 0, #c99f52 3px, #8a6630 6px, #3a2512 7px, #2a1a0c); box-shadow: 0 -2px 5px rgba(0, 0, 0, .4); }
+  #chalk .ledge { height: 12px; background: linear-gradient(180deg, #5a3a22, #3a2512 60%, #2a1a0c); box-shadow: 0 -1px 3px rgba(0, 0, 0, .35); }   /* plain walnut, no brass */
   #chalk .ledge i { display: none; }
-  /* the picture lamp: a brass hood over the top rail */
+  /* the picture lamp: put away (its brass rail looked fussy) */
+  .picLamp { display: none !important; }
   .picLamp { position: absolute; top: 3px; left: 36%; right: 36%; height: 15px; z-index: 4; pointer-events: none; border-radius: 3px 3px 12px 12px / 3px 3px 14px 14px;
       background: linear-gradient(180deg, #f7e3a6 0, #d4aa58 25%, #9a7232 62%, #5a3e18); box-shadow: 0 3px 6px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 245, 210, .7); }
   .picLamp::before, .picLamp::after { content: ""; position: absolute; }
@@ -710,7 +711,7 @@
       </div>
       <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
     </div></div></section>
-    <section class="page" id="cork"><div class="frame"><div class="inner"><div id="notes"></div></div></div></section>
+    <section class="page" id="cork"><div class="frame"><div class="inner" data-sunlit="0.42"><div id="notes"></div></div></div></section>
   </div>
 </main>
 

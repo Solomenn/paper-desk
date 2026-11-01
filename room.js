@@ -27,8 +27,10 @@
     // window's bars (two panes across, three down) as clean shadow lines in it. Nothing else — the board stays quiet.
     let sun = null, seen = "";
     function paint() {
-      const t = document.querySelector("[data-sunlit]");
-      const r = t ? t.getBoundingClientRect() : null, W = innerWidth, H = innerHeight;
+      const W = innerWidth, H = innerHeight;   // the [data-sunlit] element that is on screen (a value like "0.4" = only its left 40%)
+      const t = [...document.querySelectorAll("[data-sunlit]")].find(e => { const b = e.getBoundingClientRect(); return b.width > 40 && b.right > 0 && b.left < W; });
+      let r = t ? t.getBoundingClientRect() : null;
+      if (r && +t.dataset.sunlit) r = { left: r.left, right: r.left + r.width * +t.dataset.sunlit, top: r.top, bottom: r.bottom, width: r.width * +t.dataset.sunlit, height: r.height };
       const key = r ? [r.left, r.top, r.width, r.height, W, H].map(Math.round).join() : "";
       if (key === seen && (sun || !t)) return;                     // nothing moved: leave the light as it is
       seen = key; if (sun) { sun.remove(); sun = null; }
