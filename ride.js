@@ -142,31 +142,23 @@ function pixelRide(host) {
 
   // near trunks just outside the glass, in the picture's own cool greys: flat bark, a lit edge, a few knots
   const TW = 1400, [trunks, tx_] = (() => { const c = document.createElement("canvas"); c.width = TW; c.height = H; return [c, c.getContext("2d")]; })();
-  for (let x = 20; x < TW - 40;) { const w = 7 + Math.floor(rnd() * 10);
+  const near = [];
+  for (let x = 20; x < TW - 40;) { const w = 7 + Math.floor(rnd() * 10); near.push([x, w]);
     tx_.fillStyle = "#6d7894"; tx_.fillRect(x, 0, w, H); tx_.fillStyle = "#58627c"; tx_.fillRect(x + Math.ceil(w * .6), 0, w - Math.ceil(w * .6), H);
     tx_.fillStyle = "#a9b4cc"; tx_.fillRect(x + 1, 0, 2, H);
     tx_.fillStyle = "#4b546c"; for (let y = 10 + rnd() * 30; y < H; y += 25 + rnd() * 40) tx_.fillRect(x + 3 + Math.floor(rnd() * (w - 5)), Math.floor(y), 2 + Math.floor(rnd() * 2), 1);
     tx_.fillStyle = "#e9eef8"; for (let y = 20 + rnd() * 60; y < H; y += 50 + rnd() * 70) tx_.fillRect(x, Math.floor(y), Math.ceil(w * .5), 1);   // snow on the bark
     x += w + 60 + Math.floor(rnd() * 160); }
 
-  // tree shadows: the wood outside itself, cast in. The trees of the moving strip (everything darker than the snow and
-  // the sky) are stretched down the carriage, leaned with the low sun and made hard-edged; they scroll with the view.
-  let pat = null, SW = 0;
+  // tree shadows: the near trunks rushing past the glass throw their shadows in — the same trunks, at the same speed,
+  // as slanted hard-edged bands sweeping over the sunlit table
+  let pat = null; const SW = TW;
   function makeShadows() {
-    SW = wood.width; pat = document.createElement("canvas"); pat.width = SW; pat.height = H;
-    const p = pat.getContext("2d"), slant = .45;
-    p.filter = "blur(1.2px)";   // only the trees (not the snowy ground), stretched down the carriage, softened before the cut
-    for (const dx of [-SW, 0, SW, 2 * SW]) { p.setTransform(1, 0, -slant, 1, dx, 0); p.drawImage(wood, 0, 8, SW, 82, 0, 0, SW, H); }
-    p.filter = "none";
-    p.setTransform(1, 0, 0, 1, 0, 0);
-    const id = p.getImageData(0, 0, SW, H), d = id.data, on = new Uint8Array(SW * H);
-    for (let i = 0; i < SW * H; i++) on[i] = .3 * d[i * 4] + .59 * d[i * 4 + 1] + .11 * d[i * 4 + 2] < 186 ? 1 : 0;
-    for (let pass = 0; pass < 2; pass++) { const nx = new Uint8Array(SW * H);   // majority passes: no stray pixels or speckle
-      for (let y = 0; y < H; y++) for (let x = 0; x < SW; x++) {
-        let n = 0; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) n += on[Math.min(H - 1, Math.max(0, y + j)) * SW + (x + i + SW) % SW];
-        nx[y * SW + x] = n >= 5 ? 1 : 0; } on.set(nx); }
-    for (let i = 0; i < SW * H; i++) { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 0; d[i * 4 + 3] = on[i] ? 255 : 0; }
-    p.putImageData(id, 0, 0);
+    pat = document.createElement("canvas"); pat.width = SW; pat.height = H; const p = pat.getContext("2d"), slant = .5;
+    p.fillStyle = "#000";
+    for (const [x, w] of near) for (const dx of [-SW, 0, SW]) { const sw = Math.round(w * 1.6), x0 = x + dx - 30;
+      p.beginPath(); p.moveTo(x0, 0); p.lineTo(x0 + sw, 0); p.lineTo(x0 + sw + H * slant, H); p.lineTo(x0 + H * slant, H); p.fill(); }
+    const id = p.getImageData(0, 0, SW, H); for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] > 127 ? 255 : 0; p.putImageData(id, 0, 0);
   }
 
   // steam off the coffee: a few pale pixels rising, curling, thinning out
@@ -204,7 +196,7 @@ function pixelRide(host) {
       g.globalAlpha = a; g.drawImage(oc, 0, 0); g.globalAlpha = 1;
       // tree shadows over the sunlit table and seats
       sg.globalCompositeOperation = "source-over"; sg.clearRect(0, 0, W, H);
-      const px = -Math.floor((run * 78) % SW); for (let x = px; x < W; x += SW) sg.drawImage(pat, x, 0);   // in step with the wood
+      const px = -Math.floor((run * 780) % SW); for (let x = px; x < W; x += SW) sg.drawImage(pat, x, 0);   // in step with the near trunks
       sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0);
       g.globalAlpha = a; g.drawImage(sc, 0, 0); g.globalAlpha = 1;
     }
