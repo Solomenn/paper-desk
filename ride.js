@@ -149,20 +149,23 @@ function pixelRide(host) {
     tx_.fillStyle = "#e9eef8"; for (let y = 20 + rnd() * 60; y < H; y += 50 + rnd() * 70) tx_.fillRect(x, Math.floor(y), Math.ceil(w * .5), 1);   // snow on the bark
     x += w + 60 + Math.floor(rnd() * 160); }
 
-  // Connected, tapered winter branches. All tips narrow to a point.
+  // Snowy conifers outside: narrow crown, layered drooping boughs, straight
+  // trunk. Shear the whole silhouette along the direction of the sunlight.
   const SW = 720, pat = document.createElement("canvas"); pat.width = SW; pat.height = H;
   { const p = pat.getContext("2d"); p.fillStyle = "#000"; const slant = .45;
     for (let i = 0; i < 4; i++) { const x0 = i / 4 * SW + rnd() * 40, w = 4 + rnd() * 4;
       for (const dx of [0, SW, -SW]) {
-        p.beginPath(); p.moveTo(x0 + dx, 0); p.lineTo(x0 + dx + w, 0); p.lineTo(x0 + dx + w + H * slant, H); p.lineTo(x0 + dx + H * slant, H); p.fill();
+        const point = (x, y) => [x0 + dx + x + y * slant, y];
+        p.beginPath(); p.moveTo(...point(-1, 0)); p.lineTo(...point(1, 0)); p.lineTo(...point(w * .5, H)); p.lineTo(...point(-w * .5, H)); p.fill();
         let sd = i * 31 + 7; const q = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
         for (let b = 0; b < 9; b++) {
-          const y = 35 + b * 28 + q() * 12, xx = x0 + dx + y * slant + w * .5;
-          const side = b % 2 ? 1 : -1, length = 18 + q() * 30;
-          const ex = xx + side * length, ey = y - 18 - q() * 24;
-          p.beginPath(); p.moveTo(xx - 1.5, y + 2); p.lineTo(ex, ey); p.lineTo(xx + 1.5, y - 2); p.fill();
-          const bx = xx + (ex - xx) * .58, by = y + (ey - y) * .58;
-          p.beginPath(); p.moveTo(bx - 1, by + 1); p.lineTo(bx + side * 10, by - 18); p.lineTo(bx + 1, by - 1); p.fill();
+          const y = 14 + b * 29, half = 6 + b * 5;
+          const left = half * (.85 + q() * .15), right = half * (.85 + q() * .15);
+          p.beginPath(); p.moveTo(...point(0, y - 30));
+          p.lineTo(...point(-left, y + 8)); p.lineTo(...point(-left * .55, y + 2));
+          p.lineTo(...point(-left * .7, y + 12)); p.lineTo(...point(0, y + 4));
+          p.lineTo(...point(right * .7, y + 12)); p.lineTo(...point(right * .55, y + 2));
+          p.lineTo(...point(right, y + 8)); p.closePath(); p.fill();
         } } }
     const id = p.getImageData(0, 0, SW, H); for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] > 110 ? 255 : 0; p.putImageData(id, 0, 0); }
 
