@@ -25,12 +25,21 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   #car.car3d #line, #car.car3d #hud, #car.car3d #book, #car.car3d #sndT, #car.car3d #off { z-index: 2; }
 </style>`);
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; host.prepend(canvas);
-const lowPower = !!window.__CAR_LOW ||
+const hardwareLowPower = !!window.__CAR_LOW ||
   (navigator.deviceMemory && navigator.deviceMemory <= 4) ||
   (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
   matchMedia("(max-width: 760px)").matches;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(lowPower ? .85 : Math.min(devicePixelRatio, 1.25));
+let gpuName = "";
+try {
+  const gl = renderer.getContext();
+  const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+  if (debugInfo) gpuName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
+} catch (_) {}
+const integratedGpu = /intel|uhd graphics|iris|mali|adreno|swiftshader|llvmpipe|basic render/i.test(gpuName);
+const lowPower = hardwareLowPower || integratedGpu;
+// Keep the scene at or below native resolution. The adaptive scaler can lower it further.
+renderer.setPixelRatio(lowPower ? .72 : Math.min(devicePixelRatio, .9));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.LinearToneMapping;   // as Sketchfab
 renderer.shadowMap.enabled = true;
@@ -109,7 +118,7 @@ const forest = new THREE.Mesh(new THREE.PlaneGeometry(PANO_W, 1), new THREE.Shad
   depthWrite: false }));
 forest.visible = false; scene.add(forest);
 new THREE.TextureLoader().load(A + "snow_forest.jpg", t => {
-  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8;
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
   const H = PANO_W / (t.image.width / t.image.height), eye = 0.06;
   forest.scale.y = H; forest.position.set(0.3235, eye + H * .667 - H / 2, PANO_Z);   // the band's horizon at eye height
   forest.material.uniforms.map.value = t; forest.visible = true;
@@ -267,6 +276,51 @@ const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, amt: { val
 composer.addPass(grade);
 composer.addPass(new OutputPass());
 
+// Start in a balanced mode. SSR is the most expensive pass, so it is only
+// enabled after the live frame-time monitor confirms enough GPU headroom.
+let qualityLevel = lowPower ? 0 : 1; // 0: light, 1: balanced, 2: full
+let averageFrameMs = 0, sampleFrames = 0, sampleTotal = 0;
+let slowWindows = 0, fastWindows = 0;
+function applyQuality(level) {
+  qualityLevel = Math.max(0, Math.min(2, level));
+  if (ssr) ssr.enabled = qualityLevel >= 2;
+  if (gtao) gtao.enabled = qualityLevel >= 1;
+  if (bloom) bloom.enabled = qualityLevel >= 1;
+  const ratio = lowPower ? .72 : (qualityLevel === 0 ? .72 : qualityLevel === 1 ? .88 : Math.min(devicePixelRatio, 1));
+  renderer.setPixelRatio(ratio);
+  renderer.setSize(innerWidth, innerHeight, false);
+  composer.setSize(innerWidth, innerHeight);
+}
+function sampleFrameTime(dt) {
+  if (dt <= 0 || dt > .2) return;
+  sampleFrames++;
+  sampleTotal += dt * 1000;
+  if (sampleFrames < 90) return;
+  averageFrameMs = sampleTotal / sampleFrames;
+  sampleFrames = 0;
+  sampleTotal = 0;
+  if (averageFrameMs > 23) {
+    slowWindows++;
+    fastWindows = 0;
+  } else if (averageFrameMs < 18) {
+    fastWindows++;
+    slowWindows = 0;
+  } else {
+    slowWindows = 0;
+    fastWindows = 0;
+  }
+  if (slowWindows >= 1 && qualityLevel > 0) {
+    applyQuality(qualityLevel - 1);
+    slowWindows = 0;
+    fastWindows = 0;
+  } else if (fastWindows >= 4 && qualityLevel < 2 && !lowPower) {
+    applyQuality(qualityLevel + 1);
+    slowWindows = 0;
+    fastWindows = 0;
+  }
+}
+applyQuality(qualityLevel);
+
 /* ───────── day and night ───────── */
 function applyTheme() {
   const n = night();
@@ -297,8 +351,46 @@ addEventListener("resize", layout);
 const lean = { x: 0, y: 0, tx: 0, ty: 0 };
 addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
 let t0 = performance.now(), last = t0, run = 0, vel = 0, jolt = 0, nextJolt = 4, shown = false, loaded = false;
-THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
-let raf = 0, lastRender = 0;
+let sceneWarm = false, warmupPromise = null, warmupScheduled = false;
+async function warmScene() {
+  if (warmupPromise) return warmupPromise;
+  warmupPromise = (async () => {
+    try {
+      if (typeof renderer.compileAsync === "function") await renderer.compileAsync(scene, camera);
+      // Compile the post-processing chain and upload textures/shadow maps while
+      // the user is still on the boarding screen, not on the first moving frame.
+      if (ssr) {
+        ssr.enabled = true;
+        composer.render();
+        ssr.enabled = false;
+      }
+      composer.render();
+      sceneWarm = true;
+    } catch (error) {
+      console.warn("[paper-desk] scene warmup:", error);
+      // Keep the 2D fallback until the first regular render has a chance to retry.
+      warmupPromise = null;
+    }
+  })();
+  return warmupPromise;
+}
+function scheduleWarmup() {
+  if (!loaded || sceneWarm || warmupScheduled || document.visibilityState === "hidden") return;
+  warmupScheduled = true;
+  const start = () => {
+    warmupScheduled = false;
+    if (loaded && !sceneWarm && document.visibilityState !== "hidden") warmScene();
+  };
+  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 1400 });
+  else setTimeout(start, 500);
+}
+THREE.DefaultLoadingManager.onLoad = () => {
+  loaded = true;
+  renderer.shadowMap.needsUpdate = true;
+  scheduleWarmup();
+};
+document.addEventListener("visibilitychange", scheduleWarmup);
+let raf = 0;
 const arrival = document.getElementById("arrive");
 function shouldRender() {
   return !!window.__car || (!document.hidden && host.classList.contains("on") && !arrival.classList.contains("on"));
@@ -306,9 +398,10 @@ function shouldRender() {
 function frame(now) {
   raf = 0;
   if (!shouldRender()) { last = now; return; }
-  if (lowPower && now - lastRender < 1000 / 30) { raf = requestAnimationFrame(frame); return; }
-  lastRender = now;
-  const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
+  const rawDt = (now - last) / 1000;
+  const dt = Math.min(.1, rawDt); last = now;
+  sampleFrameTime(rawDt);
+  const t = (now - t0) / 1000;
   const goal = Math.min(1, (+window.trainSpeed || 0) * 6);   // under way → full speed; only the last of the braking slows it
   vel += (goal - vel) * Math.min(1, dt * 1.6); const v = vel, m = reduce ? 0 : v;
   if (!window.__carHold) run += dt * v;
@@ -327,7 +420,7 @@ function frame(now) {
   const roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * m;
   look(lean.x * .003, lean.y * .002 + sy, roll);
   composer.render();
-  if (!shown && loaded && forest.visible) { shown = true; host.classList.add("car3d"); setTimeout(() => host.classList.add("car3dDone"), 1300); }
+  if (!shown && loaded && forest.visible && sceneWarm) { shown = true; host.classList.add("car3d"); setTimeout(() => host.classList.add("car3dDone"), 1300); }
   raf = requestAnimationFrame(frame);
 }
 function syncRenderLoop() {
@@ -341,10 +434,20 @@ stateObserver.observe(arrival, { attributes: true, attributeFilter: ["class"] })
 document.addEventListener("visibilitychange", syncRenderLoop);
 // test hooks: render on demand without a GPU
 window.__carDbg = () => ({ cam: camera.position.toArray() });
+window.__carPerf = () => ({
+  gpu: gpuName || "unreported",
+  lowPower,
+  qualityLevel,
+  pixelRatio: renderer.getPixelRatio(),
+  averageFrameMs,
+  averageFps: averageFrameMs ? +(1000 / averageFrameMs).toFixed(1) : null,
+  loaded,
+  sceneWarm
+});
 if (window.__CAR_STILL || /still/.test(location.search)) {
   window.__car = {
     frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; },
-    ready: () => loaded && forest.visible,
+    ready: () => loaded && forest.visible && sceneWarm,
     setRun: r => { run = r; vel = 1; }
   };
 } else syncRenderLoop();

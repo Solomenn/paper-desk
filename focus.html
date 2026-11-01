@@ -748,7 +748,7 @@
   $("#again").onclick = () => { location.reload(); };
 
   /* ───────── the loop ───────── */
-  let last = performance.now();
+  let last = performance.now(), lastLinePaint = 0;
   function frame(now) {
     if (arrived) return;
     if (document.hidden) { last = now; requestAnimationFrame(frame); return; }
@@ -776,7 +776,12 @@
       if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
       if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
       if (!$("#car").classList.contains("car3dDone")) scene(dt, now / 1000);   // the 2D window only while the 3D carriage is not showing
-      updateLine();
+      // The station labels and progress HUD are DOM-heavy; 4 updates/sec are
+      // visually indistinguishable from 60 while leaving the render loop free.
+      if (!lastLinePaint || now - lastLinePaint >= 250) {
+        updateLine();
+        lastLinePaint = now;
+      }
     }
     requestAnimationFrame(frame);
   }
@@ -788,18 +793,33 @@
 })();
 </script>
 <script type="module">
-/* Load the WebGL scene only when the user boards; the 2D view remains as an immediate fallback. */
+/* The site preloads the files globally. On this page, decode the GLB and warm
+   the WebGL/post-processing pipeline during idle time while the user writes. */
 let carriageLoad;
 function loadCarriage() {
-  if (location.protocol === "file:") return;
+  if (location.protocol === "file:") return Promise.resolve(null);
   if (!carriageLoad) carriageLoad = import("./carriage.js").catch(e => {
     console.warn("3D carriage not loaded:", e);
+    carriageLoad = null;
     return null;
   });
   return carriageLoad;
 }
+function scheduleCarriageWarmup() {
+  if (location.protocol === "file:" || carriageLoad || document.hidden) return;
+  const start = () => {
+    if (!document.hidden) loadCarriage();
+  };
+  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 2200 });
+  else setTimeout(start, 900);
+}
 document.addEventListener("carriageStart", loadCarriage, { once: true });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) scheduleCarriageWarmup();
+});
 if (document.querySelector("#car.on")) loadCarriage();
+else if (document.readyState === "complete") scheduleCarriageWarmup();
+else window.addEventListener("load", scheduleCarriageWarmup, { once: true });
 </script>
 </body>
 </html>
