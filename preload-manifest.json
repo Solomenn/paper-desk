@@ -28,8 +28,7 @@
     "assets/car.webp",
     "assets/snow-day.webp",
     "assets/tyl/mechanical-head.webp",
-    "assets/tyl/snow-background.webp",
-    "assets/3d/snow_forest.jpg"
+    "assets/tyl/snow-background.webp"
   ],
   "groups": [
     {
@@ -122,9 +121,11 @@
       "name": "ride",
       "concurrency": 2,
       "paths": [
-        "assets/cabin-day.webp",
-        "assets/cabin-day-shade.webp",
-        "assets/3d/snow_forest.jpg"
+        "ride.js",
+        "assets/ride/cabin.png",
+        "assets/ride/shade.png",
+        "assets/ride/glass.png",
+        "assets/ride/wood.png"
       ]
     }
   ]
