@@ -91,6 +91,25 @@
   html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
   html[data-theme="day"] .foot { background: #bfc9d4e8; color: #4f5a66; } html[data-theme="day"] .foot .q { color: #4f5444; }
   html[data-theme="day"] #board .wordmark, html[data-theme="day"] #board .ibtn { color: #2f3a48; } html[data-theme="day"] .home { background: rgba(20,24,30,.22); }
+  /* ── the setting-off card in the same frosted glass and quiet type as the ride (one accent, #2f4f73) ── */
+  html[data-theme="day"] .paper { background: rgba(214, 223, 233, .72); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 0 0 .5px rgba(21, 35, 58, .14); }
+  html[data-theme="day"] .foot { background: rgba(244, 246, 248, .86); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: inset 0 1px 0 rgba(21, 35, 58, .08), 0 0 0 .5px rgba(21, 35, 58, .14), 0 18px 34px -18px rgba(21, 35, 58, .45); color: #5d6873; }
+  html[data-theme="day"] .foot .q { color: #5d6873; } html[data-theme="day"] .foot .q:hover { color: #1c232b; }
+  /* the lamp's light and spread keep their defaults; only the ride length is set here, across the whole width */
+  .controls label:has(#light), .controls label:has(#spread) { display: none; }
+  .controls { grid-template-columns: 1fr; padding: 18px 34px 20px; }
+  html[data-theme="day"] .controls { background: none; box-shadow: inset 0 1px 0 rgba(21, 35, 58, .06); }
+  html[data-theme="day"] .controls label > span { justify-content: flex-end; margin-bottom: 12px; }
+  html[data-theme="day"] .controls output { font: 500 13px var(--sans); letter-spacing: .06em; color: #1c232b; font-variant-numeric: tabular-nums; }
+  html[data-theme="day"] #board input#ride { height: 20px; background: repeating-linear-gradient(90deg, rgba(28, 35, 43, .22) 0 1px, transparent 1px calc(20% - .2px)) 0 50% / calc(100% + 1px) 7px no-repeat,
+    linear-gradient(rgba(28, 35, 43, .16), rgba(28, 35, 43, .16)) center / 100% 1px no-repeat; }
+  html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; border: 2.5px solid #fff; border-radius: 50%; background: #2f4f73; box-shadow: 0 1px 4px rgba(21, 35, 58, .35); }
+  html[data-theme="day"] #board input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border: 2.5px solid #fff; border-radius: 50%; background: #2f4f73; box-shadow: 0 1px 4px rgba(21, 35, 58, .35); }
+  html[data-theme="day"] .go { border-radius: 999px; padding: 10px 26px; font: 500 14px var(--sans); letter-spacing: .14em; color: #fff; background: #2f4f73;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .25) inset, 0 8px 18px -10px rgba(21, 35, 58, .7); transition: background .2s, transform .2s var(--ease); }
+  html[data-theme="day"] .go:hover { background: #3a5f88; transform: translateY(-1px); }
   @media (max-width: 680px) { .paper { height: 470px; border-radius: 60px 60px 0 0; } .writing { margin: 50px 9% 0; } .mechanism { top: 268px; } .controls { padding: 16px 18px 22px; gap: 13px; } }
 
   /* ═════════ the ticket: ticket.js (after sasshi's admission ticket) ═════════ */
@@ -225,7 +244,7 @@
         <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
       </div>
     </div>
-    <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">检票上车</button></footer>
+    <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">上车</button></footer>
   </div>
   <div id="tkStage"><div id="tkSlot"></div></div>
   <canvas id="snow0"></canvas>
