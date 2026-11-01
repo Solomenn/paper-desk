@@ -25,6 +25,14 @@
   const TW = 3200, trunks = document.createElement("canvas"); trunks.width = TW; trunks.height = IH;
   { const t = trunks.getContext("2d"); let s = 5; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
     for (let x = 0; x < TW - 200;) { x += 120 + r() * 420; const w = 50 + r() * 120;
+      if (PX) {   // pixel bark: flat tones on the 4-px grid, a snow-lit edge, a few dark notches — no gradients
+        const X = Math.round(x / 4) * 4, Wd = Math.round(w / 4) * 4;
+        t.fillStyle = "#3a3028"; t.fillRect(X, 0, Wd, IH);
+        t.fillStyle = "#261f1a"; t.fillRect(X + Math.round(Wd * .62 / 4) * 4, 0, Wd - Math.round(Wd * .62 / 4) * 4, IH);
+        t.fillStyle = "#c9d3de"; t.fillRect(X + 4, 0, 8, IH);
+        t.fillStyle = "#5a4a3e"; t.fillRect(X + 12, 0, 4, IH);
+        t.fillStyle = "#1a1512"; for (let y = 0; y < IH; y += 60 + Math.floor(r() * 90)) t.fillRect(X + 16 + Math.floor(r() * Wd / 8) * 4, Math.round(y / 4) * 4, 8 + Math.floor(r() * 3) * 4, 4);
+        x += w; continue; }
       const gr = t.createLinearGradient(x, 0, x + w, 0); gr.addColorStop(0, "rgba(28,23,18,0)"); gr.addColorStop(.18, "rgba(28,23,18,.97)"); gr.addColorStop(.6, "rgba(48,40,32,.97)"); gr.addColorStop(.82, "rgba(20,16,12,.97)"); gr.addColorStop(1, "rgba(20,16,12,0)");
       t.fillStyle = gr; t.fillRect(x, 0, w, IH);
       const hl = t.createLinearGradient(x, 0, x + w, 0); hl.addColorStop(0, "rgba(230,236,242,0)"); hl.addColorStop(.25, "rgba(230,236,242,.28)"); hl.addColorStop(.4, "rgba(230,236,242,0)"); t.fillStyle = hl; t.fillRect(x, 0, w, IH);   // the snow light on one side of the bark
@@ -33,7 +41,7 @@
   // the tree shadows: slanted trunks and needle clumps, blurred — sunlight breaking through a wood. Tiles every SW px.
   const SW = 2400, pat = document.createElement("canvas"); pat.width = SW; pat.height = IH;
   { const p = pat.getContext("2d"); let s = 17; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
-    p.filter = "blur(14px)"; p.fillStyle = "#000";
+    p.filter = PX ? "none" : "blur(14px)"; p.fillStyle = "#000";   // in pixel art the shadows keep hard edges
     const slant = .45;                              // the sun comes in low from the side: shadows lean
     for (let i = 0; i < 6; i++) {
       const x0 = i / 6 * SW + r() * 120, w = 30 + r() * 60;
@@ -57,8 +65,12 @@
     for (let i = puffs.length - 1; i >= 0; i--) {
       const p = puffs[i]; p.age += dt; if (p.age > p.life) { puffs.splice(i, 1); continue; }
       const u = p.age / p.life; p.y -= dt * (34 - 14 * u); p.x += Math.sin(t * 1.6 + p.ph + u * 5) * dt * 16 - dt * 4;
-      const r = p.r * (1 + u * 3.2); g.globalAlpha = Math.sin(Math.PI * Math.min(1, u * 1.2)) * .8 * (1 - u * .5);
-      g.drawImage(puffImg, p.x - r, p.y - r, r * 2, r * 2);
+      const r = p.r * (1 + u * 3.2), al = Math.sin(Math.PI * Math.min(1, u * 1.2)) * .8 * (1 - u * .5);
+      if (PX) {   // pixel steam: a small cluster of pale squares on the grid, stepped alpha
+        g.globalAlpha = Math.round(al * .3 * 8) / 8; g.fillStyle = "#f4f2ee"; const R = Math.max(1, Math.round(r * .32 / 4));
+        for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) if (i * i + j * j <= R * R + (((i * 7 + j * 3 + (p.ph * 10 | 0)) & 3) ? 0 : -R))
+          g.fillRect(Math.round(p.x / 4 + i) * 4, Math.round(p.y / 4 + j) * 4, 4, 4);
+      } else { g.globalAlpha = al; g.drawImage(puffImg, p.x - r, p.y - r, r * 2, r * 2); }
     }
     g.globalAlpha = 1;
   }
