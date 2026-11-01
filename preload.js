@@ -32,7 +32,8 @@
 
   function requestWorkerPreload() {
     const worker = navigator.serviceWorker.controller || (registration && registration.active);
-    if (!worker || worker.state !== "activated" || worker === lastWorker) return false;
+    if (!worker || worker.state !== "activated") return false;
+    if (worker === lastWorker) return true;
     lastWorker = worker;
     status.state = "loading";
     worker.postMessage({type:"PRELOAD_SITE"});
