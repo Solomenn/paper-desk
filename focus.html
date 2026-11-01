@@ -78,11 +78,16 @@
   html[data-theme="day"] .paper { background: linear-gradient(180deg, #e9e4d4, #e3ddcb); }
   html[data-theme="day"] #free { color: #424536; caret-color: #6b5a2a; } html[data-theme="day"] #free::placeholder { color: #6d705f; }
   html[data-theme="day"] #tasks button { color: #4b4e3f; } html[data-theme="day"] #tasks button.on { color: #2c2f24; }
-  html[data-theme="day"] .beam { opacity: var(--light); mix-blend-mode: multiply; }   /* by day the lamp still burns: a warm cone pooled on the pale paper */
-  html[data-theme="day"] .beam::before { background: radial-gradient(ellipse at 50% 100%, #e9b866 0, #efcf92cc 23%, #f3e1b855 53%, transparent 76%); }
+  /* by day: high-key winter sun — the paper lies in pale blue shade, the lamp throws near-white light into it, a little flare at the lamp */
+  html[data-theme="day"] .paper { background: linear-gradient(180deg, #d4dce6, #ccd5df); }
+  html[data-theme="day"] .foot { background: #c3ccd6e8; } html[data-theme="day"] .controls { background: #c9d2dc40; }
+  html[data-theme="day"] .beam { opacity: calc(var(--light) * 1.6); mix-blend-mode: screen; filter: blur(12px); }
+  html[data-theme="day"] .beam::before { background: radial-gradient(ellipse at 50% 100%, #ffffff 0, #fffdf6ee 22%, #fff8eaa0 50%, #ffffff30 68%, transparent 80%); }
+  html[data-theme="day"] .beam::after { content: ""; position: absolute; left: 50%; bottom: -26px; width: 90px; height: 90px; transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0, #ffffffcc 12%, #e8f4ff55 40%, transparent 70%); }
   html[data-theme="day"] .controls label > span { color: #6c715f; } html[data-theme="day"] .controls { background: #00000008; }
   html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
-  html[data-theme="day"] .foot { background: #d7d1bfe8; color: #5b5f50; } html[data-theme="day"] .foot .q { color: #4f5444; }
+  html[data-theme="day"] .foot { background: #bfc9d4e8; color: #4f5a66; } html[data-theme="day"] .foot .q { color: #4f5444; }
   html[data-theme="day"] #board .wordmark, html[data-theme="day"] #board .ibtn { color: #2f3a48; } html[data-theme="day"] .home { background: rgba(20,24,30,.22); }
   @media (max-width: 680px) { .paper { height: 470px; border-radius: 60px 60px 0 0; } .writing { margin: 50px 9% 0; } .mechanism { top: 268px; } .controls { padding: 16px 18px 22px; gap: 13px; } }
 
