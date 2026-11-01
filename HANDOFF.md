@@ -2,6 +2,7 @@
 
 > 用途：在新对话里把这份文件发给 Claude，让它接着做，不必重新解释。
 > 仓库：GitHub `Solomenn/paper-desk`，推到 `main` 后 GitHub Pages 自动发布：<https://solomenn.github.io/paper-desk/>
+> 总入口：[`README.md`](README.md)（页面、文档索引、本地预览、存档）。
 > 写于 2026-11-01，同日更新（车窗换高清、窗外加滤镜，见第七节）。
 
 ---
