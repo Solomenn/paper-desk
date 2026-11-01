@@ -54,11 +54,9 @@ html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 
 .cast.glow { mix-blend-mode: screen; background: radial-gradient(40% 45% at 0% 100%, rgba(217, 120, 63, .16), transparent 70%); animation: ember 5.2s ease-in-out infinite; }
 html[data-theme="day"] .cast.shade { background: radial-gradient(120% 110% at 92% 8%, transparent 42%, rgba(172, 188, 214, .62) 100%); opacity: .75; }   /* the shade is sky-blue, not grey */
 html[data-theme="day"] .cast.glow { opacity: 0; }
-/* day: the morning sun through the window — a clear patch of white light with the frame's shadow in it, as on the train's table */
-.cast.bars { mix-blend-mode: multiply; opacity: 0; }
-html[data-theme="day"] .cast.bars { opacity: .2; }
+/* day: one clear patch of morning sun on what you're working on (room.js, [data-sunlit]) */
 .cast.sun { mix-blend-mode: soft-light; opacity: 0; }
-html[data-theme="day"] .cast.sun { opacity: .55; }
+html[data-theme="day"] .cast.sun { opacity: .7; }
 @media (prefers-reduced-motion: reduce) { .desk .stove, .cast.glow { animation: none; } }
 
 /* ───────── the day / night switch: a little brass knob, bottom right ───────── */

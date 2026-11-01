@@ -29,26 +29,24 @@
       const b = document.createElement("button"); b.className = "themeBtn"; b.type = "button"; b.onclick = () => Theme.toggle(); document.body.appendChild(b);
     }
     setTheme(root.dataset.theme); root.classList.remove("theming");
-    // by day the morning sun comes through the window: a clear patch with the frame's shadow in it
-    let bars = null, sun = null;
+    // by day one clear patch of morning sun falls on what you're working on: the element marked [data-sunlit]
+    // (on the desk, the 在做 column). No window frame in it — there is no window on screen to explain one.
+    let sun = null;
     function paint() {
-      const W = innerWidth, H = innerHeight, sx = W / 1440, sy = H / 900, k = Math.sqrt(sx * sy), small = W < 900;
-      const patch = [[560, -60], [1520, -60], [1520, 690], [1240, 960], [300, 960]].map(([x, y]) => `${(x * sx).toFixed(1)},${(y * sy).toFixed(1)}`).join(" ");
-      const ln = [[910, -60, 730, 960, 16], [1240, -60, 1060, 960, 12], [560, 300, 1520, 220, 10]].map(([x1, y1, x2, y2, w]) =>
-        `<line x1="${x1 * sx}" y1="${y1 * sy}" x2="${x2 * sx}" y2="${y2 * sy}" stroke="#2c3e58" stroke-width="${w * Math.min(1.25, k)}"/>`).join("");
-      if (bars) { bars.remove(); sun.remove(); }
-      // the patch of sun itself: white, lifted a little, edges only slightly soft (a clear morning, not haze)
+      if (sun) { sun.remove(); sun = null; }
+      const t = document.querySelector("[data-sunlit]"); if (!t) return;
+      const r = t.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+      if (r.width < 40 || r.right < 0 || r.left > W) return;
+      const p = 6, sk = 0;                                       // square to the column, so the light stays on it
+      const pts = [[r.left - p + sk, r.top - p], [r.right + p + sk, r.top - p], [r.right + p, r.bottom + p], [r.left - p, r.bottom + p]]
+        .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
       document.body.insertAdjacentHTML("beforeend", `<svg class="cast sun" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-        <filter id="room-sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${small ? 4 : 6}"/></filter></defs>
-        <polygon points="${patch}" fill="#fffefa" filter="url(#room-sb)"/></svg>`);
+        <filter id="room-sb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${W < 900 ? 8 : 14}"/></filter></defs>
+        <polygon points="${pts}" fill="#fffefa" filter="url(#room-sb)"/></svg>`);
       sun = document.body.lastElementChild;
-      document.body.insertAdjacentHTML("beforeend", `<svg class="cast bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-        <filter id="room-pb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${small ? 4 : 6}"/></filter>
-        <filter id="room-bb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${small ? 2 : 3.5}"/></filter>
-        <mask id="room-m" maskUnits="userSpaceOnUse" x="-200" y="-200" width="${W + 400}" height="${H + 400}"><polygon points="${patch}" fill="#fff" filter="url(#room-pb)"/></mask></defs>
-        <g mask="url(#room-m)"><g filter="url(#room-bb)">${ln}</g></g></svg>`);
-      bars = document.body.lastElementChild;
     }
+    window.roomRelight = paint;
+    addEventListener("deskpage", () => setTimeout(paint, 700)); addEventListener("load", () => setTimeout(paint, 300));
     paint();
     let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paint, 120); });
   };
