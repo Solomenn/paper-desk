@@ -1,13 +1,11 @@
 /* 雪国线 · the window (focus.html)
    A dark carriage wall with one rounded window, as in the reference frames: a pale rim, a black gasket, the view through it.
-   The view is one continuous ride, not clips: the far mountains are a 360° panorama (Poly Haven, CC0) sliding slowly by; the
+   The view through it is pixel art: the snowy wood of the pixel carriage (assets/ride/wood.png) going by slowly, the trunks
    field under them rushes past; telegraph poles, their wires and stands of poplars flick by close to the glass.
    The page drives it: #car.on shows it, window.trainSpeed (0…1) sets the pace. */
 (() => {
   const car = document.getElementById("car");
   if (!car) return;
-  const PANOS = ["champagne_castle_1"];   // alps_field dropped: the road near the camera bends across the field (equirect), it reads as a photo
-  const P = PANOS[new Date().getDate() % PANOS.length];
 
   const css = `
   .cv { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0e0c0b; }
@@ -19,7 +17,7 @@
     background: linear-gradient(180deg, #a9a7a2, #908e8a 55%, #7a7874); box-shadow: 0 0 0 1px #0007, 0 12px 40px -10px #000c; }
   .cv-gasket { position: absolute; inset: 3.4% 2%; border-radius: 6.4% / 11.6%; background: #0d0d0e; box-shadow: inset 0 0 0 1px #000; }
   .cv-glass { position: absolute; inset: 5.2% 3%; border-radius: 4.6% / 8.4%; overflow: hidden; background: #c9d0d4; }
-  .cv-glass canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .cv-glass canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   /* the glass itself: a soft sheen, a touch darker at the edges */
   .cv-glass::after { content: ""; position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(120% 120% at 50% 40%, transparent 60%, rgba(10, 12, 14, .28)), linear-gradient(115deg, rgba(255,255,255,.07), transparent 35%); }
@@ -62,29 +60,22 @@
   addEventListener("resize", layout);
 
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
-  let far = null, ground = null, ready = false;
-  Promise.all([img(`assets/train/${P}.webp`), img(`assets/train/${P}_ground.webp`)]).then(([a, b]) => {
-    far = a; ready = !!a; if (!b) return;
-    // the field strip, its top edge feathered so it melts into the land under the mountains
-    const c = document.createElement("canvas"); c.width = b.width; c.height = b.height * 2; const x = c.getContext("2d");
-    x.filter = "blur(26px) saturate(.85)";                       // what a field looks like at speed: streaks, no shapes
-    for (const dx of [-b.width, 0, b.width]) x.drawImage(b, dx, 0, b.width, c.height);
-    x.filter = "none"; x.globalAlpha = .35; x.drawImage(b, 0, 0, b.width, c.height); x.globalAlpha = 1;   // a little grass texture left in
-    x.globalCompositeOperation = "destination-in";
-    const gr = x.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(.28, "#000"); x.fillStyle = gr; x.fillRect(0, 0, c.width, c.height);
-    ground = c; });
+  // the view is pixel art, as the snowy wood of the pixel carriage: drawn small (LW×LH) and shown big, crisp
+  const LH = 140, LW = Math.round(LH * 1.74), low = document.createElement("canvas"); low.width = LW; low.height = LH;
+  const l = low.getContext("2d"); l.imageSmoothingEnabled = false;
+  let wood = null, ready = false;
+  img("assets/ride/wood.png").then(a => { wood = a; ready = !!a; });
 
-  // the things close to the line, laid out along a long loop of track (px at a 1000-px-wide window)
-  let seed = 11; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const LOOP = 14000, poles = [], trees = [];
-  for (let x = 0; x < LOOP; x += 820 + rnd() * 160) poles.push(x);
-  for (let x = 400; x < LOOP;) { const n = 2 + Math.floor(rnd() * 6), at = x; for (let k = 0; k < n; k++) trees.push({ x: at + k * (26 + rnd() * 22), h: .42 + rnd() * .2, w: 9 + rnd() * 6, s: rnd() }); x += 1300 + rnd() * 2600; }
-
-  function poplar(x, base, h, w, dark) {        // a tall narrow tree, leaves in a soft dark column
-    g.fillStyle = dark; g.beginPath(); g.moveTo(x, base - h);
-    g.bezierCurveTo(x + w * .9, base - h * .7, x + w * 1.05, base - h * .2, x + w * .35, base);
-    g.lineTo(x - w * .35, base); g.bezierCurveTo(x - w * 1.05, base - h * .2, x - w * .9, base - h * .7, x, base - h); g.fill();
-  }
+  // near trunks just outside the glass: flat cool bark, a lit edge, a few knots, snow caught on them (pixel grid)
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const TW = 900, trunks = document.createElement("canvas"); trunks.width = TW; trunks.height = LH;
+  { const t = trunks.getContext("2d");
+    for (let x = 30; x < TW - 40;) { const w = 6 + Math.floor(rnd() * 9);
+      t.fillStyle = "#6d7894"; t.fillRect(x, 0, w, LH); t.fillStyle = "#58627c"; t.fillRect(x + Math.ceil(w * .6), 0, w - Math.ceil(w * .6), LH);
+      t.fillStyle = "#a9b4cc"; t.fillRect(x + 1, 0, 1, LH);
+      t.fillStyle = "#4b546c"; for (let y = 8 + rnd() * 20; y < LH; y += 18 + rnd() * 30) t.fillRect(x + 2 + Math.floor(rnd() * (w - 4)), Math.floor(y), 2, 1);
+      x += w + 70 + Math.floor(rnd() * 180); } }
+  const flakes = Array.from({ length: 60 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: .4 + rnd() * .6 }));
 
   let last = performance.now(), vel = 0, run = 0, sized = false;
   function frame(now) {
@@ -94,38 +85,13 @@
     if (!sized) { layout(); sized = true; }
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2); run += dt * vel;
-    const W = cv.width, H = cv.height, k = W / 1000;                 // k: canvas px per "window px"
-    const horizon = H * .74;                                          // where the far land meets the field
-    // far: the panorama, slow
-    const fh = H * .98, fw = far.width * fh / far.height, fx = -((run * 22 * k) % fw);
-    for (let x = fx; x < W; x += fw) g.drawImage(far, x, horizon - fh * .86, fw, fh);
-    // the field: fast, smeared by the speed
-    if (ground) {
-      const gh = (H - horizon) * 1.45, gw = ground.width * gh / ground.height * 3, gx = -((run * 520 * k) % gw), gy = H - gh;
-      g.save(); g.globalAlpha = 1;
-      for (let x = gx; x < W; x += gw) g.drawImage(ground, x, gy, gw, gh);
-      g.globalAlpha = .35 * vel;                                     // motion smear
-      for (let s = 1; s <= 3; s++) for (let x = gx + s * 9 * k; x < W; x += gw) g.drawImage(ground, x, gy, gw, gh);
-      g.restore();
-      const sh = g.createLinearGradient(0, horizon, 0, H); sh.addColorStop(0, "rgba(40,48,44,0)"); sh.addColorStop(1, "rgba(28,32,30,.45)"); g.fillStyle = sh; g.fillRect(0, horizon, W, H - horizon);
-    }
-    // near: poles with their wires, close to the glass, blurred by the speed
-    const blur = Math.min(4, vel * 3) * k;
-    g.save(); g.filter = blur > .5 ? `blur(${blur.toFixed(1)}px)` : "none";
-    const tx = (run * 300 * k) % (LOOP * k);
-    const px = (run * 900 * k) % (LOOP * k), top = H * .2;
-    g.strokeStyle = "rgba(30, 32, 32, .8)"; g.lineWidth = Math.max(1, 1.2 * k);
-    const ps = poles.map(p => { let x = p * k - px; if (x < -900 * k) x += LOOP * k; return x; }).sort((a, b) => a - b);
-    for (let i = 0; i < ps.length - 1; i++) {                       // the wires: three, sagging between poles
-      const a = ps[i], b = ps[i + 1]; if (b < 0 || a > W) continue;
-      for (const [dy, sag] of [[0, 38], [16, 44], [30, 52]]) { g.beginPath(); g.moveTo(a, top + dy * k); g.quadraticCurveTo((a + b) / 2, top + (dy + sag) * k, b, top + dy * k); g.stroke(); }
-    }
-    for (const x of ps) { if (x < -40 * k || x > W + 40 * k) continue;
-      g.fillStyle = "#2f2d2a"; g.fillRect(x - 4 * k, top - 22 * k, 8 * k, H - top + 22 * k);
-      g.fillRect(x - 34 * k, top - 4 * k, 68 * k, 5 * k); }
-    g.restore();
-    // a cool, hazy grade over the whole view, like the reference frames
-    g.fillStyle = "rgba(196, 206, 212, .06)"; g.fillRect(0, 0, W, H);
+    // the wood, slow; the trunks by the line, fast; snow drifting across
+    const fx = -Math.floor((run * 40) % wood.width); for (let x = fx; x < LW; x += wood.width) l.drawImage(wood, x, 0);
+    const tx = -Math.floor((run * 380) % TW); for (let x = tx; x < LW; x += TW) l.drawImage(trunks, x, 0);
+    l.fillStyle = "#f7f9fd";
+    for (const f of flakes) { f.x -= dt * (8 + vel * 150) * f.z; f.y += dt * 9 * f.z; if (f.x < 0) f.x += LW; if (f.y > LH) f.y -= LH;
+      l.fillRect(Math.round(f.x), Math.round(f.y), f.z > .8 ? 2 : 1, 1); }
+    g.imageSmoothingEnabled = false; g.drawImage(low, 0, 0, cv.width, cv.height);
   }
   requestAnimationFrame(frame);
 })();
