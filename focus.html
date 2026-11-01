@@ -169,6 +169,18 @@
     color: #13213a; background: #e8d9a8; }
   #arrive .ghost { color: #c9d5e3; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
   @media (prefers-reduced-motion: reduce) { #board, #car { transition: none; } }
+
+  /* ═════════ the setting-off page, reproduced after 听雨来信 (snow mode): its photo, its snow, its cable and its head.
+     TEMPORARY: assets/tyl/* are 听雨来信's own images, used to get the look right first; to be replaced with our own. ═════════ */
+  #board { background: #191c19 url(assets/tyl/snow-background.webp) center / cover no-repeat; }
+  #board::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(#0c131930, #10171442 60%, #0a110f77); }
+  #bgc { display: none; }
+  .mechanism .ties { display: none; }
+  .mechanism .rail { top: 22px; height: 21px; border-radius: 3px; background: linear-gradient(#141714, #5a6059 17%, #282d28 36%, #090d0b 65%, #343932); box-shadow: 0 3px 4px #0008; }
+  #wave { position: absolute; left: 0; right: 0; top: -15px; width: 100%; height: 100px; opacity: .36; }
+  #loco { visibility: hidden; }
+  #head { position: absolute; left: var(--hx, 30%); top: -29px; width: 126px; height: 98px; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 4px 3px #0008); }
+  #steam { display: none; }
 </style>
 </head>
 <body>
@@ -191,7 +203,7 @@
         <input id="free" maxlength="40" placeholder="这一程，专注什么？" spellcheck="false" autocomplete="off">
         <div id="tasks"></div>
       </div>
-      <div class="mechanism"><i class="ties"></i><i class="rail"></i><div id="loco"></div></div>
+      <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
       <div class="controls">
         <label><span>LIGHT <output id="lightO">柔光</output></span><input id="light" type="range" min="15" max="100" value="70"></label>
         <label><span>SPREAD <output id="spreadO">72°</output></span><input id="spread" type="range" min="30" max="100" value="72"></label>
@@ -352,7 +364,7 @@
     $("#rod").setAttribute("d", `M${(110 + ox).toFixed(1)} ${(86 + oy).toFixed(1)}H${(142 + ox).toFixed(1)}`);
     LOCO.style.left = loco.x + "px";
     // the beam leaves from the headlamp
-    const k = LOCO.offsetWidth / 200, lampX = loco.x - LOCO.offsetWidth / 2 + 188 * k, lampY = $(".mechanism").offsetTop + LOCO.offsetTop + 36 * k;
+    const lampX = loco.x, lampY = $(".mechanism").offsetTop - 22; $("#head").style.left = loco.x + "px";
     BD.style.setProperty("--lx", lampX + "px"); BD.style.setProperty("--bh", lampY + "px");
     if ((idle -= dt) < 0) { idle = 2.5 + Math.random() * 3; if (!loco.leave) puff(1, false); }
     // steam
@@ -397,22 +409,35 @@
   draw(); loco.x = -80;
 
   /* ───────── snow on the platform ───────── */
-  function snowfall(cv, n, wind) {
-    const c = cv.getContext("2d"); let W, H, fl = [];
+  function snowfall(cv) {
+    const c = cv.getContext("2d"); let W, H, t = 0; const MAX = Math.round(45 * .75 + 10), SIZE = 45, SPEED = 40;
     const fit = () => { W = cv.width = cv.clientWidth * devicePixelRatio; H = cv.height = cv.clientHeight * devicePixelRatio; };
     fit(); addEventListener("resize", fit);
-    for (let i = 0; i < n; i++) { const z = Math.random(); fl.push({ x: Math.random(), y: Math.random(), r: .5 + z * z * 4.5, v: .012 + z * .045, p: Math.random() * 6, z }); }
+    const flake = top => ({ x: Math.random() * W / devicePixelRatio, y: top ? -30 : Math.random() * H / devicePixelRatio, z: .35 + Math.random() * .85, drift: Math.random() * Math.PI * 2 });
+    const fl = Array.from({ length: MAX }, () => flake(false));
     return dt => {
-      c.clearRect(0, 0, W, H); c.fillStyle = "rgba(235, 242, 250, .85)";
-      for (const f of fl) {
-        f.y += f.v * dt; f.x += (Math.sin(f.p += dt * .8) * .01 - wind()) * dt;
-        if (f.y > 1) { f.y = -.02; f.x = Math.random() * 1.2; } if (f.x < -.05) f.x = 1.05; if (f.x > 1.05) f.x = -.05;
-        c.globalAlpha = .4 + f.z * .4; const rr = f.r * devicePixelRatio * 2.2; c.drawImage(SPRITES[f.z > .8 ? 2 : f.z > .45 ? 1 : 0], f.x * W - rr, f.y * H - rr, rr * 2, rr * 2);
+      t += dt * 1000; const w = W / devicePixelRatio, h = H / devicePixelRatio;
+      c.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); c.clearRect(0, 0, w, h);
+      c.strokeStyle = "#eff6fa"; c.fillStyle = "#eef5fa"; c.lineWidth = .8;
+      for (let i = 0; i < fl.length; i++) {
+        const p = fl[i]; p.y += dt * (14 + SPEED * 1.15) * p.z; p.x += dt * (Math.sin(t * .0006 + p.drift) * 15 + 4) * p.z;
+        const size = (1.4 + SIZE * .06) * p.z; c.globalAlpha = .4 + p.z * .28; c.beginPath();
+        if (size > 3.3) { for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; c.moveTo(p.x - Math.cos(an) * size, p.y - Math.sin(an) * size); c.lineTo(p.x + Math.cos(an) * size, p.y + Math.sin(an) * size); } c.stroke(); }
+        else { c.arc(p.x, p.y, size * .65, 0, Math.PI * 2); c.fill(); }
+        if (p.y > h + 40 || p.x > w + 30) fl[i] = flake(true);
       }
       c.globalAlpha = 1;
     };
   }
-  const platSnow = snowfall($("#snow0"), 220, () => .004);
+  // the braided cable: nine fine strands wound along the rail
+  const wave = $("#wave"), wc = wave.getContext("2d");
+  (function waves(time) {
+    requestAnimationFrame(waves); if (document.hidden) return;
+    const ww = wave.clientWidth, wh = 100; if (wave.width !== ww * devicePixelRatio) { wave.width = ww * devicePixelRatio; wave.height = wh * devicePixelRatio; }
+    wc.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); wc.clearRect(0, 0, ww, wh); wc.lineWidth = .55; wc.strokeStyle = "#ccd1b4";
+    for (let n = 0; n < 9; n++) { wc.beginPath(); for (let x = 0; x < ww; x += 5) { const ph = x * .021 + time * .0004, amp = 11 + 9 * Math.sin(x * .016 + time * .0002), y = 50 + Math.sin(ph + n * .16) * amp * Math.sin(x * .007 + n * .04); x ? wc.lineTo(x, y) : wc.moveTo(x, y); } wc.stroke(); }
+  })(0);
+  const platSnow = snowfall($("#snow0"));
 
   /* ═════════ the window ═════════ */
   const cv = $("#scene"), cx = cv.getContext("2d");
