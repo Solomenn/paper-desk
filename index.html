@@ -85,6 +85,8 @@
   .mini .mrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
   .mini .mrow .bar { flex: 1; }
   .mini .mrow span { font: 11.5px var(--mono); color: var(--accent); }
+  .ftime { display: inline-flex; align-items: center; gap: 4px; flex: none; font: 11.5px var(--mono); color: var(--muted); white-space: nowrap; }
+  .ft { flex: none; margin-right: 10px; } .ft .ftime { font-size: 12px; }
   .mini .ready { display: none; font: 12px var(--sans); color: var(--stamp); border: 1px solid var(--stamp); border-radius: 999px; padding: 1px 8px; letter-spacing: .1em; }
   .mini.isready .ready { display: inline-block; }
   .mini.lifted { opacity: .3; }
@@ -719,7 +721,7 @@
 <template id="projTpl"><div class="pcard projc flipc">
   <div class="flipper">
     <div class="face f"><div class="sheetc">
-      <div class="head"><input class="tin" data-k="title" placeholder="项目" maxlength="40"><span class="pn"></span></div>
+      <div class="head"><input class="tin" data-k="title" placeholder="项目" maxlength="40"><span class="ft"></span><span class="pn"></span></div>
       <div class="bar"><i></i></div>
       <div class="body">
         <textarea class="goal" data-k="goal" rows="1" placeholder="目标"></textarea>
@@ -1347,6 +1349,10 @@
   const filled = p => p.conds.filter(c => c.t.trim() && !c.sub);
   const isReady = p => { const f = filled(p); return f.length > 0 && f.every(c => c.done); };
   const tiltOf = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0; return ((Math.abs(h) % 9) - 4) * .35; };
+  // time ridden on the 雪国线 for a project (focus.html adds each ride's minutes to p.focus): a little engine and the time
+  const ENGINE = '<svg viewBox="0 0 16 12" width="15" height="11" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 2.5h5v6h-5zM6.5 5h6.5a1.5 1.5 0 0 1 1.5 1.5v2H6.5M11 5V2.5"/><circle cx="3.5" cy="10" r="1.2"/><circle cx="8" cy="10" r="1.2"/><circle cx="12.5" cy="10" r="1.2"/></svg>';
+  const focusTime = m => m < 60 ? `${m} 分` : `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分` : ""}`;
+  const focusTag = p => p.focus > 0 ? `<span class="ftime" title="在雪国线上专注的时间">${ENGINE}${focusTime(p.focus)}</span>` : "";
   function miniCard(p) {
     const el = document.createElement("div");
     el.className = "mini"; el._p = p;
@@ -1356,7 +1362,9 @@
     if (p.goal) $("p", el).textContent = p.goal; else $("p", el).remove();
     el.title = [p.title, p.goal].filter(Boolean).join("\n");
     if (f.length) { $(".bar i", el).style.width = (k / f.length * 100) + "%"; $(".cnt", el).textContent = `${k}/${f.length}`; }
+    else if (p.focus > 0) $(".bar", el).style.visibility = "hidden";
     else $(".mrow", el).style.display = "none";
+    $(".cnt", el).insertAdjacentHTML("beforebegin", focusTag(p));
     // the steps: folded, just the next one; opened, all of them, tickable right here on the board
     const steps = p.conds.filter(c => c.t.trim());
     const open = openMini === p.id && steps.length > 0;
@@ -1534,6 +1542,7 @@
     function renderProgress() {
       const f = filled(p), k = f.filter(c => c.done).length;
       $$(".pn", el).forEach(e => e.textContent = f.length ? `${k} / ${f.length}` : "");
+      $$(".ft", el).forEach(e => e.innerHTML = focusTag(p));
       $$(".bar i", el).forEach(b => b.style.width = f.length ? (k / f.length * 100) + "%" : "0");
       el.classList.toggle("ready", isReady(p) && !el._stamped);
     }

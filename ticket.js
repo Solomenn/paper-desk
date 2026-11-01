@@ -167,7 +167,7 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
       [x0 + 53, "到 达", t.endAt ? hm(t.endAt) : t.open ? "随 时" : hm(start + t.minutes * (t.unit || 60000))], [x0 + 70, "座 位", esc(t.seat || "")]];
     for (const [x, k, v] of F) s += at(x, 42.2, 1.75, "mi", k) + at(x, 47.4, 3, "sn", v, "color:var(--ink)");
     const n = (t.stamps || []).length;
-    s += at(x0, 53.4, 2.4, "sn", t.endAt ? `雪国线 · 夜行${t.km != null ? " · " + t.km + " km" : ""}` : t.open ? "雪国线 · 夜行 · 不限时" : "雪国线 · 夜行 · 车内请保持安静", "color:var(--muted);letter-spacing:.06em");
+    s += at(x0, 53.4, 2.4, "sn", t.endAt ? `雪国线${t.km != null ? " · " + t.km + " km" : ""}` : t.open ? "雪国线 · 不限时" : "雪国线", "color:var(--muted);letter-spacing:.06em");
     // the stub: upright characters down its middle, the number small along its outer side
     const sx = PERF + 9.6, chars = ["乘", "车", "凭", "证"], px = 2.8, step = px * 1.6, y0 = H / 2 - step * 1.5 + px * .36;
     chars.forEach((c, i) => { s += at(sx - px / 2, f2(y0 + i * step), px, "sn", c, "color:#eef2f6;font-weight:500"); });
@@ -185,12 +185,12 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
   function backPrint(t) {
     // seen from behind the stub is on the left: the print starts past it
     const bx = W - PERF + 10, d = new Date(t.start || Date.now()), pitch = 3.2, top = 12.4;
-    let s = at(bx, top, 3.2, "sf", `雪国线 夜行 ${d.getFullYear()}`, "font-weight:500");
+    let s = at(bx, top, 3.2, "sf", `雪国线 ${d.getFullYear()}`, "font-weight:500");
     let row = top + pitch * 3;
     TERMS.forEach((x, i) => { s += at(bx, f2(row), 1.9, "sn", `${i + 1}.`, "color:var(--muted);font-weight:500") + at(bx + 4.2, f2(row), 1.9, "sn", esc(x), "color:#4a5560;letter-spacing:.02em"); row += pitch; });
     const foot = top + pitch * Math.min(12, Math.floor((PUNCH.y - PUNCH.r - 3.6 - top) / pitch));
     s += `<i class="p" style="left:calc(var(--u)*${bx});top:calc(var(--u)*${f2(foot - pitch * 1.1)});width:calc(var(--u)*70);height:max(1px,calc(var(--u)*.14));background:rgba(28,35,43,.2)"></i>`;
-    s += at(bx, f2(foot), 1.9, "sn", "雪国线 · 夜行 · 一人一票", "color:var(--muted);letter-spacing:.04em");
+    s += at(bx, f2(foot), 1.9, "sn", "雪国线", "color:var(--muted);letter-spacing:.04em");
     // the station stamps collected on the way, inked over the back in a loose row
     (t.stamps || []).slice(0, 7).forEach((x, i) => {
       const cx0 = 98 + (i % 4) * 8.6, cy0 = 14 + Math.floor(i / 4) * 9 + (i % 2) * 1.2, r = ((x.k * 37) % 17) - 8;

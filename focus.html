@@ -594,7 +594,7 @@
     const km = kmNow(), k = stopping ? stopping.k : lastK();
     if (!trip.stamps.some(x => x.k === k)) trip.stamps.push({ k, name: nm(k), at: Date.now() });
     const stops = Array.from({ length: k + 1 }, (_, i) => nm(i)), focused = Math.round(km * trip.unit / 60000);
-    const rec = Object.assign({}, trip, { stops, done: !early, endAt: Date.now(), reached: k, at: nm(k), focused, km: +km.toFixed(1), minutes: trip.open ? focused : trip.minutes });
+    const rec = Object.assign({}, trip, { stops, done: !early, endAt: Date.now(), reached: k, at: nm(k), focused, km: +km.toFixed(1), planned: trip.minutes, minutes: focused });   // the ticket shows the minutes actually ridden
     const all = get(TICKETS, []) || []; all.push(rec); put(TICKETS, all);
     localStorage.removeItem(TRIP);
     if (rec.proj) {
@@ -604,7 +604,7 @@
     }
     $("#slot").innerHTML = Ticket.html(rec, { punched: true });
     const tk = $("#slot .tkt"); tk.style.setProperty("--tw", "min(520px, 86vw)"); Ticket.physics(tk);
-    $("#arrMsg").textContent = early ? `在 ${rec.at} 下了车 · ${rec.km} km · ${focused} 分钟` : `${rec.at} 到了 · ${rec.km} km · ${focused} 分钟`;
+    $("#arrMsg").textContent = "";   // the ticket says it all
     $("#arrive").classList.add("on");
     chime();
     setTimeout(() => { tk.classList.add("stamped"); window.Sound && Sound.impact("card", .8); }, 700);
