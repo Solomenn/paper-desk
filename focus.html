@@ -7,15 +7,19 @@
 <link rel="stylesheet" href="fonts.css">
 <link rel="preload" as="image" href="assets/snow-day.webp" fetchpriority="high">
 <style>
-  :root { --hand: "LXGW WenKai", "霞鹜文楷", "KaiTi", "STKaiti", serif; --ai: #2f4f73; --ease: cubic-bezier(.22, 1, .36, 1); }
+  :root { /* the same type as every other page (room.css): print for labels, handwriting only for what you write */
+    --hand: "LXGW WenKai", "霞鹜文楷", "LXGW WenKai Screen", "Klee One", "KaiTi", "STKaiti", serif;
+    --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+    --sans: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; --ai: #2f4f73; --ease: cubic-bezier(.22, 1, .36, 1); }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #070d18; font-family: var(--hand); color: #e8eef5; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070d18; font-family: var(--sans); color: #e8eef5; user-select: none; -webkit-user-select: none; }
   body { line-break: strict; }
 
   /* ═════════ setting off (after 听雨来信's writing desk): a dark board in a snowy night; you write the task in the light of the
      little engine's lamp, which runs along its rail under the words and puffs steam at every key ═════════ */
   #board { position: fixed; inset: 0; z-index: 5; overflow-y: auto; overflow-x: hidden; transition: opacity .9s, transform 1.2s var(--ease); background: #151c26;
-    --ink: #dedccb; --serif: "Noto Serif SC", "Songti SC", "STSong", serif; --mono: ui-monospace, "SF Mono", Menlo, monospace; --light: .7; --spread: 72%; }
+    --ink: #dedccb; --light: .7; --spread: 72%; }
   #board.gone { opacity: 0; transform: scale(1.03); pointer-events: none; }
   .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
     color: #d7d9c6; text-decoration: none; font-size: 20px; transition: background .2s; }
@@ -118,26 +122,12 @@
   #sndT { position: absolute; left: 76px; top: 2.2vh; border: 0; background: none; font: 13px var(--hand); letter-spacing: .3em; color: rgba(232, 217, 168, .0); cursor: pointer; transition: color .4s; }
   #car:hover #sndT { color: rgba(232, 217, 168, .55); }
 
-  /* the station stamps: every station passed inks one into the little book propped on the sill */
-  #book { position: absolute; left: 6vw; bottom: calc(12vh + 1.6vh); z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px 8px;
-    background: rgba(52, 36, 33, .78); border: 2px solid #e8d9b4; outline: 2px solid #2a1d1a; border-radius: 0;   /* a pixel panel, like the picture */
-    box-shadow: 4px 4px 0 rgba(20, 12, 10, .35); color: #e8d9b4; image-rendering: pixelated; }
-  #book .ttl { writing-mode: vertical-rl; font-size: 11px; letter-spacing: .3em; color: rgba(232, 217, 180, .7); padding-right: 6px; border-right: 2px solid rgba(232, 217, 180, .25); }
-  #book .stp { position: relative; width: 46px; height: 48px; border-radius: 0; display: grid; place-items: center; font-family: "Noto Sans SC", sans-serif;
-    border: 2px solid #e2c27a; box-shadow: inset 0 0 0 2px rgba(52, 36, 33, .9), inset 0 0 0 4px rgba(226, 194, 122, .55); color: #f0dca6; transform: none !important; }
-  #book .stp b { font-weight: 500; font-size: 12px; letter-spacing: .05em; line-height: 1.1; text-align: center; margin-bottom: 9px; }
-  #book .stp small { position: absolute; bottom: 6px; font-size: 8px; letter-spacing: .05em; opacity: .75; }
-  #book .stp.new { animation: inked .45s steps(4); }
-  @keyframes inked { from { opacity: 0; } to { opacity: 1; } }
-  #book .stp.next { border: 2px dashed rgba(232, 217, 180, .4); box-shadow: none; color: rgba(232, 217, 180, .55); }
-  #book .stp.next b { font-size: 10px; } #book .stp.next small { bottom: 6px; }
-  #book .more { font-size: 11px; color: rgba(232, 217, 180, .6); letter-spacing: .1em; }
   #line .st i em { display: block; margin-top: 2px; font-style: normal; font-size: 10px; letter-spacing: .05em; opacity: .7; text-align: center; }
   #line .st, #line .done { transition: left .8s var(--ease), width .3s linear; }
   #line .tr b { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font-weight: 400; font-size: 12px; letter-spacing: .1em; color: #f1e6c4; white-space: nowrap; }
   #hudName { outline: none; cursor: text; border-bottom: 1px dashed transparent; }
   #hudName:hover, #hudName:focus { border-bottom-color: rgba(232,217,168,.4); }
-  #hudName:empty::before { content: "这一程在做什么？点这里写"; color: rgba(232,217,168,.45); }
+  #hudName:empty::before { content: "这一程在做什么？"; color: rgba(232,217,168,.45); }
   #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { color: rgba(232, 217, 168, .8); }
   #line .st i.hid { visibility: hidden; }
 
@@ -195,12 +185,12 @@
       </div>
       <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
       <div class="controls">
-        <label><span>LIGHT <output id="lightO">柔光</output></span><input id="light" type="range" min="15" max="100" value="70"></label>
-        <label><span>SPREAD <output id="spreadO">72°</output></span><input id="spread" type="range" min="30" max="100" value="72"></label>
-        <label><span>RIDE <output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
+        <label><span>灯光</span><input id="light" type="range" min="15" max="100" value="70"></label>
+        <label><span>光束</span><input id="spread" type="range" min="30" max="100" value="72"></label>
+        <label><span>行程 <output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
       </div>
     </div>
-    <footer class="foot"><button class="q" id="sndB"></button><span class="hint">写下这一程的事，或点一个 · Enter 检票</span><button class="go" id="go">检票上车</button></footer>
+    <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">检票上车</button></footer>
   </div>
   <div id="tkStage"><div id="tkSlot"></div></div>
   <canvas id="snow0"></canvas>
@@ -210,7 +200,6 @@
 <section id="car">
   <div id="line"><i class="track"></i><i class="done"></i></div>
   <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
-  <div id="book"></div>
   <button id="sndT">车 轮 声</button>
   <button id="off">中 途 下 车</button>
 </section>
@@ -280,7 +269,7 @@
   function lampUI() {
     BD.style.setProperty("--light", (lamp.light / 100).toFixed(2)); BD.style.setProperty("--spread", lamp.spread + "%");
     $("#light").value = lamp.light; $("#spread").value = lamp.spread;
-    $("#lightO").textContent = lamp.light < 40 ? "微光" : lamp.light < 80 ? "柔光" : "明亮"; $("#spreadO").textContent = Math.round(lamp.spread * 1.6) + "°";
+    
   }
   ["light", "spread"].forEach(k => $("#" + k).addEventListener("input", e => { lamp[k] = +e.target.value; lampUI(); put("paper-desk.trip.lamp", lamp); }));
   $("#ride").addEventListener("input", e => { minutes = RIDES[+e.target.value]; put("paper-desk.trip.min", minutes); draw(); });
@@ -472,7 +461,7 @@
   }
   $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
   $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关";
-  const sndB = () => { $("#sndB").innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${wheelsOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>${wheelsOn ? "声音已开启" : "声音已关闭"}`; };
+  const sndB = () => { $("#sndB").innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${wheelsOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>`; $("#sndB").title = wheelsOn ? "声音：开" : "声音：关"; };
   $("#sndB").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); sndB(); $("#sndT").textContent = wheelsOn ? "车 轮 声" : "车 轮 声 · 关"; if (wheelsOn) chuff(.6); };
   sndB();
 
@@ -524,7 +513,7 @@
     L.querySelectorAll(".st").forEach(e => e.remove());
     for (let i = 0; i <= n; i++) {
       const e = document.createElement("i"); e.className = "st"; e.style.left = (i / n * 100) + "%";
-      const lab = document.createElement("i"); lab.textContent = nm(i); lab.innerHTML += `<em>${i * KM} km</em>`;
+      const lab = document.createElement("i"); lab.textContent = nm(i);
       if (i % every && i !== n) lab.className = "hid";
       e.appendChild(lab); L.insertBefore(e, $("#line .tr"));
     }
@@ -544,9 +533,9 @@
   $("#hudName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
   $("#hudName").addEventListener("blur", () => { if (!trip) return; trip.name = $("#hudName").textContent.trim().slice(0, 40); $("#hudName").textContent = trip.name; put(TRIP, trip); });
 
-  /* the stamp book on the sill: the last few stamps, and a dashed ring waiting for the next station */
+  /* the stamp book is gone (the line below already shows every station passed); stamps are still kept on the trip */
   function bookUI(fresh) {
-    const B = $("#book"), st = trip.stamps, show = st.slice(-5), md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${d.getDate()}`; };
+    const B = $("#book"); if (!B) return; const st = trip.stamps, show = st.slice(-5), md = ts => { const d = new Date(ts); return `${d.getMonth() + 1}.${d.getDate()}`; };
     B.innerHTML = `<span class="ttl">站 章</span>` + (st.length > 5 ? `<span class="more">… ${st.length - 5}</span>` : "") +
       show.map((x, i) => `<span class="stp${fresh && i === show.length - 1 ? " new" : ""}" style="--r:${((x.k * 37) % 17) - 8}deg;transform:rotate(${((x.k * 37) % 17) - 8}deg)"><b>${x.name}</b><small>${md(x.at)}</small></span>`).join("") +
       (trip.passed < lastK() - 1 || trip.open ? `<span class="stp next"><b>${nm(trip.passed + 1)}</b><small>${(trip.passed + 1) * KM} km</small></span>` : "");
@@ -579,7 +568,7 @@
     }
     $("#slot").innerHTML = Ticket.html(rec, { punched: true });
     const tk = $("#slot .tkt"); tk.style.setProperty("--tw", "min(520px, 86vw)"); Ticket.physics(tk);
-    $("#arrMsg").textContent = early ? `在 ${rec.at} 下了车 · ${rec.km} km · ${focused} 分钟` : `${rec.at} 到了 · ${rec.km} km · ${focused} 分钟 · 盖了 ${rec.stamps.length} 枚站章`;
+    $("#arrMsg").textContent = early ? `在 ${rec.at} 下了车 · ${rec.km} km · ${focused} 分钟` : `${rec.at} 到了 · ${rec.km} km · ${focused} 分钟`;
     $("#arrive").classList.add("on");
     chime();
     setTimeout(() => { tk.classList.add("stamped"); window.Sound && Sound.impact("card", .8); }, 700);
@@ -587,7 +576,7 @@
   // getting off: the train brakes into the next station and stops there
   $("#off").onclick = () => {
     if (arrived || stopping) return;
-    if (!trip.open && !confirm("在下一站下车？这张票会记下你坐到了哪里。")) return;
+    if (!trip.open && !confirm("在下一站下车？")) return;
     const k = Math.min(lastK(), trip.passed + 1), T = Math.max(1.5, Math.min(8, speed / CRUISE * 8));
     stopping = { k, name: nm(k), t0: performance.now(), T, v0: speed, w0: world, early: !trip.open };
   };
@@ -634,6 +623,6 @@
   requestAnimationFrame(frame);
 })();
 </script>
-<script src="ride.js?v=pixel-ride-7"></script>
+<script src="ride.js?v=pixel-ride-8"></script>
 </body>
 </html>

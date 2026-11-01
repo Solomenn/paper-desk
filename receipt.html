@@ -6,10 +6,6 @@
 <meta name="color-scheme" content="light">
 <title>纸桌 · 今日小票</title>
 <style>
-  :root{
-    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
-    --mono:"SF Mono","Cascadia Mono",Consolas,"Courier New",monospace;
-  }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
@@ -52,7 +48,7 @@
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   }
   .panel-head .sub{font:500 10.5px var(--mono);letter-spacing:.28em;color:#8e9aa4;margin:0 0 6px}
-  .panel-head h2{margin:0;font-size:19px;font-weight:600;letter-spacing:.02em;color:#1c232b;font-family:"Source Han Serif SC","Noto Serif SC","Songti SC",serif}
+  .panel-head h2{margin:0;font-size:19px;font-weight:600;letter-spacing:.02em;color:#1c232b;font-family:var(--serif)}
   .panel-head p{margin:6px 0 0;font-size:12px;color:#4f5d69;line-height:1.5}
   .icon-btn{
     flex:0 0 auto;width:32px;height:32px;border-radius:50%;
@@ -190,7 +186,6 @@
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
-  <p class="hint">事项跟着今日台历走 · 点 <b>PRINT</b> 打印并导出，<b>EDIT</b> 改样式 <kbd>P</kbd> <kbd>E</kbd></p>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -200,8 +195,7 @@
     <div>
       <p class="sub">RECEIPT STYLE</p>
       <h2>小票样式</h2>
-      <p>事项、日期和寄语都跟着左边的今日台历走；这里只改小票的样子。</p>
-    </div>
+      </div>
     <button class="icon-btn" id="close-panel" aria-label="关闭">×</button>
   </div>
   <div class="panel-body">
@@ -248,7 +242,7 @@
   const W = 1206;
   // a thermal printer prints: Noto Sans SC for the words, a monospace for the figures
   const SANS = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
-  const MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans SC",monospace';
+  const MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans SC",monospace';   // = var(--mono) in room.css, for the canvas
 
   // sasshi's inks: 墨 sumi, 鉄鼠 tetsu, 藍鼠 ainezu, 白鼠 shironezu, 藍 ai, 薄墨 usuzumi
   const INK = '#1c232b';
@@ -715,25 +709,7 @@
      ============================================================ */
   function drawHeader() {
     const x = 96;
-    /* 小圆点（氛围色）+ 小字 */
-    ctx.beginPath();
-    ctx.arc(x + 8, 105, 8, 0, Math.PI * 2);
-    ctx.fillStyle = state.accent;
-    ctx.fill();
-    tracked(ctx, 'DAILY RECEIPT', x + 30, 112, `500 19px ${MONO}`, '#8e9aa4', 8, 'left');
-
-    /* 标题 */
-    const night = document.documentElement.dataset.theme === 'night';
-    ctx.font = `600 76px ${SANS}`;
-    ctx.fillStyle = night ? '#e6dcc8' : '#1c232b';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText('今日小票', x, 194);
-
-    /* 副标题 */
-    ctx.font = `400 26px ${SANS}`;
-    ctx.fillStyle = night ? 'rgba(230,220,200,.6)' : '#4f5d69';
-    ctx.fillText('把今天的事打成一张热敏小票', x + 2, 238);
+    /* no drawn header: the margin title names the page, the printer explains itself */
   }
 
   /* ============================================================
@@ -823,11 +799,10 @@
 
     /* LIFE POS */
     tracked(c, 'LIFE POS', 160, 396, `600 30px ${MONO}`, '#36424e', 10, 'left');
-    tracked(c, 'THERMAL 58mm', 162, 428, `400 16px ${MONO}`, '#8e9aa4', 3.4, 'left');
 
     /* 按钮 */
-    paintButton(c, BTN_EDIT, '#36424e', '#4f5d69', 'EDIT');
-    paintButton(c, BTN_PRINT, '#2f4f73', '#41648f', 'PRINT');
+    paintButton(c, BTN_EDIT, '#36424e', '#4f5d69', '样式');
+    paintButton(c, BTN_PRINT, '#2f4f73', '#41648f', '打印');
 
     /* 出纸口：暗腔 */
     c.save();

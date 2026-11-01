@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-hashira="黑板　项目">
+<html lang="zh-CN" data-hashira="项目">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -675,7 +675,7 @@
 
 <header id="top">
   <button id="calTab" title="今日（点开 / 往下拉固定）"><b class="d"></b><span class="w"></span><span class="pn"></span><i class="chev"></i></button>
-  <div id="bar" class="empty"><span class="hint">把便签、项目卡或今天的事拖到这条绳上</span></div>
+  <div id="bar" class="empty"></div>
 </header>
 <aside id="cal">
 <button id="calPin" title="固定"></button>
@@ -700,9 +700,9 @@
   <div id="pages">
     <section class="page" id="chalk"><div class="frame"><i class="picLamp" aria-hidden="true"></i><div class="inner">
       <div class="lanes">
-        <div class="lane" data-col="doing"><h3>Doing<small></small></h3><div class="cards"></div></div>
-        <div class="lane" data-col="todo"><h3>To do<small></small></h3><div class="cards"></div><button class="add">＋ New</button></div>
-        <div class="lane" data-col="done"><h3>Done<small></small></h3><div class="cards"></div></div>
+        <div class="lane" data-col="doing"><h3>在做<small></small></h3><div class="cards"></div></div>
+        <div class="lane" data-col="todo"><h3>待做<small></small></h3><div class="cards"></div><button class="add" title="新项目">＋</button></div>
+        <div class="lane" data-col="done"><h3>做完<small></small></h3><div class="cards"></div></div>
       </div>
       <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
     </div></div></section>
@@ -747,8 +747,8 @@
   <button class="tb pg" data-p="0" title="项目（1）"><i></i></button>
   <button class="tb pg" data-p="1" title="便签（2）"><i></i></button>
   <span class="tsep"></span>
-  <span class="tb chalkonly" title="新项目：点一下放进 Doing，或拖到某一列"><span class="ppad doing" data-col="doing"></span></span>
-  <span class="tb chalkonly" title="新项目：点一下放进 To do，或拖到某一列"><span class="ppad todo" data-col="todo"></span></span>
+  <span class="tb chalkonly" title="新项目 · 在做"><span class="ppad doing" data-col="doing"></span></span>
+  <span class="tb chalkonly" title="新项目 · 待做"><span class="ppad todo" data-col="todo"></span></span>
   <span class="tb corkonly"><span class="pad" data-cat="work" title="拖出一张便签"></span></span>
   <span class="tb corkonly"><span class="pad" data-cat="life" title="拖出一张便签"></span></span>
   <span class="tb corkonly"><span class="pad" data-cat="idea" title="拖出一张便签"></span></span>
@@ -818,7 +818,7 @@
     $$(".pg").forEach(b => b.classList.toggle("on", +b.dataset.p === page));
     store(PAGEKEY, page);
     dispatchEvent(new CustomEvent("deskpage", { detail: page }));
-    window.setHashira && setHashira(page === 0 ? "黑板　项目" : "软木板　便签");
+    window.setHashira && setHashira(page === 0 ? "项目" : "便签");
     // the album button opens this page's album
     const ab = $("#albumBtn");
     if (ab) {
@@ -1407,7 +1407,7 @@
         el.style.setProperty("--mg", MAG[p.col]);
         return el;
       });
-      if (!ps.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = col === "done" ? "勾完的放这里" : "空"; want.push(e); }
+      if (!ps.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = ""; want.push(e); }
       // only move what has to move, so a card being typed in keeps its caret
       [...box.children].forEach(c => { if (!want.includes(c)) c.remove(); });
       want.forEach((el, i) => { if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null); });

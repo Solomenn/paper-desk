@@ -167,7 +167,7 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
       [x0 + 53, "到 达", t.endAt ? hm(t.endAt) : t.open ? "随 时" : hm(start + t.minutes * (t.unit || 60000))], [x0 + 70, "座 位", esc(t.seat || "")]];
     for (const [x, k, v] of F) s += at(x, 42.2, 1.75, "mi", k) + at(x, 47.4, 3, "sn", v, "color:var(--ink)");
     const n = (t.stamps || []).length;
-    s += at(x0, 53.4, 2.4, "sn", t.endAt ? `雪国线 · 夜行 · ${t.km != null ? t.km + " km · " : ""}站章 ${n} 枚` : t.open ? "雪国线 · 夜行 · 不限时，想下车就下车" : "雪国线 · 夜行 · 车内请保持安静", "color:var(--muted);letter-spacing:.06em");
+    s += at(x0, 53.4, 2.4, "sn", t.endAt ? `雪国线 · 夜行${t.km != null ? " · " + t.km + " km" : ""}` : t.open ? "雪国线 · 夜行 · 不限时" : "雪国线 · 夜行 · 车内请保持安静", "color:var(--muted);letter-spacing:.06em");
     // the stub: upright characters down its middle, the number small along its outer side
     const sx = PERF + 9.6, chars = ["乘", "车", "凭", "证"], px = 2.8, step = px * 1.6, y0 = H / 2 - step * 1.5 + px * .36;
     chars.forEach((c, i) => { s += at(sx - px / 2, f2(y0 + i * step), px, "sn", c, "color:#eef2f6;font-weight:500"); });

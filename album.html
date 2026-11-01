@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-hashira="卡册　盖过章的都在这里">
+<html lang="zh-CN" data-hashira="卡册">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,9 +8,6 @@
   :root {
     --ink: #3b3a33; --muted: #8b867a; --faint: #b3ad9d; --paper: #fbf8ef; --paper2: #f3eee2; --desk: #ece5d6; --accent: #4f7a5a; --stamp: #b5523b;
     --line: rgba(54, 66, 78, .16);
-    --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
-    --sans: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
-    --mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
     --ease: cubic-bezier(.22, 1, .36, 1);
     --pw: 400px; --ph: 540px;
   }
@@ -121,7 +118,7 @@
   .zf li { display: flex; gap: 12px; padding: 10px 0; font-size: 15px; line-height: 1.5; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(79,122,90,.5); }
   .zf li i { flex: none; width: 20px; height: 20px; border-radius: 4px; background: var(--accent); position: relative; margin-top: 1px; }
   .zf li i::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid var(--paper); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-  .zf .zmemo { margin-top: 12px; white-space: pre-wrap; font: 15px/28px "LXGW WenKai", "霞鹜文楷", "KaiTi", serif; color: var(--ink);
+  .zf .zmemo { margin-top: 12px; white-space: pre-wrap; font: 15px/28px var(--hand); color: var(--ink);
     background: repeating-linear-gradient(transparent 0 27px, rgba(54, 66, 78, .2) 27px 28px); min-height: 84px; max-height: 196px; overflow: hidden; }
   .zf .when { position: absolute; left: 22px; bottom: 22px; font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .12em; }
   .zstamp { position: absolute; right: 22px; bottom: 22px; width: 86px; height: 100px; transform: rotate(-5deg);
@@ -234,7 +231,7 @@
   <div class="rings" aria-hidden="true"><i></i><i></i><i></i></div>
 </div>
 <div id="pager"></div>
-<div id="empty">这些是示例卡片。在桌子上做完一张任务卡，它就会出现在这里。</div>
+<div id="empty">示例</div>
 
 <div id="zoom"><div id="zcap"><div class="k">卡 册</div><h2></h2><div class="when"></div><div class="steps"></div><p class="memo"></p><div class="hint">点卡片翻面 · 点空白处放回插袋</div></div><div id="zc"></div></div>
 
@@ -247,10 +244,10 @@
   const PW = 400, PH = 540, K = 14, PER = 4;
   // three albums in one binder: stamped projects, archived sticky notes, printed receipts
   const KIND = ({ note: "note", receipt: "receipt", ticket: "ticket" })[new URLSearchParams(location.search).get("kind")] || "proj";
-  const KINDS = { proj: { name: "项目卡册", n: "张 · 盖过章的项目都在这里", empty: "这些是示例。在黑板上做完一个项目并盖章，它就会收进这里。", run: "项目卡册　盖过章的都在这里" },
-    note: { name: "便签卡册", n: "张 · 归档的便签都在这里", empty: "这些是示例。便签右键「归档」，或拖到工具栏的卡册上，就会收进这里。", run: "便签卡册　归档的都在这里" },
-    ticket: { name: "车票卡册", n: "张 · 坐过的每一程都在这里", empty: "还没有车票。点计时器，检票坐一趟雪国线，下车后车票就收进这里。", run: "车票卡册　雪国线" },
-    receipt: { name: "小票卡册", n: "张 · 每天打印的小票都在这里", empty: "还没有小票。在小票页按 PRINT 打印一张，它就会收进这里。", run: "小票卡册　每天一张" } };
+  const KINDS = { proj: { name: "项目卡册", n: "张", empty: "示例", run: "项目卡册" },
+    note: { name: "便签卡册", n: "张", empty: "示例", run: "便签卡册" },
+    ticket: { name: "车票卡册", n: "张", empty: "还没有车票", run: "车票卡册" },
+    receipt: { name: "小票卡册", n: "张", empty: "还没有小票", run: "小票卡册" } };
   document.documentElement.dataset.hashira = KINDS[KIND].run;
   window.setHashira && setHashira(KINDS[KIND].run);
   document.title = KINDS[KIND].name + " · 纸桌";
@@ -326,7 +323,7 @@
       $(".sub", pg).textContent = first ? `${fmt(first.doneAt)} — ${fmt(last.doneAt)}` : "";
       $(".n", pg).textContent = `${cards.length} ${KINDS[KIND].n}`;
       if (KIND === "ticket") { const km = cards.reduce((x, t) => x + (t.km || 0), 0), st = cards.reduce((x, t) => x + (t.stamps || []).length, 0);
-        if (st) $(".n", pg).textContent += ` · 一共 ${km.toFixed(1)} km，盖了 ${st} 枚站章`; }
+        if (km) $(".n", pg).textContent += ` · 一共 ${km.toFixed(1)} km`; }
       return pg;
     }
     const grid = el("div", "grid");
