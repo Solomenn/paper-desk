@@ -16,13 +16,13 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
   #car3d { opacity: 0; transition: opacity .8s ease; } body.car3d #car3d { opacity: 1; }
   body:not(.car3d) #car3dVig, body:not(.car3d) #car3dLit, body:not(.car3d) #car3dLit2, body:not(.car3d) #car3dSun, body:not(.car3d) #car3dSun2 { display: none; }
-  html:not([data-theme="day"]) #car3d { filter: saturate(1.18) contrast(1.04); }
-  #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 100% at 62% 42%, transparent 55%, rgba(8, 6, 4, .55) 100%); }
+  html:not([data-theme="day"]) #car3d { filter: none; }
+  #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 100% at 62% 42%, transparent 60%, rgba(8, 6, 4, .3) 100%); }
   /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
   #car3dLit, #car3dLit2 { position: fixed; inset: 0; z-index: 6; pointer-events: none; transition: opacity .8s; }
   html:not([data-theme="day"]) #car3dLit { mix-blend-mode: multiply;
     background: radial-gradient(56% 90% at calc((100% - var(--sidew, 300px)) / 2) 4%, rgba(255, 238, 205, .95), rgba(255, 246, 228, 0) 100%),
-                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fff8ec 20%, #f6dcb0 42%, #e2bc8c 68%, #c49a72 100%); }
+                radial-gradient(70% 85% at var(--lx, 88%) var(--ly, 74%), #ffffff 0%, #fffaf2 25%, #f8e8cc 50%, #ecd6b6 75%, #dcc2a0 100%); }
   html:not([data-theme="day"]) #car3dLit2 { mix-blend-mode: screen;
     background: radial-gradient(28% 34% at var(--lx, 88%) var(--ly, 74%), rgba(255, 170, 90, .12), transparent 70%),
                 radial-gradient(34% 30% at calc((100% - var(--sidew, 300px)) / 2) 0%, rgba(255, 196, 120, .16), transparent 80%),
@@ -121,7 +121,7 @@ const M = {
   velvet: new THREE.MeshPhysicalMaterial({ color: 0x3e2a1e, roughness: .9, sheen: .4, sheenColor: new THREE.Color(0xb08a68), sheenRoughness: .7, envMapIntensity: .2, side: THREE.DoubleSide, fog: false }),
   tabletop: new THREE.MeshStandardMaterial({ map: tex("lacquered_cherry_wood", "diff", [1.5, 1.5], true), color: 0x8a4a30, roughness: .2, envMapIntensity: .9, fog: false }),
   cord: new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: .8, fog: false }),
-  globe: new THREE.MeshStandardMaterial({ color: 0xfff3e2, emissive: 0xffc890, emissiveIntensity: 1.6, roughness: .55, fog: false }),
+  globe: new THREE.MeshStandardMaterial({ color: 0xfff6ea, emissive: 0xffe2bc, emissiveIntensity: 1.1, roughness: .55, fog: false }),
   glass: new THREE.MeshBasicMaterial({ color: 0xa8c4e4, transparent: true, opacity: .06, depthWrite: false, fog: false }),
 };
 
@@ -280,7 +280,7 @@ Object.assign(moon.shadow.camera, { left: -2.5, right: 2.5, top: 2.5, bottom: -2
 const ceilLight = new THREE.RectAreaLight(0xffd9a0, 1.6, 5, .5); ceilLight.position.set(-.6, 2.3, 1.4); ceilLight.lookAt(-.6, 0, .4); scene.add(ceilLight);
 const winLight = new THREE.RectAreaLight(0x8fb0e0, 2, 1, 1); scene.add(winLight);
 const sconce = new THREE.SpotLight(0xffd6a8, 6, 4, .55, .9, 1.6); scene.add(sconce); scene.add(sconce.target);
-const wallLamp = new THREE.PointLight(0xffaa5e, 3, 3.6, 1.7); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
+const wallLamp = new THREE.PointLight(0xffd8a8, 3, 3.4, 2); wallLamp.castShadow = true; wallLamp.shadow.mapSize.set(512, 512); wallLamp.shadow.bias = -.002; wallLamp.shadow.radius = 6; scene.add(wallLamp);
 
 /* ───────── fit the window to the strip right of the boards ───────── */
 function layout() {
@@ -309,17 +309,17 @@ function applyTheme() {
   if (outside.userData.sun) outside.userData.sun.visible = !n;
   scene.background = new THREE.Color(n ? 0x03060c : 0xe6eef6);
   scene.fog = n ? new THREE.FogExp2(0x122140, .011) : null;
-  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x7a6048 : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0xc8beb4);
+  M.velvet.color.set(n ? 0x30221a : 0x2a1e16); M.velvet.sheenColor.set(n ? 0x5e4a3a : 0x6a5a4a); M.cornice.color.set(n ? 0xffffff : 0xc8beb4);
   if (ground) { ground.material.color.set(n ? 0x1a2230 : 0xf4f8fc); ground.material.emissive.set(n ? 0x3a5488 : 0x9db8da); ground.material.emissiveIntensity = n ? 1.1 : .45; }
-  hemi.intensity = n ? .35 : 2.2; hemi.color.set(n ? 0xffb070 : 0xe6eeff); hemi.groundColor.set(n ? 0x4a2410 : 0xf4e6d4);
+  hemi.intensity = n ? .55 : 2.2; hemi.color.set(n ? 0xffdcb4 : 0xe6eeff); hemi.groundColor.set(n ? 0x3a2a1e : 0xf4e6d4);
   moon.intensity = n ? .9 : 3.2; moon.color.set(n ? 0x7d9ccc : 0xfff0d6);
   moon.target.position.set(win.x, .8, .45); moon.position.copy(moon.target.position).add(n ? new THREE.Vector3(1.5, 4, -5) : new THREE.Vector3(-2.4, 3, 4));
-  ceilLight.intensity = n ? .5 : .5; ceilLight.color.set(n ? 0xffb068 : 0xf2f6ff);
+  ceilLight.intensity = n ? 1.1 : .5; ceilLight.color.set(n ? 0xffdcb0 : 0xf2f6ff);
   winLight.intensity = n ? .9 : 14; winLight.color.set(n ? 0x5a80c0 : 0xeaf3ff);
-  sconce.intensity = n ? 5 : 0; sconce.color.set(0xffbe80); wallLamp.intensity = n ? 4.8 : 0; M.globe.emissiveIntensity = n ? 1.9 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
-  renderer.toneMappingExposure = n ? 1.12 : 1.45;
+  sconce.intensity = n ? 3 : 0; sconce.color.set(0xffdcb0); wallLamp.intensity = n ? 3.2 : 0; M.globe.emissiveIntensity = n ? 1.1 : .04; M.globe.color.set(n ? 0xfff3e2 : 0xe8e4dc);
+  renderer.toneMappingExposure = n ? 1.25 : 1.45;
   trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xe8f0f8)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
-  bloom.strength = n ? .5 : .32; bloom.threshold = n ? .82 : .9; bloom.radius = n ? .7 : .85;
+  bloom.strength = n ? .28 : .32; bloom.threshold = n ? .9 : .9; bloom.radius = n ? .35 : .85;
   placeLit(); renderer.shadowMap.needsUpdate = true;
 }
 // where the lamp is on screen: the board's light falls off from there
