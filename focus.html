@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>雪国线 · 纸桌</title>
 <link rel="stylesheet" href="fonts.css">
-<script src="sound.js"></script>
-<script src="ticket.js"></script>
 <style>
   :root { --hand: "LXGW WenKai", "霞鹜文楷", "KaiTi", "STKaiti", serif; --ai: #2f4f73; --ease: cubic-bezier(.22, 1, .36, 1); }
   * { box-sizing: border-box; }
@@ -244,10 +242,13 @@
 <!-- arriving -->
 <section id="arrive"><div class="box"><div id="slot"></div><p id="arrMsg"></p><div class="btns"><a href="./">回到桌子</a><button class="ghost" id="again">再坐一程</button><a class="ghost" href="album.html?kind=ticket">车票卡册</a></div></div></section>
 
+<script src="sound.js"></script>
+<script src="ticket.js"></script>
 <script>
 (() => {
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
+  const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
   const get = (k, fb) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch { return fb; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const pad = n => String(n).padStart(2, "0");
@@ -346,7 +347,7 @@
   /* steam: a puff at every key, a wisp now and then while it waits, a great cloud when it sets off */
   const SC = $("#steam"), sg = SC.getContext("2d"), puffs = [];
   let SW = 0, SH = 0;
-  function fitSteam() { const r = PAPER.getBoundingClientRect(); SW = r.width; SH = r.height; SC.width = SW * devicePixelRatio; SC.height = SH * devicePixelRatio; }
+  function fitSteam() { const r = PAPER.getBoundingClientRect(); SW = r.width; SH = r.height; SC.width = SW * DPR; SC.height = SH * DPR; }
   fitSteam();
   const PUFF = (() => { const n = 64, o = document.createElement("canvas"); o.width = o.height = n; const g = o.getContext("2d"), gr = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
     gr.addColorStop(0, "rgba(236,234,224,.9)"); gr.addColorStop(.5, "rgba(226,226,216,.4)"); gr.addColorStop(1, "rgba(220,220,210,0)"); g.fillStyle = gr; g.fillRect(0, 0, n, n); return o; })();
@@ -386,7 +387,7 @@
     BD.style.setProperty("--lx", lampX + "px"); BD.style.setProperty("--bh", lampY + "px");
     if ((idle -= dt) < 0) { idle = 2.5 + Math.random() * 3; if (!loco.leave) puff(1, false); }
     // steam
-    sg.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); sg.clearRect(0, 0, SW, SH);
+    sg.setTransform(DPR, 0, 0, DPR, 0, 0); sg.clearRect(0, 0, SW, SH);
     for (let i = puffs.length - 1; i >= 0; i--) {
       const p = puffs[i]; p.life += dt; if (p.life > p.max) { puffs.splice(i, 1); continue; } if (p.life < 0) { const c = chimney(); p.x = c.x; p.y = c.y; continue; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.vy *= 1 - dt * .6; p.vx *= 1 - dt * .4; p.r += p.gr * dt;
@@ -397,7 +398,7 @@
 
   /* ───────── the night behind: snowy mountains, dark pines, a lake ───────── */
   function paintBg() {
-    const cv = $("#bgc"), d = devicePixelRatio || 1, w = innerWidth, h = innerHeight; cv.width = w * d; cv.height = h * d;
+    const cv = $("#bgc"), d = DPR || 1, w = innerWidth, h = innerHeight; cv.width = w * d; cv.height = h * d;
     const g = cv.getContext("2d"); g.scale(d, d);
     const r = n => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
     let sk = g.createLinearGradient(0, 0, 0, h);
@@ -429,13 +430,13 @@
   /* ───────── snow on the platform ───────── */
   function snowfall(cv) {
     const c = cv.getContext("2d"); let W, H, t = 0; const MAX = Math.round(45 * .75 + 10), SIZE = 45, SPEED = 40;
-    const fit = () => { W = cv.width = cv.clientWidth * devicePixelRatio; H = cv.height = cv.clientHeight * devicePixelRatio; };
+    const fit = () => { W = cv.width = cv.clientWidth * DPR; H = cv.height = cv.clientHeight * DPR; };
     fit(); addEventListener("resize", fit);
-    const flake = top => ({ x: Math.random() * W / devicePixelRatio, y: top ? -30 : Math.random() * H / devicePixelRatio, z: .35 + Math.random() * .85, drift: Math.random() * Math.PI * 2 });
+    const flake = top => ({ x: Math.random() * W / DPR, y: top ? -30 : Math.random() * H / DPR, z: .35 + Math.random() * .85, drift: Math.random() * Math.PI * 2 });
     const fl = Array.from({ length: MAX }, () => flake(false));
     return dt => {
-      t += dt * 1000; const w = W / devicePixelRatio, h = H / devicePixelRatio;
-      c.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); c.clearRect(0, 0, w, h);
+      t += dt * 1000; const w = W / DPR, h = H / DPR;
+      c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h);
       c.strokeStyle = "#eff6fa"; c.fillStyle = "#eef5fa"; c.lineWidth = .8;
       for (let i = 0; i < fl.length; i++) {
         const p = fl[i]; p.y += dt * (14 + SPEED * 1.15) * p.z; p.x += dt * (Math.sin(t * .0006 + p.drift) * 15 + 4) * p.z;
@@ -450,9 +451,10 @@
   // the braided cable: nine fine strands wound along the rail
   const wave = $("#wave"), wc = wave.getContext("2d");
   (function waves(time) {
+    if (BD.classList.contains("sent") || BD.classList.contains("gone")) return;
     requestAnimationFrame(waves); if (document.hidden) return;
-    const ww = wave.clientWidth, wh = 100; if (wave.width !== ww * devicePixelRatio) { wave.width = ww * devicePixelRatio; wave.height = wh * devicePixelRatio; }
-    wc.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); wc.clearRect(0, 0, ww, wh); wc.lineWidth = .55; wc.strokeStyle = "#ccd1b4";
+    const ww = wave.clientWidth, wh = 100; if (wave.width !== ww * DPR) { wave.width = ww * DPR; wave.height = wh * DPR; }
+    wc.setTransform(DPR, 0, 0, DPR, 0, 0); wc.clearRect(0, 0, ww, wh); wc.lineWidth = .55; wc.strokeStyle = "#ccd1b4";
     for (let n = 0; n < 9; n++) { wc.beginPath(); for (let x = 0; x < ww; x += 5) { const ph = x * .021 + time * .0004, amp = 11 + 9 * Math.sin(x * .016 + time * .0002), y = 50 + Math.sin(ph + n * .16) * amp * Math.sin(x * .007 + n * .04); x ? wc.lineTo(x, y) : wc.moveTo(x, y); } wc.stroke(); }
   })(0);
   const platSnow = snowfall($("#snow0"));
@@ -462,7 +464,7 @@
   let W = 0, H = 0, D = 1;
   function fit() {
     cabin();
-    const r = $("#pane").getBoundingClientRect(); D = devicePixelRatio || 1;
+    const r = $("#pane").getBoundingClientRect(); D = DPR || 1;
     W = r.width; H = r.height; cv.width = W * D; cv.height = H * D; cv.style.width = W + "px"; cv.style.height = H + "px";
     paintDrops();
   }
@@ -658,7 +660,9 @@
   let riding = false, arrived = false, lastClack = 0, lineTotal = 0, stopping = null;
   function ride() {
     riding = true; arrived = false;
-    $("#car").classList.add("on"); fit(); lineUI(); bookUI();
+    $("#car").classList.add("on");
+    dispatchEvent(new Event("carriageStart"));
+    fit(); lineUI(); bookUI();
     $("#hudName").textContent = trip.name || "";
     $("#off").textContent = trip.open ? "下 车" : "中 途 下 车";
     const elapsed = (Date.now() - trip.start) / 1000;
@@ -745,6 +749,8 @@
   /* ───────── the loop ───────── */
   let last = performance.now();
   function frame(now) {
+    if (arrived) return;
+    if (document.hidden) { last = now; requestAnimationFrame(frame); return; }
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (!riding) { platSnow(dt); deck(dt); }
     else {
@@ -781,8 +787,18 @@
 })();
 </script>
 <script type="module">
-/* the ride view in 3D (carriage.js); if WebGL or the module can't load, the 2D carriage stays */
-if (location.protocol !== "file:") import("./carriage.js").catch(e => console.warn("3D carriage not loaded:", e));
+/* Load the WebGL scene only when the user boards; the 2D view remains as an immediate fallback. */
+let carriageLoad;
+function loadCarriage() {
+  if (location.protocol === "file:") return;
+  if (!carriageLoad) carriageLoad = import("./carriage.js").catch(e => {
+    console.warn("3D carriage not loaded:", e);
+    return null;
+  });
+  return carriageLoad;
+}
+document.addEventListener("carriageStart", loadCarriage, { once: true });
+if (document.querySelector("#car.on")) loadCarriage();
 </script>
 </body>
 </html>
