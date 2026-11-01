@@ -196,7 +196,7 @@ function pixelRide(host) {
       g.globalAlpha = a; g.drawImage(oc, 0, 0); g.globalAlpha = 1;
       // tree shadows over the sunlit table and seats
       sg.globalCompositeOperation = "source-over"; sg.clearRect(0, 0, W, H);
-      const px = -Math.floor((run * 780) % SW); for (let x = px; x < W; x += SW) sg.drawImage(pat, x, 0);   // in step with the near trunks
+      const px = -Math.floor((run * 260) % SW); for (let x = px; x < W; x += SW) sg.drawImage(pat, x, 0);   // slower than the trunks themselves: a calm sweep
       sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0);
       g.globalAlpha = a; g.drawImage(sc, 0, 0); g.globalAlpha = 1;
     }
