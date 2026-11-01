@@ -119,19 +119,19 @@
   #car:hover #sndT { color: rgba(232, 217, 168, .55); }
 
   /* the station stamps: every station passed inks one into the little book propped on the sill */
-  #book { position: absolute; left: 6vw; bottom: calc(12vh + 1.6vh); z-index: 3; transform-origin: 0 100%; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 10px;
-    background: #efeadf; border-radius: 3px; transform: rotate(-2deg); transform-origin: 0 100%;
-    box-shadow: 0 10px 18px -8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(80,60,30,.12); color: #2f4f73; }
-  #book .ttl { writing-mode: vertical-rl; font-size: 11px; letter-spacing: .3em; color: #7a6f5e; padding-right: 4px; border-right: 1px solid rgba(80,60,30,.18); }
-  #book .stp { position: relative; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font-family: "Noto Sans SC", sans-serif;
-    box-shadow: inset 0 0 0 2px #2f4f73, inset 0 0 0 4px #efeadf, inset 0 0 0 5px #2f4f73; color: #2f4f73; mix-blend-mode: multiply; opacity: .82; }
-  #book .stp b { font-weight: 500; font-size: 12px; letter-spacing: .05em; line-height: 1.1; text-align: center; }
-  #book .stp small { position: absolute; bottom: 7px; font-size: 7px; letter-spacing: .05em; }
-  #book .stp.new { animation: inked .5s cubic-bezier(.4, 1.6, .5, 1); }
-  @keyframes inked { from { transform: scale(1.5) rotate(var(--r)); opacity: 0; } to { transform: scale(1) rotate(var(--r)); opacity: .82; } }
-  #book .stp.next { box-shadow: inset 0 0 0 1.5px rgba(122,111,94,.45); color: rgba(122,111,94,.75); mix-blend-mode: normal; border: 0; opacity: 1; background: repeating-conic-gradient(transparent 0 8deg, rgba(239,234,223,.0) 8deg 16deg); }
-  #book .stp.next b { font-size: 10px; } #book .stp.next small { bottom: 9px; }
-  #book .more { font-size: 11px; color: #7a6f5e; letter-spacing: .1em; }
+  #book { position: absolute; left: 6vw; bottom: calc(12vh + 1.6vh); z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    background: rgba(52, 36, 33, .78); border: 2px solid #e8d9b4; outline: 2px solid #2a1d1a; border-radius: 0;   /* a pixel panel, like the picture */
+    box-shadow: 4px 4px 0 rgba(20, 12, 10, .35); color: #e8d9b4; image-rendering: pixelated; }
+  #book .ttl { writing-mode: vertical-rl; font-size: 11px; letter-spacing: .3em; color: rgba(232, 217, 180, .7); padding-right: 6px; border-right: 2px solid rgba(232, 217, 180, .25); }
+  #book .stp { position: relative; width: 46px; height: 48px; border-radius: 0; display: grid; place-items: center; font-family: "Noto Sans SC", sans-serif;
+    border: 2px solid #e2c27a; box-shadow: inset 0 0 0 2px rgba(52, 36, 33, .9), inset 0 0 0 4px rgba(226, 194, 122, .55); color: #f0dca6; transform: none !important; }
+  #book .stp b { font-weight: 500; font-size: 12px; letter-spacing: .05em; line-height: 1.1; text-align: center; margin-bottom: 9px; }
+  #book .stp small { position: absolute; bottom: 6px; font-size: 8px; letter-spacing: .05em; opacity: .75; }
+  #book .stp.new { animation: inked .45s steps(4); }
+  @keyframes inked { from { opacity: 0; } to { opacity: 1; } }
+  #book .stp.next { border: 2px dashed rgba(232, 217, 180, .4); box-shadow: none; color: rgba(232, 217, 180, .55); }
+  #book .stp.next b { font-size: 10px; } #book .stp.next small { bottom: 6px; }
+  #book .more { font-size: 11px; color: rgba(232, 217, 180, .6); letter-spacing: .1em; }
   #line .st i em { display: block; margin-top: 2px; font-style: normal; font-size: 10px; letter-spacing: .05em; opacity: .7; text-align: center; }
   #line .st, #line .done { transition: left .8s var(--ease), width .3s linear; }
   #line .tr b { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font-weight: 400; font-size: 12px; letter-spacing: .1em; color: #f1e6c4; white-space: nowrap; }
