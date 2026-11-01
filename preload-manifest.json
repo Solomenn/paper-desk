@@ -48,8 +48,7 @@
         "sound.js",
         "ticket.js",
         "preload.js",
-        "carriage.js",
-        "vendor/three.bundle.min.js",
+        "ride.js",
         "sounds/manifest.json"
       ]
     },
@@ -120,11 +119,11 @@
       ]
     },
     {
-      "name": "3d-scene",
+      "name": "ride",
       "concurrency": 2,
       "paths": [
-        "assets/3d/cabin.glb",
-        "assets/3d/sky_day.hdr",
+        "assets/cabin-day.webp",
+        "assets/cabin-day-shade.webp",
         "assets/3d/snow_forest.jpg"
       ]
     }

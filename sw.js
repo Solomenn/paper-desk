@@ -2,7 +2,7 @@
    页面保持可交互；Service Worker 在后台分批下载所有页面、图片、音效和 3D 资源。 */
 "use strict";
 
-const CACHE_NAME = "paper-desk-site-v5";
+const CACHE_NAME = "paper-desk-site-v6";
 const CACHE_PREFIX = "paper-desk-site-";
 const OLD_CACHE_PREFIX = "paper-desk-carriage-";
 const FONT_ORIGIN = "https://cdn.jsdelivr.net";
