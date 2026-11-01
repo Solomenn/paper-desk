@@ -27,7 +27,13 @@ guard.polygon([(250, 181), (296, 197), (288, 245), (231, 225)], fill=1)  # lapto
 guard.polygon([(88, 69), (94, 69), (94, 108), (95, 165), (97, 206), (88, 206)], fill=1)  # left curtain hem
 guard.polygon([(373, 69), (379, 69), (379, 206), (368, 206), (371, 154), (372, 106)], fill=1)  # right curtain hem
 glass &= ~np.asarray(foreground, dtype=bool)
-Image.fromarray((glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
+# The pale snow/frost at the glass perimeter belongs to the fixed foreground.
+# Retain only near-white original pixels within eight native pixels of the edge;
+# retaining the whole window instead would leave stationary trees as ghosts.
+edge_distance = ndimage.distance_transform_cdt(glass, metric="chessboard")
+frost = glass & (edge_distance <= 8) & (r >= 215) & (g >= 225) & (b >= 230) & ((b - r) <= 32)
+moving_glass = glass & ~frost
+Image.fromarray((moving_glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
 Image.fromarray(cab.astype(np.uint8)).save(f"{O}/cabin.png", optimize=True)
 
 # where the sun lands inside (table, paper, seat tops): those pixels get a cool shaded twin

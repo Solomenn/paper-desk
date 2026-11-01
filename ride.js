@@ -133,7 +133,7 @@ function pixelRide(host) {
   const [low, g] = mk(), [oc, o] = mk(), [sc, sg] = mk();
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
   let cab, shade, glass, wood, ready = false;
-  Promise.all(["cabin", "shade", "glass", "wood"].map(n => img(`assets/ride/${n}.png${n === "glass" ? "?foreground-1" : ""}`)))
+  Promise.all(["cabin", "shade", "glass", "wood"].map(n => img(`assets/ride/${n}.png${n === "glass" ? "?frost-edge-1" : ""}`)))
     .then(([a, b, c, d]) => { cab = a; shade = b; wood = d;
       const [m, mx] = mk(); mx.drawImage(c, 0, 0); const id = mx.getImageData(0, 0, W, H);   // glass.png (white = glass) → alpha mask
       for (let i = 0; i < id.data.length; i += 4) { id.data[i + 3] = id.data[i]; } mx.putImageData(id, 0, 0); glass = m;
