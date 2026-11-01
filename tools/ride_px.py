@@ -4,7 +4,8 @@
                            assets/ride/glass.png    white where the window glass is
                            assets/ride/wood.png     the wood behind the glass as one strip that tiles sideways"""
 import os, numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
+import xml.etree.ElementTree as ET
 from scipy import ndimage
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); O = os.path.join(R, "assets", "ride"); os.makedirs(O, exist_ok=True)
 src = Image.open(os.path.join(R, "tools", "src", "cabin-illustration.png")).convert("RGB")
@@ -13,13 +14,15 @@ pal = src.filter(ImageFilter.MedianFilter(3)).resize((W, H), Image.BOX).quantize
 q = lambda im: np.asarray(im.quantize(palette=pal, dither=Image.Dither.NONE).convert("RGB"))
 cab = np.asarray(pal.convert("RGB")).astype(np.int32)
 
-# the glass: snow-blue pixels inside the two window openings (curtains, frame and the laptop lid are warm or dark, so they stay)
-s = W / src.width; win = np.zeros((H, W), bool)
-for x0, y0, x1, y1 in [(300, 228, 742, 682), (850, 228, 1240, 682)]: win[int(y0 * s):int(y1 * s), int(x0 * s):int(x1 * s)] = True
+# Use the same traced geometry as ride.js. Colour cannot distinguish the blue
+# laptop screen from snow, and filling colour-selection holes erases foreground.
+mask = Image.new("L", (W, H)); draw = ImageDraw.Draw(mask)
+root = ET.parse(os.path.join(O, "glass.svg")).getroot()
+for polygon in root.iter("{http://www.w3.org/2000/svg}polygon"):
+    points = [tuple(map(int, p.split(","))) for p in polygon.attrib["points"].split()]
+    draw.polygon(points, fill=255)
+glass = np.asarray(mask) > 0
 r, g, b = cab[..., 0], cab[..., 1], cab[..., 2]
-glass = win & (b >= r - 4) & (.3 * r + .59 * g + .11 * b > 70)
-lb, n = ndimage.label(glass); sz = ndimage.sum(glass, lb, range(1, n + 1))
-glass = np.isin(lb, np.argsort(sz)[-2:] + 1); glass = ndimage.binary_fill_holes(glass)
 Image.fromarray((glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
 Image.fromarray(cab.astype(np.uint8)).save(f"{O}/cabin.png", optimize=True)
 

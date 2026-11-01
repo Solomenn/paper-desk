@@ -133,9 +133,9 @@ function pixelRide(host) {
   const [low, g] = mk(), [oc, o] = mk(), [sc, sg] = mk();
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
   let cab, shade, glass, wood, ready = false;
-  Promise.all(["cabin", "shade", "glass", "wood"].map(n => img(`assets/ride/${n}.png`)))
+  Promise.all(["cabin.png", "shade.png", "glass.svg", "wood.png"].map(n => img(`assets/ride/${n}`)))
     .then(([a, b, c, d]) => { cab = a; shade = b; wood = d;
-      const [m, mx] = mk(); mx.drawImage(c, 0, 0); const id = mx.getImageData(0, 0, W, H);   // glass.png (white = glass) → alpha mask
+      const [m, mx] = mk(); mx.drawImage(c, 0, 0); const id = mx.getImageData(0, 0, W, H);   // traced glass.svg (white = glass) → alpha mask
       for (let i = 0; i < id.data.length; i += 4) { id.data[i + 3] = id.data[i]; } mx.putImageData(id, 0, 0); glass = m;
       ready = true; host.classList.add("ride2d"); });
   let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
