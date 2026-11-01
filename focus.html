@@ -136,7 +136,8 @@
   #car { --glass: rgba(246, 248, 249, .74); --ink2: #1c232b; --mute2: #5d6873; --acc: #2f4f73;
     --ring: 0 0 0 .5px rgba(21, 35, 58, .16), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(21, 35, 58, .05), 0 10px 26px -14px rgba(21, 35, 58, .45); }
   #car #hud, #car #off, #car #sndT, #car #line::before { background: var(--glass); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); box-shadow: var(--ring); }
-  #car #hud { top: 2.2vh; padding: 9px 20px 10px; border-radius: 999px; font: 400 12.5px/1 var(--sans); letter-spacing: .06em; color: var(--mute2) !important;
+  #car #hudName { display: none; }
+  #car #hud { top: calc(2.2vh + 12px); padding: 0; border-radius: 0; background: none !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 2; font: 400 12.5px/1 var(--sans); letter-spacing: .06em; color: var(--mute2) !important;
     font-variant-numeric: tabular-nums; opacity: .92; transition: opacity .3s; }
   #car #hud:hover { opacity: 1; }
   #car #hudName { font: 500 13.5px/1 var(--serif); letter-spacing: .04em; color: var(--ink2); border-bottom: 0; margin-right: 4px; }
@@ -145,8 +146,10 @@
   #car:hover #off, #car:hover #sndT { opacity: .92; }
   #car #off:hover, #car #sndT:hover { color: var(--ink2) !important; opacity: 1; }
   /* the line: a long glass slip along the bottom, a hairline track, small dots, names in quiet type */
-  #car #line { bottom: 5vh; }
-  #car #line::before { content: ""; position: absolute; inset: -14px -24px -12px; border-radius: 14px; }
+  /* the line sits at the top, in one glass slip with the words above it */
+  #car #line { top: calc(2.2vh + 38px); bottom: auto; left: 18vw; right: 18vw; }
+  #car #line::before { content: ""; position: absolute; inset: -38px -24px -14px; border-radius: 14px; }
+  #car #line .tr b { display: none; }
   #car #line .track { top: 13px; height: 1px; background: rgba(28, 35, 43, .16); }
   #car #line .done { top: 13px; height: 1px; background: var(--acc); }
   #car #line .st { top: 10px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #f6f8f9; box-shadow: inset 0 0 0 1px rgba(28, 35, 43, .35); }
@@ -553,8 +556,10 @@
     $("#line .tr b").textContent = `${km.toFixed(1)} km`;
     document.querySelectorAll("#line .st").forEach((e, i) => e.classList.toggle("past", i * KM <= km + 1e-6));
     const nk = Math.min(lastK(), k + 1), toNext = Math.max(0, nk * KM - km);
-    $("#hudRest").textContent = stopping ? ` · 列车正驶入 ${stopping.name}` : (trip.open ? ` · 已行 ${km.toFixed(1)} km · ${nm(nk)} 还有 ${toNext.toFixed(1)} km`
-      : ` · 已行 ${km.toFixed(1)} km · 下一站 ${nm(nk)} · 终点 ${nm(lastK())} 还有 ${Math.max(0, Math.ceil((trip.minutes - km) * trip.unit / 60000))} 分钟`);
+    const min = d => Math.max(0, Math.ceil(d * trip.unit / 60000)), last = lastK();   // only what's ahead: minutes to the next station and to the end
+    $("#hudRest").textContent = stopping ? `列车正驶入 ${stopping.name}`
+      : trip.open || nk === last ? `${nm(nk)} 还有 ${min(toNext)} 分钟`
+      : `${nm(nk)} 还有 ${min(toNext)} 分钟 · 终点 ${nm(last)} 还有 ${min(trip.minutes - km)} 分钟`;
   }
   $("#hudName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
   $("#hudName").addEventListener("blur", () => { if (!trip) return; trip.name = $("#hudName").textContent.trim().slice(0, 40); $("#hudName").textContent = trip.name; put(TRIP, trip); });
