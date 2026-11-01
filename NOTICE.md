@@ -31,3 +31,5 @@ The forest outside the window (`assets/3d/snow_forest.jpg`) is cut from **snowy_
 On the table in the ride still: **"PC DELL G5 5590" by CONTxE** (<https://sketchfab.com/3d-models/pc-dell-g5-5590-2cda50e73f69438598eabf8259e27cb7>, CC BY 4.0), and from Poly Haven (CC0) **tea_set_01** (a cup), **office_notepads** and **stationery_supplies** (a pen), all Poly Haven (CC0).
 
 - Fusion Pixel Font 12px Proportional SC by TakWolf — SIL Open Font License 1.1 (assets/fonts/fusion-pixel-12-sc.woff2, subset to GB2312 + ASCII). Used for the words on the 雪国线 ride.
+
+- "4920 Dumbleton Hall" by ThomasBeerens on Sketchfab — CC BY-NC 4.0 (https://sketchfab.com/3d-models/21d15cc8adde4fd6b138dfd46727c2ff). Repainted deep blue for the 雪国线, textures resized, compressed (assets/3d/loco-4920.glb). Non-commercial use only.
