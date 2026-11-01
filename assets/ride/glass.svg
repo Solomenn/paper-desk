@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300" shape-rendering="crispEdges">
-  <!-- Native illustration coordinates. Black protects the cabin, including
-       the blue laptop screen; white admits the moving outdoor scene. -->
-  <rect width="480" height="300" fill="black"/>
-  <g fill="white">
-    <polygon points="92,70 199,70 205,71 210,74 214,78 217,83 219,89 220,96 220,186 219,191 216,195 212,198 207,200 97,200 96,190 95,172 94,155 94,130 93,112 92,96"/>
-    <polygon points="258,182 258,91 260,84 263,78 268,73 274,71 280,70 373,70 373,91 372,106 371,125 370,145 370,166 369,185 369,201 294,201 296,195 294,193 254,181"/>
-  </g>
-</svg>
