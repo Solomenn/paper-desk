@@ -50,7 +50,10 @@
   .turner { left: var(--pw); z-index: 10; }
   .sface { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--paper); }
   .sface.back { transform: rotateY(180deg); }
-  .clip { position: absolute; top: 0; width: var(--pw); height: var(--ph); }
+  .clip { position: absolute; top: 0; width: var(--pw); height: var(--ph); contain: strict; }
+  /* the turning leaf carries plain copies of its pages: no blur, no paper grain, no shadows-on-shadows (each strip holds a full copy) */
+  .turner *, .turner *::before, .turner *::after { filter: none !important; transition: none !important; animation: none !important; }
+  .turner .tk-shadow, .turner .pg::before { display: none !important; }
   .shade { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
   #cast { position: absolute; top: 0; height: 100%; pointer-events: none; z-index: 9; display: none; }
 
@@ -198,7 +201,7 @@
   /* a 雪国线 ticket in a sleeve, and held up */
   .mc.mt { padding: 0; display: flex; background: none; box-shadow: none; overflow: visible; height: auto !important; align-self: center; }
   .slv:has(.mt) { display: grid; align-items: stretch; padding: 5px 6px 7px; }
-  body.kind-ticket .grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  body.kind-ticket .grid { grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 12px; }
   .mc.mt { height: 100% !important; align-self: stretch; }
   .mc.mt { container-type: size; align-items: center; justify-content: center; }
   .mc.mt .tkt { --tw: min(100cqw, 250cqh); pointer-events: none; }
@@ -207,7 +210,7 @@
   #zc.zt .tkt { --tw: 100%; }
   #zoom:has(#zc.zt) { grid-template-columns: minmax(0, 260px) min(620px, 80vw); }
 
-  #empty, #pager, .title-pg .n, .title-pg .rule { display: none !important; }   /* no captions: the book shows what it holds */
+  #empty, #pager, .title-pg .n, .title-pg .rule, .pno { display: none !important; }   /* no captions: the book shows what it holds */
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--on-wall2); letter-spacing: .08em; display: none; }
 </style>
 <link rel="stylesheet" href="room.css?v=11">
@@ -242,8 +245,9 @@
   const $ = (s, r = document) => r.querySelector(s);
   const el = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
   const CAT_C = { work: "#f3e2a1", life: "#cfe4cf", idea: "#f3cabb", study: "#cddbe9" };
-  const PW = 400, PH = 540, K = 14, PER = 4;
+  const PW = 400, PH = 540, K = 3;
   // three albums in one binder: stamped projects, archived sticky notes, printed receipts
+  const KIND0 = new URLSearchParams(location.search).get("kind"), PER = KIND0 === "ticket" ? 3 : 4;   // tickets: three to a page, so each fills its sleeve
   const KIND = ({ note: "note", receipt: "receipt", ticket: "ticket" })[new URLSearchParams(location.search).get("kind")] || "proj";
   const KINDS = { proj: { name: "项目卡册", n: "张", empty: "示例", run: "项目卡册" },
     note: { name: "便签卡册", n: "张", empty: "示例", run: "便签卡册" },
@@ -380,15 +384,16 @@
     const sw = PW / K;
     const root = el("div", "turner");
     let parent = root; const strips = [];
+    const F = page(front), B = page(back);   // build each page once; the strips carry copies
     for (let k = 0; k < K; k++) {
       const st = k === 0 ? root : el("div", "strip");
       st.style.width = sw + "px";
       if (k > 0) { st.style.left = sw + "px"; parent.appendChild(st); }
       const ff = el("div", "sface front"); ff.style.width = (sw + .75) + "px";
-      const fc = el("div", "clip"); fc.style.left = (-k * sw) + "px"; fc.appendChild(page(front)); ff.appendChild(fc);
+      const fc = el("div", "clip"); fc.style.left = (-k * sw) + "px"; fc.appendChild(F.cloneNode(true)); ff.appendChild(fc);
       const fsh = el("div", "shade"); ff.appendChild(fsh);
       const bf = el("div", "sface back"); bf.style.width = (sw + .75) + "px"; bf.style.left = "-.75px";
-      const bc = el("div", "clip"); bc.style.left = (-(PW - (k + 1) * sw)) + "px"; bc.appendChild(page(back)); bf.appendChild(bc);
+      const bc = el("div", "clip"); bc.style.left = (-(PW - (k + 1) * sw)) + "px"; bc.appendChild(B.cloneNode(true)); bf.appendChild(bc);
       const bsh = el("div", "shade"); bf.appendChild(bsh);
       st.append(ff, bf);
       strips.push({ el: st, fsh, bsh, ff, bf });

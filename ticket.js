@@ -58,6 +58,17 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
   }
 
   /* ───────── the paper ───────── */
+  // the card's grain, made once as two little images (was an SVG noise filter on every ticket: far too slow in an album of them)
+  let GRAIN = null;
+  function grain() {
+    if (GRAIN) return GRAIN;
+    const mk = (n, blur, alpha, rgb) => { const c = document.createElement("canvas"); c.width = c.height = n; const x = c.getContext("2d"), d = x.createImageData(n, n);
+      for (let i = 0; i < d.data.length; i += 4) { d.data[i] = rgb[0]; d.data[i + 1] = rgb[1]; d.data[i + 2] = rgb[2]; d.data[i + 3] = Math.max(0, Math.random() - .45) * alpha * 255; }
+      x.putImageData(d, 0, 0); if (!blur) return c.toDataURL();
+      const c2 = document.createElement("canvas"); c2.width = c2.height = 160; const y = c2.getContext("2d"); y.imageSmoothingEnabled = true; y.filter = `blur(${blur}px)`;
+      for (const dx of [-160, 0, 160]) for (const dy of [-160, 0, 160]) y.drawImage(c, dx, dy, 160, 160); return c2.toDataURL(); };
+    return (GRAIN = { g: mk(96, 0, .22, [77, 87, 97]), t: mk(12, 9, .32, [89, 102, 115]) });
+  }
   function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
   function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   const f2 = v => +v.toFixed(3);
@@ -103,22 +114,20 @@ body .tkt .tk-face .sn, body .tkt .tk-face .mi { font-family: var(--sans) !impor
     const front = side === "front";
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
   <mask id="m${id}" maskUnits="userSpaceOnUse" x="-2" y="-2" width="${W + 4}" height="${H + 4}"><g${mirror}><path d="${O}" fill="#fff"/><g fill="#000">${holes(seed)}</g></g></mask>
-  <filter id="g${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${front ? 2.2 : 2}" numOctaves="3" seed="${seed % 97}"/>
-    <feColorMatrix values="0 0 0 0 .3  0 0 0 0 .34  0 0 0 0 .38  0 0 0 .11 -.02"/></filter>
-  <filter id="t${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="${(seed >> 3) % 97}"/>
-    <feColorMatrix values="0 0 0 0 .35  0 0 0 0 .4  0 0 0 0 .45  0 0 0 .07 -.01"/></filter>
+  <pattern id="g${id}" patternUnits="userSpaceOnUse" width="24" height="24" x="${seed % 24}" y="${(seed >> 2) % 24}"><image href="${grain().g}" width="24" height="24" preserveAspectRatio="none"/></pattern>
+  <pattern id="t${id}" patternUnits="userSpaceOnUse" width="80" height="80" x="${seed % 80}" y="${(seed >> 3) % 80}"><image href="${grain().t}" width="80" height="80" preserveAspectRatio="none"/></pattern>
   <radialGradient id="h${id}" class="tk-hl" cx=".7" cy=".2" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>
   <linearGradient id="d${id}" class="tk-dk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#14202f" stop-opacity=".4"/><stop offset=".6" stop-color="#14202f" stop-opacity="0"/></linearGradient>
   <linearGradient id="s${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#15233a" stop-opacity=".07"/></linearGradient>
 </defs>
 <g mask="url(#m${id})">
   <rect width="${W}" height="${H}" fill="${BOARD}"/>
-  <rect width="${W}" height="${H}" filter="url(#t${id})"/>
-  <rect width="${W}" height="${H}" filter="url(#g${id})"/>
+  <rect width="${W}" height="${H}" fill="url(#t${id})"/>
+  <rect width="${W}" height="${H}" fill="url(#g${id})"/>
   ${front ? `<g fill="rgba(28,35,43,.14)">${guide}</g>
   <rect x="${PERF + .35}" width="${W - PERF}" height="${H}" fill="var(--spot, ${SPOT})"/>
   <rect x="${PERF + .35}" width="${W - PERF}" height="${H}" fill="url(#s${id})"/>
-  <rect x="${PERF + .35}" width="${W - PERF}" height="${H}" filter="url(#g${id})" opacity=".8"/>
+  <rect x="${PERF + .35}" width="${W - PERF}" height="${H}" fill="url(#g${id})" opacity=".8"/>
   <path d="${fr}" fill="#f4f5f2"/><g stroke="rgba(244,245,242,.7)" stroke-linecap="round" fill="none">${fib}</g>
   <circle class="tk-ring" cx="${PUNCH.x}" cy="${PUNCH.y}" r="${PUNCH.r + .08}" fill="none" stroke="rgba(40,52,66,.18)" stroke-width=".18"/>
   <g class="tk-wall" fill="none" stroke-linecap="round">${[0, 1, 2].map(k => { const a0 = Math.PI * (.92 + k * .08), a1 = Math.PI * (1.62 - k * .08), R = PUNCH.r + .15;
