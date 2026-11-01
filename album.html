@@ -211,6 +211,24 @@
   #zc.zt .tkt { --tw: 100%; }
   #zoom:has(#zc.zt) { grid-template-columns: minmax(0, 260px) min(620px, 80vw); }
 
+
+  /* ───────── the tickets on a line: every ride by date, a fine ruler under them you drag (after pengzhe.ng's timeline) ───────── */
+  #tlBtn { right: 24px; top: 20px; }
+  body.tl .ibtn { z-index: 40; }
+  #tl { position: fixed; inset: 0; z-index: 30; display: none; touch-action: none; user-select: none; }
+  body.tl #tl { display: block; } body.tl #wrap, body.tl #kinds { visibility: hidden; }
+  #tl .row { position: absolute; left: 0; top: 50%; height: 0; will-change: transform; }
+  #tl .it { position: absolute; top: 0; width: 380px; margin-left: -190px; transform: translateY(-58%); transition: opacity .3s, filter .3s; }
+  #tl .it .dt { position: absolute; left: 0; right: 0; top: -44px; text-align: center; font: 400 13px var(--sans); letter-spacing: .08em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #tl .it .tkt { --tw: 380px; }
+  #tl .it.far { opacity: .45; filter: saturate(.7); }
+  #tl .ruler { position: absolute; left: 50%; bottom: 74px; width: min(560px, 70vw); height: 34px; transform: translateX(-50%); overflow: hidden; cursor: grab;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+  #tl .ruler:active { cursor: grabbing; }
+  #tl .ticks { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
+  #tl .ticks i { position: absolute; top: 9px; width: 1px; height: 8px; background: rgba(28, 35, 43, .22); }
+  #tl .ticks i.day { top: 4px; height: 18px; width: 1.5px; background: rgba(28, 35, 43, .5); }
+  #tl .needle { position: absolute; left: 50%; top: 0; width: 2px; height: 26px; margin-left: -1px; border-radius: 1px; background: #2f4f73; }
   #empty, #pager, .title-pg .n, .title-pg .rule, .pno { display: none !important; }   /* no captions: the book shows what it holds */
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--on-wall2); letter-spacing: .08em; display: none; }
 </style>
@@ -222,6 +240,8 @@
 </head>
 <body>
 <a class="ibtn" id="home" href="./" title="回到桌子">←</a>
+<button class="ibtn" id="tlBtn" title="时间轴" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 16h18M5 13v3M8 14.5V16M11 11v5M14 14.5V16M17 13v3M20 14.5V16"/><rect x="9" y="4" width="6" height="4" rx=".8"/></svg></button>
+<div id="tl"><div class="row"></div><div class="ruler"><div class="ticks"></div><i class="needle"></i></div></div>
 
 
 <div id="wrap">
@@ -640,6 +660,57 @@
   }
   addEventListener("resize", fit);
   fit(); settle();
+  /* ───────── the tickets on a line ───────── */
+  if (KIND === "ticket" && cards.length) {
+    const tb = $("#tlBtn"), TL = $("#tl"), ROW = $(".row", TL), RU = $(".ruler", TL), TK = $(".ticks", RU);
+    const STEP = 460, RS = 22;                                   // px between tickets on the line, and on the ruler
+    const items = cards.map((t, i) => { const e = el("div", "it"); e.style.left = i * STEP + "px"; const d = new Date(t.doneAt);
+      e.innerHTML = `<div class="dt">${d.getMonth() + 1} 月 ${d.getDate()} 日</div>`; ROW.appendChild(e); return { e, t, built: false }; });
+    // the ruler: a tick a ride, a taller one where a new day starts, a fine tick between
+    cards.forEach((t, i) => { const a = el("i"); const prev = cards[i - 1]; if (!prev || new Date(prev.doneAt).toDateString() !== new Date(t.doneAt).toDateString()) a.className = "day";
+      a.style.left = i * RS + "px"; TK.appendChild(a); if (i < cards.length - 1) { const f = el("i"); f.style.left = (i + .5) * RS + "px"; f.style.height = "4px"; f.style.top = "11px"; TK.appendChild(f); } });
+    let pos = cards.length - 1, vel = 0, drag = null, snap = null, lastI = Math.round(pos), shown = false, ac = null;
+    function tick(heavy) {
+      if (window.Sound && !Sound.on) return;
+      try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const t0 = ac.currentTime, n = Math.floor(ac.sampleRate * .012), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * .18));
+        const o = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); o.buffer = b; f.type = "highpass"; f.frequency.value = heavy ? 1800 : 3200; g.gain.value = heavy ? .16 : .07;
+        o.connect(f).connect(g).connect(ac.destination); o.start(t0);
+        if (heavy) { const s2 = ac.createOscillator(), g2 = ac.createGain(); s2.frequency.setValueAtTime(190, t0); s2.frequency.exponentialRampToValueAtTime(90, t0 + .06);
+          g2.gain.setValueAtTime(.12, t0); g2.gain.exponentialRampToValueAtTime(.001, t0 + .08); s2.connect(g2).connect(ac.destination); s2.start(t0); s2.stop(t0 + .09); } } catch {}
+    }
+    function place() {
+      ROW.style.transform = `translateX(${innerWidth / 2 - pos * STEP}px)`;
+      TK.style.transform = `translateX(${RU.clientWidth / 2 - pos * RS}px)`;
+      const c = Math.round(pos); if (c !== lastI) { lastI = c; tick(false); }
+      items.forEach((it, i) => { const near = Math.abs(i - pos) < 4; if (near && !it.built) { it.e.insertAdjacentHTML("beforeend", ticketHTML(it.t)); it.built = true; }
+        it.e.classList.toggle("far", Math.abs(i - pos) > .5); it.e.style.visibility = near ? "" : "hidden"; });
+    }
+    let lt = performance.now();
+    (function loop(now) {
+      requestAnimationFrame(loop); const dt = Math.min(.05, (now - lt) / 1000); lt = now;
+      if (!shown || drag) return;
+      if (Math.abs(vel) > .6) { pos += vel * dt; vel *= Math.exp(-dt * 3.6); }
+      else { if (snap == null) snap = Math.round(pos); vel = 0; }
+      if (snap != null) { const d = snap - pos; pos += d * Math.min(1, dt * 12); if (Math.abs(d) < .002) { pos = snap; snap = null; tick(true); } }
+      pos = Math.max(0, Math.min(cards.length - 1, pos)); place();
+      if (snap == null && vel === 0) shown = shown;   // resting
+    })(lt);
+    const down = (e, k) => { drag = { x: e.clientX, t: performance.now(), k }; vel = 0; snap = null; TL.setPointerCapture(e.pointerId); };
+    TL.addEventListener("pointerdown", e => { if (e.target.closest(".ibtn")) return; down(e, e.target.closest(".ruler") ? -1 / RS : -1 / STEP); });
+    TL.addEventListener("pointermove", e => { if (!drag) return; const now = performance.now(), dx = e.clientX - drag.x;
+      const dp = dx * drag.k; pos = Math.max(-.3, Math.min(cards.length - .7, pos + dp)); vel = dp / Math.max(.008, (now - drag.t) / 1000) * .7 + vel * .3; drag.x = e.clientX; drag.t = now; place(); });
+    const up = () => { if (!drag) return; if (performance.now() - drag.t > 80) vel = 0; drag = null; snap = null; };
+    TL.addEventListener("pointerup", up); TL.addEventListener("pointercancel", up);
+    TL.addEventListener("wheel", e => { e.preventDefault(); vel = 0; snap = Math.max(0, Math.min(cards.length - 1, Math.round(pos) + ((e.deltaY + e.deltaX) > 0 ? 1 : -1))); }, { passive: false });
+    addEventListener("keydown", e => { if (!shown) return; const s = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (!s) return; e.preventDefault(); e.stopImmediatePropagation();
+      vel = 0; snap = Math.max(0, Math.min(cards.length - 1, Math.round(pos) + s)); }, true);
+    addEventListener("resize", () => shown && place());
+    tb.hidden = false;
+    tb.onclick = () => { shown = !shown; document.body.classList.toggle("tl", shown); tb.title = shown ? "卡册" : "时间轴"; if (shown) place(); };
+    if (new URLSearchParams(location.search).get("view") === "line") tb.onclick();
+  }
+
 })();
 </script>
 </body>
