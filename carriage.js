@@ -38,7 +38,7 @@ new RGBELoader().load(A + "sky_day.hdr", t => { t.mapping = THREE.Equirectangula
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.002, 20);
 
 /* ───────── where you stand: in the doorway, looking down the compartment to the window ───────── */
-const EYE = new THREE.Vector3(.3235, .084, .075), AT = new THREE.Vector3(.3235, .07, -.078);
+const EYE = new THREE.Vector3(.3235, .08, .024), AT = new THREE.Vector3(.3235, .074, -.078);   // close to the window, over the table
 function look(dx = 0, dy = 0, roll = 0) {
   camera.position.set(EYE.x + dx, EYE.y + dy, EYE.z);
   camera.up.set(Math.sin(roll), Math.cos(roll), 0); camera.lookAt(AT.x + dx * .3, AT.y + dy * .3, AT.z);
@@ -106,7 +106,7 @@ const snow = new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, 
   vertexShader: `uniform float t; uniform float run; attribute float seed; varying float a;
     void main(){
       // a box of snow outside the window: x across the glass, y up, z away; it drifts down and streams back past the train
-      vec3 p = vec3(fract(position.x - run * (.05 + .05 * seed) - t * .004) * .5 + .08, fract(position.y - t * (.012 + .012 * seed)) * .22 - .02, -.09 - position.z * .5);
+      vec3 p = vec3(fract(position.x - run * (.35 + .35 * seed) - t * .004) * .5 + .08, fract(position.y - t * (.012 + .012 * seed)) * .22 - .02, -.09 - position.z * .5);
       p.x += sin(t * 1.3 + seed * 40.) * .003;
       vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
       gl_PointSize = (.8 + 1.4 * seed) * (.12 / -mv.z) * 4.; a = .55 + .45 * seed; }`,
@@ -164,7 +164,7 @@ function frame(now) {
   const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
   const v = Math.max(0, Math.min(1, +window.trainSpeed || 0)), m = reduce ? 0 : v;
   run += dt * v;
-  forest.material.uniforms.off.value = (run * .006) % 1;   // the forest slides back past the window, as fast as the train runs
+  forest.material.uniforms.off.value = (run * .045) % 1;   // the forest slides back past the window, as fast as the train runs
   snow.material.uniforms.t.value = t; snow.material.uniforms.run.value = run;
   if (t > nextJolt) { jolt = v; nextJolt = t + 5 + Math.random() * 7; }
   jolt *= .93;
