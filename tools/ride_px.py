@@ -20,6 +20,7 @@ r, g, b = cab[..., 0], cab[..., 1], cab[..., 2]
 glass = win & (b >= r - 4) & (.3 * r + .59 * g + .11 * b > 70)
 lb, n = ndimage.label(glass); sz = ndimage.sum(glass, lb, range(1, n + 1))
 glass = np.isin(lb, np.argsort(sz)[-2:] + 1); glass = ndimage.binary_fill_holes(glass)
+original_glass = glass.copy()
 # Keep the original glass selection and its snowy edge. Only exclude the
 # foreground pixels that share the snow's blue palette after hole filling.
 foreground = Image.new("1", (W, H)); guard = ImageDraw.Draw(foreground)
@@ -33,6 +34,11 @@ glass &= ~np.asarray(foreground, dtype=bool)
 edge_distance = ndimage.distance_transform_cdt(glass, metric="chessboard")
 frost = glass & (edge_distance <= 8) & (r >= 215) & (g >= 225) & (b >= 230) & ((b - r) <= 32)
 moving_glass = glass & ~frost
+# The right curtain's pale blue fringe is scenery, not fixed frost. Keep the
+# warm fabric protected while allowing the outdoor scene up to its real edge.
+yy, xx = np.mgrid[0:H, 0:W]
+right_hem = (xx >= 360) & (xx <= 375) & (yy >= 69) & (yy <= 205)
+moving_glass[right_hem] = (original_glass & (b >= r))[right_hem]
 Image.fromarray((moving_glass * 255).astype(np.uint8)).save(f"{O}/glass.png", optimize=True)
 Image.fromarray(cab.astype(np.uint8)).save(f"{O}/cabin.png", optimize=True)
 
