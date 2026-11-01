@@ -60,25 +60,28 @@
   addEventListener("resize", layout);
 
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
-  /* the view, after HD-2D, from ONE real photograph (Poly Haven "Snowy Park 01", CC0): its 360° horizon band split by depth
-     (Depth Anything V2) into the far field and sky, the middle trees and the near tree. Everything moves at the speed its depth
-     gives it: the sky and far line slowly, the snow faster row by row towards us, each tree layer at the speed of the ground it
-     stands on — so nothing slides against anything. Fine pixels, a soft glow. */
-  const BH = 573, HZ = 412;                                          // the band's height and where its horizon is
-  const LH = 270, LW = Math.round(LH * 1.74), K = LH / BH;
-  const mk = () => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; };
-  const [low, l] = mk(), [glow, gl] = mk();
+  /* the view: an open snowfield in the sun, from one photograph (Poly Haven "Passendorf Snow", CC0). No trees to cut.
+     The sky and the sun are infinitely far: they stay. The hills and the forest line on the horizon slide slowly. The snow
+     goes by faster row by row as it comes nearer (on flat ground the speed grows with the distance below the horizon).
+     Drawn small, shown big in fine crisp pixels; the sun glows. */
+  const BW = 4096, HZ = 417;                                          // band width, the snow line in the band
+  const LH = 270, LW = Math.round(LH * 1.74);
+  const K = LH / 505;                                                 // the window shows band rows ~190..655 (some sky, the hills, the field)
+  const TOP = 150;
+  const [low, l] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; })();
+  const [glow, gl] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; return [c, c.getContext("2d")]; })();
   let A = null, ready = false;
-  Promise.all(["bg", "mid", "near"].map(n => img(`assets/view/${n}.webp`))).then(([bg, mid, near]) => { A = { bg, mid, near }; ready = !!bg; });
-  const VF = 14, VB = 420;                                            // far and nearest ground speed, low-res px per second at full speed
-  const speedAt = y => y <= HZ ? VF : VF + (y - HZ) / (BH - HZ) * (VB - VF);
+  Promise.all(["sky.png", "sun.png", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}`))).then(([sky, sun, land, snow]) => { A = { sky, sun, land, snow }; ready = !!(sky && land && snow); });
+  const VH = 9, VG = 3.2;                                             // the hills' speed; the snow's speed per band row below the horizon
+  const rowPos = new Float64Array(260);
+  let landPos = 0;
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const flakes = Array.from({ length: 90 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
-  const pos = new Float64Array(BH + 2);                              // how far each row has travelled
-  let last = performance.now(), vel = 0, sized = false, mpos = 0, npos = 0;
-  function strip(im, y0, y1, off) {                                  // rows y0..y1 of a layer, wrapped horizontally
-    const bw = im.width * K, x0 = -(((off % bw) + bw) % bw);
-    for (let x = x0; x < LW; x += bw) l.drawImage(im, 0, y0, im.width, y1 - y0, x, y0 * K, bw, (y1 - y0) * K + .6);
+  const flakes = Array.from({ length: 40 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
+  let last = performance.now(), vel = 0, sized = false;
+  const Y = by => (by - TOP) * K;                                     // band row -> low canvas row
+  function wrap(im, sy, sh, off, dy) {
+    const bw = BW * K, x0 = -(((off % bw) + bw) % bw);
+    for (let x = x0; x < LW; x += bw) l.drawImage(im, 0, sy, BW, sh, x, dy, bw, sh * K + .7);
   }
   function frame(now) {
     requestAnimationFrame(frame);
@@ -87,25 +90,26 @@
     if (!sized) { layout(); sized = true; }
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2);
-    l.filter = "none"; l.globalAlpha = 1;
-    // background: sky and far line together, then the snow in bands, each a little faster than the one above
-    pos[0] += dt * vel * VF; strip(A.bg, 0, HZ, pos[0] / K);
-    const STEP = 1;
-    l.filter = vel > .05 ? `blur(${(vel * 1.6).toFixed(1)}px)` : "none";
-    for (let y = HZ; y < BH; y += STEP) { const i = y + 1; pos[i] += dt * vel * speedAt(y + STEP / 2); strip(A.bg, y, Math.min(BH, y + STEP), pos[i] / K); }
-    l.filter = "none";
-    // the middle trees stand about 60 rows below the horizon; the near tree stands on the bottom edge
-    mpos += dt * vel * speedAt(HZ + 60); npos += dt * vel * VB * 1.05;
-    l.filter = "none"; strip(A.mid, 0, BH, mpos / K);
-    l.filter = vel > .05 ? `blur(${(.4 + vel * 1.2).toFixed(1)}px)` : "blur(.4px)"; strip(A.near, 0, BH, npos / K); l.filter = "none";
-    // snow in the air
-    for (const f of flakes) { f.x -= dt * (5 + vel * (30 + f.z * 260)); f.y += dt * (8 + f.z * 12); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
-      l.fillStyle = "#fbfdff"; if (f.z > .85) { l.globalAlpha = .5; l.beginPath(); l.arc(f.x, f.y, 2, 0, 7); l.fill(); } else { l.globalAlpha = .9; l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); } }
+    // the sky (still) and the sun (still, up in the left of the window)
+    l.drawImage(A.sky, 0, TOP, 4, HZ + 6 - TOP, 0, 0, LW, Y(HZ + 6));
+    if (A.sun) { l.globalCompositeOperation = "lighter"; const s = A.sun.width * K; l.drawImage(A.sun, LW * .3 - s / 2, Y(200) - s / 2, s, s); l.globalCompositeOperation = "source-over"; }
+    // the hills and the forest line: slow
+    landPos += dt * vel * VH; wrap(A.land, TOP, HZ + 6 - TOP, landPos, 0);
+    // the snow, band by band: each a little faster than the one above
+    const rows = A.snow.height, STEP = 2;
+    for (let r = 0; r < rows; r += STEP) {
+      rowPos[r >> 1] += dt * vel * (VH + (r + 2) * VG);
+      const bw = BW * K, x0 = -(((rowPos[r >> 1] % bw) + bw) % bw), dy = Y(HZ - 2 + r);
+      for (let x = x0; x < LW; x += bw) l.drawImage(A.snow, 0, r, BW, STEP, x, dy, bw, STEP * K + .7);
+    }
+    // a few flakes glinting in the air
+    for (const f of flakes) { f.x -= dt * (4 + vel * (30 + f.z * 300)); f.y += dt * (6 + f.z * 8); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
+      l.fillStyle = "#ffffff"; l.globalAlpha = .55 + f.z * .4; l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); }
     l.globalAlpha = 1;
     g.imageSmoothingEnabled = false; g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.filter = "none";
     g.drawImage(low, 0, 0, cv.width, cv.height);
-    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(6px) brightness(1.1)"; gl.drawImage(low, 0, 0); gl.filter = "none";
-    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .12; g.drawImage(glow, 0, 0, cv.width, cv.height);
+    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(7px) brightness(1.1)"; gl.drawImage(low, 0, 0); gl.filter = "none";
+    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .16; g.drawImage(glow, 0, 0, cv.width, cv.height);
     g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
   }
   requestAnimationFrame(frame);

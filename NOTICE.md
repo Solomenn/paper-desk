@@ -32,6 +32,5 @@ On the table in the ride still: **"PC DELL G5 5590" by CONTxE** (<https://sketch
 
 - Fusion Pixel Font 12px Proportional SC by TakWolf — SIL Open Font License 1.1 (assets/fonts/fusion-pixel-12-sc.woff2, subset to GB2312 + ASCII). Used for the words on the 雪国线 ride.
 
-The view from the 雪国线 window (`carview.js`, `assets/view/`, `tools/view_split.py`): one photograph, Poly Haven HDRI
-"Snowy Park 01" (CC0) — its horizon band split by depth (Depth Anything V2, Apache-2.0) into the far field, the middle trees
-and the near tree, the gaps behind the trees filled from the same photo.
+The view from the 雪国线 window (`carview.js`, `assets/view/`, `tools/view_snowfield.py`): one photograph, Poly Haven HDRI
+"Passendorf Snow" (CC0) — its horizon band split into the sky, the sun, the hills and tree line, and the snowfield.
