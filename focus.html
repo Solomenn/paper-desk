@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>雪国线 · 纸桌</title>
 <link rel="stylesheet" href="fonts.css">
+<link rel="preload" as="image" href="assets/snow-day.webp" fetchpriority="high">
 <style>
   :root { --hand: "LXGW WenKai", "霞鹜文楷", "KaiTi", "STKaiti", serif; --ai: #2f4f73; --ease: cubic-bezier(.22, 1, .36, 1); }
   * { box-sizing: border-box; }
@@ -90,35 +91,14 @@
   /* ═════════ the ticket: ticket.js (after sasshi's admission ticket) ═════════ */
   #tkSlot .tkt { --tw: min(560px, 88vw); }
 
-  /* ═════════ the carriage: a window onto the snow at night ═════════ */
-  #car { position: fixed; inset: 0; opacity: 0; transition: opacity 1.6s; background: #1a1410; }
+  /* ═════════ the carriage: photographic fallback while the 3D scene loads ═════════ */
+  #car { position: fixed; inset: 0; opacity: 0; transition: opacity 1.6s;
+    background: linear-gradient(180deg, rgba(6, 11, 20, .22), rgba(6, 11, 20, .32)), url(assets/snow-day.webp) center / cover no-repeat; }
   #car.on { opacity: 1; }
-  #scene { position: absolute; display: block; }
-/* the carriage interior is a layered vector illustration; the live moonlit snow-country scene remains visible through the window. */
-  #wall { position: absolute; inset: 0; pointer-events: none; background: #120c09; }
-  #shot { position: absolute; pointer-events: none; background: url(assets/carriage-vector.svg) 0 0 / 100% 100% no-repeat; transition: filter 1.2s;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 9%, #000 91%, transparent); -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 9%, #000 91%, transparent); mask-composite: intersect; }
-  html[data-theme="day"] #shot { filter: brightness(1.22) saturate(.78) contrast(.96) hue-rotate(-5deg); }
-  #pane { position: absolute; overflow: hidden; box-shadow: inset 0 0 36px 6px rgba(0, 0, 0, .55); }
-  #pane::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background:
-      radial-gradient(60% 50% at 0% 100%, rgba(200, 215, 230, .2), transparent 70%),
-      radial-gradient(50% 40% at 100% 0%, rgba(200, 215, 230, .12), transparent 70%),
-      linear-gradient(104deg, transparent 40%, rgba(255,255,255,.05) 46%, transparent 52%); }
-  /* the top of the carriage stays dark by day too, so the title and the route plate can be read */
-  #topshade { position: absolute; left: 0; right: 0; top: 0; height: 16vh; pointer-events: none; background: linear-gradient(180deg, rgba(18, 11, 7, .78), rgba(18, 11, 7, .45) 55%, transparent); opacity: 0; transition: opacity 1.2s; }
-  html[data-theme="day"] #topshade { opacity: 1; }
-  #drops { position: absolute; inset: 0; pointer-events: none; }
-  /* the sconce on the left wall breathes a little, and its warmth reaches the room */
-  #lampglow { position: absolute; pointer-events: none; border-radius: 50%; mix-blend-mode: screen; transition: opacity 1.2s;
-    background: radial-gradient(closest-side, rgba(255, 190, 110, .42), rgba(255, 160, 80, .14) 55%, transparent 100%); animation: sconce 4.7s ease-in-out infinite; }
-  html[data-theme="day"] #lampglow { opacity: .35; }
-  @keyframes sconce { 0%, 100% { opacity: 1; } 40% { opacity: .86; } 55% { opacity: .96; } 80% { opacity: .9; } }
-  @media (prefers-reduced-motion: reduce) { #lampglow { animation: none; } }
-  
-  /* the route plate above the window */
-  #line.plate { bottom: auto; }
+  html[data-theme="day"] #car {
+    background-image: linear-gradient(180deg, rgba(255,255,255,.04), rgba(15,30,45,.14)), url(assets/snow-day.webp);
+  }
+
   /* the line along the bottom of the carriage */
   #line { position: absolute; left: 12vw; right: 12vw; bottom: 4.6vh; height: 40px; }
   #line .track { position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: rgba(232, 217, 168, .25); }
@@ -228,11 +208,7 @@
 
 <!-- the carriage -->
 <section id="car">
-  <div id="wall"></div>
-  <div id="shot"></div>
-  <div id="pane"><canvas id="scene"></canvas><canvas id="drops"></canvas></div>
-  <i id="lampglow"></i>
-  <i id="topshade"></i>
+  <!-- The snowy-day photograph stays visible until the 3D carriage is fully warmed. -->
   <div id="line"><i class="track"></i><i class="done"></i></div>
   <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
   <div id="book"></div>
@@ -460,136 +436,8 @@
   })(0);
   const platSnow = snowfall($("#snow0"));
 
-  /* ═════════ the window ═════════ */
-  const cv = $("#scene"), cx = cv.getContext("2d");
-  let W = 0, H = 0, D = 1;
-  function fit() {
-    cabin();
-    const r = $("#pane").getBoundingClientRect(); D = DPR || 1;
-    W = r.width; H = r.height; cv.width = W * D; cv.height = H * D; cv.style.width = W + "px"; cv.style.height = H + "px";
-    paintDrops();
-  }
-  /* ───────── the compartment: the photograph, scaled to cover the screen with the window kept in view ───────── */
-  const ZOOM = .8;
-  const SHOT = { w: 1600, h: 914, fx: 895, fy: 330,                      // picture size; the window's middle in it
-    glass: [[698, 120], [1097, 120], [1110, 260], [1136, 390], [1142, 480], [1136, 535], [1120, 548], [668, 548], [654, 535], [650, 480], [660, 390], [678, 260]],   // the visible glass, between the curtains
-    lamp: [300, 262], table: [902, 668] };                               // the sconce; the middle of the table top
-  function cabin() {
-    const VW = innerWidth, VH = innerHeight, s = Math.max(VW / SHOT.w, VH / SHOT.h) * ZOOM;   // a little smaller than the screen: the room recedes into the dark
-    const fit1 = (V, size, focus, at) => size <= V ? (V - size) / 2 : Math.min(0, Math.max(V - size, V * at - focus));
-    const ox = fit1(VW, SHOT.w * s, SHOT.fx * s, .5), oy = fit1(VH, SHOT.h * s, SHOT.fy * s, .42);
-    const px = x => ox + x * s, py = y => oy + y * s, set = (el, o) => Object.assign($(el).style, o);
-    set("#shot", { left: ox + "px", top: oy + "px", width: SHOT.w * s + "px", height: SHOT.h * s + "px" });
-    const xs = SHOT.glass.map(p => p[0]), ys = SHOT.glass.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    set("#pane", { left: px(x0) + "px", top: py(y0) + "px", width: (x1 - x0) * s + "px", height: (y1 - y0) * s + "px",
-      clipPath: "polygon(" + SHOT.glass.map(([x, y]) => `${((x - x0) / (x1 - x0) * 100).toFixed(2)}% ${((y - y0) / (y1 - y0) * 100).toFixed(2)}%`).join(",") + ")" });
-    const lr = 300 * s; set("#lampglow", { left: px(SHOT.lamp[0]) - lr + "px", top: py(SHOT.lamp[1]) - lr + "px", width: lr * 2 + "px", height: lr * 2 + "px" });
-    // the route plate in the dark frame above the window, and the stamp card on the table
-    const L = $("#line"); L.classList.add("plate"); set("#line", { left: px(712) + "px", right: (VW - px(1086)) + "px", top: py(47) + "px" });
-    set("#book", { left: px(SHOT.table[0]) - 100 * Math.min(1, s * .9) + "px", bottom: (VH - py(SHOT.table[1] + 36)) + "px", transform: `rotate(-3deg) scale(${Math.min(1, s * .9)})` });
-  }
-
-  // value noise, smooth
-  const hsh = n => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
-  const noise = x => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hsh(i) * (1 - u) + hsh(i + 1) * u; };
-  const ridge = (x, oct) => { let a = 0, amp = 1, fr = 1, n = 0; for (let k = 0; k < oct; k++) { a += noise(x * fr + k * 31) * amp; n += amp; amp *= .5; fr *= 2.1; } return a / n; };
-  const stars = Array.from({ length: 120 }, (_, i) => ({ x: hsh(i * 3.1), y: hsh(i * 7.7) * .5, r: .3 + hsh(i * 1.3) * 1.1, t: hsh(i * 9.1) * 6 }));
-  let world = 0, speed = 0, target = 0;          // px of the nearest layer travelled; px/s
-  /* snow with depth: far flakes small, many and sharp; near ones few, large and out of focus, lit at the edge.
-     Each drifts in a gusting wind and a little turbulence; the train's speed sweeps them back. */
-  const SPRITES = [0, 1, 2, 3].map(k => {                       // soft discs, sharper to blurrier
-    const n = 64, o = document.createElement("canvas"); o.width = o.height = n; const g = o.getContext("2d");
-    const core = [.55, .35, .18, .06][k], gr = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
-    gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(core, "rgba(245,249,255,.95)");
-    gr.addColorStop(Math.min(.95, core + .3), "rgba(225,235,250,.35)"); gr.addColorStop(1, "rgba(220,232,250,0)");
-    g.fillStyle = gr; g.fillRect(0, 0, n, n);
-    if (k >= 2) { g.globalCompositeOperation = "destination-out"; const h = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n * .3); h.addColorStop(0, "rgba(0,0,0,.35)"); h.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = h; g.fillRect(0, 0, n, n); }
-    return o;
-  });
-  const LAYERS = [ { n: 420, z: [.08, .3], s: 0 }, { n: 170, z: [.3, .65], s: 1 }, { n: 46, z: [.65, .9], s: 2 }, { n: 10, z: [.9, 1], s: 3 } ];
-  const flakes = [];
-  LAYERS.forEach(L => { for (let i = 0; i < L.n; i++) flakes.push({ x: Math.random() * 1.2, y: Math.random(), z: L.z[0] + Math.random() * (L.z[1] - L.z[0]), s: L.s, p: Math.random() * 100, q: Math.random() * 100 }); });
-  flakes.sort((a, b) => a.z - b.z);
-  // flakes that land on the glass: they sit a moment, melt to a drop and run down
-  const stuck = [];
-  let platform = null;                             // the station we stop at: world x where its middle comes to rest
-  /* the station, seen through the glass: a warm light sweeps across the snow and the name board goes by (name large; the neighbours
-     on a 藍 band). The trees behind are the photograph's own. */
-  const PAR = 1.5, SANS = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
-  const platX = () => (platform.x - world) * PAR + W / 2;
-  function drawStation() {
-    if (!platform) return;
-    const x = platX();
-    if (x < -W * .9) { if (!platform.stop) platform = null; return; }
-    if (x > W * 1.9) return;
-    const c = cx, near = Math.max(0, Math.min(1, 1.15 - Math.abs(x - W / 2) / (W * 1.05)));
-    const gl = c.createRadialGradient(x, H * .62, 0, x, H * .62, H * .8);
-    gl.addColorStop(0, DAY ? "rgba(255,255,255,.22)" : "rgba(255,214,150,.34)"); gl.addColorStop(1, "rgba(255,214,150,0)");
-    c.globalAlpha = near; c.fillStyle = gl; c.fillRect(0, 0, W, H);
-    const s = Math.min(1.1, W / 640), nw = 330 * s, nh = 104 * s, nt = H * .17;
-    c.globalAlpha = near * (DAY ? .96 : .9);
-    c.fillStyle = "#121a26"; c.fillRect(x - nw * .4, nt, 6 * s, 120 * s); c.fillRect(x + nw * .4 - 6 * s, nt, 6 * s, 120 * s);
-    c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(x - nw / 2 + 4 * s, nt + 6 * s, nw, nh);
-    c.fillStyle = DAY ? "#f6f8fa" : "#e6e3d6"; c.fillRect(x - nw / 2, nt, nw, nh);
-    c.fillStyle = DAY ? "#e7edf3" : "#cfccbd"; c.fillRect(x - nw / 2 - 3 * s, nt - 6 * s, nw + 6 * s, 7 * s);
-    c.fillStyle = "#1c232b"; c.font = `700 ${40 * s}px ${SANS}`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillText(platform.name, x, nt + 46 * s);
-    c.fillStyle = "#6b7682"; c.font = `500 ${11 * s}px ${SANS}`; c.fillText(`${LINE}　${platform.name} 站`, x, nt + 64 * s);
-    c.fillStyle = "#2f4f73"; c.fillRect(x - nw / 2, nt + nh - 30 * s, nw, 30 * s);
-    c.fillStyle = "#eef3f8"; c.font = `500 ${13 * s}px ${SANS}`; c.textBaseline = "middle";
-    c.textAlign = "left"; c.fillText(`◀ ${platform.prev || ""}`, x - nw / 2 + 12 * s, nt + nh - 15 * s);
-    c.textAlign = "right"; c.fillText(`${platform.next || ""} ▶`, x + nw / 2 - 12 * s, nt + nh - 15 * s);
-    c.textAlign = "left"; c.textBaseline = "alphabetic"; c.globalAlpha = 1;
-  }
-  function scene(dt, t) {
-    const c = cx; c.setTransform(D, 0, 0, D, 0, 0); c.clearRect(0, 0, W, H);
-    drawStation();
-    // falling snow, swept back by the train's speed
-    const sweep = speed / 260, gust = .5 + .5 * Math.sin(t * .23) * Math.sin(t * .071 + 1);
-    for (const f of flakes) {
-      const z = f.z, fall = .018 + z * .06;
-      const tx = Math.sin(t * .5 + f.p) * .6 + Math.sin(t * 1.3 + f.q) * .4;          // turbulence
-      const vy = fall + Math.cos(t * .9 + f.q) * .006 * z, vx = -(sweep * .5 * z) - gust * .025 * z + tx * .012 * z;
-      f.y += vy * dt; f.x += vx * dt;
-      if (f.y > 1.05) { f.y = -.05; f.x = Math.random() * 1.3; }
-      if (f.x < -.08) { f.x = 1.05 + Math.random() * .15; f.y = Math.random() * 1.05 - .05; }
-      if (f.x > 1.3) f.x = -.05;
-      const r = (.7 + z * z * 11) * (f.s === 3 ? 1.6 : 1), px = f.x * W, py = f.y * H;
-      // a soft round flake, only lightly drawn out along its own path (blurry near ones hardly at all)
-      const v = Math.hypot(vx * W, vy * H), st = 1 + Math.min(.9, v / (r * 60)) * (f.s >= 2 ? .35 : 1);
-      c.globalAlpha = (f.s === 0 ? .6 : f.s === 1 ? .8 : f.s === 2 ? .55 : .28) * (.85 + .15 * Math.sin(t * 2 + f.p));
-      c.save(); c.translate(px, py); c.rotate(Math.atan2(vy * H, vx * W)); c.scale(st, 1);
-      c.drawImage(SPRITES[f.s], -r, -r, r * 2, r * 2); c.restore();
-      // now and then a near flake lands on the glass
-      if (f.s >= 2 && stuck.length < 14 && Math.random() < .0009) { stuck.push({ x: px, y: py, r: r * .45, age: 0, life: 2.5 + Math.random() * 3, vy: 0 }); f.y = -.05; }
-    }
-    c.globalAlpha = 1;
-    // on the glass: a flake, then a bead of water that slides down
-    for (let i = stuck.length - 1; i >= 0; i--) {
-      const g = stuck[i]; g.age += dt;
-      const melt = Math.min(1, g.age / g.life);
-      if (melt >= 1) { g.vy += 18 * dt; g.y += g.vy * dt * 6; }
-      if (g.y > H + 10 || g.age > g.life + 6) { stuck.splice(i, 1); continue; }
-      if (melt < 1) { c.globalAlpha = .9 * (1 - melt * .6); c.drawImage(SPRITES[1], g.x - g.r * 2, g.y - g.r * 2, g.r * 4, g.r * 4); }
-      c.globalAlpha = .5 * melt; c.fillStyle = "rgba(225, 235, 248, .9)";
-      c.beginPath(); c.ellipse(g.x, g.y, 1.6 + g.r * .15, 2.2 + g.r * .2, 0, 0, 7); c.fill();
-      if (melt >= 1) { c.strokeStyle = "rgba(220,232,245,.18)"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(g.x, g.y - Math.min(60, g.vy * 4)); c.lineTo(g.x, g.y); c.stroke(); }
-    }
-    c.globalAlpha = 1;
-    // the carriage's own lights faint in the glass
-    const rf = c.createLinearGradient(0, H * .7, 0, H); rf.addColorStop(0, "rgba(255, 190, 120, 0)"); rf.addColorStop(1, "rgba(255, 190, 120, .08)");
-    c.fillStyle = rf; c.fillRect(0, 0, W, H);
-  }
-  // condensation and a few drops running down the glass
-  function paintDrops() {
-    const dc = $("#drops"); dc.width = W * D; dc.height = H * D; dc.style.width = W + "px"; dc.style.height = H + "px";
-    const g = dc.getContext("2d"); g.scale(D, D);
-    for (let i = 0; i < 16; i++) {
-      const x = hsh(i * 3.7) * W, y = H * .35 + hsh(i * 5.3) * H * .6, l = 6 + hsh(i * 2.1) * 22;
-      const gr = g.createLinearGradient(x, y, x, y + l); gr.addColorStop(0, "rgba(220,230,240,0)"); gr.addColorStop(1, "rgba(220,230,240,.14)");
-      g.strokeStyle = gr; g.lineWidth = 1 + hsh(i) * 1.2; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + (hsh(i * 9) - .5) * 6, y + l / 2, x + (hsh(i * 7) - .5) * 4, y + l); g.stroke();
-      g.fillStyle = "rgba(230,238,245,.28)"; g.beginPath(); g.arc(x + (hsh(i * 7) - .5) * 4, y + l, 1.6, 0, 7); g.fill();
-    }
-  }
+  /* Train motion state; the visible carriage is rendered exclusively by carriage.js. */
+  let world = 0, speed = 0, target = 0;
 
   /* ───────── the sound of the wheels: rumble (filtered noise) and the joints of the rails ───────── */
   let ac = null, rumble = null, wheelsOn = get("paper-desk.trip.wheels", true), clackT = 0;
@@ -663,7 +511,7 @@
     riding = true; arrived = false;
     $("#car").classList.add("on");
     dispatchEvent(new Event("carriageStart"));
-    fit(); lineUI(); bookUI();
+    lineUI(); bookUI();
     $("#hudName").textContent = trip.name || "";
     $("#off").textContent = trip.open ? "下 车" : "中 途 下 车";
     const elapsed = (Date.now() - trip.start) / 1000;
@@ -743,7 +591,6 @@
     if (!trip.open && !confirm("在下一站下车？这张票会记下你坐到了哪里。")) return;
     const k = Math.min(lastK(), trip.passed + 1), T = Math.max(1.5, Math.min(8, speed / CRUISE * 8));
     stopping = { k, name: nm(k), t0: performance.now(), T, v0: speed, w0: world, early: !trip.open };
-    platform = { x: world + speed * T / 2, name: nm(k), prev: nm(Math.max(0, k - 1)), next: nm(k + 1), stop: true };
   };
   $("#again").onclick = () => { location.reload(); };
 
@@ -759,12 +606,9 @@
       if (!arrived && !stopping) {
         // stations on the way go by at speed, each one stamped
         while (trip.passed < k && trip.passed + 1 < lastK()) pass(trip.passed + 1);
-        const nk = trip.passed + 1, secs = (nk * KM - km) * trip.unit / 1000;
-        if (nk < lastK() && secs > 0 && secs < 7 && (!platform || platform.k !== nk) && speed > 20) platform = { k: nk, x: world + speed * secs, name: nm(nk), prev: nm(nk - 1), next: nm(nk + 1) };
-        // a timed trip brakes into its last station: constant braking from v0 over T covers v0·T/2, the platform is put exactly there
+        // A timed trip brakes into its final station.
         const leftS = trip.open ? Infinity : (trip.start + trip.minutes * trip.unit - Date.now()) / 1000;
-        if (leftS <= BRAKE) { const T = Math.max(.5, leftS); stopping = { k: lastK(), name: nm(lastK()), t0: now, T, v0: speed, w0: world, early: false };
-          platform = { x: world + speed * T / 2, name: nm(lastK()), prev: nm(lastK() - 1), next: nm(lastK() + 1), stop: true }; }
+        if (leftS <= BRAKE) { const T = Math.max(.5, leftS); stopping = { k: lastK(), name: nm(lastK()), t0: now, T, v0: speed, w0: world, early: false }; }
       }
       if (stopping) {
         // even braking, worked out from the time (not summed frame by frame), so it comes to rest exactly at the platform
@@ -775,7 +619,6 @@
       window.trainSpeed = speed / CRUISE;   // carriage.js: how fast the forest goes by
       if (rumble) { rumble.g.gain.value = wheelsOn ? Math.min(.5, speed / CRUISE * .5) : 0; rumble.lp.frequency.value = 160 + speed * .6; }
       if (speed > 20 && world - lastClack > 520) { lastClack = world; clack(Math.min(1, speed / CRUISE)); }
-      if (!$("#car").classList.contains("car3dDone")) scene(dt, now / 1000);   // the 2D window only while the 3D carriage is not showing
       // The station labels and progress HUD are DOM-heavy; 4 updates/sec are
       // visually indistinguishable from 60 while leaving the render loop free.
       if (!lastLinePaint || now - lastLinePaint >= 250) {
@@ -785,7 +628,7 @@
     }
     requestAnimationFrame(frame);
   }
-  addEventListener("resize", () => { if (riding) { fit(); lineUI(); } });
+  addEventListener("resize", () => { if (riding) lineUI(); });
   // back on the train if the page was closed mid-trip
   if (trip) { $("#board").classList.add("gone"); seat = trip.seat; no = trip.no; fillTicket(TK, trip); TK.classList.add("punched"); ride();
     addEventListener("pointerdown", () => audio(), { once: true }); }
