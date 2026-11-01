@@ -149,15 +149,25 @@ function pixelRide(host) {
     tx_.fillStyle = "#e9eef8"; for (let y = 20 + rnd() * 60; y < H; y += 50 + rnd() * 70) tx_.fillRect(x, Math.floor(y), Math.ceil(w * .5), 1);   // snow on the bark
     x += w + 60 + Math.floor(rnd() * 160); }
 
-  // tree shadows: leaning trunks and needle clumps, hard-edged (thresholded), tiling every SW px
+  // tree shadows, like the trees outside: snowy pines (tiers of drooping boughs) and bare birches (forking twigs),
+  // leaning with the low sun, hard-edged (thresholded), tiling every SW px
   const SW = 720, pat = document.createElement("canvas"); pat.width = SW; pat.height = H;
-  { const p = pat.getContext("2d"); p.fillStyle = "#000"; const slant = .45;
-    for (let i = 0; i < 5; i++) { const x0 = i / 5 * SW + rnd() * 40, w = 8 + rnd() * 14;
-      for (const dx of [0, SW, -SW]) {
-        p.beginPath(); p.moveTo(x0 + dx, 0); p.lineTo(x0 + dx + w, 0); p.lineTo(x0 + dx + w + H * slant, H); p.lineTo(x0 + dx + H * slant, H); p.fill();
-        let sd = i * 31 + 7; const q = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
-        for (let b = 0; b < 16; b++) { const y = q() * H, xx = x0 + dx + y * slant + (q() - .5) * 110;
-          p.beginPath(); p.ellipse(xx, y, 5 + q() * 14, 3 + q() * 7, slant + (q() - .5), 0, 7); p.fill(); } } }
+  { const p = pat.getContext("2d"); p.strokeStyle = p.fillStyle = "#000"; p.lineCap = "round"; const slant = .45;
+    const at = (x, y) => [x + y * slant, y];                     // lean every point with the sun
+    const line = (x0, y0, x1, y1, w) => { p.lineWidth = w; p.beginPath(); p.moveTo(...at(x0, y0)); p.lineTo(...at(x1, y1)); p.stroke(); };
+    function pine(x, dx) { x += dx; const tw = 4 + rnd() * 3;
+      p.beginPath(); p.moveTo(...at(x - tw / 2, 0)); p.lineTo(...at(x + tw / 2, 0)); p.lineTo(...at(x + tw / 2, H)); p.lineTo(...at(x - tw / 2, H)); p.fill();
+      for (let y = 6 + rnd() * 8; y < H; y += 9 + rnd() * 6) {   // boughs: longer lower down, drooping at the tips
+        const len = 10 + (y / H) * 26 + rnd() * 6;
+        for (const sd of [-1, 1]) { const ex = x + sd * len, ey = y + 4 + len * .18;
+          line(x, y, ex, ey, 2.2); line(ex, ey, ex + sd * 3, ey + 4, 1.6);
+          for (let k = .35; k < 1; k += .3) line(x + sd * len * k, y + 4 * k + len * .18 * k, x + sd * len * k + sd * 2, y + 4 * k + len * .18 * k + 5, 1.3); } } }
+    function birch(x, dx) { x += dx; line(x, 0, x, H, 3);
+      const twig = (x0, y0, ang, len, w, n) => { const x1 = x0 + Math.cos(ang) * len, y1 = y0 + Math.sin(ang) * len; line(x0, y0, x1, y1, w);
+        if (n > 0) { twig(x1, y1, ang - .45, len * .62, w * .7, n - 1); twig(x1, y1, ang + .4, len * .58, w * .7, n - 1); } };
+      for (let y = 20 + rnd() * 30; y < H - 20; y += 30 + rnd() * 40) twig(x, y, (rnd() < .5 ? Math.PI + .5 : -.5) + (rnd() - .5) * .3, 18 + rnd() * 12, 1.6, 2); }
+    const trees = []; for (let i = 0; i < 6; i++) trees.push([i / 6 * SW + rnd() * 50, i % 3 === 1 ? birch : pine, seed]);
+    for (const [x, f, sd] of trees) for (const dx of [0, SW, -SW]) { seed = sd; f(x, dx); }   // same tree on both sides of the seam
     const id = p.getImageData(0, 0, SW, H); for (let i = 3; i < id.data.length; i += 4) id.data[i] = id.data[i] > 110 ? 255 : 0; p.putImageData(id, 0, 0); }
 
   // steam off the coffee: a few pale pixels rising, curling, thinning out
