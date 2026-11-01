@@ -2,15 +2,9 @@
    to their right a window onto the snowy forest going by, curtains tied back with cord, a brass sconce with a frosted globe,
    the luggage rack and a carved cornice overhead, a polished fold-down table under the window. Only a scene — nothing to click;
    the carriage sways as it runs and the view leans a touch with the mouse.
-   three.js (MIT) from jsDelivr; wood textures from Poly Haven (CC0). */
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+   three.js (MIT), bundled locally in vendor/; wood textures from Poly Haven (CC0). */
+import * as THREE from "./vendor/three.bundle.min.js";   // three.js r170 (MIT) and the few addons used here, bundled: one local file, no CDN
+const { EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RectAreaLightUniformsLib, RoomEnvironment } = THREE;
 
 const A = "assets/3d/";
 const night = () => document.documentElement.dataset.theme !== "day";
@@ -18,8 +12,10 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ───────── the canvas, behind the boards ───────── */
 document.head.insertAdjacentHTML("beforeend", `<style>
-  body.car3d #room, body.car3d .cast, body.car3d #side { display: none !important; }
+  body.car3dDone #room, body.car3dDone .cast, body.car3dDone #side { display: none !important; }   /* the 2D room stays under the canvas until it has faded in */
   #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+  #car3d { opacity: 0; transition: opacity .8s ease; } body.car3d #car3d { opacity: 1; }
+  body:not(.car3d) #car3dVig, body:not(.car3d) #car3dLit, body:not(.car3d) #car3dLit2, body:not(.car3d) #car3dSun, body:not(.car3d) #car3dSun2 { display: none; }
   html:not([data-theme="day"]) #car3d { filter: saturate(1.18) contrast(1.04); }
   #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 100% at 62% 42%, transparent 55%, rgba(8, 6, 4, .55) 100%); }
   /* one light over everything — the boards are lit by the same lamp as the carriage, not lit from nowhere */
@@ -48,7 +44,6 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   #car3dSun2 i:nth-child(3), #car3dSun i:nth-child(3) { left: 58%; width: 10%; opacity: .6; }
   html[data-theme="day"] #car3dVig { background: radial-gradient(130% 110% at 70% 45%, transparent 65%, rgba(150, 175, 205, .14) 100%); }
 </style>`);
-document.body.classList.add("car3d");
 const canvas = document.createElement("canvas"); canvas.id = "car3d"; document.body.prepend(canvas);
 const vig = document.createElement("i"); vig.id = "car3dVig"; canvas.after(vig);
 const lit = document.createElement("i"); lit.id = "car3dLit"; document.body.appendChild(lit);
@@ -61,6 +56,7 @@ renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75)
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = !window.__CAR_LOW || !!window.__CAR_SHADOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;   // nothing that casts a shadow moves (the camera doesn't matter): redraw the shadows only when the light or the layout changes
 RectAreaLightUniformsLib.init();
 
 const scene = new THREE.Scene();
@@ -118,7 +114,6 @@ const M = {
   panel: new THREE.MeshStandardMaterial({ map: plankTexture(), roughness: .36, envMapIntensity: .6, fog: false }),
   cornice: new THREE.MeshStandardMaterial({ map: corniceTexture(), roughness: .5, metalness: .15, fog: false }),
   mould: wood("lacquered_cherry_wood", [3, 3], { color: 0x6e4228, roughness: .4 }),
-  walnut: wood("american_walnut_veneer", [1.5, 1.5], { color: 0x8a6448 }),
   cherry: wood("lacquered_cherry_wood", [2, 2], { color: 0x9a6a4a, roughness: .5 }),
   brass: new THREE.MeshStandardMaterial({ color: 0xc9a25a, metalness: 1, roughness: .32, fog: false }),
   iron: new THREE.MeshStandardMaterial({ color: 0x2a2b2d, metalness: .6, roughness: .55, fog: false }),
@@ -325,7 +320,7 @@ function applyTheme() {
   renderer.toneMappingExposure = n ? 1.12 : 1.45;
   trees.forEach(tm => tm.material.color.set(n ? 0x8aa2c8 : 0xe8f0f8)); if (snow) { snow.material.uniforms.bright.value = n ? .9 : 1; snow.material.uniforms.warm.value = n ? 1 : 0; }
   bloom.strength = n ? .5 : .32; bloom.threshold = n ? .82 : .9; bloom.radius = n ? .7 : .85;
-  placeLit();
+  placeLit(); renderer.shadowMap.needsUpdate = true;
 }
 // where the lamp is on screen: the board's light falls off from there
 function placeLit() {
@@ -360,12 +355,13 @@ function frame(now) {
   camera.lookAt(LOOK); camera.rotation.z += roll;
   // the hovered thing rises a little
   composer.render();
+  if (!shown && loaded) { shown = true; document.body.classList.add("car3d"); setTimeout(() => document.body.classList.add("car3dDone"), 900); }   // the 2D room stays until the carriage is ready, then it fades in
   requestAnimationFrame(frame);
 }
 
 layout(); applyTheme();
 addEventListener("resize", () => { layout(); applyTheme(); });
-let loaded = false; THREE.DefaultLoadingManager.onLoad = () => { loaded = true; };
+let loaded = false, shown = false; THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
 // ?still: no loop — render on demand (for checking frames without a GPU)
 window.__carDbg = () => ({ win, boardEdge, cam: camera.position.toArray() });
 if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded }; }

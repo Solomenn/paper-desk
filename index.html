@@ -6,7 +6,7 @@
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css">
 <script src="room.js"></script>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<link rel="modulepreload" href="vendor/three.bundle.min.js"><link rel="modulepreload" href="carriage.js">
 <script>
 /* load the 3D carriage; if it can't load, say why in a corner instead of failing silently */
 addEventListener("DOMContentLoaded", () => {
@@ -25,8 +25,6 @@ addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css">
 <style>
   :root {
     --ink: #2a323a;

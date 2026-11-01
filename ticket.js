@@ -19,9 +19,8 @@
 
   /* ───────── fonts and styles, once ───────── */
   if (!document.getElementById("tk-style")) {
-    for (const href of ["https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/500.css", "https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/400.css",
-      "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/400.css", "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/500.css"]) {
-      const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href; document.head.appendChild(l);
+    if (!document.querySelector('link[href*="room.css"], link[href*="fonts.css"]')) {   // the faces, unless the page has them already
+      const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "fonts.css"; document.head.appendChild(l);
     }
     const s = document.createElement("style"); s.id = "tk-style";
     s.textContent = `

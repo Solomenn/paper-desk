@@ -1,10 +1,4 @@
-@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css");
-@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css");
-@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/400.css");
-@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/500.css");
-@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5.3.1/700.css");
-@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/400.css");
-@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5.3.1/500.css");
+@import url("fonts.css");   /* 霞鹜文楷, Noto Serif / Sans SC — local first (tools/fetch_fonts.py), jsDelivr otherwise */
 /* 雪国驿舍 · the room every page sits in: a wooden room by a small snow-country station. Two themes (html[data-theme]):
    night — the lamp and the stove are the only warm light, the window is cold; day — snow light through the window, the stove low.
    Print (Song / Hei) for everything the desk prints or labels; handwriting (霞鹜文楷) only for what you write by hand. */

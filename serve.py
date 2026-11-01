@@ -9,8 +9,8 @@ text/plain（装过某些编辑器、下载器或者杀软后很常见），http
 .js 发成 text/plain。浏览器对 ES module 做严格 MIME 校验，会拒绝执行，于是
 index.html 里 import("./carriage.js") 失败，3D 车厢静默不出现，只剩 2D 墙面。
 
-这里把常见的类型钉死（尤其 .js → text/javascript），并且不发缓存头，所以
-刷新就是新文件，不用 Ctrl+F5。
+这里把常见的类型钉死（尤其 .js → text/javascript）。页面代码不缓存，刷新就是新文件，
+不用 Ctrl+F5；字体、three.js、贴图这些不会变的文件让浏览器缓存，第二次打开就不用再读。
 """
 
 import functools
@@ -46,7 +46,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map, **MIME}
 
     def end_headers(self):
-        self.send_header("Cache-Control", "no-store, must-revalidate")
+        # the code is re-read on every refresh; fonts, three.js and textures never change, so the browser keeps them
+        p = self.path.split("?", 1)[0]
+        if p.startswith(("/vendor/", "/assets/")) or p.endswith((".woff2", ".jpg", ".webp", ".png")):
+            self.send_header("Cache-Control", "public, max-age=2592000")
+        else:
+            self.send_header("Cache-Control", "no-store, must-revalidate")
         super().end_headers()
 
     def log_message(self, fmt, *args):  # quiet: one line per file is noise
