@@ -33,6 +33,8 @@ On the table in the ride still: **"PC DELL G5 5590" by CONTxE** (<https://sketch
 - Fusion Pixel Font 12px Proportional SC by TakWolf — SIL Open Font License 1.1 (assets/fonts/fusion-pixel-12-sc.woff2, subset to GB2312 + ASCII). Used for the words on the 雪国线 ride.
 
 The view from the 雪国线 window (`carview.js`, `assets/view/`, `tools/view_snowfield.py`): one photograph, Poly Haven HDRI
-"Passendorf Snow" (CC0) — its horizon band split into the sky, the sun, the hills and tree line, and the snowfield.
-The carriage window and table on the 雪国线 ride (`assets/frame.webp`) are cut from a photograph of a train window; its author shares
-the frame and table as free material (the view in that photo is theirs and is not used — the glass is punched out).
+"Passendorf Snow" (CC0, the 8K tonemapped panorama) — its horizon band split into the sky, the sun, the hills and tree line,
+and the snowfield, and colour-graded to match the window author's own photos (muted, a teal cast, highlights rolled off).
+The carriage window and table on the 雪国线 ride (`assets/frame.webp`) are taken from the author's photographs of a train window; he shares
+the frame and table as free material (the views in those photos are his and are not used): the median of six of his frames
+(1440×962), the platform watermark removed, the glass punched out.

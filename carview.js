@@ -1,24 +1,23 @@
 /* 雪国线 · the window (focus.html)
-   A dark carriage wall with one rounded window, as in the reference frames: a pale rim, a black gasket, the view through it.
-   The view through it is pixel art: the snowy wood of the pixel carriage (assets/ride/wood.png) going by slowly, the trunks
-   field under them rushes past; telegraph poles, their wires and stands of poplars flick by close to the glass.
+   The carriage is a photograph of a train window (assets/frame.webp, 1440×962; the window and the table are shared free
+   material by its author, the views in his photos are his and are not used): the median of six of his frames, the
+   watermark taken out, the glass punched out as a rounded rectangle. The view plays behind the glass.
    The page drives it: #car.on shows it, window.trainSpeed (0…1) sets the pace. */
 (() => {
   const car = document.getElementById("car");
   if (!car) return;
 
+  const FW = 1440, FH = 962;                                          // the frame photograph
+  const GL = 190, GT = 221, GW = 1067, GH = 611;                      // the glass in it (a little under the gasket)
   const css = `
-  .cv { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #121110; }
-  /* the wall: near black, a faint warm sheen from the window, a dark rail for the blind above it */
-  .cv::before { content: ""; position: absolute; inset: 0;
-    background: radial-gradient(70% 60% at 50% 48%, rgba(70, 64, 58, .35), transparent 70%), linear-gradient(180deg, #151311, #0d0b0a 60%, #090807); }
-  /* the carriage: the window and the table cut from a photograph of a train window (frame and table shared as free material
-     by its author; the view in it was theirs and is not used). The glass is punched out and the view plays behind it. */
-  .cv-ph { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 680 / 448; height: min(100vh, calc(100vw * 448 / 680)); }
-  .cv-ph > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none;
-    -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
-  .cv-glass { position: absolute; left: ${91 / 6.8}%; top: ${102 / 4.48}%; width: ${501 / 6.8}%; height: ${286 / 4.48}%; overflow: hidden; background: #c9d0d4; }
-  .cv-glass canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .cv { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0c0a08; }
+  /* the photograph covers the screen: the wall, the rail above, the table below */
+  .cv-ph { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: max(100vw, calc(100vh * ${FW} / ${FH})); aspect-ratio: ${FW} / ${FH}; }
+  .cv-ph > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none; }
+  .cv-glass { position: absolute; left: ${GL / FW * 100}%; top: ${GT / FH * 100}%; width: ${GW / FW * 100}%; height: ${GH / FH * 100}%;
+    overflow: hidden; background: #9fa9a8; }
+  .cv-glass canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   /* the page's own controls, on a dark wall */
   #car #line::before { background: rgba(18, 16, 14, .5) !important; box-shadow: 0 0 0 .5px rgba(236, 228, 210, .14) !important; }
@@ -38,42 +37,45 @@
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   const scene = document.createElement("div"); scene.className = "cv"; scene.setAttribute("aria-hidden", "true");
-  scene.innerHTML = '<div class="cv-ph"><div class="cv-glass"><canvas></canvas></div><img src="assets/frame.webp" alt=""></div>';
+  scene.innerHTML = '<div class="cv-ph"><div class="cv-glass"><canvas></canvas></div><img src="assets/frame.webp?v=2" alt=""></div>';
   car.prepend(scene);
   
   const cv = scene.querySelector("canvas"), g = cv.getContext("2d");
-
-  // the window's place on the wall: about three quarters of the width, 16:9-ish, a little above the middle
+  let LW = 1, LH = 1, K = 1;
   function layout() {
     const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
-    cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+    cv.width = LW = Math.max(1, Math.round(r.width * d)); cv.height = LH = Math.max(1, Math.round(r.height * d));
+    K = LW / VW;                                                      // band px -> canvas px
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
   }
-  addEventListener("resize", layout);
+  addEventListener("resize", () => { if (car.classList.contains("on")) layout(); else sized = false; });
 
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
-  /* the view: an open snowfield in the sun, from one photograph (Poly Haven "Passendorf Snow", CC0). No trees to cut.
+  /* the view: an open snowfield in the sun, from one photograph (Poly Haven "Passendorf Snow", CC0, the 8K panorama),
+     graded like the author's window photos (tools/view_snowfield.py: muted, a teal cast, the highlights rolled off).
      The sky and the sun are infinitely far: they stay. The hills and the forest line on the horizon slide slowly. The snow
      goes by faster row by row as it comes nearer (on flat ground the speed grows with the distance below the horizon).
-     Nothing is added: at rest the window is the photograph as taken. Drawn small, shown big in fine crisp pixels. */
-  const BW = 4096, HZ = 417;                                          // band width, the snow line in the band
-  const LH = 270, LW = Math.round(LH * 1.74);
-  const K = LH / 505;                                                 // the window shows band rows ~190..655 (some sky, the hills, the field)
-  const TOP = 150;
-  const [low, l] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; })();
-  const [glow, gl] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; return [c, c.getContext("2d")]; })();
+     Nothing is added: at rest the window is the photograph as taken. Drawn at the screen's own resolution. */
+  const BW = 8192, HZ = 834, TOP = 300, VW = 1760;                    // band width, the snow line, the band row at the window's top, the window's width in band px
+  const X0 = 4916 - 528;                                              // at rest the window shows the photograph exactly as taken
   let A = null, ready = false;
-  Promise.all(["skyp.webp", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}`))).then(([sky, land, snow]) => { A = { sky, land, snow }; ready = !!(sky && land && snow); });
-  const VH = 9, VG = 3.2;                                             // the hills' speed; the snow's speed per band row below the horizon
-  const X0 = 2458 - 264;                                             // at rest the window shows the photograph exactly as taken
-  const rowPos = new Float64Array(260).fill(X0 * (LH / 505));
-  let landPos = X0 * (LH / 505);
+  Promise.all(["skyp.webp", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}?v=2`))).then(([sky, land, snow]) => { A = { sky, land, snow }; ready = !!(sky && land && snow); });
+  const SP = 505 / 270;                                               // the old speeds were in canvas px of a 270-row window
+  const VH = 9 * SP * 2;                                              // the hills, band px per second
+  const vSnow = r => (9 + (r / 2 + 2) * 3.2) * SP * 2;                // the snow, row r below the horizon
+  const STEP = 4;
+  const rowPos = new Float64Array(Math.ceil(480 / STEP)).fill(X0);
+  let landPos = X0;
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const flakes = Array.from({ length: 40 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
-  let last = performance.now(), vel = 0, sized = false;
-  const Y = by => (by - TOP) * K;                                     // band row -> low canvas row
-  function wrap(im, sy, sh, off, dy) {
-    const bw = BW * K, x0 = -(((off % bw) + bw) % bw);
-    for (let x = x0; x < LW; x += bw) l.drawImage(im, 0, sy, BW, sh, x, dy, bw, sh * K + .7);
+  const flakes = Array.from({ length: 40 }, () => ({ x: rnd(), y: rnd(), z: rnd() }));
+  const [glow, gl] = (() => { const c = document.createElement("canvas"); c.width = 470; c.height = 270; return [c, c.getContext("2d")]; })();
+  let last = performance.now(), vel = 0, sized = false, tick = 0;
+  const Y = by => (by - TOP) * K;                                     // band row -> canvas row
+  // the visible stretch of a band at position pos (band px), wrapping round the panorama
+  function span(im, sy, sh, pos, dy, dh) {
+    const w = LW / K, s0 = ((pos % BW) + BW) % BW, a = Math.min(w, BW - s0);
+    g.drawImage(im, s0, sy, a, sh, 0, dy, a * K, dh);
+    if (a < w) g.drawImage(im, 0, sy, w - a, sh, a * K, dy, (w - a) * K, dh);
   }
   function frame(now) {
     requestAnimationFrame(frame);
@@ -83,24 +85,26 @@
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2);
     // the sky exactly as photographed, sun and all: it stays (it is infinitely far)
-    l.drawImage(A.sky, 0, TOP, A.sky.width, HZ + 6 - TOP, 0, 0, A.sky.width * K, Y(HZ + 6));
+    g.drawImage(A.sky, 0, TOP, VW, HZ + 12 - TOP, 0, 0, VW * K, Y(HZ + 12));
     // the hills and the forest line: slow
-    landPos += dt * vel * VH; wrap(A.land, TOP, HZ + 6 - TOP, landPos, 0);
+    landPos += dt * vel * VH; span(A.land, TOP, HZ + 12 - TOP, landPos, 0, Y(HZ + 12));
     // the snow, band by band: each a little faster than the one above
-    const rows = A.snow.height, STEP = 2;
-    for (let r = 0; r < rows; r += STEP) {
-      rowPos[r >> 1] += dt * vel * (VH + (r + 2) * VG);
-      const bw = BW * K, x0 = -(((rowPos[r >> 1] % bw) + bw) % bw), dy = Y(HZ - 2 + r);
-      for (let x = x0; x < LW; x += bw) l.drawImage(A.snow, 0, r, BW, STEP, x, dy, bw, STEP * K + .7);
+    for (let r = 0; r < A.snow.height; r += STEP) {
+      const p = rowPos[r / STEP] += dt * vel * vSnow(r);
+      span(A.snow, r, STEP, p, Y(HZ - 4 + r), STEP * K + .7);
     }
     // a few flakes glinting in the air
-    for (const f of flakes) { f.x -= dt * (4 + vel * (30 + f.z * 300)); f.y += dt * (6 + f.z * 8); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
-      l.fillStyle = "#ffffff"; l.globalAlpha = .55 + f.z * .4; l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); }
-    l.globalAlpha = 1;
-    g.imageSmoothingEnabled = false; g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.filter = "none";
-    g.drawImage(low, 0, 0, cv.width, cv.height);
-    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(7px) brightness(1.1)"; gl.drawImage(low, 0, 0); gl.filter = "none";
-    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .16; g.drawImage(glow, 0, 0, cv.width, cv.height);
+    const fs = Math.max(1, Math.round(LH / 300));
+    g.fillStyle = "#ffffff";
+    for (const f of flakes) {
+      f.x -= dt * (4 + vel * (30 + f.z * 300)) / 470; f.y += dt * (6 + f.z * 8) / 270;
+      if (f.x < -.01) f.x += 1.02; if (f.y > 1) f.y -= 1;
+      g.globalAlpha = .55 + f.z * .4; g.beginPath(); g.arc(f.x * LW, f.y * LH, fs * (.5 + f.z * .4), 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+    // a faint bloom, as through glass
+    if (!(tick++ & 3)) { gl.clearRect(0, 0, 470, 270); gl.filter = "blur(7px) brightness(1.1)"; gl.drawImage(cv, 0, 0, 470, 270); gl.filter = "none"; }
+    g.globalCompositeOperation = "screen"; g.globalAlpha = .16; g.drawImage(glow, 0, 0, LW, LH);
     g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
   }
   requestAnimationFrame(frame);
