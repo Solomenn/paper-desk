@@ -78,7 +78,8 @@
   html[data-theme="day"] .paper { background: linear-gradient(180deg, #e9e4d4, #e3ddcb); }
   html[data-theme="day"] #free { color: #424536; caret-color: #6b5a2a; } html[data-theme="day"] #free::placeholder { color: #6d705f; }
   html[data-theme="day"] #tasks button { color: #4b4e3f; } html[data-theme="day"] #tasks button.on { color: #2c2f24; }
-  html[data-theme="day"] .beam { opacity: calc(var(--light) * .35); }
+  html[data-theme="day"] .beam { opacity: var(--light); mix-blend-mode: multiply; }   /* by day the lamp still burns: a warm cone pooled on the pale paper */
+  html[data-theme="day"] .beam::before { background: radial-gradient(ellipse at 50% 100%, #e9b866 0, #efcf92cc 23%, #f3e1b855 53%, transparent 76%); }
   html[data-theme="day"] .controls label > span { color: #6c715f; } html[data-theme="day"] .controls { background: #00000008; }
   html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
   html[data-theme="day"] .foot { background: #d7d1bfe8; color: #5b5f50; } html[data-theme="day"] .foot .q { color: #4f5444; }
@@ -174,6 +175,8 @@
      TEMPORARY: assets/tyl/* are 听雨来信's own images, used to get the look right first; to be replaced with our own. ═════════ */
   #board { background: #191c19 url(assets/tyl/snow-background.webp) center / cover no-repeat; }
   #board::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(#0c131930, #10171442 60%, #0a110f77); }
+  html[data-theme="day"] #board { background-image: url(assets/snow-day.webp); }   /* by day a sunlit snowy wood (Poly Haven, CC0) */
+  html[data-theme="day"] #board::before { background: linear-gradient(#ffffff10, #dfe8f020 60%, #33404a40); }
   #bgc { display: none; }
   .mechanism .ties { display: none; }
   .mechanism .rail { top: 22px; height: 21px; border-radius: 3px; background: linear-gradient(#141714, #5a6059 17%, #282d28 36%, #090d0b 65%, #343932); box-shadow: 0 3px 4px #0008; }
