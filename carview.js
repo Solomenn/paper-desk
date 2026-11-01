@@ -8,21 +8,17 @@
   if (!car) return;
 
   const css = `
-  .cv { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0e0c0b; }
+  .cv { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #121110; }
   /* the wall: near black, a faint warm sheen from the window, a dark rail for the blind above it */
   .cv::before { content: ""; position: absolute; inset: 0;
     background: radial-gradient(70% 60% at 50% 48%, rgba(70, 64, 58, .35), transparent 70%), linear-gradient(180deg, #151311, #0d0b0a 60%, #090807); }
-  .cv-rail { position: absolute; left: 6%; right: 6%; height: 1.6%; border-radius: 2px; background: linear-gradient(#1d1b19, #121110); box-shadow: 0 1px 0 rgba(255,255,255,.04); }
-  .cv-win { position: absolute; left: 50%; transform: translateX(-50%); border-radius: 7.5% / 13%;
-    background: linear-gradient(180deg, #a9a7a2, #908e8a 55%, #7a7874); box-shadow: 0 0 0 1px #0007, 0 12px 40px -10px #000c; }
-  .cv-gasket { position: absolute; inset: 3.4% 2%; border-radius: 6.4% / 11.6%; background: #0d0d0e; box-shadow: inset 0 0 0 1px #000; }
-  .cv-glass { position: absolute; inset: 5.2% 3%; border-radius: 4.6% / 8.4%; overflow: hidden; background: #c9d0d4; }
+  /* the carriage: the window and the table cut from a photograph of a train window (frame and table shared as free material
+     by its author; the view in it was theirs and is not used). The glass is punched out and the view plays behind it. */
+  .cv-ph { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 680 / 448; height: min(100vh, calc(100vw * 448 / 680)); }
+  .cv-ph > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .cv-glass { position: absolute; left: ${91 / 6.8}%; top: ${102 / 4.48}%; width: ${501 / 6.8}%; height: ${286 / 4.48}%; overflow: hidden; background: #c9d0d4; }
   .cv-glass canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-  /* the glass itself: a soft sheen, a touch darker at the edges */
-  .cv-glass::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(120% 120% at 50% 40%, transparent 60%, rgba(10, 12, 14, .28)), linear-gradient(115deg, rgba(255,255,255,.07), transparent 35%); }
-  .cv-table { position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; border-radius: 6px 6px 0 0;
-    background: linear-gradient(180deg, #dfe2e4, #b9bdc0); clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%); }
 
   /* the page's own controls, on a dark wall */
   #car #line::before { background: rgba(18, 16, 14, .5) !important; box-shadow: 0 0 0 .5px rgba(236, 228, 210, .14) !important; }
@@ -42,18 +38,13 @@
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   const scene = document.createElement("div"); scene.className = "cv"; scene.setAttribute("aria-hidden", "true");
-  scene.innerHTML = '<i class="cv-rail"></i><div class="cv-win"><div class="cv-gasket"></div><div class="cv-glass"><canvas></canvas></div></div><i class="cv-table"></i>';
+  scene.innerHTML = '<div class="cv-ph"><div class="cv-glass"><canvas></canvas></div><img src="assets/frame.webp" alt=""></div>';
   car.prepend(scene);
-  const WIN = scene.querySelector(".cv-win"), RAIL = scene.querySelector(".cv-rail"), TABLE = scene.querySelector(".cv-table");
+  
   const cv = scene.querySelector("canvas"), g = cv.getContext("2d");
 
   // the window's place on the wall: about three quarters of the width, 16:9-ish, a little above the middle
   function layout() {
-    const W = innerWidth, H = innerHeight;
-    const w = Math.min(W * .76, H * .66 * 1.74), h = w / 1.74, top = Math.max(H * .17, (H - h) / 2 - H * .03);
-    Object.assign(WIN.style, { width: w + "px", height: h + "px", top: top + "px" });
-    Object.assign(RAIL.style, { top: (top - H * .1) + "px" });
-    Object.assign(TABLE.style, { width: w * .3 + "px", height: Math.max(10, H - top - h - H * .06) * .3 + "px" });
     const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
     cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
   }
