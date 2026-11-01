@@ -1,6 +1,6 @@
-/* 雪国列车 · the carriage (index.html): you sit in a 1930s train compartment, on the left-hand seat by the table. The boards
-   hang over the near wall; to their right the compartment's window, the table with a camera, a journal and a pocket watch, and
-   outside a snowy pine forest going by. By day the snow light fills the compartment; by night the ceiling lamp is lit.
+/* 雪国列车 · the carriage (focus.html, the ride): you stand at the door of a 1930s train compartment — leather seats either side, the
+   table under the window with a camera, a journal and a pocket watch, and outside a snowy pine forest. The forest only goes by while
+   the train is running: focus.html sets window.trainSpeed (0 standing … 1 cruising). By day the snow light fills the compartment; by night the ceiling lamp is lit.
    Only a scene — nothing to click; the view leans a touch with the mouse and the carriage sways a little.
 
    The daylight is a reproduction of the model's own Sketchfab scene (its environment "Gareoult", its three lights, AO, bloom,
@@ -16,17 +16,15 @@ const A = "assets/3d/";
 const night = () => document.documentElement.dataset.theme !== "day";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ───────── the canvas, behind the boards ───────── */
+/* ───────── the canvas, in the ride view (#car); the 2D carriage under it stays as the fallback ───────── */
+const host = document.getElementById("car");
 document.head.insertAdjacentHTML("beforeend", `<style>
-  body.car3dDone #room, body.car3dDone .cast, body.car3dDone #side { display: none !important; }   /* the 2D room stays under the canvas until it has faded in */
-  #car3d { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; opacity: 0; transition: opacity .9s ease; }
-  body.car3d #car3d { opacity: 1; }
-  #car3dVig { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(130% 110% at 70% 45%, transparent 62%, rgba(6, 4, 3, .32) 100%); opacity: 0; transition: opacity .9s; }
-  body.car3d #car3dVig { opacity: 1; }
+  #car3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.2s ease; }
+  #car.car3d #car3d { opacity: 1; }
+  #car.car3dDone #wall, #car.car3dDone #shot, #car.car3dDone #pane, #car.car3dDone #lampglow, #car.car3dDone #topshade { display: none; }
+  #car.car3d #line, #car.car3d #hud, #car.car3d #book, #car.car3d #sndT, #car.car3d #off { z-index: 2; }
 </style>`);
-const canvas = document.createElement("canvas"); canvas.id = "car3d"; document.body.prepend(canvas);
-const vig = document.createElement("i"); vig.id = "car3dVig"; canvas.after(vig);
-
+const canvas = document.createElement("canvas"); canvas.id = "car3d"; host.prepend(canvas);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(window.__CAR_LOW ? .75 : Math.min(devicePixelRatio, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -37,24 +35,13 @@ renderer.shadowMap.autoUpdate = false;   // nothing that casts a shadow moves: d
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x130b0b);
 scene.environmentRotation.set(0, 3.478, 0);
 new RGBELoader().load(A + "sky_day.hdr", t => { t.mapping = THREE.EquirectangularReflectionMapping; scene.environment = t; });
-const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.002, 20);
+const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.002, 20);
 
-/* ───────── where you sit: the left seat, facing the window wall; the right-hand window is turned into the strip beside the boards ───────── */
-const EYE = new THREE.Vector3(0.25, 0.085, 0.05);
-const WINDOW = new THREE.Vector3(0.361, 0.073, -0.078);   // the middle of the right-hand window
-const PITCH = Math.atan2(0.078 - 0.085, 0.128);
-let yaw = 0;
-function aim() {
-  const W = innerWidth, H = innerHeight, side = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidew")) || 300;
-  const ndc = (1 - side / 2 / W) * 2 - 1;                       // the strip's middle, in clip space
-  const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), halfW = halfH * camera.aspect;
-  const theta = Math.atan2(WINDOW.x - EYE.x, -(WINDOW.z - EYE.z));
-  yaw = theta - Math.atan(ndc * halfW);
-}
+/* ───────── where you stand: in the doorway, looking down the compartment to the window ───────── */
+const EYE = new THREE.Vector3(.3235, .084, .075), AT = new THREE.Vector3(.3235, .07, -.078);
 function look(dx = 0, dy = 0, roll = 0) {
   camera.position.set(EYE.x + dx, EYE.y + dy, EYE.z);
-  const d = new THREE.Vector3(Math.sin(yaw) * Math.cos(PITCH), Math.sin(PITCH), -Math.cos(yaw) * Math.cos(PITCH));
-  camera.up.set(Math.sin(roll), Math.cos(roll), 0); camera.lookAt(camera.position.clone().add(d));
+  camera.up.set(Math.sin(roll), Math.cos(roll), 0); camera.lookAt(AT.x + dx * .3, AT.y + dy * .3, AT.z);
 }
 
 /* ───────── the compartment, lit as on Sketchfab ───────── */
@@ -115,11 +102,11 @@ const SN = 900, sp = new Float32Array(SN * 3), ss = new Float32Array(SN);
 for (let i = 0; i < SN; i++) { sp[i * 3] = Math.random(); sp[i * 3 + 1] = Math.random(); sp[i * 3 + 2] = Math.random(); ss[i] = Math.random(); }
 const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3)); sg.setAttribute("seed", new THREE.BufferAttribute(ss, 1));
 const snow = new THREE.Points(sg, new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
-  uniforms: { t: { value: 0 }, bright: { value: 1 } },
-  vertexShader: `uniform float t; attribute float seed; varying float a;
+  uniforms: { t: { value: 0 }, run: { value: 0 }, bright: { value: 1 } },
+  vertexShader: `uniform float t; uniform float run; attribute float seed; varying float a;
     void main(){
       // a box of snow outside the window: x across the glass, y up, z away; it drifts down and streams back past the train
-      vec3 p = vec3(fract(position.x - t * (.05 + .05 * seed)) * .5 + .08, fract(position.y - t * (.012 + .012 * seed)) * .22 - .02, -.09 - position.z * .5);
+      vec3 p = vec3(fract(position.x - run * (.05 + .05 * seed) - t * .004) * .5 + .08, fract(position.y - t * (.012 + .012 * seed)) * .22 - .02, -.09 - position.z * .5);
       p.x += sin(t * 1.3 + seed * 40.) * .003;
       vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
       gl_PointSize = (.8 + 1.4 * seed) * (.12 / -mv.z) * 4.; a = .55 + .45 * seed; }`,
@@ -145,14 +132,14 @@ composer.addPass(grade);
 function applyTheme() {
   const n = night();
   scene.environmentIntensity = n ? .05 : 2.2;
-  warm.intensity = n ? warm.userData.base * .35 : warm.userData.base;
+  warm.intensity = n ? warm.userData.base * .15 : warm.userData.base;
   cool.intensity = n ? 0 : cool.userData.base;
-  bulbLight.intensity = n ? bulbLight.userData.base * 3 : bulbLight.userData.base;
-  suns.forEach(s => s.intensity = n ? 0 : 2);
+  bulbLight.intensity = n ? bulbLight.userData.base * 1.4 : bulbLight.userData.base;
+  suns.forEach(s => s.intensity = n ? 0 : 1.2);
   if (bulb) { bulb.emissive = new THREE.Color(0xffd9a0); bulb.emissiveIntensity = n ? 4 : 1.5; }
   forest.material.uniforms.night.value = n ? 1 : 0;
   snow.material.uniforms.bright.value = n ? .5 : 1;
-  renderer.toneMappingExposure = n ? .9 : .65;
+  renderer.toneMappingExposure = n ? .6 : .65;
   grade.uniforms.sat.value = n ? .9 : .82;
   renderer.shadowMap.needsUpdate = true;
 }
@@ -161,7 +148,7 @@ addEventListener("deskTheme", applyTheme);
 /* ───────── layout ───────── */
 function layout() {
   renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  aim(); look();
+  look();
 }
 layout(); applyTheme();
 addEventListener("resize", layout);
@@ -169,23 +156,26 @@ addEventListener("resize", layout);
 /* ───────── the loop: the forest goes by, the carriage sways ───────── */
 const lean = { x: 0, y: 0, tx: 0, ty: 0 };
 addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
-let t0 = performance.now(), jolt = 0, nextJolt = 4, shown = false, loaded = false;
+let t0 = performance.now(), last = t0, run = 0, jolt = 0, nextJolt = 4, shown = false, loaded = false;
 THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
 function frame(now) {
-  const t = (now - t0) / 1000, m = reduce ? 0 : 1;
-  forest.material.uniforms.off.value = (t * .006) % 1;   // the forest slides back past the window
-  snow.material.uniforms.t.value = t;
-  if (t > nextJolt) { jolt = 1; nextJolt = t + 5 + Math.random() * 7; }
+  requestAnimationFrame(frame);
+  if (!host.classList.contains("on") && shown && !window.__car) { last = now; return; }   // nothing to draw while the ride view is closed
+  const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
+  const v = Math.max(0, Math.min(1, +window.trainSpeed || 0)), m = reduce ? 0 : v;
+  run += dt * v;
+  forest.material.uniforms.off.value = (run * .006) % 1;   // the forest slides back past the window, as fast as the train runs
+  snow.material.uniforms.t.value = t; snow.material.uniforms.run.value = run;
+  if (t > nextJolt) { jolt = v; nextJolt = t + 5 + Math.random() * 7; }
   jolt *= .93;
   lean.x += (lean.tx - lean.x) * .05; lean.y += (lean.ty - lean.y) * .05;
   const sy = (Math.sin(t * 1.9) * .00025 + Math.sin(t * .63) * .0003 + jolt * Math.sin(t * 38) * .0004) * m;
   const roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * m;
   look(lean.x * .003, lean.y * .002 + sy, roll);
   composer.render();
-  if (!shown && loaded && forest.visible) { shown = true; document.body.classList.add("car3d"); setTimeout(() => document.body.classList.add("car3dDone"), 1000); }
-  requestAnimationFrame(frame);
+  if (!shown && loaded && forest.visible) { shown = true; host.classList.add("car3d"); setTimeout(() => host.classList.add("car3dDone"), 1300); }
 }
 // test hooks: render on demand without a GPU
-window.__carDbg = () => ({ yaw, cam: camera.position.toArray() });
+window.__carDbg = () => ({ cam: camera.position.toArray() });
 if (window.__CAR_STILL || /still/.test(location.search)) { window.__car = { frame: t => { t0 = performance.now() - t * 1000; const keep = requestAnimationFrame; window.requestAnimationFrame = () => 0; frame(performance.now()); window.requestAnimationFrame = keep; }, ready: () => loaded && forest.visible }; }
 else requestAnimationFrame(frame);
