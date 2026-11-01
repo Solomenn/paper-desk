@@ -810,7 +810,7 @@ function scheduleCarriageWarmup() {
   const start = () => {
     if (!document.hidden) loadCarriage();
   };
-  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 2200 });
+  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 4000 });
   else setTimeout(start, 900);
 }
 document.addEventListener("carriageStart", loadCarriage, { once: true });

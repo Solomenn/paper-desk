@@ -299,7 +299,7 @@ function sampleFrameTime(dt) {
   averageFrameMs = sampleTotal / sampleFrames;
   sampleFrames = 0;
   sampleTotal = 0;
-  if (averageFrameMs > 23) {
+  if (averageFrameMs > 20) {
     slowWindows++;
     fastWindows = 0;
   } else if (averageFrameMs < 18) {
@@ -356,9 +356,12 @@ async function warmScene() {
   if (warmupPromise) return warmupPromise;
   warmupPromise = (async () => {
     try {
-      if (typeof renderer.compileAsync === "function") await renderer.compileAsync(scene, camera);
-      // Compile the post-processing chain and upload textures/shadow maps while
-      // the user is still on the boarding screen, not on the first moving frame.
+      if (typeof renderer.compileAsync === "function") {
+        try { await renderer.compileAsync(scene, camera); }
+        catch (error) { console.warn("[paper-desk] shader precompile:", error); }
+      }
+      // Compile the expensive reflection path once while the boarding screen
+      // is idle; then leave the normal balanced pipeline ready for the first ride frame.
       if (ssr) {
         ssr.enabled = true;
         composer.render();
@@ -368,8 +371,17 @@ async function warmScene() {
       sceneWarm = true;
     } catch (error) {
       console.warn("[paper-desk] scene warmup:", error);
-      // Keep the 2D fallback until the first regular render has a chance to retry.
-      warmupPromise = null;
+      if (ssr) ssr.enabled = false;
+      if (gtao) gtao.enabled = false;
+      if (bloom) bloom.enabled = false;
+      try {
+        composer.render();
+        sceneWarm = true;
+      } catch (fallbackError) {
+        console.warn("[paper-desk] fallback scene warmup:", fallbackError);
+        warmupPromise = null;
+        setTimeout(scheduleWarmup, 1200);
+      }
     }
   })();
   return warmupPromise;
@@ -381,7 +393,7 @@ function scheduleWarmup() {
     warmupScheduled = false;
     if (loaded && !sceneWarm && document.visibilityState !== "hidden") warmScene();
   };
-  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 1400 });
+  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 4000 });
   else setTimeout(start, 500);
 }
 THREE.DefaultLoadingManager.onLoad = () => {
@@ -419,7 +431,7 @@ function frame(now) {
   const sy = (Math.sin(t * 1.9) * .00025 + Math.sin(t * .63) * .0003 + jolt * Math.sin(t * 38) * .0004) * m;
   const roll = (Math.sin(t * 1.1) * .0012 + jolt * .002 * Math.sin(t * 31)) * m;
   look(lean.x * .003, lean.y * .002 + sy, roll);
-  composer.render();
+  if (sceneWarm) composer.render();
   if (!shown && loaded && forest.visible && sceneWarm) { shown = true; host.classList.add("car3d"); setTimeout(() => host.classList.add("car3dDone"), 1300); }
   raf = requestAnimationFrame(frame);
 }
