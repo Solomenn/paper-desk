@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
 <link rel="stylesheet" href="room.css?v=8">
-<script src="room.js?v=8"></script>
+<script src="room.js?v=9"></script>
 <style>
   :root {
     --ink: #2a323a;
@@ -146,7 +146,7 @@
   .text::first-line { font-size: 19px; font-weight: 600; }
   .note.editing .sheet { cursor: text; }
   .note.editing .text { user-select: text; -webkit-user-select: text; }
-  .text:empty::before { content: "写点什么…"; color: rgba(46, 40, 30, .32); }
+  /* an empty note is just paper: no "write something" hint */
 
   /* ───────── push pin ───────── */
   .pin {

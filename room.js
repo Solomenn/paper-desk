@@ -25,12 +25,14 @@
     // by day the morning sun comes through a window up and to the right and falls on what you're working on (the element
     // marked [data-sunlit] — on the desk, the 在做 column): a patch in the window's shape, leaning with the light, with the
     // window's bars (two panes across, three down) as clean shadow lines in it. Nothing else — the board stays quiet.
-    let sun = null;
+    let sun = null, seen = "";
     function paint() {
-      if (sun) { sun.remove(); sun = null; }
-      const t = document.querySelector("[data-sunlit]"); if (!t) return;
-      const r = t.getBoundingClientRect(), W = innerWidth, H = innerHeight;
-      if (r.width < 40 || r.right < 0 || r.left > W) return;
+      const t = document.querySelector("[data-sunlit]");
+      const r = t ? t.getBoundingClientRect() : null, W = innerWidth, H = innerHeight;
+      const key = r ? [r.left, r.top, r.width, r.height, W, H].map(Math.round).join() : "";
+      if (key === seen && (sun || !t)) return;                     // nothing moved: leave the light as it is
+      seen = key; if (sun) { sun.remove(); sun = null; }
+      if (!t || r.width < 40 || r.right < 0 || r.left > W) return;
       const top = r.top + 8, bot = r.bottom - 8, h = bot - top, lean = Math.min(h * .14, r.width * .22);
       const x0 = r.left + 10, x1 = r.right - 10 - lean;                 // leaning right as it goes up, kept inside the column
       const at = (u, v) => [x0 + (x1 - x0) * u + lean * (1 - v), top + h * v];   // u across, v down
@@ -46,9 +48,8 @@
       sun = document.body.lastElementChild;
     }
     window.roomRelight = paint;
-    addEventListener("deskpage", () => setTimeout(paint, 700)); addEventListener("load", () => setTimeout(paint, 300));
-    paint();
-    let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paint, 120); });
+    // the column moves and resizes (fonts arriving, the board settling in, a page turn, cards added): check twice a second
+    paint(); setInterval(paint, 500); addEventListener("resize", paint);
   };
   if (document.body) start(); else addEventListener("DOMContentLoaded", start);
 
