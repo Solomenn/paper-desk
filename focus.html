@@ -29,6 +29,7 @@
   #board .shell { position: relative; z-index: 2; width: min(920px, calc(100% - 64px)); margin: auto; padding: 26px 0 34px; transition: opacity .7s, transform .9s var(--ease); }
   #board.sent .shell { opacity: 0; transform: translateY(30px); pointer-events: none; }
   #board .topbar { height: 55px; display: flex; align-items: center; justify-content: center; position: relative; }
+  #tkCount { display: none !important; }
   #board .wordmark { font: 14px var(--serif); letter-spacing: .38em; color: var(--ink); opacity: .62; }
   #board .tops { position: absolute; right: 0; display: flex; align-items: center; gap: 16px; }
   #board .count { font: 13px var(--mono); letter-spacing: .16em; color: #c1c7b9; }
@@ -204,7 +205,7 @@
 <section id="board">
   <canvas id="bgc"></canvas>
   <div class="shell">
-    <header class="topbar"><span class="wordmark">雪国线 · 夜行</span>
+    <header class="topbar"><span class="wordmark"></span>
       <div class="tops"><span class="count" id="tkCount"></span><a class="ibtn" href="album.html?kind=ticket" title="车票卡册">
         <svg viewBox="0 0 24 24"><path d="M3 7h13v10H3zM16 7h5v10h-5"/><path d="M16 9v1M16 12v1M16 15v1"/></svg></a></div></header>
     <div class="gap"></div>
@@ -219,9 +220,9 @@
       </div>
       <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
       <div class="controls">
-        <label><span>灯光</span><input id="light" type="range" min="15" max="100" value="70"></label>
-        <label><span>光束</span><input id="spread" type="range" min="30" max="100" value="72"></label>
-        <label><span>行程 <output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
+        <label><span></span><input id="light" type="range" min="15" max="100" value="70"></label>
+        <label><span></span><input id="spread" type="range" min="30" max="100" value="72"></label>
+        <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"></label>
       </div>
     </div>
     <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">检票上车</button></footer>
@@ -276,7 +277,7 @@
   let pick = null, minutes = RIDES.includes(get("paper-desk.trip.min", 5)) ? get("paper-desk.trip.min", 5) : 5;
   const tEl = $("#tasks"), FREE = $("#free");
   tasks.forEach(t => { const b = document.createElement("button"); b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; FREE.value = t.name; FREE.focus(); FREE.setSelectionRange(t.name.length, t.name.length); draw(); chuff(.5); }; t.el = b; tEl.appendChild(b); });
-  if (!tasks.length) tEl.innerHTML = '<span class="none">黑板 Doing 和今日台历上还没有事 · 写下一件就好</span>';
+  if (!tasks.length) tEl.innerHTML = '';   // nothing to pick: the question above is enough
   FREE.addEventListener("input", () => { const v = FREE.value.trim(); pick = tasks.find(t => t.name === v) || (v ? { name: v } : null); draw(); });
   // where today's trains start, and the stations of a trip: 先坐一站 shows just the next one (the ride goes on as long as you like)
   const OFF = (new Date().getDate() * 5) % STATIONS.length;
@@ -289,7 +290,7 @@
   const fillTicket = (tk, t) => Ticket.fill(tk, Object.assign({ no, seat }, t));
   function draw() {
     tasks.forEach(t => t.el.classList.toggle("on", t === pick));
-    $("#rideO").textContent = minutes === 5 ? "先坐一站 · 不限时" : `${minutes} 分 · ${minutes / KM} 站`;
+    $("#rideO").textContent = minutes === 5 ? "先坐一站" : `${minutes} 分`;
     $("#ride").value = RIDES.indexOf(minutes);
     fillTicket(TK, { name: pick ? pick.name : "", minutes, open: minutes === 5, stops: stopsFor(minutes), seat, no });
     aimLoco();

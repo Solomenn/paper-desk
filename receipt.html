@@ -175,14 +175,14 @@
     background:rgba(248,249,247,.9);color:#4f5d69;text-decoration:none;font-size:16px;box-shadow:0 2px 6px rgba(21,35,58,.16);transition:color .2s,transform .2s}
   .back:hover{color:#2f4f73;transform:translateY(-2px)}
 </style>
-<link rel="stylesheet" href="room.css?v=8">
+<link rel="stylesheet" href="room.css?v=11">
 <script src="room.js?v=10"></script>
 <script src="sound.js"></script>
 <script src="preload.js" defer></script>
 </head>
 <body>
 <a class="back" href="./" title="回到桌子">←</a>
-<a class="back" href="album.html?kind=receipt" title="小票卡册" style="left:auto;right:24px;font-size:13px;letter-spacing:.1em;width:auto;padding:0 14px;border-radius:999px">卡册</a>
+<a class="back" href="album.html?kind=receipt" title="小票卡册" style="left:auto;right:24px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="13" height="17" rx="1.5"/><path d="M6 8H4.5M6 16H4.5M10 9h5"/></svg></a>
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
@@ -798,7 +798,6 @@
     c.restore();
 
     /* LIFE POS */
-    tracked(c, 'LIFE POS', 160, 396, `600 30px ${MONO}`, '#36424e', 10, 'left');
 
     /* 按钮 */
     paintButton(c, BTN_EDIT, '#36424e', '#4f5d69', '样式');

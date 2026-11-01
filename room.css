@@ -69,6 +69,7 @@ html.theming, html.theming * { transition: background-color 1s, color .8s, borde
 /* 禁则: no closing punctuation at the start of a line, no opening one at the end */
 body { line-break: strict; word-break: normal; hanging-punctuation: allow-end; }
 /* the running title in the margin */
+#hashira { display: none !important; }   /* no running title in the margin: the page itself says what it is */
 #hashira { position: fixed; left: 6px; top: 50%; transform: translateY(-50%); z-index: 2; writing-mode: vertical-rl; pointer-events: none;
   font: 11px var(--serif); letter-spacing: .6em; color: var(--on-wall2); white-space: nowrap; }
 .seal { display: inline-block; width: 46px; height: 46px; cursor: pointer; transform: rotate(-3deg); opacity: .9; transition: transform .2s; }
