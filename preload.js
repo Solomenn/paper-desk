@@ -7,8 +7,9 @@
 
   const currentScript = document.currentScript;
   const BASE = new URL("./", currentScript && currentScript.src ? currentScript.src : location.href);
-  const CACHE_NAME = "paper-desk-carriage-v3";
+  const CACHE_NAME = "paper-desk-carriage-v4";
   const ASSETS = [
+    "assets/snow-day.webp",
     "carriage.js",
     "vendor/three.bundle.min.js",
     "assets/3d/cabin.glb",
