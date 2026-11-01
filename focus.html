@@ -131,6 +131,24 @@
   #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { color: rgba(232, 217, 168, .8); }
   #line .st i.hid { visibility: hidden; }
 
+  /* the ride's words in a pixel face, on the same pixel grid as the picture (Fusion Pixel 12px, OFL; shown at 2×, never blurred),
+     with hard pixel shadows instead of glows */
+  @font-face { font-family: "Pixel SC"; src: url(assets/fonts/fusion-pixel-12-sc.woff2) format("woff2"); font-display: swap; }
+  #car #hud, #car #off, #car #sndT, #car #line .st i, #car #line .tr b {
+    font-family: "Pixel SC", var(--sans); font-size: 24px; line-height: 24px; letter-spacing: 0; font-weight: 400;
+    -webkit-font-smoothing: none; -moz-osx-font-smoothing: grayscale; font-smooth: never; text-shadow: 2px 2px 0 rgba(36, 24, 20, .85); }
+  #car #line .st { border-radius: 0; width: 10px; height: 10px; margin-left: -5px; top: 9px; box-shadow: inset 0 0 0 2px rgba(244, 232, 196, .6), 2px 2px 0 rgba(36, 24, 20, .6); }
+  #car #line .st.past { background: #f4e8c4; box-shadow: inset 0 0 0 2px #f4e8c4, 2px 2px 0 rgba(36, 24, 20, .6); }
+  #car #line .st i { color: rgba(244, 232, 196, .6); top: 20px; }
+  #car #line .st.past i { color: #f4e8c4; }
+  #car #line .tr b { bottom: 18px; color: #fff3cf; font-style: normal; }
+  #car #line .track { height: 4px; top: 12px; background: rgba(244, 232, 196, .45); box-shadow: 2px 2px 0 rgba(36, 24, 20, .6); }
+  #car #line .tr { width: 20px; height: 10px; margin-left: -10px; border-radius: 0; background: #f4e8c4; box-shadow: 0 0 0 2px #3a2a24, 2px 2px 0 2px rgba(36, 24, 20, .6); }
+  #car #line .tr::after { display: none; }
+  #car #hud { top: 1.6vh; padding: 6px 14px 8px; background: rgba(36, 24, 20, 0); transition: color .4s, background .4s; }
+  #car:hover #hud, #car #hud.show, #car:has(#hudName:empty) #hud, #car:has(#hudName:focus) #hud { background: rgba(36, 24, 20, .5); }   /* a dark slip behind the words over the bright window */
+  @media (max-width: 900px) { #car #hud, #car #off, #car #sndT, #car #line .st i, #car #line .tr b { font-size: 12px; line-height: 12px; text-shadow: 1px 1px 0 rgba(36, 24, 20, .85); } }
+
   /* ═════════ arriving: the ticket comes back with the station's stamp ═════════ */
   #arrive { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 16, .72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .8s; }
   #arrive.on { opacity: 1; pointer-events: auto; }
@@ -623,6 +641,6 @@
   requestAnimationFrame(frame);
 })();
 </script>
-<script src="ride.js?v=pixel-ride-8"></script>
+<script src="ride.js?v=pixel-ride-9"></script>
 </body>
 </html>
