@@ -6,7 +6,7 @@
 (() => {
   const car = document.getElementById("car");
   if (!car) return;
-  const PANOS = ["alps_field", "champagne_castle_1"];
+  const PANOS = ["champagne_castle_1"];   // alps_field dropped: the road near the camera bends across the field (equirect), it reads as a photo
   const P = PANOS[new Date().getDate() % PANOS.length];
 
   const css = `
@@ -67,7 +67,10 @@
     far = a; ready = !!a; if (!b) return;
     // the field strip, its top edge feathered so it melts into the land under the mountains
     const c = document.createElement("canvas"); c.width = b.width; c.height = b.height * 2; const x = c.getContext("2d");
-    x.drawImage(b, 0, 0, b.width, c.height); x.globalCompositeOperation = "destination-in";
+    x.filter = "blur(26px) saturate(.85)";                       // what a field looks like at speed: streaks, no shapes
+    for (const dx of [-b.width, 0, b.width]) x.drawImage(b, dx, 0, b.width, c.height);
+    x.filter = "none"; x.globalAlpha = .35; x.drawImage(b, 0, 0, b.width, c.height); x.globalAlpha = 1;   // a little grass texture left in
+    x.globalCompositeOperation = "destination-in";
     const gr = x.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(.28, "#000"); x.fillStyle = gr; x.fillRect(0, 0, c.width, c.height);
     ground = c; });
 
@@ -106,11 +109,10 @@
       g.restore();
       const sh = g.createLinearGradient(0, horizon, 0, H); sh.addColorStop(0, "rgba(40,48,44,0)"); sh.addColorStop(1, "rgba(28,32,30,.45)"); g.fillStyle = sh; g.fillRect(0, horizon, W, H - horizon);
     }
-    // near: poplars (mid distance) and poles with their wires (close), blurred by the speed
+    // near: poles with their wires, close to the glass, blurred by the speed
     const blur = Math.min(4, vel * 3) * k;
     g.save(); g.filter = blur > .5 ? `blur(${blur.toFixed(1)}px)` : "none";
     const tx = (run * 300 * k) % (LOOP * k);
-    for (const t of trees) { let x = t.x * k - tx; if (x < -60 * k) x += LOOP * k; if (x > W + 60 * k) continue; poplar(x, horizon + 6 * k, H * t.h, t.w * k, t.s > .5 ? "#1d2421" : "#232a26"); }
     const px = (run * 900 * k) % (LOOP * k), top = H * .2;
     g.strokeStyle = "rgba(30, 32, 32, .8)"; g.lineWidth = Math.max(1, 1.2 * k);
     const ps = poles.map(p => { let x = p * k - px; if (x < -900 * k) x += LOOP * k; return x; }).sort((a, b) => a - b);

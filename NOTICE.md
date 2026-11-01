@@ -32,5 +32,5 @@ On the table in the ride still: **"PC DELL G5 5590" by CONTxE** (<https://sketch
 
 - Fusion Pixel Font 12px Proportional SC by TakWolf — SIL Open Font License 1.1 (assets/fonts/fusion-pixel-12-sc.woff2, subset to GB2312 + ASCII). Used for the words on the 雪国线 ride.
 
-The view from the 雪国线 window (`carview.js`, `assets/train/`): Poly Haven HDRIs "Alps Field" and "Champagne Castle 1" (CC0),
+The view from the 雪国线 window (`carview.js`, `assets/train/`): Poly Haven HDRI "Champagne Castle 1" (CC0),
 the horizon band cut from the tonemapped panoramas, toned cooler and quieter. Poles, wires and poplars are drawn in code.
