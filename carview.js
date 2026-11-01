@@ -60,23 +60,24 @@
   addEventListener("resize", layout);
 
   const img = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
-  // the view is pixel art, as the snowy wood of the pixel carriage: drawn small (LW×LH) and shown big, crisp
-  const LH = 140, LW = Math.round(LH * 1.74), low = document.createElement("canvas"); low.width = LW; low.height = LH;
-  const l = low.getContext("2d"); l.imageSmoothingEnabled = false;
-  let wood = null, ready = false;
-  img("assets/ride/wood.png").then(a => { wood = a; ready = !!a; });
-
-  // near trunks just outside the glass: flat cool bark, a lit edge, a few knots, snow caught on them (pixel grid)
-  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const TW = 900, trunks = document.createElement("canvas"); trunks.width = TW; trunks.height = LH;
-  { const t = trunks.getContext("2d");
-    for (let x = 30; x < TW - 40;) { const w = 6 + Math.floor(rnd() * 9);
-      t.fillStyle = "#6d7894"; t.fillRect(x, 0, w, LH); t.fillStyle = "#58627c"; t.fillRect(x + Math.ceil(w * .6), 0, w - Math.ceil(w * .6), LH);
-      t.fillStyle = "#a9b4cc"; t.fillRect(x + 1, 0, 1, LH);
-      t.fillStyle = "#4b546c"; for (let y = 8 + rnd() * 20; y < LH; y += 18 + rnd() * 30) t.fillRect(x + 2 + Math.floor(rnd() * (w - 4)), Math.floor(y), 2, 1);
-      x += w + 70 + Math.floor(rnd() * 180); } }
-  const flakes = Array.from({ length: 60 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: .4 + rnd() * .6 }));
-
+  /* the view, after HD-2D: the snowy wood of the carriage picture split by depth (a depth model on the picture's own window)
+     into a misty far wood, the snow, single pines and a near trunk; each at its own distance, speed and focus, drawn small
+     and shown big (fine, crisp pixels), with mist between the layers and a soft glow over the bright snow */
+  const LH = 200, LW = Math.round(LH * 1.74), S = LH / 400;          // the source panes are 400 px tall
+  const mk = () => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; return [c, x]; };
+  const [low, l] = mk(), [glow, gl] = mk();
+  let A = null, ready = false;
+  Promise.all(["far", "ground", "pine0", "pine1", "pine2", "pine3", "trunk0"].map(n => img(`assets/view/${n}.png`)))
+    .then(([far, ground, ...sp]) => { A = { far, ground, pines: [sp[0], sp[2], sp[3]].filter(Boolean), trunk: sp[4] }; ready = !!far; });   // pine1 (mostly a bare pole) left out
+  let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const LOOP = 1600, pines = [], trunks = [];
+  for (let x = 0; x < LOOP;) { pines.push({ x, i: Math.floor(rnd() * 4), k: .8 + rnd() * .35, f: rnd() < .5, d: rnd() }); x += 34 + rnd() * 120; }
+  for (let x = 120; x < LOOP;) { trunks.push({ x, k: 1.5 + rnd() * .5, f: rnd() < .5 }); x += 260 + rnd() * 420; }
+  const flakes = Array.from({ length: 70 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
+  function sprite(im, x, base, k, flip) {
+    const w = im.width * S * k, h = im.height * S * k;
+    l.save(); l.translate(Math.round(x), Math.round(base - h)); if (flip) { l.translate(w, 0); l.scale(-1, 1); } l.drawImage(im, 0, 0, w, h); l.restore();
+  }
   let last = performance.now(), vel = 0, run = 0, sized = false;
   function frame(now) {
     requestAnimationFrame(frame);
@@ -85,13 +86,42 @@
     if (!sized) { layout(); sized = true; }
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2); run += dt * vel;
-    // the wood, slow; the trunks by the line, fast; snow drifting across
-    const fx = -Math.floor((run * 40) % wood.width); for (let x = fx; x < LW; x += wood.width) l.drawImage(wood, x, 0);
-    const tx = -Math.floor((run * 380) % TW); for (let x = tx; x < LW; x += TW) l.drawImage(trunks, x, 0);
-    l.fillStyle = "#f7f9fd";
-    for (const f of flakes) { f.x -= dt * (8 + vel * 150) * f.z; f.y += dt * 9 * f.z; if (f.x < 0) f.x += LW; if (f.y > LH) f.y -= LH;
-      l.fillRect(Math.round(f.x), Math.round(f.y), f.z > .8 ? 2 : 1, 1); }
-    g.imageSmoothingEnabled = false; g.drawImage(low, 0, 0, cv.width, cv.height);
+    const base = LH * .74;
+    l.filter = "none"; l.globalAlpha = 1;
+    // far wood: slow, a touch out of focus, in the mist
+    const fw = A.far.width * S, fh = A.far.height * S; l.filter = "blur(.7px)";
+    for (let x = -((run * 7) % fw); x < LW; x += fw) l.drawImage(A.far, x, 0, fw, fh);
+    l.filter = "none";
+    // the snow: fast, smeared by the speed
+    const gw = A.ground.width * S, gh = LH - LH * .66, gy = LH * .66;
+    l.filter = vel > .05 ? `blur(${(vel * 1.6).toFixed(2)}px)` : "none";
+    for (let x = -((run * 70) % gw); x < LW; x += gw) l.drawImage(A.ground, x, gy, gw, gh);
+    l.filter = "none";
+    let fog = l.createLinearGradient(0, 0, 0, LH); fog.addColorStop(0, "rgba(232,238,246,.22)"); fog.addColorStop(.7, "rgba(232,238,246,.1)"); fog.addColorStop(1, "rgba(232,238,246,0)");
+    l.fillStyle = fog; l.fillRect(0, 0, LW, LH);
+    // the pines: in focus, the speed of the line
+    const px = (run * 46) % LOOP;
+    for (const p of pines) { let x = p.x - px; if (x < -80) x += LOOP; if (x > LW + 10) continue; const im = A.pines[p.i % A.pines.length];
+      const k = p.k * (.9 + p.d * .2), b = base + 4 + p.d * 6, w = im.width * S * k;
+      sprite(im, x, b, k, p.f);
+      // where it stands: a soft bank of snow over the cut, and a faint blue shadow
+      l.fillStyle = "rgba(150,165,195,.25)"; l.beginPath(); l.ellipse(x + w * .5, b + 1, w * .55, 2.2, 0, 0, 7); l.fill();
+      l.fillStyle = "rgba(246,249,253,.95)"; l.beginPath(); l.ellipse(x + w * .5, b - .5, w * .42, 2.4, 0, 0, 7); l.fill(); }
+    // the near trunks: fast, big, out of focus
+    if (A.trunk) { const tx = (run * 300) % LOOP; l.filter = `blur(${(1.2 + vel * 1.4).toFixed(2)}px)`;
+      for (const t of trunks) { let x = t.x - tx; if (x < -60) x += LOOP; if (x > LW + 10) continue; sprite(A.trunk, x, LH + 10, t.k, t.f); }
+      l.filter = "none"; }
+    // snow in the air: small crisp flakes far, big soft ones close
+    for (const f of flakes) { f.x -= dt * (6 + vel * (40 + f.z * 260)); f.y += dt * (6 + f.z * 10); if (f.x < -4) f.x += LW + 8; if (f.y > LH) f.y -= LH;
+      const r = f.z > .85 ? 1.6 : f.z > .5 ? .8 : .5; l.globalAlpha = f.z > .85 ? .55 : .9; l.fillStyle = "#fbfdff";
+      if (f.z > .85) { l.beginPath(); l.arc(f.x, f.y, r, 0, 7); l.fill(); } else l.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); }
+    l.globalAlpha = 1;
+    // up to the window: crisp pixels, then the glow of the bright snow laid over softly
+    g.imageSmoothingEnabled = false; g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.filter = "none";
+    g.drawImage(low, 0, 0, cv.width, cv.height);
+    gl.clearRect(0, 0, LW, LH); gl.filter = "blur(5px) brightness(1.15)"; gl.drawImage(low, 0, 0); gl.filter = "none";
+    g.imageSmoothingEnabled = true; g.globalCompositeOperation = "screen"; g.globalAlpha = .16; g.drawImage(glow, 0, 0, cv.width, cv.height);
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
   }
   requestAnimationFrame(frame);
 })();
