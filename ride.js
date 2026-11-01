@@ -44,6 +44,21 @@
     } }
   const sc = document.createElement("canvas"), sg = sc.getContext("2d");
 
+  // steam off the coffee: soft puffs rising from the rim, curling, thinning out
+  const CUP = { x: 1027, y: 832 }, puffs = [];
+  const puffImg = document.createElement("canvas"); puffImg.width = puffImg.height = 64;
+  { const p = puffImg.getContext("2d"), gr = p.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,.55)"); gr.addColorStop(.5, "rgba(250,250,248,.2)"); gr.addColorStop(1, "rgba(250,250,248,0)"); p.fillStyle = gr; p.fillRect(0, 0, 64, 64); }
+  let puffT = 0;
+  function steam(dt, t) {
+    puffT -= dt; if (puffT < 0) { puffT = .09; puffs.push({ x: CUP.x + (Math.random() - .5) * 26, y: CUP.y, age: 0, life: 2.6 + Math.random() * 1.4, ph: Math.random() * 6, r: 10 + Math.random() * 6 }); }
+    for (let i = puffs.length - 1; i >= 0; i--) {
+      const p = puffs[i]; p.age += dt; if (p.age > p.life) { puffs.splice(i, 1); continue; }
+      const u = p.age / p.life; p.y -= dt * (34 - 14 * u); p.x += Math.sin(t * 1.6 + p.ph + u * 5) * dt * 16 - dt * 4;
+      const r = p.r * (1 + u * 3.2); g.globalAlpha = Math.sin(Math.PI * Math.min(1, u * 1.2)) * .8 * (1 - u * .5);
+      g.drawImage(puffImg, p.x - r, p.y - r, r * 2, r * 2);
+    }
+    g.globalAlpha = 1;
+  }
   const flakes = Array.from({ length: 140 }, () => ({ x: Math.random() * IW, y: Math.random() * IH, z: .4 + Math.random() * .6 }));
   let W = 0, H = 0, k = 1, ox = 0, oy = 0;
   function fit() {
@@ -72,13 +87,14 @@
       g.globalAlpha = .5 + f.z * .4; g.beginPath(); g.arc(f.x, f.y, 1.2 + f.z * 2.2, 0, 7); g.fill(); }
     g.globalAlpha = 1;
     // the compartment in sun
-    g.drawImage(sun, 0, 0);
+    g.drawImage(sun, 0, 0, IW, IH);
     // the shade, let through where the trees outside block the sun
     sg.setTransform(1, 0, 0, 1, 0, 0); sg.globalCompositeOperation = "source-over"; sg.clearRect(0, 0, W, H);
     sg.setTransform(k, 0, 0, k, ox, oy); sg.globalAlpha = .9;
     const px = -((run * 900) % SW); for (let x = px; x < IW; x += SW) sg.drawImage(pat, x, 0);
-    sg.globalAlpha = 1; sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0);
+    sg.globalAlpha = 1; sg.globalCompositeOperation = "source-in"; sg.drawImage(shade, 0, 0, IW, IH);
     g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(sc, 0, 0);
+    g.setTransform(k, 0, 0, k, ox, oy); steam(dt, now / 1000);
   }
   requestAnimationFrame(frame);
   window.__ride = { set: r => { run = r; vel = 1; }, ready: () => ready };

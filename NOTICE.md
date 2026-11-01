@@ -27,3 +27,5 @@ The 3D carriage in `focus.html` (`carriage.js`, `assets/3d/cabin.glb`) is **"193
 animation removed, textures converted to WebP, the mesh compressed (meshopt). Its lighting and post-processing follow the model's
 own Sketchfab scene settings; `assets/3d/sky_day.hdr` is decoded from Sketchfab's default environment "Gareoult" for that purpose.
 The forest outside the window (`assets/3d/snow_forest.jpg`) is cut from **snowy_forest_path_01** by Poly Haven (CC0).
+
+On the table in the ride still: **classic_laptop**, **tea_set_01** (a cup), **office_notepads** and **stationery_supplies** (a pen), all Poly Haven (CC0).
