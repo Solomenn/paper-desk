@@ -29,3 +29,11 @@ Image.fromarray(land.astype(np.uint8)).save(O+'land.webp','WEBP',quality=88)
 Image.fromarray(im[HZ-2:].astype(np.uint8)).save(O+'snow.webp','WEBP',quality=84)
 p=np.asarray(Image.open(O+'land.webp').convert('RGBA')).astype(float); bg=np.full(p.shape[:2]+(3,),(255,0,255.)); a=p[...,3:]/255
 Image.fromarray((p[...,:3]*a+bg*(1-a)).astype(np.uint8)).resize((1600,int((HZ+6)*1600/W))).save('/tmp/land.png')
+# the sky exactly as photographed (the sun where it is), for the part of the band the window starts on; behind the tree line
+# the sky row's own colour, so the line can slide away without leaving a hole
+X0, VW = SX - 264, 880
+skyp=im[:HZ+6, X0:X0+VW].copy(); bad=~sky[:HZ+6, X0:X0+VW]
+for y in range(HZ+6):
+    if bad[y].any(): skyp[y,bad[y]]=skyrow[y]
+skyp=ndimage.gaussian_filter(skyp,(1,1,0))*bad[...,None]+skyp*(~bad[...,None])
+Image.fromarray(skyp.astype(np.uint8)).save(O+'skyp.webp','WEBP',quality=90)

@@ -63,7 +63,7 @@
   /* the view: an open snowfield in the sun, from one photograph (Poly Haven "Passendorf Snow", CC0). No trees to cut.
      The sky and the sun are infinitely far: they stay. The hills and the forest line on the horizon slide slowly. The snow
      goes by faster row by row as it comes nearer (on flat ground the speed grows with the distance below the horizon).
-     Drawn small, shown big in fine crisp pixels; the sun glows. */
+     Nothing is added: at rest the window is the photograph as taken. Drawn small, shown big in fine crisp pixels. */
   const BW = 4096, HZ = 417;                                          // band width, the snow line in the band
   const LH = 270, LW = Math.round(LH * 1.74);
   const K = LH / 505;                                                 // the window shows band rows ~190..655 (some sky, the hills, the field)
@@ -71,10 +71,11 @@
   const [low, l] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; })();
   const [glow, gl] = (() => { const c = document.createElement("canvas"); c.width = LW; c.height = LH; return [c, c.getContext("2d")]; })();
   let A = null, ready = false;
-  Promise.all(["sky.png", "sun.png", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}`))).then(([sky, sun, land, snow]) => { A = { sky, sun, land, snow }; ready = !!(sky && land && snow); });
+  Promise.all(["skyp.webp", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}`))).then(([sky, land, snow]) => { A = { sky, land, snow }; ready = !!(sky && land && snow); });
   const VH = 9, VG = 3.2;                                             // the hills' speed; the snow's speed per band row below the horizon
-  const rowPos = new Float64Array(260);
-  let landPos = 0;
+  const X0 = 2458 - 264;                                             // at rest the window shows the photograph exactly as taken
+  const rowPos = new Float64Array(260).fill(X0 * (LH / 505));
+  let landPos = X0 * (LH / 505);
   let seed = 5; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const flakes = Array.from({ length: 40 }, () => ({ x: rnd() * LW, y: rnd() * LH, z: rnd() }));
   let last = performance.now(), vel = 0, sized = false;
@@ -90,9 +91,8 @@
     if (!sized) { layout(); sized = true; }
     if (!ready) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2);
-    // the sky (still) and the sun (still, up in the left of the window)
-    l.drawImage(A.sky, 0, TOP, 4, HZ + 6 - TOP, 0, 0, LW, Y(HZ + 6));
-    if (A.sun) { l.globalCompositeOperation = "lighter"; const s = A.sun.width * K; l.drawImage(A.sun, LW * .3 - s / 2, Y(200) - s / 2, s, s); l.globalCompositeOperation = "source-over"; }
+    // the sky exactly as photographed, sun and all: it stays (it is infinitely far)
+    l.drawImage(A.sky, 0, TOP, A.sky.width, HZ + 6 - TOP, 0, 0, A.sky.width * K, Y(HZ + 6));
     // the hills and the forest line: slow
     landPos += dt * vel * VH; wrap(A.land, TOP, HZ + 6 - TOP, landPos, 0);
     // the snow, band by band: each a little faster than the one above
