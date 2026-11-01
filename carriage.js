@@ -88,7 +88,8 @@ loader.load(A + "cabin.glb", gltf => {
     const materials = Array.isArray(o.material) ? o.material : [o.material];
     materials.forEach(patchFoliageShadow);
     if (/StingrayPBS17/.test(materialName)) floor.push(o);
-    if (/lightBulb/.test(o.material.name)) bulb = o.material;
+    const bulbMaterial = Array.isArray(o.material) ? o.material.find(m => m && /lightBulb/i.test(m.name || "")) : o.material;
+    if (bulbMaterial && /lightBulb/i.test(bulbMaterial.name || "")) bulb = bulbMaterial;
   });
   scene.add(g); if (ssr) ssr.selects = floor; applyTheme();
 });
@@ -183,7 +184,12 @@ function createFoliageShadowTexture() {
     const x = 64 + i * 128, h = 340 + rand(i * 11) * 110, w = 90 + rand(i * 7) * 45;
     for (const shift of [-size, 0, size]) pine(x + shift, size * 1.08, h, w, i * 31 + 1);
   }
-  const texture = new THREE.CanvasTexture(canvas);
+  const softened = document.createElement("canvas");
+  softened.width = softened.height = size;
+  const softCtx = softened.getContext("2d");
+  softCtx.filter = "blur(2.5px)";
+  softCtx.drawImage(canvas, 0, 0);
+  const texture = new THREE.CanvasTexture(softened);
   texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
@@ -292,7 +298,7 @@ const lean = { x: 0, y: 0, tx: 0, ty: 0 };
 addEventListener("pointermove", e => { lean.tx = e.clientX / innerWidth * 2 - 1; lean.ty = -(e.clientY / innerHeight) * 2 + 1; });
 let t0 = performance.now(), last = t0, run = 0, vel = 0, jolt = 0, nextJolt = 4, shown = false, loaded = false;
 THREE.DefaultLoadingManager.onLoad = () => { loaded = true; renderer.shadowMap.needsUpdate = true; };
-let raf = 0;
+let raf = 0, lastRender = 0;
 const arrival = document.getElementById("arrive");
 function shouldRender() {
   return !!window.__car || (!document.hidden && host.classList.contains("on") && !arrival.classList.contains("on"));
@@ -300,6 +306,8 @@ function shouldRender() {
 function frame(now) {
   raf = 0;
   if (!shouldRender()) { last = now; return; }
+  if (lowPower && now - lastRender < 1000 / 30) { raf = requestAnimationFrame(frame); return; }
+  lastRender = now;
   const t = (now - t0) / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
   const goal = Math.min(1, (+window.trainSpeed || 0) * 6);   // under way → full speed; only the last of the braking slows it
   vel += (goal - vel) * Math.min(1, dt * 1.6); const v = vel, m = reduce ? 0 : v;
