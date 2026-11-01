@@ -11,14 +11,16 @@ lo = lambda f: Image.open(f).convert("RGBA").resize((W, H), Image.BOX)
 sun, sh = lo(f"{A}/cabin-day.webp"), lo(f"{A}/cabin-day-shade.webp")
 wood = Image.open(f"{A}/3d/snow_forest.jpg").convert("RGB"); wood = wood.resize((int(wood.width * 190 / wood.height), 190), Image.BOX)
 code = np.asarray(Image.open(os.path.join(R, "tools", "cabin-id.png")).convert("RGB")).astype(np.int32) @ [65536, 256, 1]
+_g = code == 0                                                  # the window's middle rail goes: the view stays whole
+BARS = ndimage.binary_closing(_g, structure=np.ones((15, 1))) & ~_g & (code == 0x111180); code[BARS] = 0
 _lap = code == 0x881180; code[ndimage.binary_fill_holes(_lap) & ~_lap] = 0x991180   # the touchpad shows as a hole in the id render
 glass = code == 0
 # how much each part is smoothed (in pixels): props and table flat and clean, the panelling keeps its grain
 WALL, TABLE = 0x111180, 0x110080
 LAPTOP, PAD, CUP, PAPER, PEN = 0x881180, 0x991180, 0x2280, 0x112280, 0x222280
 SEATS = (0x1180, 0xaa0080, 0x770080, 0xdd0080)
-sig = {TABLE: .7, LAPTOP: 0, PAD: 0, CUP: 0, PAPER: .6, PEN: 0, WALL: 0.0}
-DEFAULT = 1.1                                                    # curtains, seats, ceiling
+sig = {TABLE: 1.0, LAPTOP: 0, PAD: 0, CUP: 0, PAPER: .6, PEN: 0, WALL: 2.2}
+DEFAULT = 2.4                                                     # curtains, seats, ceiling: smooth, no dust                                                    # curtains, seats, ceiling
 
 def grade(a):
     a = np.where(a > .72, .72 + (a - .72) * .45, a)              # tame the blown-out sun on the table
@@ -106,8 +108,43 @@ yy_, xx_ = np.mgrid[0:H, 0:W]; st = (np.stack([xx_ + .5 - H0[0], yy_ + .5 - H0[1
 s_, t_ = st[..., 0], st[..., 1]
 kb = (code == LAPTOP) & (s_ > .07) & (s_ < .93) & (t_ > .12) & (t_ < .58)
 key = kb & ((s_ * 15) % 1 < .62) & (((t_ - .12) / .46 * 6) % 1 < .66)
+CURTAINS = (0x551180, 0x661180, 0x660080, 0xbb0080)
+def kposter(g, q, m, k, sat_only=False):
+    X = g[m].reshape(-1, 3); fit = X
+    if sat_only:   # cluster on the coloured wood only, so grey smudges can't keep a colour of their own
+        s = (X.max(1) - X.min(1)) / np.maximum(X.max(1), 1e-3); fit = X[s > .35] if (s > .35).sum() > k * 20 else X
+    C = np.array(sorted(fit[np.random.RandomState(2).choice(len(fit), k, replace=False)].tolist(), key=sum))
+    for _ in range(25):
+        lab = ((fit[:, None] - C[None]) ** 2).sum(-1).argmin(1); C = np.array([fit[lab == i].mean(0) if (lab == i).any() else C[i] for i in range(k)])
+    lab = ((X[:, None] - C[None]) ** 2).sum(-1).argmin(1); q[m] = (C[lab] * 255).astype(np.uint8)
+SEAMS = None
+LEVELS = np.array([.6, .78, 1.0, 1.25, 1.5])
+LIGHT_SUN = np.asarray(Image.open(os.path.join(R, "tools", "cabin-light.png")).convert("L")).astype(np.float32) / 255
+_sunlit = (f32(sun) @ [.3, .59, .11]) > (f32(sh) @ [.3, .59, .11]) * 1.25 + .04
+LIGHT_SHADE = LIGHT_SUN.copy()
+for _v in np.unique(code):                                       # without the sun: sunlit pixels fall back to the part's own shade level
+    _m = code == _v; _s = _m & ~_sunlit
+    if _s.sum() > 10: LIGHT_SHADE[_m & _sunlit] = np.median(LIGHT_SUN[_s])
+def band(g, q, m, v):
+    """one flat colour per part, shaded in a few clean steps by the light only (the texture's dirt is low-passed away)"""
+    if m.sum() < 30: return
+    X = g[m]; s = (X.max(1) - X.min(1)) / np.maximum(X.max(1), 1e-3)
+    base_c = np.median((X[s > .3] if v == WALL and (s > .3).sum() > 50 else X)[~_sunlit[m][(s > .3) if v == WALL and (s > .3).sum() > 50 else slice(None)]] if False else (X[s > .3] if v == WALL and (s > .3).sum() > 50 else X), 0)
+    if v == WALL: base_c = base_c * 1.25
+    if v in SEATS: base_c = base_c * np.array([1.08, 1.0, .9])   # wood colour, never the grey smudge
+    L = LIGHT_SUN if lit else LIGHT_SHADE                        # shading from a flat-colour render: light and form only, no texture dirt
+    r = L[m] / max(np.median(LIGHT_SHADE[m]), 1e-3); r = LEVELS[np.abs(r[:, None] - LEVELS[None]).argmin(1)]
+    q[m] = (np.clip(base_c[None] * r[:, None], 0, 1) * 255).astype(np.uint8)
 def px(g):
+    global SEAMS
     q = poster(g, quant(g))
+    big = ~glass & ~np.isin(code, PROPS + (PAPER, PAD))
+    for v in np.unique(code[big]): band(g, q, code == v, v)
+    wall = code == WALL
+    if SEAMS is None:   # the plank seams: thin dark lines in the unsmoothed still, kept as one clean wood-dark line
+        l = f32(sh) @ [.3, .59, .11]; d = l - ndimage.uniform_filter(l, 7)
+        SEAMS = wall & (d < -.035); SEAMS = ndimage.binary_opening(SEAMS, structure=np.ones((5, 1)))
+    q[SEAMS] = (q[SEAMS].astype(np.float32) * .62).astype(np.uint8)
     q[kb] = (104, 110, 128); q[key] = (196, 202, 218); q[code == PAD] = (170, 176, 192)
     q = despeck(q, ~glass & ~np.isin(code, PROPS)).astype(np.float32)
     q = despeck(q.astype(np.uint8), np.isin(code, PROPS), n=2).astype(np.float32)
@@ -118,8 +155,8 @@ def px(g):
 yy, xx = np.mgrid[0:H, 0:W]
 a = np.asarray(sun)[..., 3]                                          # the snow on the glass is kept from the render
 frost = (a > 70) & (a <= 110) & (xx % 3 == 0) & (yy % 3 == 1)
-alpha = np.where(glass, np.where(a > 110, 255, np.where(frost, 200, 0)), 255).astype(np.uint8)
-for g, name in [(g_sun, "cabin-day-px.png"), (g_sh, "cabin-day-shade-px.png")]:
+alpha = np.where(glass, np.where(BARS, np.where(frost, 200, 0), np.where(a > 110, 255, np.where(frost, 200, 0))), 255).astype(np.uint8)
+for g, name, lit in [(g_sun, "cabin-day-px.png", True), (g_sh, "cabin-day-shade-px.png", False)]:
     Image.fromarray(np.dstack([px(g), alpha]), "RGBA").save(f"{A}/{name}", optimize=True)
 qw = np.asarray(Image.fromarray((g_wood * 255).astype(np.uint8)).quantize(palette=pal, dither=Image.Dither.NONE).convert("RGB"))
 Image.fromarray(qw).save(f"{A}/snow-forest-px.png", optimize=True)
