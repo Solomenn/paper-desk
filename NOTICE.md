@@ -28,4 +28,4 @@ animation removed, textures converted to WebP, the mesh compressed (meshopt). It
 own Sketchfab scene settings; `assets/3d/sky_day.hdr` is decoded from Sketchfab's default environment "Gareoult" for that purpose.
 The forest outside the window (`assets/3d/snow_forest.jpg`) is cut from **snowy_forest_path_01** by Poly Haven (CC0).
 
-On the table in the ride still: **classic_laptop**, **tea_set_01** (a cup), **office_notepads** and **stationery_supplies** (a pen), all Poly Haven (CC0).
+On the table in the ride still: a modern laptop modelled for this scene, **tea_set_01** (a cup), **office_notepads** and **stationery_supplies** (a pen), all Poly Haven (CC0).

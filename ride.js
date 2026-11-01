@@ -45,7 +45,7 @@
   const sc = document.createElement("canvas"), sg = sc.getContext("2d");
 
   // steam off the coffee: soft puffs rising from the rim, curling, thinning out
-  const CUP = { x: 1027, y: 832 }, puffs = [];
+  const CUP = { x: 1080, y: 888 }, puffs = [];
   const puffImg = document.createElement("canvas"); puffImg.width = puffImg.height = 64;
   { const p = puffImg.getContext("2d"), gr = p.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,255,255,.55)"); gr.addColorStop(.5, "rgba(250,250,248,.2)"); gr.addColorStop(1, "rgba(250,250,248,0)"); p.fillStyle = gr; p.fillRect(0, 0, 64, 64); }
   let puffT = 0;
