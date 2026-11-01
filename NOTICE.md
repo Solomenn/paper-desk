@@ -15,14 +15,9 @@ Parts of it are adapted from **sasshi** by qzz0518 — <https://github.com/qzz05
 
 The handwriting face is LXGW WenKai (SIL Open Font License 1.1), loaded from jsDelivr.
 
-The carriage in `focus.html` (雪国线) is a photograph, `assets/car.webp` — an AI-generated image from **ぱくたそ (PAKUTASO)**,
-"Vintage train compartment — purple velvet armchairs, round table, wall sconce, snowy window" (<https://www.pakutaso.com/en/20230345090post-28949.html>).
-PAKUTASO images are free for commercial and non-commercial use; because this repository is public, the file can be downloaded from it,
-which PAKUTASO counts as redistribution, so the source is named here — see the terms of use on <https://www.pakutaso.com/>.
-The file in `assets/` is the picture re-encoded as WebP; the window is cut out of it in code and the live scene is drawn behind it.
+The loading fallback in `focus.html` is `assets/snow-day.webp`, a snowy forest path from Poly Haven (CC0).
 
-
-The carriage on the desk (`carriage.js`, `assets/3d/cabin.glb`) is **"1930s Train Cabin"** by thomas.rynne,
+The 3D carriage in `focus.html` (`carriage.js`, `assets/3d/cabin.glb`) is **"1930s Train Cabin"** by thomas.rynne,
 <https://sketchfab.com/3d-models/2f109ba713fe455b959e4d79676b5c2d>, licensed CC BY 4.0. Changed: the landscape plane and the
 animation removed, textures converted to WebP, the mesh compressed (meshopt). Its lighting and post-processing follow the model's
 own Sketchfab scene settings; `assets/3d/sky_day.hdr` is decoded from Sketchfab's default environment "Gareoult" for that purpose.
