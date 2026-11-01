@@ -6,7 +6,7 @@
   /* ───────── the theme: night (lamp and stove) or day (snow light); remembered, switched with the knob or D ───────── */
   const TKEY = "paper-desk.theme.v1", root = document.documentElement;
   const saved = (() => { try { return JSON.parse(localStorage.getItem(TKEY)); } catch { return null; } })();
-  root.dataset.theme = saved === "day" ? "day" : "night";
+  root.dataset.theme = "day";   // day only for now: the night and its switch are put away
   const ICON = { night: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
     day: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>' };
   function setTheme(t) {
@@ -17,17 +17,10 @@
     clearTimeout(setTheme.t); setTheme.t = setTimeout(() => root.classList.remove("theming"), 1300);
   }
   window.Theme = { get: () => root.dataset.theme, set: setTheme, toggle: () => setTheme(root.dataset.theme === "night" ? "day" : "night") };
-  addEventListener("keydown", e => {
-    if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey && !e.target.closest("input, textarea, [contenteditable]")) Theme.toggle();
-  });
-  addEventListener("storage", e => { if (e.key === TKEY && e.newValue) setTheme(JSON.parse(e.newValue)); });
 
   const start = () => {
     if (!$("#room")) document.body.insertAdjacentHTML("afterbegin", '<div class="desk" id="room" aria-hidden="true"><i class="boards"></i><i class="grain"></i><i class="win"></i><i class="lamp"></i><i class="stove"></i><i class="tooth"></i></div>');
     document.body.insertAdjacentHTML("beforeend", '<i class="cast shade" aria-hidden="true"></i><i class="cast glow" aria-hidden="true"></i>');
-    if (!document.body.dataset.noTheme) {
-      const b = document.createElement("button"); b.className = "themeBtn"; b.type = "button"; b.onclick = () => Theme.toggle(); document.body.appendChild(b);
-    }
     setTheme(root.dataset.theme); root.classList.remove("theming");
     // by day the morning sun comes through a window up and to the right and falls on what you're working on (the element
     // marked [data-sunlit] — on the desk, the 在做 column): a patch in the window's shape, leaning with the light, with the
