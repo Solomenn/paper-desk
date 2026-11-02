@@ -169,7 +169,7 @@
      blur 12 + saturate, a hairline ring, a soft drop; ink #1c232b, one accent #2f4f73 */
   #car { --glass: rgba(246, 248, 249, .74); --ink2: #1c232b; --mute2: #5d6873; --acc: #2f4f73;
     --ring: 0 0 0 .5px rgba(21, 35, 58, .16), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(21, 35, 58, .05), 0 10px 26px -14px rgba(21, 35, 58, .45); }
-  #car #hud, #car #off, #car #sndT, #car #line::before { background: var(--glass); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); box-shadow: var(--ring); }
+  #car #hud, #car #off, #car #sndT, #car #radioT, #car #line::before { background: var(--glass); -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); box-shadow: var(--ring); }
   #car #hudName { display: none; }
   body:has(#car.on) .home { opacity: 0; transition: opacity .3s; }
   body:has(#car.on:hover) .home, body:has(#car.on) .home:hover { opacity: .92; }
@@ -181,9 +181,9 @@
   #car #hud:hover { opacity: 1; }
   #car #hudName { font: 500 13.5px/1 var(--serif); letter-spacing: .04em; color: var(--ink2); border-bottom: 0; margin-right: 4px; }
   #car #hudName:empty::before { color: var(--mute2); font-weight: 400; }
-  #car #off, #car #sndT { top: 2.2vh; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--mute2) !important; opacity: .0; transition: opacity .3s, color .2s; }
-  #car:hover #off, #car:hover #sndT { opacity: .92; }
-  #car #off:hover, #car #sndT:hover { color: var(--ink2) !important; opacity: 1; }
+  #car #off, #car #sndT, #car #radioT { top: 2.2vh; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--mute2) !important; opacity: .0; transition: opacity .3s, color .2s; }
+  #car:hover #off, #car:hover #sndT, #car:hover #radioT { opacity: .92; }
+  #car #off:hover, #car #sndT:hover, #car #radioT:hover { color: var(--ink2) !important; opacity: 1; }
   /* the line: a long glass slip along the bottom, a hairline track, small dots, names in quiet type */
   /* the line sits at the top, in one glass slip with the words above it */
   #car #line { top: calc(2.2vh + 38px); bottom: auto; left: 18vw; right: 18vw; }
@@ -231,7 +231,7 @@
   #dayBtn .moon, html[data-theme="day"] #dayBtn .sun { display: none; } html[data-theme="day"] #dayBtn .moon { display: block; }
   html[data-theme="day"] #dayBtn { background: #eef2f6dd; color: #2f3a48; box-shadow: 0 0 0 1px #2f3a4822, 0 6px 18px #0002; }
 </style>
-<script src="preload.js" defer></script>
+<script src="preload.js" defer></script>\n<script src="radio-shell.js" defer></script>
 </head>
 <body>
 <a class="home" href="./" title="回到桌子">←</a>
@@ -260,7 +260,7 @@
         <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"><div id="dial" tabindex="0" role="slider" aria-label="行程"><div class="dt"></div><i class="needle"></i></div></label>
       </div>
     </div>
-    <footer class="foot"><button class="q" id="sndB"></button><span class="hint"></span><button class="go" id="go">上车</button></footer>
+    <footer class="foot"><button class="q" id="sndB"></button><button class="q" id="radioB" data-radio-open title="白噪音收音机" aria-label="白噪音收音机"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="8" width="23" height="16" rx="2.4"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="12" r=".75"/><circle cx="11.5" cy="12" r=".75"/><circle cx="8.5" cy="15" r=".75"/><circle cx="11.5" cy="15" r=".75"/><circle cx="8.5" cy="18" r=".75"/><circle cx="11.5" cy="18" r=".75"/><circle cx="8.5" cy="21" r=".75"/><circle cx="11.5" cy="21" r=".75"/></g><circle cx="21" cy="16" r="4.4"/><circle cx="21" cy="16" r="1.05"/></svg></button><span class="hint"></span><button class="go" id="go">上车</button></footer>
   </div>
   <div id="tkStage"><div id="tkSlot"></div></div>
   <canvas id="snow0"></canvas>
@@ -270,7 +270,7 @@
 <section id="car">
   <div id="line"><i class="track"></i><i class="done"></i></div>
   <div id="hud"><span id="hudName" contenteditable="plaintext-only" spellcheck="false"></span><span id="hudRest"></span></div>
-  <button id="sndT" title="车轮声"></button>
+  <button id="sndT" title="车轮声"></button>\n  <button id="radioT" data-radio-open title="白噪音收音机" aria-label="白噪音收音机"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="8" width="23" height="16" rx="2.4"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="12" r=".75"/><circle cx="11.5" cy="12" r=".75"/><circle cx="8.5" cy="15" r=".75"/><circle cx="11.5" cy="15" r=".75"/><circle cx="8.5" cy="18" r=".75"/><circle cx="11.5" cy="18" r=".75"/><circle cx="8.5" cy="21" r=".75"/><circle cx="11.5" cy="21" r=".75"/></g><circle cx="21" cy="16" r="4.4"/><circle cx="21" cy="16" r="1.05"/></svg></button>
   <button id="off" title="中途下车"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H13"/><path d="M10 12h10M16.5 8.5 20 12l-3.5 3.5"/></svg></button>
 </section>
 
