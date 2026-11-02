@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f3f1eb">
+<title>纸桌 · 3D 模型浏览馆</title>
+<style>
+:root{--paper:#f3f1eb;--paper2:#e9e6de;--ink:#303330;--muted:#7d8078;--line:rgba(48,51,48,.14);--accent:#718274;--card:#faf9f5}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,"Noto Sans SC","Microsoft YaHei",sans-serif}
+a{color:inherit}
+.top{max-width:1440px;margin:0 auto;padding:28px 34px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.kicker{font-size:10px;letter-spacing:.24em;color:var(--muted);margin-bottom:9px}
+h1{font-size:25px;font-weight:500;letter-spacing:.035em;margin:0}
+.subtitle{font-size:12px;color:var(--muted);margin-top:8px}
+.back{font-size:11px;text-decoration:none;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:5px;white-space:nowrap}
+.tabs{position:sticky;top:0;z-index:20;background:rgba(243,241,235,.9);backdrop-filter:blur(16px);border-block:1px solid var(--line);display:flex;gap:24px;padding:12px max(34px,calc((100vw - 1372px)/2));overflow:auto}
+.tabs a{font-size:11px;text-decoration:none;color:var(--muted);white-space:nowrap}
+.tabs a:hover{color:var(--ink)}
+main{max-width:1440px;margin:0 auto;padding:24px 34px 70px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:start}
+.card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 12px 32px rgba(44,43,37,.035)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 14px}
+.num{font-size:10px;letter-spacing:.18em;color:#9b9c92;margin-bottom:6px}
+h2{font-size:16px;font-weight:550;letter-spacing:.025em;margin:0}
+.desc{font-size:11px;line-height:1.6;color:var(--muted);margin-top:6px}
+.source{font-size:10px;color:#65766a;text-decoration:none;border-bottom:1px solid rgba(101,118,106,.35);padding:3px 0;white-space:nowrap}
+.viewer{height:510px;background:#e7e5df;position:relative;overflow:hidden}
+.viewer iframe{width:100%;height:100%;border:0;display:block;background:#e7e5df}
+.viewer.large{height:680px;background:#f1f0ec}
+.viewer.large iframe{background:#f1f0ec}
+.viewer-note{padding:10px 18px 13px;font-size:10px;line-height:1.55;color:var(--muted);border-top:1px solid var(--line)}
+.status{position:absolute;z-index:2;left:12px;bottom:12px;max-width:calc(100% - 24px);padding:7px 10px;border-radius:6px;background:rgba(250,249,245,.9);border:1px solid var(--line);color:#646b62;font-size:10px;line-height:1.5;pointer-events:none;backdrop-filter:blur(8px)}
+.actions{display:flex;gap:7px;flex-wrap:wrap;padding:0 18px 14px}
+.action{border:1px solid var(--line);background:#fffefa;border-radius:7px;padding:7px 10px;color:#53584f;font:inherit;font-size:10px;cursor:pointer;text-decoration:none}
+.action:hover{border-color:#9aa596;background:#f4f5ef}
+.action[aria-pressed="true"]{background:#e8ece5;border-color:#aab6a8}
+#shelfFrame{background:#e7e5df}
+#printerFrame{background:#e7e5df}
+.smallprint{max-width:1440px;margin:0 auto;padding:0 34px 30px;color:#999a91;font-size:10px;line-height:1.7}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.viewer{height:480px}.viewer.large{height:620px}}
+@media(max-width:600px){.top{padding:20px 16px 14px}h1{font-size:21px}.tabs{padding:11px 16px;gap:18px}main{padding:16px 12px 45px}.card-head{padding:14px 14px 12px}.viewer{height:430px}.viewer.large{height:560px}.actions{padding:0 14px 12px}.viewer-note{padding:9px 14px 11px}.smallprint{padding-inline:16px}}
+</style>
+<script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="kicker">PAPER DESK / OBJECT LIBRARY</div>
+    <h1>3D 模型浏览馆</h1>
+    <div class="subtitle">已选物件的实际模型与官方交互配置器</div>
+  </div>
+  <a class="back" href="./">返回纸桌 ↗</a>
+</header>
+<nav class="tabs" aria-label="模型目录">
+  <a href="#bookshelf">01 书架</a>
+  <a href="#printer">02 小票机</a>
+  <a href="#silk-wall">03 黑板</a>
+  <a href="#textile-board">04 便签板</a>
+</nav>
+<main>
+  <div class="grid">
+    <section class="card" id="bookshelf">
+      <div class="card-head">
+        <div>
+          <div class="num">01 / BOOKSHELF</div>
+          <h2>Bookshelf Short LOWPOLY · 米白试色</h2>
+          <div class="desc">EFX · Sketchfab 原模型 · 书架结构改为暖米白，书籍贴图保留</div>
+        </div>
+        <a class="source" href="https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c" target="_blank" rel="noopener">模型来源 ↗</a>
+      </div>
+      <div class="viewer">
+        <iframe id="shelfFrame" title="Bookshelf Short LOWPOLY 3D viewer" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+        <div class="status" id="shelfStatus">正在加载模型；载入后尝试在线应用米白材质…</div>
+      </div>
+      <div class="actions">
+        <button class="action" id="shelfIvory" aria-pressed="true" disabled>米白色</button>
+        <button class="action" id="shelfOriginal" aria-pressed="false" disabled>原始颜色</button>
+        <a class="action" href="https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c" target="_blank" rel="noopener">在 Sketchfab 打开</a>
+      </div>
+      <div class="viewer-note">拖动旋转 · 滚轮缩放 · 右键平移。米白按钮通过 Sketchfab Viewer API 只重映射 UV 图集下方的书架结构区域；如果平台没有开放原贴图 URL，页面会明确显示失败状态，不会假装改色成功。</div>
+    </section>
+
+    <section class="card" id="printer">
+      <div class="card-head">
+        <div>
+          <div class="num">02 / RECEIPT PRINTER</div>
+          <h2>POS Receipt Printer</h2>
+          <div class="desc">HQ3DMOD · 29,078 polygons · 22 parts · 3 materials · 4K PBR</div>
+        </div>
+        <a class="source" href="https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer" target="_blank" rel="noopener">CGTrader ↗</a>
+      </div>
+      <div class="viewer">
+        <iframe id="printerFrame" title="HQ3DMOD POS Receipt Printer 3D viewer" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+      </div>
+      <div class="actions">
+        <a class="action" href="https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983" target="_blank" rel="noopener">在 Sketchfab 打开</a>
+        <a class="action" href="https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer" target="_blank" rel="noopener">查看购买页 · US$19</a>
+      </div>
+      <div class="viewer-note">这是之前保留的 HQ3DMOD 小票打印机，不是另外找来的收银机。Sketchfab 内嵌的是同作者同规格模型的在线预览；购买与下载仍以 CGTrader 页面为准。</div>
+    </section>
+
+    <section class="card" id="silk-wall">
+      <div class="card-head">
+        <div>
+          <div class="num">03 / GLASS BOARD</div>
+          <h2>LINTEX Silk Wall · 浅蓝玻璃黑板</h2>
+          <div class="desc">哑光低铁玻璃 · 隐藏安装 · 24 色配置</div>
+        </div>
+        <a class="source" href="https://lintex.com/en-us/products/silk-wall/" target="_blank" rel="noopener">LINTEX ↗</a>
+      </div>
+      <div class="viewer large">
+        <iframe id="silkFrame" title="LINTEX Silk Wall official 3D configurator" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="status">官方产品页内含 3D 配置器；向下滚动到 Configure Silk Wall，可用方向键旋转并切换 24 种玻璃颜色。</div>
+      </div>
+      <div class="actions">
+        <a class="action" href="https://lintex.com/en-us/products/silk-wall/" target="_blank" rel="noopener">单独打开官方 3D 配置器</a>
+      </div>
+      <div class="viewer-note">这里嵌入的是 LINTEX 官方产品页和原生 3D 配置器，不是静态仿制图。页面内可选择尺寸、玻璃颜色和笔槽。</div>
+    </section>
+
+    <section class="card" id="textile-board">
+      <div class="card-head">
+        <div>
+          <div class="num">04 / TEXTILE NOTICEBOARD</div>
+          <h2>LINTEX Textile Noticeboard · 织物便签板</h2>
+          <div class="desc">四边包布 · 无外露边框 · 隐藏安装 · 20 mm 厚</div>
+        </div>
+        <a class="source" href="https://lintex.com/products/textile-noticeboard/" target="_blank" rel="noopener">LINTEX ↗</a>
+      </div>
+      <div class="viewer large">
+        <iframe id="textileFrame" title="LINTEX Textile Noticeboard official 3D configurator" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="status">官方产品页内含 3D 配置器；向下滚动到 Configure Textile Noticeboard，可用方向键旋转并切换尺寸、面料。</div>
+      </div>
+      <div class="actions">
+        <a class="action" href="https://lintex.com/products/textile-noticeboard/" target="_blank" rel="noopener">单独打开官方 3D 配置器</a>
+      </div>
+      <div class="viewer-note">这是已确认的 Textile Noticeboard，不是 Air Noticeboard。官方配置器可切换 1005–3005 mm 宽度及多种织物。</div>
+    </section>
+  </div>
+</main>
+<footer class="smallprint">模型版权与许可归各自作者 / 品牌所有。本页只提供交互预览与选型入口；Sketchfab、LINTEX 与 CGTrader 的在线资源由其原站提供。</footer>
+<script>
+(function(){
+  const $ = (s) => document.querySelector(s);
+  const loaded = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      if (loaded.has(id)) return;
+      loaded.add(id);
+      if (id === 'printer') {
+        $('#printerFrame').src = 'https://sketchfab.com/models/4daf4e22d9d34b949d0ae7cbf3902983/embed?autostart=1&ui_controls=1&ui_infos=0&ui_watermark=1&ui_hint=0&ui_ar=0';
+      }
+      if (id === 'silk-wall') {
+        $('#silkFrame').src = 'https://lintex.com/en-us/products/silk-wall/';
+      }
+      if (id === 'textile-board') {
+        $('#textileFrame').src = 'https://lintex.com/products/textile-noticeboard/';
+      }
+      if (id === 'bookshelf') startShelfViewer();
+    });
+  }, {rootMargin:'180px 0px'});
+  document.querySelectorAll('.card').forEach(el => observer.observe(el));
+
+  let shelfApi = null;
+  let originalMaterial = null;
+  let ivoryMaterial = null;
+  let ivoryTextureUid = null;
+  let shelfStarted = false;
+
+  function setShelfStatus(text){
+    const el = $('#shelfStatus');
+    if (el) el.textContent = text;
+  }
+  function setPressed(id, value){
+    const el = $(id);
+    if (el) el.setAttribute('aria-pressed', String(value));
+  }
+  function applyMaterial(material, status){
+    if (!shelfApi || !material) return;
+    shelfApi.setMaterial(material, function(){
+      setPressed('#shelfIvory', material === ivoryMaterial);
+      setPressed('#shelfOriginal', material === originalMaterial);
+      setShelfStatus(status);
+    });
+  }
+  function remapIvory(sourceUrl, material){
+    return new Promise((resolve,reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+          const ctx = canvas.getContext('2d', {willReadFrequently:true});
+          ctx.drawImage(image,0,0);
+          const startY = Math.floor(canvas.height * 0.748);
+          const pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+          const d = pixels.data;
+          const target = [233,226,214];
+          for (let y=startY; y<canvas.height; y++) {
+            for (let x=0; x<canvas.width; x++) {
+              const i=(y*canvas.width+x)*4;
+              const lum=(d[i]*0.2126+d[i+1]*0.7152+d[i+2]*0.0722);
+              const t=Math.max(0,Math.min(1,(lum-7)/125));
+              const shade=0.86+0.14*t;
+              d[i]=Math.round(target[0]*shade);
+              d[i+1]=Math.round(target[1]*shade);
+              d[i+2]=Math.round(target[2]*shade);
+            }
+          }
+          ctx.putImageData(pixels,0,0);
+          const dataUrl=canvas.toDataURL('image/jpeg',0.96);
+          shelfApi.addTexture(dataUrl,function(err,uid){
+            if(err) reject(err);
+            else {
+              const changed=JSON.parse(JSON.stringify(material));
+              changed.channels.AlbedoPBR.texture.uid=uid;
+              resolve({material:changed,uid});
+            }
+          });
+        } catch(err) { reject(err); }
+      };
+      image.onerror=()=>reject(new Error('原始 Base Color 贴图无法跨域读取'));
+      image.src=sourceUrl;
+    });
+  }
+  function startShelfViewer(){
+    if (shelfStarted) return;
+    shelfStarted = true;
+    if (!window.Sketchfab) {
+      setShelfStatus('Sketchfab Viewer API 未能加载；可点击“在 Sketchfab 打开”查看原模型。');
+      return;
+    }
+    const iframe=$('#shelfFrame');
+    const client=new Sketchfab('1.12.1',iframe);
+    client.init('e2eb14aedca24c22a80220e8d72c379c',{
+      autostart:1,preload:1,ui_controls:1,ui_infos:0,ui_watermark:1,ui_hint:0,ui_ar:0,
+      success:function(api){
+        shelfApi=api;
+        api.start(function(){
+          api.addEventListener('viewerready',function(){
+            setShelfStatus('原始书架已载入，正在读取材质并应用米白色…');
+            api.getMaterialList(function(err,materials){
+              if(err||!materials||!materials.length){
+                setShelfStatus('模型已载入，但无法读取材质；当前显示原始颜色。');
+                return;
+              }
+              const mat=materials.find(m=>m.channels&&m.channels.AlbedoPBR&&m.channels.AlbedoPBR.texture);
+              if(!mat){
+                setShelfStatus('模型已载入，但未找到 Base Color 贴图；当前显示原始颜色。');
+                return;
+              }
+              originalMaterial=JSON.parse(JSON.stringify(mat));
+              api.getTextureList(function(texErr,textures){
+                if(texErr||!textures){
+                  setShelfStatus('模型已载入，但 Sketchfab 未提供贴图列表；当前显示原始颜色。');
+                  return;
+                }
+                const uid=mat.channels.AlbedoPBR.texture.uid;
+                const tex=textures.find(t=>t.uid===uid);
+                const imageInfo=tex&&Array.isArray(tex.images)?tex.images.slice().sort((a,b)=>(b.size||0)-(a.size||0))[0]:null;
+                if(!imageInfo||!imageInfo.url){
+                  setShelfStatus('模型已载入。Sketchfab 未开放原始贴图 URL，因此暂时只能查看原始颜色。');
+                  return;
+                }
+                remapIvory(imageInfo.url,mat).then(result=>{
+                  ivoryMaterial=result.material;
+                  ivoryTextureUid=result.uid;
+                  $('#shelfIvory').disabled=false;
+                  $('#shelfOriginal').disabled=false;
+                  applyMaterial(ivoryMaterial,'米白材质已应用：只调整 UV 图集下方的书架结构，书籍贴图保留。');
+                }).catch(error=>{
+                  console.warn(error);
+                  setShelfStatus('模型已载入，但在线改色未成功：'+(error&&error.message?error.message:'未知错误')+'。当前仍可旋转查看原模型。');
+                });
+              });
+            });
+          });
+        });
+      },
+      error:function(){
+        setShelfStatus('Sketchfab 模型加载失败；请点击“在 Sketchfab 打开”查看。');
+      }
+    });
+  }
+  $('#shelfIvory').addEventListener('click',()=>applyMaterial(ivoryMaterial,'已切换为暖米白结构。'));
+  $('#shelfOriginal').addEventListener('click',()=>applyMaterial(originalMaterial,'已恢复 Sketchfab 原始材质。'));
+})();
+</script>
+</body>
+</html>
