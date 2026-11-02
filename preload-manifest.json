@@ -1,19 +1,21 @@
 {
-  "version": 5,
+  "version": 6,
   "pages": [
     "index.html",
     "focus.html",
     "album.html",
     "journal.html",
     "receipt.html",
-    "desk.html"
+    "desk.html",
+    "radio.html"
   ],
   "fontPages": [
     "index.html",
     "focus.html",
     "album.html",
     "journal.html",
-    "receipt.html"
+    "receipt.html",
+    "radio.html"
   ],
   "fontFaces": [
     "400 16px \"LXGW WenKai\"",
@@ -48,7 +50,10 @@
         "ticket.js",
         "preload.js",
         "ride.js",
-        "sounds/manifest.json"
+        "sounds/manifest.json",
+        "radio.html",
+        "radio.js",
+        "radio-shell.js"
       ]
     },
     {
@@ -129,4 +134,4 @@
       ]
     }
   ]
-}
+}\n
