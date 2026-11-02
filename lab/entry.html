@@ -289,7 +289,9 @@ function fineMove() {
   if (k !== H.sel) { H.sel = k; click(E[k].u !== E[H.sel === k ? k : k].u && month[U[E[k].u].items[0]] !== month[cur] ? "month" : "line"); const u = E[k].u; if (u !== uOf[cur]) goTo(U[u].items[0], false, "scrub"); }
 }
 zone.addEventListener("pointermove", e => {
-  const r = zoneRect(); H.px = e.clientX - r.left; H.py = e.clientY - r.top - LINE; const near = Math.abs(e.clientY - (r.top + LINE)) <= 20 && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
+  // 鼠标在整个刻度区里（上下 104 px 全算，左右到两头的刻度再往外 20 px）就算指到了刻度轴。
+  // 原来只认刻度线上下 20 px：刻度区里光标又是隐藏的，离线稍远就既看不到光标、也没有指针，点了没反应（用户 2026-11-02）
+  const r = zoneRect(); H.px = e.clientX - r.left; H.py = e.clientY - r.top - LINE; const near = e.clientY >= r.top && e.clientY <= r.bottom && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
   if (!H.inside && near) { H.inside = true; H.month = -1; labItem = -1; H.sx = undefined;   /* 重新进入：标签直接显示，不沿用上次的月份 */ H.hot = hoverItem(unzoom(H.px)); click("line"); }
   if (H.down) {
     if (Math.abs(H.px - H.rest.x) > 6) { H.rest = { x: H.px, t: performance.now(), armed: false }; }
@@ -316,7 +318,7 @@ const up = e => {
   // 点哪去哪：去按下时指针所指的地点；点完后高亮对准它，直到指针再移动 6 px。点击、松手都不另外出声
   if (!H.scrub && !H.fine) { const it = H.down.item; goTo(it, false); H.snap = { x: H.px, item: it }; }
   H.down = null; H.scrub = false; H.fine = false;
-  const r = zoneRect(); H.inside = Math.abs(e.clientY - (r.top + LINE)) <= 20 && e.clientX >= r.left && e.clientX <= r.right; kick();
+  const r = zoneRect(); H.inside = e.clientY >= r.top && e.clientY <= r.bottom && e.clientX >= r.left && e.clientX <= r.right; kick();   // 同上：整个刻度区都算
 };
 zone.addEventListener("pointerup", up); zone.addEventListener("pointercancel", up);
 zone.addEventListener("keydown", e => {
