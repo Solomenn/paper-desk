@@ -23,7 +23,8 @@
 </script>
 </head>
 <body>
-<div class="tone"><a href="#cool" id="tc" style="background:#e3ecef"></a><a href="#warm" id="tw" style="background:#efe8dc"></a></div><div class="n" id="n"></div><pre id="err" style="position:fixed;left:16px;top:16px;right:16px;margin:0;font:12px/1.5 ui-monospace,monospace;color:#e9b0a8;white-space:pre-wrap;display:none"></pre>
+<div class="tone"><a href="#cool" id="tc" style="background:#e3ecef"></a><a href="#warm" id="tw" style="background:#efe8dc"></a></div><div class="n" id="n"></div>
+<pre id="err" style="position:fixed;left:16px;top:16px;right:16px;margin:0;font:12px/1.5 ui-monospace,monospace;color:#c0392b;white-space:pre-wrap;display:none;z-index:9"></pre>
 <script>
   /* 出错时把原因写在页面上，不再静默黑屏 */
   const showErr = m => { const e = document.getElementById("err"); if (!e) return; e.style.display = "block"; e.textContent += m + "\n"; };
@@ -41,14 +42,15 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { WebGLPathTracer, PhysicalSpotLight, GradientEquirectTexture } from "three-gpu-pathtracer";
 
-/* 这一版的参数都已按 LINTEX 原图校准：明度、饱和度、色相、冷暖逐项对齐；窗由原图光斑反推。#warm 切暖调 */
+/* 参数已按 LINTEX 原图校准（2026-11-02）：明度、饱和度、色相、冷暖逐项对齐，软边对齐；窗由原图光斑反推。#warm 切暖调 */
 const WARM = location.hash === "#warm";
-const P = Object.assign({ gobo: "1", sky: "5.4", sun: "9", ang: "1.2", wall: "#f0f0ee", floor: "#c9c8c4", spp: "3000", tiles: "1" },
-  WARM ? { sunc: "#fff0dc", skyTop: "#dde0e2", skyBot: "#efe9e1", wall: "#f1efeb" } : {});
+const P = Object.assign({ gobo: "1", sky: "11", sun: "9", ang: "2.0", board: "#bad8dd", wall: "#f0f0ee", floor: "#c9c8c4", spp: "4000", tiles: "1" },
+  WARM ? { sunc: "#fff0dc", skyTop: "#dde0e2", skyBot: "#efe9e1", wall: "#f1efeb" } : {},
+  Object.fromEntries(new URLSearchParams(location.search)));
 addEventListener("hashchange", () => location.reload());
 document.getElementById(WARM ? "tw" : "tc").classList.add("on");
 /* ?gobo=1：左墙上的窗洞不靠猜，而是由原图的光斑沿阳光方向反推出来（assets/objects/lintex-light-windows.json） */
-const GOBO = {"az":45.0,"el":37.0,"W":1.226,"Z1":9.0,"Y1":4.6,"holes":[[[0.245,1.25],[0.235,1.24],[0.135,1.24],[0.125,1.25],[0.115,1.24],[0.105,1.25],[0.085,1.24],[0.075,1.25],[0.02,1.245],[0.025,0.02],[0.065,0.02],[0.61,0.595],[0.61,1.225],[0.425,1.23],[0.415,1.24],[0.405,1.23],[0.395,1.24],[0.375,1.23],[0.365,1.24],[0.255,1.24],[0.245,1.25]],[[1.445,2.62],[1.345,2.62],[1.265,2.58],[1.13,2.435],[1.09,2.375],[1.06,2.305],[1.06,2.115],[1.04,2.095],[1.045,1.06],[1.54,1.595],[1.54,1.905],[1.53,1.915],[1.53,2.535],[1.52,2.545],[1.52,2.605],[1.455,2.61],[1.445,2.62]],[[0.175,2.62],[0.065,2.62],[0.02,2.585],[0.02,1.445],[0.365,1.44],[0.375,1.43],[0.385,1.44],[0.405,1.43],[0.415,1.44],[0.425,1.43],[0.535,1.43],[0.545,1.42],[0.565,1.43],[0.575,1.42],[0.605,1.42],[0.61,1.635],[0.63,1.655],[0.63,2.155],[0.62,2.165],[0.62,2.185],[0.59,2.235],[0.58,2.275],[0.52,2.365],[0.45,2.435],[0.445,2.45],[0.425,2.44],[0.355,2.51],[0.245,2.57],[0.175,2.62]],[[1.845,2.8],[1.785,2.8],[1.745,2.78],[1.68,2.705],[1.64,2.635],[1.645,1.7],[2.17,2.265],[2.17,2.535],[2.15,2.585],[2.11,2.645],[2.085,2.66],[2.055,2.7],[1.905,2.79],[1.855,2.79],[1.845,2.8]]]};   // 由原图光斑沿阳光方向反推出的窗洞
+const GOBO = P.gobo ? {"az":35.0,"el":32.0,"W":3.0,"Z1":9.0,"Y1":6.0,"holes":[[[1.255,2.6],[1.24,2.595],[1.245,1.31],[1.67,1.765],[1.67,2.395],[1.255,2.6]],[[2.205,3.57],[2.165,3.57],[2.125,3.55],[2.095,3.52],[2.04,3.455],[1.99,3.355],[1.99,3.155],[1.97,3.125],[1.975,2.1],[2.32,2.475],[2.32,2.955],[2.31,2.965],[2.31,3.495],[2.32,3.505],[2.295,3.51],[2.205,3.57]],[[2.505,3.61],[2.465,3.6],[2.43,3.565],[2.39,3.495],[2.395,2.56],[2.76,2.955],[2.76,3.245],[2.75,3.255],[2.75,3.295],[2.71,3.365],[2.71,3.385],[2.64,3.475],[2.62,3.515],[2.555,3.58],[2.505,3.61]],[[1.305,3.95],[1.275,3.95],[1.24,3.905],[1.24,2.805],[1.255,2.79],[1.415,2.71],[1.435,2.72],[1.535,2.67],[1.545,2.65],[1.665,2.59],[1.67,2.805],[1.69,2.825],[1.69,3.325],[1.68,3.335],[1.66,3.445],[1.64,3.475],[1.61,3.575],[1.58,3.635],[1.56,3.655],[1.56,3.675],[1.555,3.68],[1.545,3.67],[1.52,3.695],[1.52,3.715],[1.48,3.775],[1.44,3.815],[1.37,3.915],[1.305,3.95]]]} : null;   // 由原图光斑沿阳光方向反推出的窗洞
 const num = (k, d) => (P[k] !== undefined ? +P[k] : d);
 const deg = Math.PI / 180;
 
@@ -75,20 +77,22 @@ renderer.toneMappingExposure = EXP;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 60);
+/* 镜头：按宽度取景（画面宽度永远是原图那 2.6 m），宽屏只会裁掉上下，不会露出侧墙 */
+const ASP = innerWidth / innerHeight;
+const camera = new THREE.PerspectiveCamera(ASP >= 1 ? 2 * Math.atan(Math.tan(15 * deg) / ASP) / deg : 30, ASP, 0.05, 60);
 camera.position.set(0, 1.5, 1.2985 / Math.tan(15 * deg));
 camera.lookAt(0, 1.5, 0);
 
 /* 天空：从窗户看出去的那一片，蓝白渐变 */
 const sky = new GradientEquirectTexture();
 sky.topColor.set(P.skyTop || 0xbfd3ea); sky.bottomColor.set(P.skyBot || 0xe8ecef); sky.update();
-scene.environment = sky; scene.background = new THREE.Color(0x000000);
+scene.environment = sky; scene.background = sky;   // 画面外看到的是天空，不是黑色
 scene.environmentIntensity = SKY;
 
 /* ── 房间 ── */
 const wallMat = new THREE.MeshStandardMaterial({ color: P.wall || 0xe9e9e7, roughness: 0.95 });
 const floorMat = new THREE.MeshStandardMaterial({ color: P.floor || 0x9c9b98, roughness: 0.9 });
-const X1 = 4.5, Z1 = 9, Y1 = 4.6;
+const X1 = 4.5, Z1 = 9, Y1 = GOBO ? GOBO.Y1 : 4.6;   // 原图的房间是挑高的 loft
 function box(w, h, d, x, y, z, m) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); scene.add(b); return b; }
 box(W + X1 + 0.6, Y1, 0.2, (X1 - W) / 2, Y1 / 2, -0.1, wallMat);                 // 后墙（板子挂在这面）
 box(W + X1 + 0.6, 0.2, Z1, (X1 - W) / 2, -0.1, Z1 / 2, floorMat);                 // 地板
@@ -101,7 +105,7 @@ function windowWall() {
   const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(Z1, 0); s.lineTo(Z1, Y1); s.lineTo(0, Y1); s.lineTo(0, 0);
   if (GOBO) {
     // 画面里能看到影子的那几扇窗；再按 2.6 m 间距往远处复制成一排（它们的光斑落在画面右边以外，只给屋子添天光和反射光）
-    const REP = num("rep", 2), PER = num("per", 2.6);
+    const REP = num("rep", 2), PER = num("per", 2.0);
     for (let k = 0; k <= REP; k++) for (const h of GOBO.holes) {
       if (Math.max(...h.map(q => q[0])) + k * PER > Z1 - 0.05) continue;
       const p = new THREE.Path(); p.moveTo(h[0][0] + k * PER, h[0][1]); for (const q of h.slice(1)) p.lineTo(q[0] + k * PER, q[1]); p.closePath(); s.holes.push(p);
@@ -141,8 +145,8 @@ windowWall();
 const dir = new THREE.Vector3(-Math.cos(EL * deg) * Math.cos(AZ * deg), Math.sin(EL * deg), Math.cos(EL * deg) * Math.sin(AZ * deg));
 const D = 40;
 const sun = new PhysicalSpotLight(P.sunc || 0xffffff, SUN * D * D);
-sun.position.copy(dir.clone().multiplyScalar(D)).add(new THREE.Vector3(-W, 2, 2));
-sun.target.position.set(-W, 2, 2); scene.add(sun.target);
+sun.position.copy(dir.clone().multiplyScalar(D)).add(new THREE.Vector3(-W, 2.6, 2));
+sun.target.position.set(-W, 2.6, 2); scene.add(sun.target);
 sun.angle = Math.atan(6 / D); sun.penumbra = 0; sun.decay = 2; sun.distance = 0;
 sun.radius = D * Math.tan(SUN_ANG * deg);
 scene.add(sun);
@@ -163,11 +167,23 @@ scene.add(gltf.scene);
 if (P.fast) {
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   scene.environment = null; scene.add(new THREE.HemisphereLight(0xffffff, 0xcccccc, 1.2));
-  const dl = new THREE.DirectionalLight(0xffffff, 3); dl.position.copy(dir.clone().multiplyScalar(12)).add(new THREE.Vector3(0, 1.5, 0)); dl.target.position.set(0, 1.5, 0);
-  dl.castShadow = true; dl.shadow.mapSize.set(2048, 2048); Object.assign(dl.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 40 }); dl.shadow.bias = -0.0005;
+  // 太阳有大小：在太阳圆盘内取 N 个方向，每个方向渲染一遍普通阴影，再取平均（一次只开一盏，避免超出显卡的阴影贴图数）。
+  // 软边和路径追踪里的面光源一样，但没有噪点
+  const N = num("n", 32), R = SUN_ANG * deg;
+  const dl = new THREE.DirectionalLight(0xffffff, 3); dl.target.position.set(0, 1.5, 0);
+  dl.castShadow = true; dl.shadow.mapSize.set(2048, 2048); Object.assign(dl.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 40 }); dl.shadow.bias = -0.0005;
   scene.add(dl, dl.target); sun.visible = false;
   scene.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
-  renderer.render(scene, camera); document.body.dataset.ready = "1"; document.body.dataset.samples = "1";
+  const acc = document.createElement("canvas"); acc.width = renderer.domElement.width; acc.height = renderer.domElement.height;
+  const cx2 = acc.getContext("2d");
+  for (let i = 0; i < N; i++) {
+    const a = i * 2.39996, rr = R * Math.sqrt((i + 0.5) / N), el = EL * deg + Math.sin(a) * rr, az = AZ * deg + Math.cos(a) * rr;
+    dl.position.set(-Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).multiplyScalar(14).add(new THREE.Vector3(0, 1.5, 0));
+    dl.shadow.needsUpdate = true; renderer.render(scene, camera);
+    cx2.globalAlpha = 1 / (i + 1); cx2.drawImage(renderer.domElement, 0, 0);
+  }
+  renderer.domElement.style.display = "none"; document.body.insertBefore(acc, document.body.firstChild);
+  document.body.dataset.ready = "1"; document.body.dataset.samples = String(N);
   throw new Error("fast mode done");   // 不进入路径追踪
 }
 /* ── 路径追踪 ── */
@@ -181,7 +197,6 @@ let failed = false;
 function loop() {
   if (pt.samples < SPP) {
     try { pt.renderSample(); } catch (e) { if (!failed) { failed = true; showErr("renderSample: " + (e.stack || e.message) + "\nGPU: " + window.__gpu); } return; }
-    const gl = renderer.getContext(), ge = gl.getError(); if (ge && !failed) { failed = true; showErr("WebGL error " + ge + "\nGPU: " + window.__gpu); }
     requestAnimationFrame(loop);
   }
   else document.body.dataset.ready = "1";
