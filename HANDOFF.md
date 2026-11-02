@@ -141,13 +141,13 @@
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
 | 手账 | Bookshelf Short LOWPOLY | 已下载并改成暖米白 | 独立 360° 浏览包已交付；尚未替换 `journal.html` |
 - **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
-- **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 14.9 MB。
-- **浏览包**：`paper-desk-object-preview.zip`，包含 `preview.html`、`assets/bookshelf_short_offwhite.glb`、`run-preview.bat` 和 README。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设；独立于现有 `journal.html`。
+- **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 24.7 MB。Base Color 保持 4K，Normal / Metallic-Roughness 缩至 2K；Normal scale 调低至 0.35，以减弱原始深色木纹凹凸。
+- **浏览包**：`paper-desk-object-preview.zip`，包含 `preview.html`、`assets/bookshelf_short_offwhite.glb`、`bookshelf-preview.png`、`run-preview.bat` 和 README。Windows 双击启动脚本即可打开本地预览；Three.js 依赖 jsDelivr 网络加载。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设；独立于现有 `journal.html`。
 - **其他模型预览**：
   - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
   - 黑板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
   - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
-- **状态**：米白书架 GLB 已生成并重新读取验证；预览页 JavaScript 语法检查通过。浏览器 WebGL 的线上运行仍需在用户电脑打开验收；验收通过后再决定是否替换 `journal.html`。
+- **状态**：米白书架 GLB 已生成并重新读取验证：1 mesh、842 triangles，4K Base Color + 2K Normal / Metallic-Roughness；ZIP 完整性检查通过，预览页 JavaScript 语法检查通过。浏览器 WebGL 的实际显示仍需在用户电脑打开验收；验收通过后再决定是否替换 `journal.html`。该 ZIP 作为本轮交付附件，尚未把二进制 GLB 纳入 GitHub `main`。
 | 小票 | 小票机 | CSS 画的，页面上还有“样式 / 打印”文字按钮 | 换成实体模型；去掉文字按钮 |
 
 - **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
