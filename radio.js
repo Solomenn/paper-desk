@@ -216,31 +216,57 @@ function buildFallback() {
 }
 function centerAndFit(obj) {
   const box=new THREE.Box3().setFromObject(obj), size=box.getSize(new THREE.Vector3()), center=box.getCenter(new THREE.Vector3());
+  if (size.x < size.y * 1.5) throw new Error("T3 orientation is not landscape");
   const s=5.2/Math.max(size.x,size.y*1.7,size.z*1.3);
-  // Scale the center offset too; Object3D.position is not multiplied by its own scale.
   obj.scale.setScalar(s);
   obj.position.set(-center.x*s,-center.y*s+.18,-center.z*s);
   obj.traverse(o=>{ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
+  return {box,size,center,scale:s};
 }
 async function loadModel() {
   const loader=new GLTFLoader();
   try {
     const gltf=await loader.loadAsync("assets/radio/t3.glb");
-    radioRoot.clear(); const m=gltf.scene;
-    // The source GLB has a baked root transform that leaves the radio in portrait orientation.
-    // Rotate the whole scene 90 degrees so its long edge is horizontal, keeping the front facing +Z.
-    m.rotation.z=Math.PI/2;
+    radioRoot.clear();
+    const source=gltf.scene;
+    source.updateMatrixWorld(true);
+    const sourceBox=new THREE.Box3().setFromObject(source);
+    const sourceSize=sourceBox.getSize(new THREE.Vector3());
+    // Bake the GLB's own node transforms into cloned geometry first.
+    // Its longest axis is currently Y; rotate the baked vertices into landscape on X.
+    const correction=sourceSize.y>sourceSize.x?Math.PI/2:0;
+    const sourceRoot=source.children[0];
+    const dialPoint=new THREE.Vector3(84.219953,-76.135107,1.49);
+    if(sourceRoot) dialPoint.applyMatrix4(sourceRoot.matrixWorld);
+    dialPoint.applyAxisAngle(new THREE.Vector3(0,0,1),correction);
+    const m=new THREE.Group();
     const edgeMat=new THREE.LineBasicMaterial({color:0x5f5e59,transparent:true,opacity:.18,depthWrite:false});
-    m.traverse(o=>{
+    source.traverse(o=>{
       if(!o.isMesh) return;
-      o.material=cream;
-      const edgeGeo=new THREE.EdgesGeometry(o.geometry,55);
+      const geometry=o.geometry.clone();
+      geometry.applyMatrix4(o.matrixWorld);
+      if(correction) geometry.rotateZ(correction);
+      const mesh=new THREE.Mesh(geometry,cream);
+      mesh.name=o.name;
+      mesh.castShadow=true; mesh.receiveShadow=true;
+      const edgeGeo=new THREE.EdgesGeometry(geometry,55);
       const edges=new THREE.LineSegments(edgeGeo,edgeMat);
-      edges.renderOrder=2; o.add(edges);
+      edges.renderOrder=2; mesh.add(edges);
+      m.add(mesh);
     });
-    centerAndFit(m); radioRoot.add(m);
-    ground.position.y=-1.235;
-    dialCenter.set(1.47603,-.00013,.74556); dialRadius=.83548; dialPlaneZ=.75372;
+    const fit=centerAndFit(m);
+    radioRoot.add(m);
+    ground.position.y=.18-(fit.size.y*fit.scale)/2-.015;
+    dialCenter.set(
+      (dialPoint.x-fit.center.x)*fit.scale,
+      (dialPoint.y-fit.center.y)*fit.scale+.18,
+      (dialPoint.z-fit.center.z)*fit.scale
+    );
+    dialRadius=24.463915*fit.scale;
+    dialPlaneZ=(fit.box.max.z-fit.center.z)*fit.scale;
+    dialCenter.z=dialPlaneZ;
+    document.body.dataset.radioModelAspect=(fit.size.x/fit.size.y).toFixed(2);
+    document.body.dataset.radioModelOrientation="landscape";
     usingRealModel=true;
     document.body.classList.add("model-loaded");
   } catch {
