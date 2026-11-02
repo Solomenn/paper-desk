@@ -147,7 +147,7 @@
   - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
   - 黑板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
   - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
-- **状态**：米白书架 GLB 已生成并重新读取验证：1 mesh、842 triangles，4K Base Color + 2K Normal / Metallic-Roughness；ZIP 完整性检查通过，预览页 JavaScript 语法检查通过。浏览器 WebGL 的实际显示仍需在用户电脑打开验收；验收通过后再决定是否替换 `journal.html`。该 ZIP 作为本轮交付附件，尚未把二进制 GLB 纳入 GitHub `main`。
+- **状态**：米白书架 GLB 已生成并重新读取验证：1 mesh、842 triangles，4K Base Color + 2K Normal / Metallic-Roughness。在线浏览馆已推送 `main`，通过 Sketchfab Viewer API 对公开原模型进行在线 UV 区域改色；实际效果取决于 Sketchfab 是否向 Viewer API 暴露源贴图 URL。LINTEX 官方产品页配置器与 Sketchfab 小票机使用嵌入式原站预览。当前需要线上浏览器验收各 iframe / WebGL 是否成功加载；通过后再决定是否替换 `journal.html`。本地独立预览包仍作为额外交付，二进制 GLB 尚未纳入 GitHub `main`。
 | 小票 | 小票机 | CSS 画的，页面上还有“样式 / 打印”文字按钮 | 换成实体模型；去掉文字按钮 |
 
 - **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
