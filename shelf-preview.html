@@ -148,6 +148,7 @@
     let viewMode = 'rows';
     let currentModule = 'straight';
     const modelCache = new Map();
+    const originalSnapshots = new Map();
     const loader = new GLTFLoader();
 
     function materialColorHex(mat) {
@@ -306,7 +307,21 @@
           modelCache.set(key, gltf.scene);
         }
         sourceRoot = modelCache.get(key);
+        const savedOriginals = originalSnapshots.get(key);
+        if (savedOriginals) {
+          savedOriginals.forEach((state) => {
+            state.mat.color.copy(state.color);
+            state.mat.map = state.map;
+            if (state.roughness !== undefined) state.mat.roughness = state.roughness;
+            if (state.metalness !== undefined) state.mat.metalness = state.metalness;
+            state.mat.needsUpdate = true;
+          });
+        }
         collectMaterials(sourceRoot);
+        originalSnapshots.set(key, materials.map((item) => ({
+          mat:item.mat, color:item.original.color.clone(), map:item.original.map,
+          roughness:item.original.roughness, metalness:item.original.metalness
+        })));
         buildArrangement(key === 'straight' ? 'rows' : 'single');
         if (selected.size) {
           applyWarmWhite();
