@@ -31,22 +31,24 @@
 - 3D：官方提供 7 种尺寸的 DWG / RFA / OBJ / FBX；配置器可导出 OBJ / GLB / STL。
 - 目标：以用户确认的浅蓝色产品图为准，不沿用原来 CSS 绿黑板与厚木框的外观。
 
-### 便签板：LINTEX Air Noticeboard
+### 便签板：LINTEX Textile Noticeboard
 
-用户确认参考图二的**整体造型**：无框矩形、薄边、倒角、隐藏固定件，像轻轻浮在墙面上；不喜欢之前推荐的圆形或异形便签板。
+用户确认的是截图中间那张**横向宽幅、米灰色织物表面、四边包布、无外露边框**的方案。它对应 **Textile Noticeboard**，不是 Air Noticeboard。
 
-- 官方产品：<https://lintex.com/products/air-noticeboard/>
-- 结构：无框；倒角边缘；隐藏式安装；离墙 22 mm。
-- 表面：天然软木，或 Forbo Bulletin Board 亚麻油毡。
-- Forbo Bulletin Board 有 15 种颜色；用户特别喜欢色卡中的 **Duck Egg 2162** 和 **Blue Berry 2214**。
-- 3D：官方提供 8 种尺寸的 DWG / OBJ / FBX；配置器可导出 OBJ / GLB / STL。
-- 颜色 HEX 如需用于网页材质，必须从官方色卡/实物校准；截图中出现的 `#9EB8BE` 仅是视觉近似值，不是厂家公布的精确色值。
+- 官方产品：<https://lintex.com/products/textile-noticeboard/>
+- 结构：木质基板，织物覆盖正面并折包边缘；隐藏式固定件，无可见外框；离墙 20 mm。
+- 材料：织物、木材；边缘为折叠织物。
+- 官方尺寸（宽 × 高）：1005 × 1205、1505 × 1205、2005 × 1205、2505 × 1205、3005 × 1205 mm。最终建模尺寸以后续配置器选择为准，不预先替用户选尺寸。
+- 面料：官方配置器列出 Linen、Blazer Lite、Cara、Fiji、Cura 等系列；当前只确认了截图中的米灰织物视觉方向，**尚未锁定具体面料系列和色号**。
+- 3D：官方提供 DWG / RFA / OBJ / FBX；配置器可导出 OBJ / GLB / STL。
+- 建模目标：保留宽幅矩形比例、织物包边和极薄的墙面悬浮感；不要加木框、金属外框或底部柜体。
+- **Air Noticeboard 不再是当前选型**；它的 Forbo 亚麻油毡色卡仍保留作独立配色研究参考，不能把那些色号直接套用到 Textile Noticeboard。
 
 ### LINTEX 色卡研究
 
 用户希望把 LINTEX 作为后续材质与配色研究的重要参考。注意两套色卡不能混为一谈：
 
-**A. Air Noticeboard 使用的 Forbo Bulletin Board 亚麻油毡色卡（15 色）**
+**A. Forbo Bulletin Board 亚麻油毡色卡（15 色；保留作 LINTEX 配色研究参考，原为 Air Noticeboard 的可选表面，不属于当前定稿的 Textile Noticeboard）**
 
 | 色名 | 色号 |
 |---|---:|
@@ -68,7 +70,11 @@
 
 官方资料：<https://lintex.com/products/air-noticeboard/>；色卡资料：<https://www.vogels-halterung.de/pdf/catalogs/en/lintex/lintex-catalog.pdf>。
 
-**B. Silk Wall 使用的 Silk Glass® 色卡（24 色）**
+**B. Textile Noticeboard 当前面料系列**
+
+官方配置器当前列出 Linen、Blazer Lite、Cara、Fiji、Cura 等面料系列。截图只确认米灰色织物外观，尚未确定具体系列、色号或织物纹理。后续应以官方配置器的真实面料样本为准；不要把 Forbo Bulletin Board 的 Duck Egg 2162、Blue Berry 2214 等色号当成 Textile Noticeboard 的面料色号。
+
+**C. Silk Wall 使用的 Silk Glass® 色卡（24 色）**
 
 Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Lively 460、Loving 760、Calm 320、Gentle 560、Soft 150、Warm 160、Blush 680、Casual 480、Mellow 730、Brave 750、Crisp 350、Fair 550、Pure 130、Pale 230、Lazy 140、Naive 640、Mild 250、Sunny 740。
 
@@ -78,18 +84,48 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 
 ### 手账书架：图书馆多排书架方向
 
-用户明确想要的是 **Public Library Interior** 那种图书馆书库：多排、连续、双面可取书的开放式书架形成过道；不是家用独立书柜，也不是底部带厚重柜体的储物柜。
+用户明确想要的是 **Public Library Interior** 那种公共图书馆书库：多排、连续、双面可取书的开放式书架形成过道；不是家用独立书柜，也不是底部带厚重柜体的储物柜。
 
-- 形态参考：<https://www.cgtrader.com/3d-models/interior/other/public-library-interior>（用户喜欢其书架排列方式；该模型售价约 US$14.99，不作为免费方案）。
-- 外观目标：白色或暖白色金属/喷涂结构；开放式多层书格；视觉上轻、直、连续；不加笨重底柜。
-- 免费候选仍在筛选中，不能仅凭三角面数量认定质量：
-  - **优先检查：<https://3dassets.dev/packs/public-library-and-reading-garden>**。CC0 1.0；51 个独立 GLB，合计 9.1 MB、474,212 triangles；其中 `Library Stack Straight` 是双面书库架，4 层搁板、中间隔板、独立建模的书脊，约 77.5k triangles；另有 Stack End / Stack Corner，可拼接连续过道。整套色调是浅橡木、奶油白、鼠尾草绿和黑钢；书架木质端板可研究改成暖白。**重要限制：页面注明 51/51 模型由 AI 工具生成，必须先看实际 GLB 的几何、书脊、法线和近景材质，不能直接当成 T3 级成品。**
-  - **单体备选：<https://www.innerscene.com/tools/library/3d-parts/double-sided-library-shelving-education-furniture-c2b67492>**。CC0、GLB、约 1.8 MB，标称尺寸 1.1 × 0.7 × 1.8 m；单个双面教育/图书馆书架，可重复排列成多排；页面未公布三角面数量，精度待实际检查。
-  - **几何备选：<https://3dwarehouse.sketchup.com/model/9f4c624e-e285-42eb-9b16-dfb7255c6f6a/Library-Book-Shelf>**。双面书架并带书，11,586 polygons、22 种材质、627 KB，标称 1.2 × 0.625 × 2.0 m；原生 SketchUp，需转换 GLB；具体授权和模型细节待检查。
-  - **高面数备选：<https://www.cgtrader.com/free-3d-models/interior/house-interior/3d-book-shelves-a2154731-e59c-4e2c-8e91-e754db770d55>**。免费，页面标注 521,303 polygons / 522,056 vertices，提供 C4D / FBX / OBJ；FBX 约 5.68 MB；不是 GLB，未明确 PBR/UV，需检查是否真的是多排书库而非普通室内书架。
-  - 对照基准：付费 <https://www.cgtrader.com/3d-models/interior/other/public-library-interior> 页面列出约 948k triangles、136 objects、75 unique meshes、50 materials、65 textures（最高 4K），售价约 US$14.99。只作为用户喜欢的书库排列和细节密度参照，不购买。
-- 暂不采用：低多边形卡通图书馆、传统木质古典书架或家用装饰书柜。白色预览目标是暖白色喷涂金属/哑光白色端板，书籍保留克制的低饱和封面色；不是把整组书架和书都刷成纯白。
+- 形态参考：<https://www.cgtrader.com/3d-models/interior/other/public-library-interior>。用户喜欢它的书库排列方式；目前售价 **US$14.99**，不作为免费方案。
+- 外观目标：暖白色 / 象牙白金属或哑光喷涂结构；开放式多层书格；视觉轻、直、连续；不加笨重底柜。书脊保留低饱和的米白、灰蓝、浅绿等颜色，不把书和书架全部刷成纯白。
+- 主场景需要的是**双面书架单元 + 端部 / 转角模块**，能拼成多条平行过道；单面靠墙书柜只作次要参考。
 
+#### 免费候选（第一轮）
+
+1. **优先检查：<https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98> — Library Stack Straight**
+   - CC0 1.0；GLB 约 1.3 MB；77,484 triangles、58,662 vertices、5 种材质。
+   - 尺寸 1.4 × 2.145 × 0.6 m；双面书架、四层搁板、中间隔板，书脊独立建模。
+   - 同一套还有 Library Stack End 和 Library Stack Corner，可拼接连续书库过道；整套 51 个 GLB，合计 9.1 MB。
+   - **风险：** 页面标明这套 51/51 模型由 AI 工具生成；当前缩略图是浅橡木端板和低饱和书脊，并非白色成品。必须先检查原始 GLB 的近景几何、法线、UV、书脊和材质，再决定是否将端板 / 框架改为暖白色。它目前是结构上最接近目标的免费候选，不等于已经通过美术验收。
+
+2. **第二候选：<https://www.innerscene.com/tools/library/3d-parts/double-sided-library-shelving-education-furniture-c2b67492> — Double sided library shelving**
+   - CC0；GLB 约 1.8 MB；标称尺寸 1.1 × 0.7 × 1.8 m。
+   - 单个双面教育 / 图书馆书架，可复制排列成多排。
+   - 页面没有公布三角面数量和详细贴图规格；需要打开 3D 预览确认结构、书籍细节和材质，不凭文件大小推断精度。
+
+3. **第三候选：<https://3dwarehouse.sketchup.com/model/9f4c624e-e285-42eb-9b16-dfb7255c6f6a/Library-Book-Shelf> — Library Book Shelf（Archie M.）**
+   - 双面书架，带书；11,586 polygons、22 种材质、627 KB。
+   - 标称尺寸 1.2 × 0.625 × 2.0 m；原生 SketchUp，需要转换为 GLB。
+   - **授权尚待核实**，确认授权前不进入项目。
+
+4. **墙面书架参考：<https://3dwarehouse.sketchup.com/model/0ce33b92-6188-4ce8-87ff-49e45135404a/Library-Book-Shelves-with-Rolling-Ladder> — Library Book Shelves with Rolling Ladder（Thomas F.）**
+   - 四段连续书架并带滚动梯；7,971 polygons、4 种材质、473 KB。
+   - 单段标称约 115 英寸高、32.5 英寸宽；更接近靠墙连续书架，不是我们优先要的双面过道书架。
+   - 原生 SketchUp；授权尚待核实。
+
+#### 付费对照基准（不购买）
+
+- **Public Library Interior：** <https://www.cgtrader.com/3d-models/interior/other/public-library-interior>
+- 当前售价 US$14.99；约 619,657 polygons / 948,328 triangles；136 objects、75 unique meshes、50 materials、65 张 PBR 贴图（最高 4K），GLTF 约 77 MB。
+- 包含约 35,133 本书、双层环形书库、书梯、阅读桌和完整公共空间。只作为书库排列、书籍密度和细节表现的对照基准。
+
+#### 已排除 / 不作为主候选
+
+- Grab3D 的 Library Room / Bookstore Interior：虽然免费 CC0、可下载 GLB，但属于等距视角的轻量化卡通房间套件，不符合纸桌的实体模型质感。
+- 1DesignTool 的 Bookshelf walls：2,644 triangles、207 KB，明确为 low-poly，且是深桃花心木墙面书架；不符合精度和配色方向。
+- FurniMesh 的 AI 白色家用书架：多数是单体家用储物架，不是公共图书馆双面多排书库；不因面数高就列为优先候选。
+
+**当前状态：书架尚未定稿。** 下一步先对前两款免费双面书架做真实 GLB 检查和 360° 预览，再做暖白材质测试；确认近景质量、书籍细节和拼接效果后再选，不直接把 AI 生成或低多边形模型当成最终资产。
 
 共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
