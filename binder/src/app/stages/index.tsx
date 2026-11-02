@@ -39,5 +39,5 @@ export const STAGES: StageMap = {
   proj: stage(() => import("./AlbumStage").then((m) => ({ default: m.ProjStage }))),
   note: stage(() => import("./AlbumStage").then((m) => ({ default: m.NoteStage }))),
   ticket: stage(() => import("./AlbumStage").then((m) => ({ default: m.TicketStage }))),
-  receipt: stage(() => import("./AlbumStage").then((m) => ({ default: m.ReceiptStage }))),
+  postcard: stage(() => import("./AlbumStage").then((m) => ({ default: m.PostcardStage }))),
 };

@@ -121,7 +121,7 @@ export const en: Dict = {
     proj: { name: "Projects", local: "项目卡册", latin: "Projects", noun: (n) => (n === 1 ? "card" : "cards") },
     note: { name: "Notes", local: "便签卡册", latin: "Notes", noun: (n) => (n === 1 ? "note" : "notes") },
     ticket: { name: "Tickets", local: "车票卡册", latin: "Tickets", noun: (n) => (n === 1 ? "ticket" : "tickets") },
-    receipt: { name: "Receipts", local: "小票卡册", latin: "Receipts", noun: (n) => (n === 1 ? "receipt" : "receipts") },
+    postcard: { name: "Postcards", local: "明信片卡册", latin: "Postcards", noun: (n) => (n === 1 ? "postcard" : "postcards") },
   },
   nav: { booklets: "Booklets", skip: "Skip to the booklet" },
   langs: { label: "Language" },
@@ -217,7 +217,7 @@ export const zh: Dict = {
     proj: { name: "项目卡册", local: "项目卡册", latin: "Projects", noun: () => "张项目卡" },
     note: { name: "便签卡册", local: "便签卡册", latin: "Notes", noun: () => "张便签" },
     ticket: { name: "车票卡册", local: "车票卡册", latin: "Tickets", noun: () => "张车票" },
-    receipt: { name: "小票卡册", local: "小票卡册", latin: "Receipts", noun: () => "张小票" },
+    postcard: { name: "明信片卡册", local: "明信片卡册", latin: "Postcards", noun: () => "张明信片" },
   },
   nav: { booklets: "册子", skip: "跳到册子" },
   langs: { label: "语言" },
@@ -304,7 +304,7 @@ export const zh: Dict = {
   date: dateZh,
   months: ["1 月", "2 月", "3 月", "4 月", "5 月", "6 月", "7 月", "8 月", "9 月", "10 月", "11 月", "12 月"],
   meta: {
-    description: () => "纸桌的卡册：项目、便签、车票、小票。",
+    description: () => "纸桌的卡册：项目、便签、车票、明信片。",
     title: (_p, v) => (v === "folio" ? "纸桌 · 卡册" : v === "json" ? "纸桌 · profile.json" : "纸桌 · 卡册 · 文字版"),
   },
 };

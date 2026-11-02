@@ -101,6 +101,6 @@ export function NoteStage(p: StageProps) {
 export function TicketStage(p: StageProps) {
   return <AlbumStage {...p} tab="ticket" />;
 }
-export function ReceiptStage(p: StageProps) {
-  return <AlbumStage {...p} tab="receipt" />;
+export function PostcardStage(p: StageProps) {
+  return <AlbumStage {...p} tab="postcard" />;
 }

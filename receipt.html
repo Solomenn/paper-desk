@@ -182,7 +182,7 @@
 </head>
 <body>
 <a class="back" href="./" title="回到桌子">←</a>
-<a class="back" href="binder/?kind=receipt" title="小票卡册" style="left:auto;right:24px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="13" height="17" rx="1.5"/><path d="M6 8H4.5M6 16H4.5M10 9h5"/></svg></a>
+<a class="back" href="binder/?kind=postcard" title="明信片卡册" style="left:auto;right:24px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="13" height="17" rx="1.5"/><path d="M6 8H4.5M6 16H4.5M10 9h5"/></svg></a>
 
 <div class="stage">
   <div id="scene"><canvas id="poster" aria-label="日程进度打印机海报"></canvas></div>
@@ -1212,7 +1212,7 @@
   function openResult() {
     const url = exportDataURL();
     exporting = true; { const was = print.printed; print.printed = true; drawFrame(); print.printed = was; }
-    if (keepReceipt()) toast('已收进小票卡册');
+    if (keepReceipt()) toast('已收进明信片卡册');
     exporting = false; drawFrame();
     shot.src = url;
     const m = receiptModel(state);

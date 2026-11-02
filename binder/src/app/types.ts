@@ -8,8 +8,8 @@ import type { Insets } from "./layout";
  * The booklets on the desk: 纸桌's four (2026-11-02). The author's three (cards, postcards, the résumé folio with its pouch) are kept
  * on the sasshi-original branch. Each is drawn as one of the author's albums (booklets.ts `kind`).
  */
-export type Tab = "proj" | "note" | "ticket" | "receipt";
-export const TAB_IDS: readonly Tab[] = ["proj", "note", "ticket", "receipt"];
+export type Tab = "proj" | "note" | "ticket" | "postcard";
+export const TAB_IDS: readonly Tab[] = ["proj", "note", "ticket", "postcard"];
 /** ?view= : the 3D desk (default), the text version, or the machine-readable JSON. */
 export type View = "folio" | "text" | "json";
 export const DEFAULT_TAB: Tab = "proj";

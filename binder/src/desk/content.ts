@@ -10,7 +10,7 @@ import { createTicketContent } from "./tickets";
  *   项目卡册 → 卡片册的色卡（2 × 4）：底色 = 类别色，左下 = 项目名，右上 = 编号
  *   便签卡册 → 明信片册（2 × 3，正反两面）：正面 = 类别色的风景画，背面手写 = 便签文字，邮戳 = 类别和归档日期
  *   车票卡册 → 车票原尺寸 150 × 58 mm 的卡袋（2 × 3），卡面 = 作者拉链袋里入场券的画法（tickets.ts）
- *   小票卡册 → 明信片册：正面 = 着色的风景画（不放小票图片，用户 2026-11-02 定），背面 = 当天完成几件，邮戳 = 店名和日期
+ *   明信片卡册 → 明信片册：正面 = 着色的风景画，背面 = 当天完成几件，邮戳 = 店名和日期
  */
 
 /** 类别色（album.html 的 CAT_C）和类别名 */
@@ -33,12 +33,12 @@ export const notePostcards: PostcardItem[] = DESK.note.map((n) => {
   return { id: n.id, label: cat, color: CAT_C[n.cat ?? ""] ?? CAT_C.work, message: (n.text ?? "").trim() || first, from: FROM, place: cat, date: ymd(n.doneAt) };
 });
 
-/** 小票卡册的明信片：正面风景画的颜色按四个类别色轮流 */
-const RECEIPT_TINTS = [CAT_C.study!, CAT_C.life!, CAT_C.work!, CAT_C.idea!];
-export const receiptPostcards: PostcardItem[] = DESK.receipt.map((r, i) => {
+/** 明信片卡册的明信片：正面风景画的颜色按四个类别色轮流 */
+const DAY_TINTS = [CAT_C.study!, CAT_C.life!, CAT_C.work!, CAT_C.idea!];
+export const dayPostcards: PostcardItem[] = DESK.postcard.map((r, i) => {
   const store = r.store?.trim() || "今天便利店";
-  const message = r.total ? `今天完成 ${r.done ?? 0} / ${r.total} 件。` : "今天的小票。";
-  return { id: r.id, label: store, color: RECEIPT_TINTS[i % RECEIPT_TINTS.length], message, from: FROM, place: store, date: r.date ?? ymd(r.doneAt) };
+  const message = r.total ? `今天完成 ${r.done ?? 0} / ${r.total} 件。` : "今天的明信片。";
+  return { id: r.id, label: store, color: DAY_TINTS[i % DAY_TINTS.length], message, from: FROM, place: store, date: r.date ?? ymd(r.doneAt) };
 });
 
 /** 每本册子的卡数（目录里名字后面的数字） */
@@ -54,15 +54,15 @@ export function contentFor(tab: DeskTab): ContentSource {
         ? createCardContent(projCards, "idCard2x4")
         : tab === "note"
           ? createPostcardContent(notePostcards, "postcard2x3")
-          : tab === "receipt"
-            ? createPostcardContent(receiptPostcards, "postcard2x3")
+          : tab === "postcard"
+            ? createPostcardContent(dayPostcards, "postcard2x3")
             : createTicketContent(DESK.ticket);
     made.set(tab, c);
   }
   return c;
 }
 
-/** 当前这本册子的卡交给作者的"取出细看"（AlbumDetail 读 profile.albums）：项目卡册放进 cards，便签和小票放进 postcards；车票不取出 */
+/** 当前这本册子的卡交给作者的"取出细看"（AlbumDetail 读 profile.albums）：项目卡册放进 cards，便签和明信片放进 postcards；车票不取出 */
 export function albumsFor(tab: DeskTab): { cards: AlbumCard[]; postcards: PostcardItem[] } {
-  return { cards: tab === "proj" ? projCards : [], postcards: tab === "note" ? notePostcards : tab === "receipt" ? receiptPostcards : [] };
+  return { cards: tab === "proj" ? projCards : [], postcards: tab === "note" ? notePostcards : tab === "postcard" ? dayPostcards : [] };
 }

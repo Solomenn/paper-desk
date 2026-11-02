@@ -12,7 +12,7 @@ import { TAB_IDS, type Tab } from "./types";
  *   项目卡册 proj     卡片册 cards        青磁 seiji、银烫、皮面；每页 2 × 4 张卡
  *   便签卡册 note     明信片册 postcards  銀鼠 ginnezu、素压、布面；每页 2 × 3 张明信片，正反两面
  *   车票卡册 ticket   车票 tickets        青磁、银烫、皮面（作者的卡片册封面）；每页 2 × 3 张 150 × 58 mm 的车票
- *   小票卡册 receipt  明信片册 postcards  銀鼠、素压、布面
+ *   明信片卡册 postcard  明信片册 postcards  銀鼠、素压、布面
  * 名字、手册说明在 i18n.ts。作者原来的三本在 sasshi-original 分支。
  */
 
@@ -36,7 +36,7 @@ export const BOOKLETS: readonly Booklet[] = [
   { id: "proj", color: "seiji", foil: "silver", material: "leather", local: "项目卡册", layout: "idCard2x4", kind: "cards", back: { href: "../#board", label: "回到黑板" } },
   { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../#notes", label: "回到软木板" } },
   { id: "ticket", color: "seiji", foil: "silver", material: "leather", local: "车票卡册", kind: "tickets", back: { href: "../focus.html", label: "回到站台" } },
-  { id: "receipt", color: "ginnezu", foil: "blind", material: "cloth", local: "小票卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../receipt.html", label: "回到小票" } },
+  { id: "postcard", color: "ginnezu", foil: "blind", material: "cloth", local: "明信片卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../receipt.html", label: "返回" } },
 ];
 
 /** The local name of each pouch kind (the English page's; a Chinese page uses i18n's `held`). */

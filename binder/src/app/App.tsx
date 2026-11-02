@@ -38,7 +38,7 @@ export type AppProps = {
 const isTab = (v: string): v is Tab => (TAB_IDS as readonly string[]).includes(v);
 /**
  * 纸桌（HANDOFF 第十一节第四阶段第 2 条）：活页夹不是单独一页，一次只开一本，属于它的页面。哪一本由地址里的 ?kind= 决定
- * （和 album.html?kind= 一样）：proj 项目、note 便签、ticket 车票、receipt 小票；没写或写错时是项目册。
+ * （和 album.html?kind= 一样）：proj 项目、note 便签、ticket 车票、postcard 明信片；没写或写错时是项目册。
  */
 const readTab = (): Tab => {
   const k = new URLSearchParams(window.location.search).get("kind") ?? "";

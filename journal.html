@@ -310,7 +310,7 @@
   const SHELVES = [
     { id: "proj", name: "项目", hint: "盖过章的项目", months: byMonth(pd.done || [], t => t.doneAt), href: k => `binder/?kind=proj&m=${k}` },
     { id: "note", name: "便签", hint: "归档的便签", months: byMonth(get("paper-desk.notes-archive.v1") || [], n => n.archivedAt || n.createdAt), href: k => `binder/?kind=note&m=${k}` },
-    { id: "receipt", name: "小票", hint: "每天的小票", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `binder/?kind=receipt&m=${k}` },
+    { id: "receipt", name: "明信片", hint: "每天一张", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `binder/?kind=postcard&m=${k}` },
     { id: "ticket", name: "车票", hint: "坐过的雪国线", months: byMonth(get("paper-desk.tickets.v1") || [], t => t.endAt || t.end), href: k => `binder/?kind=ticket&m=${k}` },
     { id: "jot", name: "碎碎念", hint: "每个月的手账", journal: true },
   ];
