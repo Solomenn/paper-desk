@@ -15,6 +15,8 @@
   #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: 714.5px; height: 104px; cursor: default; touch-action: none; outline: none; }
   .tk { position: absolute; left: 0; top: 0; width: 3px; height: 8px; border-radius: 999px; background: #1a1a1a; will-change: transform, height, opacity; }
   .sp { position: absolute; left: 0; top: 0; width: 3px; height: 14px; border-radius: 999px; background: #1a1a1a; opacity: .28; }
+  .reel { display: inline-block; position: relative; height: 24px; vertical-align: top; overflow: visible; perspective: 3em; transition: width .52s cubic-bezier(.4,0,.2,1); }
+  .reel > span { position: absolute; left: 0; top: 0; backface-visibility: hidden; }
   #lab { position: absolute; top: 0; left: 0; font-size: 20px; line-height: 24px; font-weight: 500; color: #1d1d1d; white-space: nowrap; pointer-events: none; transform: translate(-50%, 0); opacity: 0; font-variant-numeric: tabular-nums; }
   .num { position: absolute; top: 0; left: 0; font-size: 19px; line-height: 24px; font-weight: 500; white-space: nowrap; pointer-events: none; transform: translate(-50%, -50%); font-variant-numeric: tabular-nums; }
   .mk { position: absolute; left: 0; top: 0; width: 4px; height: 10px; border-radius: 999px; background: #ff9705; pointer-events: none; }
@@ -65,6 +67,29 @@ const nearU = x => { let b = 0, bd = 1e9; U.forEach((u, k) => { const d = Math.a
 const tickEls = ticks.map(() => { const d = document.createElement("div"); d.className = "tk"; zone.append(d); return d; });
 const sepEls = seps.map(x => { const d = document.createElement("div"); d.className = "sp"; zone.append(d); return d; });
 const lab = document.createElement("div"); lab.id = "lab"; zone.append(lab);
+/* 日期标签换字时像滚轮一样翻过去：月份和日子各一个轮，只有变了的那个转；往后翻向上转，往前翻向下转。
+   转一次 520 ms，连续快速换字时缩短到 260 ms（参考的 drum-roll 参数） */
+const reels = [0, 1, 2].map(() => { const r = document.createElement("span"); r.className = "reel"; lab.append(r); return r; });
+reels[1].style.width = ".28em";
+let labItem = -1, rollDur = 520, lastRoll = -1e9;
+const EASE = "cubic-bezier(0.4, 0, 0.2, 1)", ROT = 64;
+function rollTo(reel, text, dir) {
+  const old = reel.lastChild, nu = document.createElement("span"); nu.textContent = text; reel.append(nu);
+  const w = nu.getBoundingClientRect().width; reel.style.width = w + "px";
+  if (!old || !dir) { if (old) old.remove(); return; }
+  const tf = deg => `translateZ(-0.54em) rotateX(${deg}deg) translateZ(0.54em)`;
+  nu.animate([{ transform: tf(-dir * ROT), opacity: 0, filter: "blur(1px)" }, { transform: tf(0), opacity: 1, filter: "blur(0)" }], { duration: rollDur, easing: EASE });
+  old.animate([{ transform: tf(0), opacity: 1 }, { transform: tf(dir * ROT), opacity: 0, filter: "blur(1px)" }], { duration: rollDur, easing: EASE, fill: "forwards" }).finished.then(() => old.remove(), () => {});
+}
+function setLabel(it) {
+  if (it === labItem) return;
+  const now = performance.now(), gap = now - lastRoll; lastRoll = now;
+  rollDur = gap > 1040 ? 520 : Math.max(260, rollDur + (Math.min(520, Math.max(260, gap)) - rollDur) * (gap < rollDur ? .6 : .25));
+  const dir = labItem < 0 ? 0 : Math.sign(it - labItem), [m, d] = DATES[it].split(" "), [pm, pd] = labItem < 0 ? ["", ""] : DATES[labItem].split(" ");
+  if (m !== pm) rollTo(reels[0], m, dir); if (!reels[1].lastChild) reels[1].textContent = "\u00a0";
+  if (d !== pd || m !== pm) rollTo(reels[2], d, dir);
+  labItem = it;
+}
 const hotEl = document.createElement("div"); hotEl.className = "mk"; hotEl.style.opacity = 0; zone.append(hotEl);
 const marks = [0, 1].map(() => { const d = document.createElement("div"); d.className = "mk"; zone.append(d); return d; });
 
@@ -89,15 +114,20 @@ function makeClick(sr, pitch, decay) {
   return out;
 }
 function audio() {
-  if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); }
+  if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A();
+    ac.addEventListener("statechange", () => { if (ac.state === "running" && pend && !pendT) { const k = pend; pend = null; click(k); } }); }   // 解锁后补放等着的那一声
   if (ac.state !== "running") ac.resume();
   return ac;
 }
+let pend = null, pendT = 0;
 function click(kind) {
-  const a = audio(); if (!a || a.state !== "running") return;
+  const a = audio(); if (!a) return;
+  if (a.state !== "running") { pend = kind; return; }                    // 声音还没解锁：记下最后一声，解锁后补放
   if (!bufs[kind]) { const [p, d] = KINDS[kind], s = makeClick(a.sampleRate, p, d), b = a.createBuffer(1, s.length, a.sampleRate); b.getChannelData(0).set(s); bufs[kind] = b; }
-  const at = Math.max(a.currentTime, lastAt + .06);                       // 两声之间至少 60 ms
-  if (at - a.currentTime > .25) return;                                   // 排队超过 250 ms 就丢掉
+  if (kind !== "travel" && a.currentTime < lastAt + .06) {               // 60 ms 内又来一声：只留最新的一声，等空档再放（不排队）
+    pend = kind; if (!pendT) pendT = setTimeout(() => { pendT = 0; const k = pend; pend = null; if (k) click(k); }, (lastAt + .06 - a.currentTime) * 1000 + 1); return;
+  }
+  const at = Math.max(a.currentTime, lastAt + .06); if (at - a.currentTime > .25) return;
   lastAt = at;
   const src = a.createBufferSource(); src.buffer = bufs[kind]; src.playbackRate.value = 1 + (Math.random() - .5) * .04;
   const g = a.createGain(); g.gain.value = .2 * KINDS[kind][2]; src.connect(g).connect(a.destination); src.start(at);
@@ -169,8 +199,8 @@ function fineMove() {
   if (k !== H.sel) { H.sel = k; click(E[k].u !== E[H.sel === k ? k : k].u && month[U[E[k].u].items[0]] !== month[cur] ? "month" : "line"); const u = E[k].u; if (u !== uOf[cur]) goTo(U[u].items[0], false, "scrub"); }
 }
 zone.addEventListener("pointermove", e => {
-  const r = zoneRect(); H.px = e.clientX - r.left; const near = Math.abs(e.clientY - (r.top + LINE)) <= 20 && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
-  if (!H.inside && near) { H.inside = true; H.month = -1; click("line"); }
+  const r = zoneRect(); H.px = e.clientX - r.left; H.py = e.clientY - r.top - LINE; const near = Math.abs(e.clientY - (r.top + LINE)) <= 20 && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
+  if (!H.inside && near) { H.inside = true; H.month = -1; H.hot = hoverItem(unzoom(H.px)); click("line"); }
   if (H.down) {
     if (Math.abs(H.px - H.rest.x) > 6) { H.rest = { x: H.px, t: performance.now(), armed: false }; }
     if (!H.scrub && Math.abs(e.clientX - H.down.x) > 3) { H.scrub = true; H.tick = -1; }
@@ -181,18 +211,18 @@ zone.addEventListener("pointermove", e => {
     const it = hoverItem(unzoom(H.px)); H.hot = it; if (it !== cur) goTo(it, false, "scrub");
     const b = unzoom(H.px); let tk = 0, bd = 1e9; ticks.forEach((t, j) => { const d = Math.abs(t.x - b); if (d < bd) { bd = d; tk = j; } });
     if (tk !== H.tick) { if (H.tick >= 0) click(ticks[tk].month !== ticks[H.tick].month ? "month" : "line"); H.tick = tk; }
-  } else if (H.inside) H.hot = hoverItem(unzoom(H.px));
+  } else if (H.inside) { const it = hoverItem(unzoom(H.px)); if (H.hot !== undefined && it !== H.hot) click(month[it] !== month[H.hot] ? "month" : "line"); H.hot = it; }   // 悬停时每换一个地点响一声
   kick();
 });
-zone.addEventListener("pointerleave", () => { if (!H.down) H.inside = false; kick(); });
+zone.addEventListener("pointerleave", () => { H.py = 999; if (!H.down) H.inside = false; kick(); });
 zone.addEventListener("pointerdown", e => {
   if (e.button !== 0 || !H.inside) return; zone.setPointerCapture(e.pointerId);
   H.down = { x: e.clientX, t: performance.now() }; H.rest = { x: H.px, t: performance.now(), first: true };
-  audio(); setTimeout(() => click("line"), 0); kick();                  // 按下那一刻响一声
+  audio(); kick();
 });
 const up = e => {
   if (!H.down) return;
-  if (!H.scrub && !H.fine) goTo(H.hot ?? nearItem(unzoom(H.px)), false);   // 参考站：鼠标点击、松手都不另外出声
+  if (!H.scrub && !H.fine) { const it = H.hot ?? nearItem(unzoom(H.px)); goTo(it, false); H.snap = { x: H.px, item: it }; }   // 点完后高亮对准所点的地点，直到指针再移动 6 px   // 参考站：鼠标点击、松手都不另外出声
   H.down = null; H.scrub = false; H.fine = false;
   const r = zoneRect(); H.inside = Math.abs(e.clientY - (r.top + LINE)) <= 20 && e.clientX >= r.left && e.clientX <= r.right; kick();
 };
@@ -217,13 +247,17 @@ function kick() { if (!running) { running = true; last = performance.now(); requ
 function frame(now) {
   const dt = Math.min(50, now - last); last = now;
   if (S.g) { const a = glideAt(S.g, now); S.x = a.x; if (a.p >= 1) S.g = null; }
-  H.amt = ease(H.amt, H.inside ? 1 : 0, 45, dt);
+  H.amt = ease(H.amt, H.inside ? 1 : 0, 60, dt);                          // 橙色刻度约 0.2 s 长到 33 px（参考实测）
+  H.pre = !H.inside && Math.abs(H.py ?? 999) < 46 ? Math.min(1, Math.max(0, 1 - (Math.abs(H.py) - 20) / 26)) : ease(H.pre || 0, 0, 60, dt);   // 离刻度线 46 px 内开始，越近越明显
   H.scrubAmt = ease(H.scrubAmt, H.fine ? 1 : 0, 60, dt);
   H.zoom = ease(H.zoom, H.inside && !H.fine ? ZOOM : 1, 60, dt);
+  if (H.snap && Math.abs(H.px - H.snap.x) > 6) H.snap = null;
+  const sxTo = H.snap ? H.zoomAt + (ticks[tickOf[H.snap.item]].x - H.zoomAt) * H.zoom : H.px;
+  H.sx = H.sx === undefined || !H.inside ? sxTo : ease(H.sx, sxTo, 55, dt);   // 悬停的高亮比指针慢半拍（参考实测约 55 ms）
   if (H.inside && !H.scrub && !H.fine) H.hot = hoverItem(unzoom(H.px));  // 放大过程中所指的地点也跟着更新
   if (H.down && !H.fine) { const still = now - H.rest.t; if (still >= (H.rest.first ? 500 : 700)) enterFine(); }
   draw();
-  const busy = !!S.g || !!H.down || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.fine ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.fine ? ZOOM : 1)) > .001;
+  const busy = !!S.g || (H.pre || 0) > .002 || !!H.down || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.fine ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.fine ? ZOOM : 1)) > .001 || (!H.snap && Math.abs((H.sx ?? 0) - H.px) > .1);
   window.__state = { t: now, x: S.x, cur, scrub: H.scrub };
   if (busy) requestAnimationFrame(frame); else running = false;
 }
@@ -240,16 +274,33 @@ function draw() {
   if (H.fine) H.anchorLast = H.anchor;
   const shift = gap * ((H.fine ? H.anchor : gx) - Z(marker));
   const fadeGap = x => { if (gap <= .01) return 1; const h = x < gx ? halfL : halfR; return Math.abs(x - gx) < h + 8 ? Math.max(0, (Math.abs(x - gx) - h) / 8) : 1; };
+  // 每根刻度：当前位置（黑）跟着物件条连续滑动；悬停时指针所指那根变橙、长高并滑到所指地点，两侧刻度稍稍让开、变高变暗（数值来自参考逐帧实测）
+  const it0 = Math.max(0, Math.min(N - 1.0001, S.x / PITCH)), i0 = Math.floor(it0);
+  const mk = Lpos[i0] + (Lpos[Math.min(N - 1, i0 + 1)] - Lpos[i0]) * (it0 - i0);
+  const held = hot !== null && H.amt > .001 ? Z(Lpos[H.hot ?? nearItem(hot)]) : null, slot = C * H.zoom;
+  if (held !== null) { let bd = 1e9; ticks.forEach((t, k) => { const dd = Math.abs(Z(t.x) - H.sx); if (dd < bd) { bd = dd; H.hotTick = k; } }); } else H.hotTick = -1;
   ticks.forEach((t, k) => {
-    const x = Z(t.x) + shift, h = 8, w = 3; let op = Math.abs(t.x - marker) < C * .999 ? 1 : .14;   // 当前地点那一两根刻度
+    let x = Z(t.x) + shift, h = 8, w = 3, y = 0, op = .14 + .86 * Math.min(1, Math.max(0, (1.5 * C - Math.abs(t.x - mk)) / C)), col = "#1a1a1a";
+    if (held !== null) {
+      // 指针下的刻度按离指针的距离（以格计）长高变亮：最近那根约 33 px、变橙；指针在两格之间时两根各长一半（参考逐帧实测）
+      const d = (x - H.sx) / slot, W = Math.exp(-(d * d) / (.575 * .575)), G = Math.exp(-(d * d) / (2.2 * 2.2)), a = H.amt;
+      x += Math.sign(d) * 1.4 * Math.min(1, Math.abs(d)) * a;            // 两侧稍稍让开
+      h += a * (25.4 * W + 2.5 * G); w += a * W; op = Math.min(1, op + a * (.86 * W + .12 * G));
+      if (k === H.hotTick && a > .5) { col = "#ff9500"; } else if (G > .3) col = "#22180d";
+    } else if ((H.pre || 0) > .002) {                                    // 指针靠近还没进入：附近几根刻度微微抬起、变亮
+      const d = (x - H.px) / C, G = Math.exp(-(d * d) / 4.5), e = H.pre; y = -2.8 * e * G; h += 1.3 * e * G; op = Math.min(1, op + .09 * e * G);
+    }
     op *= fadeGap(x); if (gap > .01) op *= Math.min(1, Math.min(x, ZW - x) / 40 + (1 - gap));
-    const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2}px)`; el.style.opacity = op;
+    const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2 + y}px)`; el.style.height = h + "px"; el.style.width = w + "px"; el.style.opacity = op; el.style.background = col;
+    // 滑行中当前位置每越过一根刻度响一声 travel
+    if (S.g && k === tickOf[Math.round(it0)] && H.lastTravelTick !== k) { if (H.lastTravelTick !== undefined) click("travel"); H.lastTravelTick = k; }
   });
+  if (!S.g) H.lastTravelTick = undefined;
   seps.forEach((sx, k) => { const x = Z(sx) + shift; sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = .28 * fadeGap(x); });
   // 悬停和粗擦：指针所指地点（按月握住）立一根 4×32 的橙色刻度，上方是它的日期
-  if (hot !== null && H.amt > .01) { const it = H.hot ?? nearItem(hot), hx = Z(Lpos[it]); lab.textContent = DATES[it]; lab.style.transform = `translate(calc(${hx}px - 50%), ${LINE - 37 - 12}px)`; lab.style.opacity = H.amt;
-    hotEl.style.opacity = H.amt; hotEl.style.height = (8 + 24 * H.amt) + "px"; hotEl.style.transform = `translate(${hx - 2}px, ${LINE - 4 - 12 * H.amt}px)`; }
-  else { lab.style.opacity = 0; hotEl.style.opacity = H.fine ? 0 : hotEl.style.opacity * 0; }
+  if (hot !== null && H.amt > .01) { const it = H.hot ?? nearItem(hot), hx = Z(Lpos[it]); setLabel(it); lab.style.transform = `translate(calc(${hx}px - 50%), ${LINE - 37 - 12}px)`; lab.style.opacity = H.amt;
+  }
+  else lab.style.opacity = 0;
   // 日子轮：选中的橙色居中，前后各两格由深到浅，月份是小号大写
   pool.forEach(el => el.style.opacity = 0);
   if (gap > .01) {
