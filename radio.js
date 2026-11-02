@@ -236,7 +236,8 @@ async function loadModel() {
       const edges=new THREE.LineSegments(edgeGeo,edgeMat);
       edges.renderOrder=2; o.add(edges);
     });
-    centerAndFit(m); radioRoot.add(m);\n    ground.position.y=-1.36;
+    centerAndFit(m); radioRoot.add(m);
+    ground.position.y=-1.36;
     dialCenter.set(1.1191,-.2879,.5653); dialRadius=.6335; dialPlaneZ=.5903;
     usingRealModel=true;
     document.body.classList.add("model-loaded");
