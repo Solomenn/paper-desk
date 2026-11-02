@@ -258,14 +258,14 @@ function buildDialMarker() {
   if (!usingRealModel) return;
   dialRotor=new THREE.Group();
   dialRotor.position.set(dialCenter.x,dialCenter.y,dialPlaneZ);
-  const ink=new THREE.LineBasicMaterial({color:0x666257,transparent:true,opacity:.82,depthTest:false});
+  const ink=new THREE.LineBasicMaterial({color:0x666257,transparent:true,opacity:.82,depthTest:true,depthWrite:false});
   const lineGeometry=new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(0,.19,.002), new THREE.Vector3(0,.545,.002)
   ]);
   dialRotor.add(new THREE.Line(lineGeometry,ink));
   const tip=new THREE.Mesh(
     new THREE.SphereGeometry(.026,16,12),
-    new THREE.MeshBasicMaterial({color:0x9b8962,depthTest:false})
+    new THREE.MeshBasicMaterial({color:0x9b8962,depthTest:true})
   );
   tip.position.set(0,.555,.006);
   dialRotor.add(tip);
@@ -291,6 +291,7 @@ const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
 const dialPlane=new THREE.Plane(), hitPoint=new THREE.Vector3(), planeNormal=new THREE.Vector3(0,0,1);
 let tuning=false, tuningPointer=null;
 function dialAngleAt(e, requireInside=false) {
+  if (camera.position.z<=dialPlaneZ) return null;
   const r=renderer.domElement.getBoundingClientRect();
   pointer.x=((e.clientX-r.left)/r.width)*2-1;
   pointer.y=-((e.clientY-r.top)/r.height)*2+1;
