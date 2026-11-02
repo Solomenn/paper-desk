@@ -140,6 +140,15 @@
 | 便签 | LINTEX Air Noticeboard | CSS 画的 | 按用户确认的无框矩形造型替换；研究 Forbo Duck Egg 2162 / Blue Berry 2214 色卡 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
 | 手账 | 图书馆多排双面书架 | CSS 画的，用户不满意 | 参考 Public Library Interior 的多排书库布局；寻找免费、高精度、白色效果的替代模型，排除家用书柜和底部厚柜体 |
+- **图书馆书架方向**：用户要的是 Public Library Interior 那种多排、连续、双面可取书的开放书库过道，不是家用独立书柜，也不要底部厚重柜体。目标为白色/暖白色轻型结构，书脊保留克制的低饱和色。
+- **免费模型候选**：
+  1. 3DAssets.dev「Public Library and Reading Garden」：CC0，51 个独立 GLB；其中双面 Library Stack Straight 约 77.5k triangles，另有端部和转角模块；但整套注明由 AI 工具生成，必须先审看实际模型，不可直接采用。
+  2. Innerscene「Double sided library shelving」：CC0 GLB，1.8 MB，1.1 × 0.7 × 1.8 m 单体，可尝试重复排列；精度未公布。
+  3. 3D Warehouse「Library Book Shelf」：双面带书，11,586 polygons / 22 materials / 627 KB；需转换 GLB，授权待核。
+  4. CGTrader「3D Book shelves」：免费，521,303 polygons，FBX 约 5.68 MB；格式需转换，PBR/UV 与具体书库布局待核。
+- 用户喜欢的付费对照模型 Public Library Interior 约 US$14.99、948k triangles、75 unique meshes、65 textures（最高 4K）；只作形态和细节密度参照，不购买。
+- 不能仅凭面数决定质量。先检查各模型正面、背面、侧面、书脊细节、结构是否可拆、材质和文件大小，再制作白色效果预览；未经用户确认不导入项目。
+
 | 小票 | 小票机 | CSS 画的，页面上还有“样式 / 打印”文字按钮 | 换成实体模型；去掉文字按钮 |
 
 - **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、隐藏安装、官方配置器可导出 GLB）；便签板采用 LINTEX Air Noticeboard 的无框矩形倒角方向（Forbo Bulletin Board 15 色，用户特别喜欢 Duck Egg 2162 和 Blue Berry 2214）。详细色卡已记入 `README.md`，两套色卡要分开管理：Silk Glass 24 色、Forbo Bulletin Board 15 色。产品参考已确认，实际模型仍需下载检查后再导入。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
