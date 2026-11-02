@@ -90,8 +90,8 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - **作者：** EFX（<https://sketchfab.com/evan4129>）；许可：**CC BY 4.0**。
 - **上传原件：** `bookshelf_short_lowpoly.glb`，约 47.7 MB；GLB 内为单 mesh / 单 PBR 材质，书架结构与书籍使用同一张 4K Base Color 图集，另有 Metallic-Roughness 和 Normal 贴图。
 - **改色方法：** 根据 UV 区域只调整书架结构贴图，不漂白书脊和书籍封面；结构目标色 `#E9E2D6`（暖米白）。保留原始书籍图案、法线细节和粗糙度变化。
-- **优化后的模型：** `bookshelf_short_offwhite.glb`，约 14.9 MB；Base Color 保持 4K，Normal / Metallic-Roughness 为 2K。下载件几何为 1 mesh、842 triangles；主要细节来自原始 4K 书籍贴图。
-- **独立浏览包：** 本轮交付的 `paper-desk-object-preview.zip`，包含自动加载 GLB 的 Three.js 浏览页、模型文件和 Windows 启动脚本。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设。
+- **优化后的模型：** `bookshelf_short_offwhite.glb`，约 24.7 MB；Base Color 保持 4K，Normal / Metallic-Roughness 为 2K，并降低原木纹法线强度以适配哑光涂装。几何拓扑保持不变：1 mesh、842 triangles；书籍细节来自原始 4K 贴图。
+- **独立浏览包：** 本轮交付的 `paper-desk-object-preview.zip`，包含自动加载 GLB 的 Three.js 浏览页、模型文件、静态预览图和 Windows 启动脚本。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设；Three.js 通过 jsDelivr 加载，首次预览需要网络。
 - **状态：** 米白模型已制作并完成 GLB 结构重读验证；浏览页源码已通过 JavaScript 语法检查。当前是独立验收资产，**尚未替换 `journal.html` 中的书架**。
 
 ### 其他物件的交互预览入口
