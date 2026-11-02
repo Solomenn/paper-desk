@@ -19,6 +19,7 @@ const stations = [
 ];
 let station = +(localStorage.getItem("paper-desk.radio.station") || 0);
 station = Math.max(0, Math.min(stations.length - 1, station));
+let tuning=false, tuningPointer=null, dialTargetRotation=0, dialPointerAngle=0;
 let playing = localStorage.getItem("paper-desk.radio.playing") === "1";
 let volume = +(localStorage.getItem("paper-desk.radio.volume") || 48);
 
@@ -150,7 +151,7 @@ qs("#power").classList.toggle("on",playing);
 
 // ── scene ──
 const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -162,10 +163,15 @@ const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.05,100);
 camera.position.set(0,1.0,7.2);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true; controls.dampingFactor=.07;
-controls.enablePan=false; controls.minDistance=4.2; controls.maxDistance=10;
-controls.minPolarAngle=.65; controls.maxPolarAngle=2.15;
-controls.target.set(0,.45,0);
+controls.enableDamping=true;
+controls.dampingFactor=.085;
+controls.rotateSpeed=1.14;
+controls.zoomSpeed=.88;
+controls.enablePan=false;
+controls.minDistance=4.2; controls.maxDistance=10;
+controls.minPolarAngle=.58; controls.maxPolarAngle=2.25;
+// Orbit around the radio body center, not a point above it.
+controls.target.set(0,.18,0);
 
 scene.add(new THREE.HemisphereLight(0xffffff,0xc8bda9,2.1));
 const key=new THREE.DirectionalLight(0xffffff,3.1); key.position.set(-3,5,5); key.castShadow=true; scene.add(key);
@@ -309,7 +315,8 @@ function updateDial() {
     needle.position.y=cy+Math.sin(a)*rr;
     needle.rotation.z=a-Math.PI/2;
   }
-  if (dialRotor) dialRotor.rotation.z=a-Math.PI/2;
+  // The real dial eases to a station detent instead of snapping instantly.
+  if (dialRotor && !tuning) dialTargetRotation=a-Math.PI/2;
 }
 buildDialMarker();
 updateDial();
@@ -318,7 +325,7 @@ updateDial();
 // OrbitControls only receives pointer gestures that begin outside this circle.
 const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
 const dialPlane=new THREE.Plane(), hitPoint=new THREE.Vector3(), planeNormal=new THREE.Vector3(0,0,1);
-let tuning=false, tuningPointer=null;
+function wrapAngle(a) { while(a>Math.PI) a-=Math.PI*2; while(a< -Math.PI) a+=Math.PI*2; return a; }
 function dialAngleAt(e, requireInside=false) {
   if (camera.position.z<=dialPlaneZ) return null;
   const r=renderer.domElement.getBoundingClientRect();
@@ -337,6 +344,9 @@ renderer.domElement.addEventListener("pointerdown",e=>{
   if(a===null) return;
   e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
   tuning=true; tuningPointer=e.pointerId; controls.enabled=false;
+  dialPointerAngle=a;
+  const visualAngle=dialRotor ? dialRotor.rotation.z+Math.PI/2 : stationAngle(station);
+  dialTargetRotation=(dialRotor ? dialRotor.rotation.z : visualAngle-Math.PI/2)+wrapAngle(a-wrapAngle(visualAngle));
   try { renderer.domElement.setPointerCapture(e.pointerId); } catch {}
   const next=stationFromAngle(a);
   if(next!==station) setStation(next,true);
@@ -346,12 +356,15 @@ renderer.domElement.addEventListener("pointermove",e=>{
   if(!tuning || e.pointerId!==tuningPointer) return;
   const a=dialAngleAt(e,false);
   if(a===null) return;
+  dialTargetRotation+=wrapAngle(a-dialPointerAngle);
+  dialPointerAngle=a;
   const next=stationFromAngle(a);
   if(next!==station) setStation(next,true);
 },true);
 function endTune(e) {
   if(!tuning || (e && e.pointerId!==tuningPointer)) return;
   tuning=false; tuningPointer=null; controls.enabled=true;
+  updateDial();
 }
 renderer.domElement.addEventListener("pointerup",endTune,true);
 renderer.domElement.addEventListener("pointercancel",endTune,true);
@@ -361,5 +374,16 @@ function resize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjection
 addEventListener("resize",resize);
 let firstMove=true;
 controls.addEventListener("start",()=>{ if(firstMove){qs("#hint").classList.add("hide"); firstMove=false;} });
-function frame(){ controls.update(); renderer.render(scene,camera); requestAnimationFrame(frame); }
+let previousFrame=performance.now();
+function frame(now=performance.now()) {
+  const delta=Math.min((now-previousFrame)/1000,.05);
+  previousFrame=now;
+  controls.update();
+  if(dialRotor) {
+    const difference=wrapAngle(dialTargetRotation-dialRotor.rotation.z);
+    dialRotor.rotation.z+=difference*(1-Math.exp(-17*delta));
+  }
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
 frame();
