@@ -377,13 +377,11 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
   const labels = useMemo(() => {
     // the book's keyboard links and page counter speak the page's language too (its defaults are English)
     const common = { prev: st.controls.prevPage, next: st.controls.nextPage, pageOf: st.controls.pageOf, openCard: st.controls.openCard };
-    return tab === "resume"
-      ? { ...common, region: st.lang === "zh" ? st.booklet.resume.name : st.booklet.resume.latin, openBook: st.controls.openFolio, closeBook: st.controls.closeFolio, loading: st.loading.folio, cardsHere: st.booklet.resume.name }
-      : { ...common, region: st.booklet[tab].name, openBook: st.controls.openAlbum, closeBook: st.controls.closeAlbum, loading: st.loading.album, cardsHere: st.booklet[tab].name };
+    return { ...common, region: st.booklet[tab].name, openBook: st.controls.openAlbum, closeBook: st.controls.closeAlbum, loading: st.loading.album, cardsHere: st.booklet[tab].name };
   }, [st, tab]);
   const slip = useMemo(() => ({ title: st.booklet[tab].local, han: stageHan }) as const, [st, tab, stageHan]);
   // the albums' open spreads are width-bound: on a desk they reach into the 間 column, a margin clear of the words (layout.ts wide)
-  const insets = tab === "resume" ? frame.insets : tab === "cards" ? frame.wideCards : frame.wide;
+  const insets = tab === "cards" ? frame.wideCards : frame.wide;
   // the phone turns one page at a time, the tablet in portrait too (an iPad's 3:4 sits exactly on the engine's own threshold); a
   // tablet-sized window held landscape (900 × 600) shows the open spread
   const narrow = frame.cls === "p" || (frame.cls === "t" && frame.H >= frame.W) ? true : frame.cls === "t" ? false : undefined;
@@ -397,11 +395,9 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
     ? t.handling.printed
     : stage && stage.ready && !stage.open
       ? t.handling.closed
-      : tab === "resume"
-        ? t.handling.resume
-        : tab === "cards"
-          ? t.handling.cards
-          : t.handling.postcards(profile.albums.postcards.length);
+      : tab === "cards"
+        ? t.handling.cards
+        : t.handling.postcards(profile.albums.postcards.length);
   // the phone hint is about the 3D booklet (tap the closed cover; tilt, swipe a page until the first touch): not over the flat
   // book or the printed version. A tablet-sized window driven by a mouse reads the desk's handling line instead (no swipes, no tilt).
   const hint = fallback || flat || !stage?.ready ? "" : !stage.open ? (frame.coarse ? t.hint.closed : t.handling.closed) : hinted ? "" : !frame.coarse ? handling : t.hint[tab];
@@ -448,7 +444,7 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
         handling={handling}
         hint={hint}
         day={dawn.day}
-        loading={view === "folio" && !ready && !leaving ? { label: tab === "resume" ? t.loading.folio : t.loading.album, progress: dawn.progress } : null}
+        loading={view === "folio" && !ready && !leaving ? { label: t.loading.album, progress: dawn.progress } : null}
         {...(view !== "folio" ? { hashira: { local: t.text.hashira.local, latin: t.text.hashira.latin, han: chromeHan } } : {})}
       >
         {body}

@@ -525,35 +525,10 @@ function StageControls({ api, tab, frame }: { api: StageApi; tab: Tab; frame: Fr
   const last = useRef(0);
   if (!api.open)
     return (
-      <Word onClick={() => api.toggle?.()} label={tab === "resume" ? t.controls.openFolio : t.controls.openAlbum}>
+      <Word onClick={() => api.toggle?.()} label={t.controls.openAlbum}>
         {t.controls.open}
       </Word>
     );
-  if (tab === "resume") {
-    const phone = frame.cls === "p" || frame.cls === "t" || frame.cls === "l";
-    const shake = () => {
-      const now = performance.now();
-      if (now - last.current < 600) return;
-      last.current = now;
-      api.shake?.();
-    };
-    return (
-      <>
-        {api.motion && (frame.cls === "p" || frame.cls === "t") ? <Tilt motion={api.motion} /> : null}
-        {api.shake ? (
-          <>
-            <Word onClick={shake} keys="S">
-              {t.controls.shake}
-            </Word>
-            <Sep />
-          </>
-        ) : null}
-        <Word onClick={() => api.toggle?.()} label={t.controls.closeFolio}>
-          {phone ? t.controls.closeFolioShort : t.controls.closeFolio}
-        </Word>
-      </>
-    );
-  }
   const p = api.page ?? { index: 0, count: 1 };
   return (
     <>

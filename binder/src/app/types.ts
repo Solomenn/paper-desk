@@ -4,12 +4,12 @@ import type { BookLabels } from "../book/labels";
 import type { Profile } from "../profile/schema";
 import type { Insets } from "./layout";
 
-/** The three booklets on the desk. */
-export type Tab = "cards" | "postcards" | "resume";
-export const TAB_IDS: readonly Tab[] = ["cards", "postcards", "resume"];
+/** The booklets on the desk (纸桌 2026-11-02: the résumé folio and its pouch are taken off; the original three are on the sasshi-original branch). */
+export type Tab = "cards" | "postcards";
+export const TAB_IDS: readonly Tab[] = ["cards", "postcards"];
 /** ?view= : the 3D desk (default), the text version, or the machine-readable JSON. */
 export type View = "folio" | "text" | "json";
-export const DEFAULT_TAB: Tab = "resume";
+export const DEFAULT_TAB: Tab = "cards";
 
 /** Device-motion state of the résumé folio's Tilt control (touch devices only). */
 export type MotionUi = "off" | "asking" | "on" | "denied" | "unsupported";

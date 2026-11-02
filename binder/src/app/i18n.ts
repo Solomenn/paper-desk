@@ -120,7 +120,6 @@ export const en: Dict = {
   booklet: {
     cards: { name: "Cards", local: "カード帖", latin: "Cards", noun: (n) => (n === 1 ? "card" : "cards") },
     postcards: { name: "Postcards", local: "絵葉書", latin: "Postcards", noun: (n) => (n === 1 ? "postcard" : "postcards") },
-    resume: { name: "Résumé", local: "履歴書", latin: "Résumé folio", noun: (n) => (n === 1 ? "thing" : "things") },
   },
   nav: { booklets: "Booklets", skip: "Skip to the booklet" },
   langs: { label: "Language" },
@@ -214,7 +213,6 @@ export const zh: Dict = {
   booklet: {
     cards: { name: "卡册", local: "卡册", latin: "Cards", noun: () => "张卡片" },
     postcards: { name: "明信片", local: "明信片", latin: "Postcards", noun: () => "张明信片" },
-    resume: { name: "简历", local: "简历", latin: "Résumé folio", noun: () => "件东西" },
   },
   nav: { booklets: "册子", skip: "跳到册子" },
   langs: { label: "语言" },

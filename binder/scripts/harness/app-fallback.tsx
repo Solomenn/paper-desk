@@ -39,7 +39,8 @@ function StubThrows(): never {
   throw new Error("stub stage exploded");
 }
 
-const stages: StageMap = { cards: StubCards, postcards: StubUnsupported, resume: StubThrows };
+const stages: StageMap = { cards: StubCards, postcards: StubThrows };
+void StubUnsupported;
 
 // ?stages=none uses the built-in flat placeholders (no 3D stages); ?pdf=1 gives the resume item a pdf so the download link can be checked
 const q = new URLSearchParams(location.search);

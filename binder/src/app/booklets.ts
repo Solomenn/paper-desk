@@ -29,17 +29,16 @@ export type Booklet = {
 export const BOOKLETS: readonly Booklet[] = [
   { id: "cards", color: "seiji", foil: "silver", material: "leather", local: "カード帖", layout: "idCard2x4" },
   { id: "postcards", color: "ginnezu", foil: "blind", material: "cloth", local: "絵葉書", layout: "postcard2x3" },
-  { id: "resume", color: "aitetsu", foil: "silver", material: "frost", local: "履歴書" },
 ];
 
 /** The local name of each pouch kind (the English page's; a Chinese page uses i18n's `held`). */
 export const LOCAL_KIND: Record<ItemKind, string> = { card: "名刺", resume: "履歴書", ticket: "入場券", polaroid: "写真", note: "一筆箋" };
 
-export const booklet = (id: Tab): Booklet => BOOKLETS.find((b) => b.id === id) ?? BOOKLETS[2]!;
+export const booklet = (id: Tab): Booklet => BOOKLETS.find((b) => b.id === id) ?? BOOKLETS[0]!;
 
 /** How many things a booklet holds (the count after its name). */
 export function countOf(profile: Profile, id: Tab): number {
-  return id === "resume" ? profile.items.length : profile.albums[id].length;
+  return profile.albums[id].length;
 }
 
 /** The local title of a booklet (hashira, 題簽 slip): カード帖 / 絵葉書 / 履歴書, or 卡册 / 明信片 / 简历 for a Chinese page. */
