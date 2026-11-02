@@ -530,17 +530,25 @@ const MODELS = {
   },
 };
 let PXM = 1;                                                              // 每米多少 CSS 像素（随窗口宽度变）
+/* 物件跟着切换条转（用户 2026-11-02：不要像贴纸）：像人走过一排实物，每个物件的转角 =
+     基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"；再整体俯视 TILT 度。
+   例：停在明信片盒子上 → 盒子转 BASE 度，右边的书架多转约 PER 度、露出左侧面，左边的火车头往反方向转、露出右侧面。
+   物件绕自己的中心转（pivot），不绕墙面转，免得转进墙里。三个数可在地址里试：?base=18&per=30&tilt=8 */
+const Q = new URLSearchParams(location.search);
+const BASE = +(Q.get("base") ?? 18) * deg, PER = +(Q.get("per") ?? 30) * deg, TILT = +(Q.get("tilt") ?? 8) * deg;
 function fitInto(group, obj) {
-  group.userData.obj = obj;
+  const pivot = new THREE.Group(); group.userData.obj = obj; group.userData.pivot = pivot;
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   obj.userData.fit = { size, c, zmin: box.min.z, s0: obj.scale.x };
   obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  group.add(obj); sizeObjects(); render();
+  pivot.add(obj); group.add(pivot); sizeObjects(); render();
 }
 function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变
   const fit = FIT_FRAC * 240 / PXM;
   slots.forEach(g => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, k = fit / Math.max(f.size.x, f.size.y);
-    o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.zmin * k + OFF_WALL); });
+    // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm，和原来一样）
+    o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
+    g.userData.pivot.position.set(0, 0, (f.c.z - f.zmin) * k + OFF_WALL); });
 }
 PAGES_3D.forEach((p, i) => {
   if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
@@ -591,7 +599,12 @@ let off = innerWidth / 2 - 120;
 function render() {
   if (!wallReady) return;
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120;   // 物件区中心的页面 y
-  slots.forEach((g, i) => g.position.set((off + i * PITCH_3D + 120 - innerWidth / 2) / PXM, YC - (top - innerHeight / 2) / PXM, 0));
+  const D = PITCH_3D / Math.tan(PER);                                      // 视距（CSS 像素）
+  slots.forEach((g, i) => {
+    const dx = off + i * PITCH_3D + 120 - innerWidth / 2;                  // 这个物件离画面中心多远（CSS 像素，右边为正）
+    g.position.set(dx / PXM, YC - (top - innerHeight / 2) / PXM, 0);
+    const pv = g.userData.pivot; if (pv) pv.rotation.set(TILT, BASE + Math.atan(dx / D), 0, "YXZ");
+  });
   sunAt(AZ * deg, EL * deg); sun.shadow.needsUpdate = true;
   // ①
   gobo.visible = false; hemi.visible = false; scene.overrideMaterial = visMat;
