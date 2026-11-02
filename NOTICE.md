@@ -38,3 +38,15 @@ and the snowfield, and colour-graded to match the window author's own photos (mu
 The carriage window and table on the 雪国线 ride (`assets/frame.webp`) are taken from the author's photographs of a train window; he shares
 the frame and table as free material (the views in those photos are his and are not used): the median of six of his frames
 (1440×962), the platform watermark removed, the glass punched out.
+
+
+## Library shelf candidate A (preview only)
+
+The standalone preview `shelf-preview.html` loads three models directly from the **Public Library and Reading Garden** pack by **3D Assets**:
+
+- Pack: <https://3dassets.dev/packs/public-library-and-reading-garden>
+- `Library Stack Straight`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98> — <https://cdn.3dassets.dev/assets/30913/v1/model.glb>
+- `Library Stack End`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-cb4a4da8> — <https://cdn.3dassets.dev/assets/30914/v1/model.glb>
+- `Library Stack Corner`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-31a8d131> — <https://cdn.3dassets.dev/assets/30915/v1/model.glb>
+
+Licence: **CC0 1.0 Universal** (free commercial use and modification; attribution not required). The pack page reports that AI tools were used for all 51 models. The GLB files are loaded from the source CDN by the preview page; they are not copied into this repository. This is a candidate under review, not yet an adopted production asset.
