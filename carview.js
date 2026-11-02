@@ -30,9 +30,9 @@
   #car #line .st.past i { color: #e9e2d0 !important; }
   #car #line .tr { background: #e9e2d0 !important; box-shadow: 0 0 0 2.5px #141210 !important; }
   #car #hud { color: rgba(236, 228, 210, .8) !important; }
-  #car #off, #car #sndT, body:has(#car.on) .home { color: rgba(236, 228, 210, .82) !important; background: rgba(24, 21, 19, .6) !important;
+  #car #off, #car #sndT, #car #radioT, body:has(#car.on) .home { color: rgba(236, 228, 210, .82) !important; background: rgba(24, 21, 19, .6) !important;
     box-shadow: 0 0 0 .5px rgba(236, 228, 210, .18) !important; }
-  #car #off:hover, #car #sndT:hover { color: #fff !important; }
+  #car #off:hover, #car #sndT:hover, #car #radioT:hover { color: #fff !important; }
   `;
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
