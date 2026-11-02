@@ -21,7 +21,8 @@
   .credit a { color: inherit; text-decoration: none; } .credit a:hover { text-decoration: underline; }
   #strip, #zone { z-index: 1; }
   .it .place { position: absolute; top: 557px; left: 0; right: 0; color: #1a1a1a; font-weight: 500; font-size: 20px; line-height: 32px; letter-spacing: -.2px; }
-  #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: 714.5px; height: 104px; cursor: default; touch-action: none; outline: none; }
+  /* 鼠标在刻度区里时隐藏光标（用户 2026-11-02）：指针刻度本身就是光标 */
+  #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: 714.5px; height: 104px; cursor: none; touch-action: none; outline: none; }
   .tk { position: absolute; left: 0; top: 0; width: 3px; height: 8px; border-radius: 999px; background: #1a1a1a; will-change: transform, height, opacity; }
   .sp { position: absolute; left: 0; top: 0; width: 3px; height: 14px; border-radius: 999px; background: #1a1a1a; opacity: .28; }
   .reel { display: inline-block; position: relative; height: 24px; vertical-align: top; overflow: visible; white-space: pre; transition: width .52s cubic-bezier(.4,0,.2,1); }
@@ -30,7 +31,7 @@
   .reel > .gh > span { position: absolute; left: 0; top: 0; height: 100%; }
   #lab { display: none; position: absolute; top: 0; left: 0; font-size: 20px; line-height: 24px; font-weight: 500; color: #1d1d1d; white-space: nowrap; pointer-events: none; transform: translate(-50%, 0); opacity: 0; }
   .num { position: absolute; top: 0; left: 0; font-size: 17px; line-height: 24px; font-weight: 600; white-space: nowrap; pointer-events: none; transform: translate(-50%, -50%); font-variant-numeric: tabular-nums; }
-  .mk { position: absolute; left: 0; top: 0; width: 4px; height: 10px; border-radius: 999px; background: #647F98; pointer-events: none; }
+  .mk { position: absolute; left: 0; top: 0; width: 4px; height: 10px; border-radius: 999px; background: #7FC1EC; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -48,8 +49,8 @@ await Promise.all(["500 19px", "500 20px", "600 15px"].map(f => document.fonts.l
 /* ── 数据：日期序列照参考站（149 个地点，2025-12 → 2026-10），名字用占位 ── */
 /* 六个物件 = 六页；一页一根刻度。month/day 结构沿用复现代码：都算同一个"月"，所以没有月界分隔 */
 const PAGES = [
-  { name: "项目", href: "../index.html", model: "silk" },
-  { name: "便签", href: "../index.html", model: "textile" },
+  { name: "项目", href: "../index.html#board", model: "silk" },
+  { name: "便签", href: "../index.html#notes", model: "textile" },
   { name: "雪国线", href: "../focus.html", model: "loco" },
   { name: "明信片", href: "../receipt.html", model: "boxes" },
   { name: "手账", href: "../journal.html", model: "shelf" },
@@ -208,14 +209,18 @@ addEventListener("pointerdown", audio, { capture: true });
 
 /* ── 物件条的运动：三次 Hermite 滑行（起点带当前速度，终点速度 0）。
    时长照参考实测：擦动 280 ms，逐个（键盘）380 ms，跳转 460 ms + 距离×0.08，限制在 520–950 ms ── */
-const S = { x: 0 * PITCH, v: 0, free: false, g: null };
+/* 打开时停在哪一格：地址里的 ?at=第几格（0 起，各页面的返回箭头带着它回来，回到刚才那个物件），没有就是第 0 格 */
+const AT = Math.max(0, Math.min(N - 1, Math.round(+new URLSearchParams(location.search).get("at") || 0)));
+const S = { x: AT * PITCH, v: 0, free: false, g: null };
+// 3D 部分加载得比切换条晚，第一次画时先问这里：物件条现在的位置（和上面 __scene3d 收到的是同一个数）
+window.__stripOff = () => innerWidth / 2 - ITEM / 2 - S.x;
 function glideAt(g, t) {
   const p = Math.min(1, Math.max(0, (t - g.t0) / g.dur)), p2 = p * p, p3 = p2 * p, m = g.v0 * g.dur;
   return { p, x: (2 * p3 - 3 * p2 + 1) * g.from + (p3 - 2 * p2 + p) * m + (3 * p2 - 2 * p3) * g.to,
            v: ((6 * p2 - 6 * p) * g.from + (3 * p2 - 4 * p + 1) * m + (6 * p - 6 * p2) * g.to) / g.dur };
 }
 const settled = () => !S.g;
-let cur = 0;                                                            // 当前地点
+let cur = AT;                                                           // 当前地点
 function goTo(i, sound, mode = "jump") {
   i = Math.max(0, Math.min(N - 1, i)); if (i === cur && !S.free) return;
   const prevMonth = month[cur]; cur = i; S.free = false;
@@ -381,7 +386,7 @@ function draw() {
       const d = (x - H.sx) / slot, W = Math.exp(-(d * d) / (.575 * .575)), G = Math.exp(-(d * d) / (2.2 * 2.2)), a = H.amt;
       x += Math.sign(d) * 1.4 * Math.min(1, Math.abs(d)) * a;            // 两侧稍稍让开
       h += a * (25.4 * W + 2.5 * G); w += a * W; op = Math.min(1, op + a * (.86 * W + .12 * G));
-      if (k === H.hotTick && a > .5) { col = "#647F98"; } else if (G > .3) col = "#1a1a1a";   // 强调色：蓝莓 Blue Berry 2214
+      if (k === H.hotTick && a > .5) { col = "#7FC1EC"; } else if (G > .3) col = "#1a1a1a";   // 指针刻度：宝宝蓝（用户 2026-11-02：比蓝莓 #647F98 亮一点）
     } else if ((H.pre || 0) > .002) {                                    // 指针靠近还没进入：附近几根刻度微微抬起、变亮
       const d = (x - H.px) / C, G = Math.exp(-(d * d) / 4.5), e = H.pre; y = -2.8 * e * G; h += 1.3 * e * G; op = Math.min(1, op + .09 * e * G);
     }
@@ -612,14 +617,15 @@ function bakeWall() {                                                     // 只
 }
 
 /* ── 每帧：① 物件投在墙上的影子（只有物件投影，窗不投）→ rtVis；② 墙 = 累积 − 阳光 ×（1 − 可见度）；③ 物件（窗影照在物件上） ── */
-let off = innerWidth / 2 - 120;
+let off = window.__stripOff ? window.__stripOff() : innerWidth / 2 - 120;   // 物件条的位置：开始时问切换条（?at= 打开时不在第 0 格）
 function render() {
   if (!wallReady) return;
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120;   // 物件区中心的页面 y
   slots.forEach((g, i) => {
     const dx = off + i * PITCH_3D + 120 - innerWidth / 2;                  // 这个物件离画面中心多远（CSS 像素，右边为正）
     g.position.set(dx / PXM, YC - (top - innerHeight / 2) / PXM, 0);
-    const pv = g.userData.pivot; if (pv) pv.rotation.set(0, yawAt(dx), 0);
+    // 转角 = 跟着切换条的角度 + 鼠标拿在手里的倾斜（hold）；"XYZ"：先左右转，再绕画面的横轴上下转，竖线保持竖直
+    const pv = g.userData.pivot, h = hold[i]; if (pv) pv.rotation.set(h.x, yawAt(dx) + h.y, 0, "XYZ");
   });
   sunAt(AZ * deg, EL * deg); sun.shadow.needsUpdate = true;
   // ①
@@ -631,7 +637,46 @@ function render() {
   // ③
   wall.visible = false; renderer.autoClear = false; sun.shadow.needsUpdate = true; renderer.render(scene, camera); renderer.autoClear = true; wall.visible = true;
 }
-window.__scene3d = o => { off = o; render(); };
+window.__scene3d = o => { off = o; render(); aim(); };
+
+/* ── 鼠标拿在手里（用户 2026-11-02，同 sasshi 拉链袋里的东西）：鼠标移到哪个模型上，它就跟着指针轻轻转；
+   移走就慢慢回正。
+   哪个模型算"被指着"：指针在它那一格里（左右各半个格距），上下在它的底边以上 HEIGHT_PX、以下 30 px 之间。
+     指着：目标角度 = 指针离模型中心的距离（按半格、半高算成 −1 到 1）× 最大角度：左右最多 HOLD_YAW，上下最多 HOLD_PITCH；
+           指针在右边 → 正面往右转；指针在下边 → 正面往下转。
+     没指着：目标角度 = 0（回正）。
+   角度用带一点回弹的弹簧跟上目标（HOLD_K 弹簧硬度、HOLD_DAMP 阻尼比，小于 1 就会稍稍冲过头再回来）。
+   例：鼠标从左往右扫过书架 → 书架先往左偏、再往右偏，最多 14°；鼠标移开 → 书架晃一下回到原来的角度。
+   只有还在转的时候才逐帧重画，停稳了就停。 */
+const HOLD_YAW = 14 * deg, HOLD_PITCH = 4 * deg, HOLD_K = 90, HOLD_DAMP = 0.62;
+const hold = PAGES_3D.map(() => ({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0 }));
+let mouse = null;
+const clamp1 = v => Math.max(-1, Math.min(1, v));
+function aim() {
+  const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120, base = top + BOTTOM_PX;   // 底边那条线的页面 y
+  hold.forEach((h, i) => {
+    const cx = off + i * PITCH_3D + 120, cy = base - HEIGHT_PX / 2;
+    const on = mouse && Math.abs(mouse.x - cx) < PITCH_3D / 2 && mouse.y > base - HEIGHT_PX && mouse.y < base + 30;
+    h.ty = on ? clamp1((mouse.x - cx) / (PITCH_3D / 2)) * HOLD_YAW : 0;
+    h.tx = on ? clamp1((mouse.y - cy) / (HEIGHT_PX / 2)) * HOLD_PITCH : 0;
+  });
+  if (!holdRaf) { holdLast = performance.now(); holdRaf = requestAnimationFrame(holdStep); }
+}
+let holdRaf = 0, holdLast = 0;
+function holdStep(now) {
+  const dt = Math.min(0.05, (now - holdLast) / 1000); holdLast = now;
+  const c = 2 * Math.sqrt(HOLD_K) * HOLD_DAMP; let busy = false;
+  for (const h of hold) {
+    h.vx += (HOLD_K * (h.tx - h.x) - c * h.vx) * dt; h.x += h.vx * dt;
+    h.vy += (HOLD_K * (h.ty - h.y) - c * h.vy) * dt; h.y += h.vy * dt;
+    if (Math.abs(h.tx - h.x) > 1e-4 || Math.abs(h.ty - h.y) > 1e-4 || Math.abs(h.vx) > 1e-3 || Math.abs(h.vy) > 1e-3) busy = true;
+    else { h.x = h.tx; h.y = h.ty; h.vx = h.vy = 0; }
+  }
+  render();
+  holdRaf = busy ? requestAnimationFrame(holdStep) : 0;
+}
+addEventListener("pointermove", e => { mouse = { x: e.clientX, y: e.clientY }; aim(); });
+document.documentElement.addEventListener("pointerleave", () => { mouse = null; aim(); });
 function layout() {
   const w = innerWidth, h = innerHeight; PXM = w / VIEW_W;
   renderer.setSize(w, h, false);
