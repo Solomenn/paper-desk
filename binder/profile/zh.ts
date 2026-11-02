@@ -70,7 +70,8 @@ export const profileZh: Profile = {
   bio: "我做小而有手感的界面，让人想伸手拿起来的那种。产品设计和前端开发，一共做了八年。",
   coverTitle: "林文 · 作品集",
   seal,
-  source: "https://github.com/qzz0518/sasshi",
+  // 纸桌：页面上跑的是改过的版本，源码链接指向纸桌的仓库（AGPL-3.0 第 13 条）
+  source: "https://github.com/Solomenn/paper-desk",
   links: [
     { label: "邮箱", href: "mailto:i@zerah.cc" },
     { label: "GitHub", href: "https://github.com/qzz0518" },

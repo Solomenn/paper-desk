@@ -44,7 +44,7 @@ function PaintedFace({ kind, item, index, face, han }: { kind: "cards" | "postca
       .then(({ content, layout: L }) => {
         if (dead) return;
         // the booklet's own pocket grid (booklets.ts): the same item size and painter details as its 3D pockets
-        const layout = L.resolveLayout(booklet(kind).layout ?? (kind === "postcards" ? "postcard2x3" : "idCard2x4"));
+        const layout = L.resolveLayout(kind === "postcards" ? "postcard2x3" : "idCard2x4");
         const { w, h, r } = layout.item;
         const cell = { side: face === "back" ? 1 : 0, slot: 0, index, face, mirrored: false, pocket: { x: 0, y: 0, w, h }, place: { x: 0, y: 0, w, h, tilt: 0, r }, seed: index + 1 };
         paint = () => {

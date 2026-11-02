@@ -22,9 +22,9 @@ export type Dict = {
   nav: { booklets: string; skip: string };
   /** the language switch (each language is named in itself: English · 中文) */
   langs: { label: string };
-  handling: { resume: string; cards: string; postcards: (n: number) => string; closed: string; printed: string };
+  handling: { resume: string; cards: string; postcards: (n: number) => string; tickets: string; closed: string; printed: string };
   /** Phones, until the first touch: per booklet (a card album and a postcard album name what they hold), and on a closed one. */
-  hint: { resume: string; cards: string; postcards: string; closed: string };
+  hint: { resume: string; cards: string; postcards: string; tickets: string; closed: string };
   clock: (time: string, city?: string) => string;
   controls: {
     open: string;
@@ -118,19 +118,22 @@ export const en: Dict = {
   lang: "en",
   htmlLang: "en",
   booklet: {
-    cards: { name: "Cards", local: "カード帖", latin: "Cards", noun: (n) => (n === 1 ? "card" : "cards") },
-    postcards: { name: "Postcards", local: "絵葉書", latin: "Postcards", noun: (n) => (n === 1 ? "postcard" : "postcards") },
+    proj: { name: "Projects", local: "项目卡册", latin: "Projects", noun: (n) => (n === 1 ? "card" : "cards") },
+    note: { name: "Notes", local: "便签卡册", latin: "Notes", noun: (n) => (n === 1 ? "note" : "notes") },
+    ticket: { name: "Tickets", local: "车票卡册", latin: "Tickets", noun: (n) => (n === 1 ? "ticket" : "tickets") },
+    receipt: { name: "Receipts", local: "小票卡册", latin: "Receipts", noun: (n) => (n === 1 ? "receipt" : "receipts") },
   },
   nav: { booklets: "Booklets", skip: "Skip to the booklet" },
   langs: { label: "Language" },
   handling: {
     resume: "Tilt the desk and the things inside will slide. Lift one out to read it.",
     cards: "Turn a page by its edge, or with the arrow keys. Lift a card out to look closer.",
-    postcards: (n) => `${cap(enWord(n))} places, ${enWord(n)} mornings. Turn the page to read the backs.`,
+    postcards: (n) => `${cap(enWord(n))} ${n === 1 ? "card" : "cards"}. Turn the page to read the backs.`,
+    tickets: "Turn a page by its edge, or with the arrow keys.",
     closed: "Click the cover to open it.",
     printed: "This desk needs WebGL, so here is the printed version.",
   },
-  hint: { resume: "Tilt your phone, or lift a thing out.", cards: "Swipe to turn. Tap a card to lift it.", postcards: "Swipe to turn. Tap a postcard to lift it.", closed: "Tap the cover to open it." },
+  hint: { resume: "Tilt your phone, or lift a thing out.", cards: "Swipe to turn. Tap a card to lift it.", postcards: "Swipe to turn. Tap a postcard to lift it.", tickets: "Swipe to turn.", closed: "Tap the cover to open it." },
   clock: (time, city) => `Local time ${time}${city ? ` in ${city}` : ""}`,
   controls: {
     open: "Open",
@@ -211,19 +214,22 @@ export const zh: Dict = {
   lang: "zh",
   htmlLang: "zh-CN",
   booklet: {
-    cards: { name: "卡册", local: "卡册", latin: "Cards", noun: () => "张卡片" },
-    postcards: { name: "明信片", local: "明信片", latin: "Postcards", noun: () => "张明信片" },
+    proj: { name: "项目卡册", local: "项目卡册", latin: "Projects", noun: () => "张项目卡" },
+    note: { name: "便签卡册", local: "便签卡册", latin: "Notes", noun: () => "张便签" },
+    ticket: { name: "车票卡册", local: "车票卡册", latin: "Tickets", noun: () => "张车票" },
+    receipt: { name: "小票卡册", local: "小票卡册", latin: "Receipts", noun: () => "张小票" },
   },
   nav: { booklets: "册子", skip: "跳到册子" },
   langs: { label: "语言" },
   handling: {
     resume: "倾斜桌面，袋里的东西会随之滑动。取出一件，就能细看。",
     cards: "拖动页边或用方向键翻页。取出一张卡片，可以看得更近。",
-    postcards: (n) => `${zhNum(n)}个地方，${zhNum(n)}个清晨。翻过这一页，读它们的背面。`,
+    postcards: () => "拖动页边或用方向键翻页。翻过这一页，读它们的背面。",
+    tickets: "拖动页边或用方向键翻页。",
     closed: "点一下封面，把它打开。",
     printed: "这张桌面需要 WebGL，下面是印刷版。",
   },
-  hint: { resume: "倾斜手机，或取出一件东西。", cards: "滑动翻页，轻点卡片取出。", postcards: "滑动翻页，轻点明信片取出。", closed: "点一下封面，把它打开。" },
+  hint: { resume: "倾斜手机，或取出一件东西。", cards: "滑动翻页，轻点卡片取出。", postcards: "滑动翻页，轻点明信片取出。", tickets: "滑动翻页。", closed: "点一下封面，把它打开。" },
   clock: (time, city) => `${city ? `${city}` : ""}当地时间 ${time}`,
   controls: {
     open: "打开",
@@ -298,8 +304,8 @@ export const zh: Dict = {
   date: dateZh,
   months: ["1 月", "2 月", "3 月", "4 月", "5 月", "6 月", "7 月", "8 月", "9 月", "10 月", "11 月", "12 月"],
   meta: {
-    description: (p) => `${p.nameLocal ?? p.name}，${p.role}${p.location ? `，${p.location}` : ""}。${p.bio}`,
-    title: (p, v) => (v === "folio" ? `${p.nameLocal ?? p.name} — ${p.role}` : v === "json" ? `${p.nameLocal ?? p.name} — profile.json` : `${p.nameLocal ?? p.name} — 文字版`),
+    description: () => "纸桌的卡册：项目、便签、车票、小票。",
+    title: (_p, v) => (v === "folio" ? "纸桌 · 卡册" : v === "json" ? "纸桌 · profile.json" : "纸桌 · 卡册 · 文字版"),
   },
 };
 

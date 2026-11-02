@@ -3,33 +3,38 @@ import type { CaseSpec } from "../../book/binder";
 import { BookView, type BookViewHandle } from "../../book/BookView";
 import type { CoverSpec } from "../../book/cover";
 import type { BookState } from "../../book/scene";
+import { contentFor } from "../../desk/content";
 import { booklet } from "../booklets";
 import { play } from "../sound";
-import type { StageProps } from "../types";
+import type { StageProps, Tab } from "../types";
 import { useWindowLight } from "./light";
 
 /*
- * The two ring binders: the card album (2 x 4 ID-card pockets) and the postcard album (2 x 3 A6 pockets, the picture through the
+ * 纸桌 2026-11-02: the four desk booklets (types.ts Tab) on the author's two ring binders; each booklet's cards come from src/desk
+ * (contentFor), drawn by the author's painters. Picking a card lifts it out as before (cards, postcards); tickets stay in their pockets.
+ *
+ * The author's note — the two ring binders: the card album (2 x 4 ID-card pockets) and the postcard album (2 x 3 A6 pockets, the picture through the
  * front film and the message side through the back film). BookView brings the keyboard path and the flat fallback (no WebGL);
  * the shell's printed controls drive the book through its handle in both. The canvas is full-bleed; `insets`
  * frame the album into the page's book box. Cloth and leather albums carry the booklet's local title on a 題簽 slip inside.
  */
 
-type Kind = "cards" | "postcards";
 const DEBUG = typeof location !== "undefined" && new URLSearchParams(location.search).has("debug");
 
-function AlbumStage({ kind, profile, material, insets, narrow, slip, labels, ambient, onPickCard, onStage }: StageProps & { kind: Kind }) {
-  const b = booklet(kind);
+function AlbumStage({ tab, profile, material, insets, narrow, slip, labels, ambient, onPickCard, onStage }: StageProps & { tab: Tab }) {
+  const b = booklet(tab);
+  const kind = b.kind;
   const handle = useRef<BookViewHandle>(null);
   const root = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<BookState | null>(null);
   const [ready, setReady] = useState(false);
   const [flat, setFlat] = useState(false);
-  const onPick = useCallback((_: number, o: { id: string }) => onPickCard(kind, o.id), [kind, onPickCard]);
+  const onPick = useCallback((_: number, o: { id: string }) => (kind === "tickets" ? undefined : onPickCard(kind, o.id)), [kind, onPickCard]);
   const title = labels?.region ?? kind;
   const cover = useMemo<CoverSpec>(() => ({ material, color: b.color, foil: b.foil, window: null, title }), [material, b, title]);
   const caseSpec = useMemo<CaseSpec | undefined>(() => (slip ? { slip: { title: slip.title, han: slip.han } } : undefined), [slip]);
-  const items = profile.albums[kind];
+  void profile;
+  const content = useMemo(() => contentFor(tab), [tab]);
   const onBook = useWindowLight(ambient);
 
   // BookView draws its flat book when 3D is not possible (or its context is lost): its root says so in data-mode
@@ -66,11 +71,10 @@ function AlbumStage({ kind, profile, material, insets, narrow, slip, labels, amb
   }, [kind]);
 
   return (
-    <div className="stage-book" data-stage={kind} ref={root}>
+    <div className="stage-book" data-stage={tab} ref={root}>
       <BookView
         ref={handle}
-        kind={kind}
-        items={items}
+        content={content}
         {...(b.layout ? { layout: b.layout } : {})}
         cover={cover}
         {...(caseSpec ? { case: caseSpec } : {})}
@@ -88,9 +92,15 @@ function AlbumStage({ kind, profile, material, insets, narrow, slip, labels, amb
   );
 }
 
-export function CardsStage(p: StageProps) {
-  return <AlbumStage {...p} kind="cards" />;
+export function ProjStage(p: StageProps) {
+  return <AlbumStage {...p} tab="proj" />;
 }
-export function PostcardsStage(p: StageProps) {
-  return <AlbumStage {...p} kind="postcards" />;
+export function NoteStage(p: StageProps) {
+  return <AlbumStage {...p} tab="note" />;
+}
+export function TicketStage(p: StageProps) {
+  return <AlbumStage {...p} tab="ticket" />;
+}
+export function ReceiptStage(p: StageProps) {
+  return <AlbumStage {...p} tab="receipt" />;
 }

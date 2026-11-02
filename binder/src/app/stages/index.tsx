@@ -36,6 +36,8 @@ function stage(load: () => Promise<{ default: ComponentType<StageProps> }>): Com
 }
 
 export const STAGES: StageMap = {
-  cards: stage(() => import("./AlbumStage").then((m) => ({ default: m.CardsStage }))),
-  postcards: stage(() => import("./AlbumStage").then((m) => ({ default: m.PostcardsStage }))),
+  proj: stage(() => import("./AlbumStage").then((m) => ({ default: m.ProjStage }))),
+  note: stage(() => import("./AlbumStage").then((m) => ({ default: m.NoteStage }))),
+  ticket: stage(() => import("./AlbumStage").then((m) => ({ default: m.TicketStage }))),
+  receipt: stage(() => import("./AlbumStage").then((m) => ({ default: m.ReceiptStage }))),
 };

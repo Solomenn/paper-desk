@@ -5,7 +5,8 @@ import { folioLangs, langKey, langName, loadProfile, type Folio } from "../profi
 import type { Profile } from "../profile/schema";
 import { profile as sample } from "../../profile/en";
 import { AlbumDetail } from "./AlbumDetail";
-import { readMaterials, writeMaterial } from "./booklets";
+import { albumsFor } from "../desk/content";
+import { booklet, readMaterials, writeMaterial } from "./booklets";
 import { applyFontVars, loadDomFaces, pageRuns, run } from "./fonts";
 import { dictFor, I18n } from "./i18n";
 import { ItemDetail } from "./ItemDetail";
@@ -210,14 +211,17 @@ function useLanguage(first: Profile, folio: Folio | undefined, firstLang: string
 }
 
 export function App({ profile: firstProfile = sample, folio, lang: firstLang, stages = STAGES }: AppProps) {
-  const { profile, stageProfile, langs, fade } = useLanguage(firstProfile, folio, firstLang);
+  const { profile: personProfile, stageProfile: personStage, langs, fade } = useLanguage(firstProfile, folio, firstLang);
+  const [tab, setTabState] = useState<Tab>(readTab);
+  // 纸桌: the albums hold the open booklet's cards from the desk (src/desk), not the profile's
+  const profile = useMemo(() => ({ ...personProfile, albums: albumsFor(tab) }), [personProfile, tab]);
+  const stageProfile = useMemo(() => ({ ...personStage, albums: albumsFor(tab) }), [personStage, tab]);
   const t = useMemo(() => dictFor(profile), [profile]);
   /** The booklet's own words (its labels, the slip): they follow the page's once a switch's new words are in (useLanguage). */
   const st = useMemo(() => dictFor(stageProfile), [stageProfile]);
   const han = profileHan(profile);
   const view = useMemo(readView, []);
   const frame = useFrame();
-  const [tab, setTabState] = useState<Tab>(readTab);
   /** The booklet the visitor just picked while the one on the desk fades out. */
   const [leaving, setLeaving] = useState<Tab | null>(null);
   const leaveTimer = useRef(0);
@@ -381,7 +385,7 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
   }, [st, tab]);
   const slip = useMemo(() => ({ title: st.booklet[tab].local, han: stageHan }) as const, [st, tab, stageHan]);
   // the albums' open spreads are width-bound: on a desk they reach into the 間 column, a margin clear of the words (layout.ts wide)
-  const insets = tab === "cards" ? frame.wideCards : frame.wide;
+  const insets = booklet(tab).kind === "cards" ? frame.wideCards : frame.wide;
   // the phone turns one page at a time, the tablet in portrait too (an iPad's 3:4 sits exactly on the engine's own threshold); a
   // tablet-sized window held landscape (900 × 600) shows the open spread
   const narrow = frame.cls === "p" || (frame.cls === "t" && frame.H >= frame.W) ? true : frame.cls === "t" ? false : undefined;
@@ -395,12 +399,14 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
     ? t.handling.printed
     : stage && stage.ready && !stage.open
       ? t.handling.closed
-      : tab === "cards"
+      : booklet(tab).kind === "cards"
         ? t.handling.cards
-        : t.handling.postcards(profile.albums.postcards.length);
+        : booklet(tab).kind === "tickets"
+          ? t.handling.tickets
+          : t.handling.postcards(profile.albums.postcards.length);
   // the phone hint is about the 3D booklet (tap the closed cover; tilt, swipe a page until the first touch): not over the flat
   // book or the printed version. A tablet-sized window driven by a mouse reads the desk's handling line instead (no swipes, no tilt).
-  const hint = fallback || flat || !stage?.ready ? "" : !stage.open ? (frame.coarse ? t.hint.closed : t.handling.closed) : hinted ? "" : !frame.coarse ? handling : t.hint[tab];
+  const hint = fallback || flat || !stage?.ready ? "" : !stage.open ? (frame.coarse ? t.hint.closed : t.handling.closed) : hinted ? "" : !frame.coarse ? handling : t.hint[booklet(tab).kind];
 
   let body: ReactNode;
   if (view === "json") body = <JsonView profile={profile} />;

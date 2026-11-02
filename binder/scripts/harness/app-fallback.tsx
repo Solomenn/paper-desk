@@ -39,7 +39,7 @@ function StubThrows(): never {
   throw new Error("stub stage exploded");
 }
 
-const stages: StageMap = { cards: StubCards, postcards: StubThrows };
+const stages: StageMap = { proj: StubCards, note: StubThrows, ticket: StubCards, receipt: StubCards };
 void StubUnsupported;
 
 // ?stages=none uses the built-in flat placeholders (no 3D stages); ?pdf=1 gives the resume item a pdf so the download link can be checked

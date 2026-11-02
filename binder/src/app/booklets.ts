@@ -3,15 +3,16 @@ import { COVER_MATERIALS, type CoverColor, type CoverFoil, type CoverMaterial } 
 import type { LayoutPreset } from "../book/layout";
 import type { ItemKind, Profile } from "../profile/schema";
 import type { Dict } from "./i18n";
+import { deskCount } from "../desk/content";
 import { TAB_IDS, type Tab } from "./types";
 
 /*
- * The three booklets on the desk (spec §2.4): each case's colour and foil are fixed per booklet (the material is the visitor's
- * choice, remembered per booklet); the words for them (names, local titles, handling lines) live in i18n.ts.
- *   Cards      青磁 seiji,   silver foil, leather; 2 × 4 card pockets a side
- *   Postcards  銀鼠 ginnezu, blind stamp, cloth; 2 × 3 A6 pockets a side
- *   Résumé     藍鉄 aitetsu, silver foil, frosted PP (owner 2026-10-23: the résumé folio in frost, the albums in the others)
- * The albums' pages are tall (brief r3 D3): an open spread of 2 × 3 cards or 2 × 2 postcards is so wide that it is small on a desk.
+ * 纸桌的四本册子（2026-11-02）。每本照作者的一种册子做（`kind`），封面颜色、烫印和默认材质也照那一种：
+ *   项目卡册 proj     卡片册 cards        青磁 seiji、银烫、皮面；每页 2 × 4 张卡
+ *   便签卡册 note     明信片册 postcards  銀鼠 ginnezu、素压、布面；每页 2 × 3 张明信片，正反两面
+ *   车票卡册 ticket   车票 tickets        青磁、银烫、皮面（作者的卡片册封面）；每页 2 × 3 张 150 × 58 mm 的车票
+ *   小票卡册 receipt  明信片册 postcards  銀鼠、素压、布面
+ * 名字、手册说明在 i18n.ts。作者原来的三本在 sasshi-original 分支。
  */
 
 export type Booklet = {
@@ -22,13 +23,17 @@ export type Booklet = {
   material: CoverMaterial;
   /** The Japanese local title (the English page's hashira and 題簽 slip); a Chinese page uses i18n's. */
   local: string;
-  /** The albums' pocket grid (src/book/layout.ts). */
+  /** The albums' pocket grid (src/book/layout.ts); the ticket album brings its own (src/desk/tickets.ts). */
   layout?: LayoutPreset;
+  /** Which of the author's albums it is drawn as: its faces, its handling line, its insets. */
+  kind: "cards" | "postcards" | "tickets";
 };
 
 export const BOOKLETS: readonly Booklet[] = [
-  { id: "cards", color: "seiji", foil: "silver", material: "leather", local: "カード帖", layout: "idCard2x4" },
-  { id: "postcards", color: "ginnezu", foil: "blind", material: "cloth", local: "絵葉書", layout: "postcard2x3" },
+  { id: "proj", color: "seiji", foil: "silver", material: "leather", local: "项目卡册", layout: "idCard2x4", kind: "cards" },
+  { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards" },
+  { id: "ticket", color: "seiji", foil: "silver", material: "leather", local: "车票卡册", kind: "tickets" },
+  { id: "receipt", color: "ginnezu", foil: "blind", material: "cloth", local: "小票卡册", layout: "postcard2x3", kind: "postcards" },
 ];
 
 /** The local name of each pouch kind (the English page's; a Chinese page uses i18n's `held`). */
@@ -37,8 +42,8 @@ export const LOCAL_KIND: Record<ItemKind, string> = { card: "名刺", resume: "�
 export const booklet = (id: Tab): Booklet => BOOKLETS.find((b) => b.id === id) ?? BOOKLETS[0]!;
 
 /** How many things a booklet holds (the count after its name). */
-export function countOf(profile: Profile, id: Tab): number {
-  return profile.albums[id].length;
+export function countOf(_profile: Profile, id: Tab): number {
+  return deskCount(id);
 }
 
 /** The local title of a booklet (hashira, 題簽 slip): カード帖 / 絵葉書 / 履歴書, or 卡册 / 明信片 / 简历 for a Chinese page. */
