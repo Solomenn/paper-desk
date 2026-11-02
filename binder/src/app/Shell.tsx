@@ -745,7 +745,12 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
           <aside className="words" aria-label={profile.name}>
             {/* phones and the tablet: the switch in the header, at the identity's right (one tap, clear of the booklet tabs) */}
             {phone ? <LangSwitch langs={langs} han={han} tab={tab} /> : null}
-            <Toc profile={profile} tab={shown} onTab={onTab} />
+            {/* 纸桌：一次只开一本（HANDOFF 第十一节第四阶段第 2 条），没有册子目录；左上角一个箭头回到它所属的页面 */}
+            <a className="back" href={booklet(tab).back.href} aria-label={booklet(tab).back.label} title={booklet(tab).back.label}>
+              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M16 10H4M9 5L4 10l5 5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
             {land ? <LangSwitch langs={langs} han={han} tab={tab} /> : null}
             {!compact ? (
               <CrossFade k={handling} className="handling" ms={300}>

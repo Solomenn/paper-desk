@@ -36,9 +36,13 @@ export type AppProps = {
 };
 
 const isTab = (v: string): v is Tab => (TAB_IDS as readonly string[]).includes(v);
+/**
+ * 纸桌（HANDOFF 第十一节第四阶段第 2 条）：活页夹不是单独一页，一次只开一本，属于它的页面。哪一本由地址里的 ?kind= 决定
+ * （和 album.html?kind= 一样）：proj 项目、note 便签、ticket 车票、receipt 小票；没写或写错时是项目册。
+ */
 const readTab = (): Tab => {
-  const h = window.location.hash.replace(/^#/, "");
-  return isTab(h) ? h : DEFAULT_TAB;
+  const k = new URLSearchParams(window.location.search).get("kind") ?? "";
+  return isTab(k) ? k : DEFAULT_TAB;
 };
 function readView(): View {
   const v = new URLSearchParams(window.location.search).get("view");
@@ -243,20 +247,6 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
     loadDomFaces(profile, t.lang === "zh");
   }, [t, han, profile]);
 
-  // Hash <-> booklet. The default is written with replaceState so Back does not land on an empty hash.
-  useEffect(() => {
-    if (view === "folio" && !isTab(window.location.hash.replace(/^#/, ""))) window.history.replaceState(null, "", `${window.location.search}#${DEFAULT_TAB}`);
-    const on = () => {
-      const h = window.location.hash.replace(/^#/, "");
-      if (!isTab(h)) return; // foreign anchors never change the booklet
-      window.clearTimeout(leaveTimer.current);
-      setLeaving(null);
-      setTabState(h);
-      setDetail(null);
-    };
-    window.addEventListener("hashchange", on);
-    return () => window.removeEventListener("hashchange", on);
-  }, [view]);
   // The text version opened with a booklet's hash (#resume from "Read as text"): start at that section
   useLayoutEffect(() => {
     if (view !== "text") return;
@@ -333,7 +323,7 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
     [tab, materials],
   );
 
-  // Keys (§1.8): 1 2 3 booklets; ← → pages; Space opens a closed booklet; S shake; M sound. Never while typing, with a
+  // Keys (§1.8): ← → pages (纸桌: one booklet per page, so no number keys); Space opens a closed booklet; S shake; M sound. Never while typing, with a
   // modifier, or while a dialog (a held object, the Profile sheet) is up: those handle their own keys.
   useEffect(() => {
     if (view !== "folio") return;
@@ -342,11 +332,7 @@ export function App({ profile: firstProfile = sample, folio, lang: firstLang, st
       if (detail || document.querySelector("dialog[open]")) return;
       const api = stageRef.current;
       const k = e.key;
-      const n = Number(k);
-      if (!e.repeat && n >= 1 && n <= TAB_IDS.length) {
-        const x = TAB_IDS[n - 1];
-        if (x) setTab(x);
-      } else if ((k === "ArrowRight" || k === "ArrowLeft") && api?.ready && api.open && api.page) {
+      if ((k === "ArrowRight" || k === "ArrowLeft") && api?.ready && api.open && api.page) {
         if (k === "ArrowRight") api.next?.();
         else if (!e.repeat || api.page.index > 0) api.prev?.();
       } else if (k === " " && api?.ready && !api.open && !(e.target as HTMLElement | null)?.closest?.("button, a")) {

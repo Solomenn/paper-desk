@@ -203,6 +203,10 @@ button.id-name, button.nameplate { cursor: pointer; text-align: start; }
 .jo { margin-top: calc(40 * var(--u)); font: 400 calc(14 * var(--u))/calc(24 * var(--u)) var(--mincho); letter-spacing: .015em; color: var(--tetsu); text-wrap: pretty; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; padding-bottom: calc(2 * var(--u)); }
 
 /* 目次 the booklets: name, leader, count; the active row has a 藍 disc that slides between rows */
+/* 纸桌：返回箭头（替换册子目录的位置）：20 px 细线图标，平时淡，悬停变深 */
+.words > .back { align-self: flex-start; display: grid; place-items: center; width: calc(36 * var(--u)); height: calc(36 * var(--u)); margin: calc(-8 * var(--u)) 0 0 calc(-8 * var(--u)); color: var(--ainezu); transition: color .18s var(--ease); }
+.words > .back:hover { color: var(--tetsu); }
+.words > .back:focus-visible { outline: 1.5px solid currentColor; outline-offset: 2px; border-radius: 2px; }
 .toc { position: relative; margin-top: calc(40 * var(--u)); --rh: calc(36 * var(--u)); }
 .toc ol { display: grid; }
 .toc a { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; height: var(--rh); color: var(--ainezu); transition: color .18s var(--ease); }

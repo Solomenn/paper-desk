@@ -27,13 +27,15 @@ export type Booklet = {
   layout?: LayoutPreset;
   /** Which of the author's albums it is drawn as: its faces, its handling line, its insets. */
   kind: "cards" | "postcards" | "tickets";
+  /** 它属于哪个页面：左上角的返回箭头回到那里（和 album.html 的返回箭头一样；地址相对于 /binder/） */
+  back: { href: string; label: string };
 };
 
 export const BOOKLETS: readonly Booklet[] = [
-  { id: "proj", color: "seiji", foil: "silver", material: "leather", local: "项目卡册", layout: "idCard2x4", kind: "cards" },
-  { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards" },
-  { id: "ticket", color: "seiji", foil: "silver", material: "leather", local: "车票卡册", kind: "tickets" },
-  { id: "receipt", color: "ginnezu", foil: "blind", material: "cloth", local: "小票卡册", layout: "postcard2x3", kind: "postcards" },
+  { id: "proj", color: "seiji", foil: "silver", material: "leather", local: "项目卡册", layout: "idCard2x4", kind: "cards", back: { href: "../#board", label: "回到黑板" } },
+  { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../#notes", label: "回到软木板" } },
+  { id: "ticket", color: "seiji", foil: "silver", material: "leather", local: "车票卡册", kind: "tickets", back: { href: "../focus.html", label: "回到站台" } },
+  { id: "receipt", color: "ginnezu", foil: "blind", material: "cloth", local: "小票卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../receipt.html", label: "回到小票" } },
 ];
 
 /** The local name of each pouch kind (the English page's; a Chinese page uses i18n's `held`). */

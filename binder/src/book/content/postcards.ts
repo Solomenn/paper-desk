@@ -244,7 +244,11 @@ function messageSide(ctx: CanvasRenderingContext2D, card: PostcardItem, cell: Sl
     font(ctx, "hand", 600, size, s);
     return ctx.measureText(s).width;
   };
-  let lines = wrapUnits(card.message.trim(), maxW, measure);
+  // 纸桌：便签原文里的换行保留（每段各自折行）；作者的留言没有换行，结果和原来一样
+  let lines = card.message
+    .trim()
+    .split("\n")
+    .flatMap((para) => wrapUnits(para.trim(), maxW, measure));
   const maxLines = Math.floor((H - 30) / lead);
   if (lines.length > maxLines) {
     lines = lines.slice(0, maxLines);
