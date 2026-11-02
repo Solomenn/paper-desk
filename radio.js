@@ -175,7 +175,9 @@ const rim=new THREE.DirectionalLight(0xfff0d8,1.2); rim.position.set(4,2,-3); sc
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({color:0x453f36,opacity:.12}));
 ground.rotation.x=-Math.PI/2; ground.position.y=-1.18; ground.receiveShadow=true; scene.add(ground);
 
-let radioRoot=new THREE.Group(), tuneDisc=null, needle=null;\nlet dialRotor=null, usingRealModel=false;\nlet dialCenter=new THREE.Vector3(1.1191,-.2879,.5653), dialRadius=.6335, dialPlaneZ=.5903;
+let radioRoot=new THREE.Group(), tuneDisc=null, needle=null;
+let dialRotor=null, usingRealModel=false;
+let dialCenter=new THREE.Vector3(1.1191,-.2879,.5653), dialRadius=.6335, dialPlaneZ=.5903;
 scene.add(radioRoot);
 
 const cream=new THREE.MeshStandardMaterial({color:0xedece5,roughness:.62,metalness:.02});
