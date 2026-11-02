@@ -6,7 +6,7 @@
 <title>切换条 · 纸桌实验</title>
 <style>
   /* 复现 pengzhe.ng 时间轴切换条（桌面版）。数字来自实测，见 docs/pengzhe-strip-notes.md；代码是自己写的，物件用占位方块 */
-  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   #strip { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
   .it { position: absolute; top: 0; width: 240px; text-align: center; }
   .it .when { position: absolute; top: 214px; left: 0; right: 0; color: #8a8a8a; font-weight: 500; font-size: 20px; line-height: 32px; }
@@ -66,7 +66,6 @@ const tickEls = ticks.map(() => { const d = document.createElement("div"); d.cla
 const sepEls = seps.map(x => { const d = document.createElement("div"); d.className = "sp"; zone.append(d); return d; });
 const lab = document.createElement("div"); lab.id = "lab"; zone.append(lab);
 const hotEl = document.createElement("div"); hotEl.className = "mk"; hotEl.style.opacity = 0; zone.append(hotEl);
-const nums = [-2, -1, 0, 1, 2].map(() => { const d = document.createElement("div"); d.className = "num"; zone.append(d); return d; });
 const marks = [0, 1].map(() => { const d = document.createElement("div"); d.className = "mk"; zone.append(d); return d; });
 
 /* ── 声音：40 ms 的咔声样本（高通白噪声 + 5.2 kHz / 7.4 kHz 两个衰减正弦），五种音色 ── */
@@ -143,27 +142,58 @@ function hoverItem(b) {
 }
 const unzoom = x => H.zoomAt + (x - H.zoomAt) / H.zoom;                   // 屏幕 x → 刻度坐标（放大前）
 H.zoomAt = ZW / 2; const ZOOM = 1.072;                                     // 悬停时刻度以刻度区中心放大 7%（由四次点击的落点反推）
+/* 按住不动（离按下点 6 px 内）500 ms，或拖动中停下 150 ms 后再停 550 ms，进入"细调"：
+   刻度区中间打开一个日子轮，一格一天（格宽 = 字宽 + 12），指针移多少，轮就转多少 */
+const MON = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"], MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const meas = document.createElement("canvas").getContext("2d");
+const tw = (t, f) => { meas.font = f; return meas.measureText(t).width; };
+const NUMF = "500 19px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif", MONF = "600 15px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+const E = []; U.forEach((u, k) => {
+  const [m, d] = u.d.split(" ");
+  if (k > 0 && U[k - 1].d.split(" ")[0] !== m) E.push({ t: MON[MONS.indexOf(m)], month: true, u: k });
+  E.push({ t: d, month: false, u: k });
+});
+let acc = 0; E.forEach(e => { e.w = tw(e.t, e.month ? MONF : NUMF) + (e.month ? 2 : 0) + 12; e.c = acc + e.w / 2; acc += e.w; });
+const eOfU = new Int32Array(U.length); E.forEach((e, k) => { if (!e.month) eOfU[e.u] = k; });
+const pool = Array.from({ length: 11 }, () => { const d = document.createElement("div"); d.className = "num"; zone.append(d); return d; });
+function enterFine() {
+  H.fine = true; H.anchor = H.px; H.sel = eOfU[uOf[cur]]; H.lastPx = H.px; H.dir = 1;
+  // 参考里，按下后已拖过的距离会带进轮子（×0.69）；限制在 ±36 px 以内，免得长拖后一停就跳很远（只对上了一组连拍，见笔记）
+  H.P = E[H.sel].c + Math.max(-36, Math.min(36, (H.px - (H.down.x - zoneRect().left)) * 0.69)); click("fine"); kick();
+}
+function fineMove() {
+  const dp = (H.px - H.lastPx) * 0.69; H.dir = Math.sign(dp) || H.dir || 1;          // 轮转得比指针慢：增益 0.69（由参考的连拍反推）
+  H.P = Math.max(E[0].c, Math.min(E.at(-1).c, H.P + dp)); H.lastPx = H.px;
+  let k = H.sel; while (k < E.length - 1 && H.P > E[k].c + E[k].w / 2) k++; while (k > 0 && H.P < E[k].c - E[k].w / 2) k--;
+  if (E[k].month) k = H.dir > 0 ? Math.min(E.length - 1, k + 1) : Math.max(0, k - 1);   // 月份只占位，不能选；落在月份上就取前进方向的下一天
+  if (k !== H.sel) { H.sel = k; click(E[k].u !== E[H.sel === k ? k : k].u && month[U[E[k].u].items[0]] !== month[cur] ? "month" : "line"); const u = E[k].u; if (u !== uOf[cur]) goTo(U[u].items[0], false, "scrub"); }
+}
 zone.addEventListener("pointermove", e => {
   const r = zoneRect(); H.px = e.clientX - r.left; const near = Math.abs(e.clientY - (r.top + LINE)) <= 20 && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
   if (!H.inside && near) { H.inside = true; H.month = -1; click("line"); }
-  if (H.inside && !H.scrub) H.hot = hoverItem(unzoom(H.px));
-  if (H.down && !H.scrub && Math.abs(e.clientX - H.down.x) > 3) { H.scrub = true; H.tick = -1; }
-  if (H.scrub) {
-    const k = nearU(H.px), pm = month[cur]; if (k !== uOf[cur]) goTo(U[k].items[0], false, "scrub");
-    // 擦动时每跨过一根刻度响一声；跨月换成 month
-    let tk = 0, bd = 1e9; ticks.forEach((t, j) => { const d = Math.abs(t.x - H.px); if (d < bd) { bd = d; tk = j; } });
+  if (H.down) {
+    if (Math.abs(H.px - H.rest.x) > 6) { H.rest = { x: H.px, t: performance.now(), armed: false }; }
+    if (!H.scrub && Math.abs(e.clientX - H.down.x) > 3) { H.scrub = true; H.tick = -1; }
+  }
+  if (H.fine) fineMove();
+  else if (H.scrub) {
+    // 粗擦：和悬停一样按月握住、放大映射；每跨过一根刻度响一声，跨月换成 month
+    const it = hoverItem(unzoom(H.px)); H.hot = it; if (it !== cur) goTo(it, false, "scrub");
+    const b = unzoom(H.px); let tk = 0, bd = 1e9; ticks.forEach((t, j) => { const d = Math.abs(t.x - b); if (d < bd) { bd = d; tk = j; } });
     if (tk !== H.tick) { if (H.tick >= 0) click(ticks[tk].month !== ticks[H.tick].month ? "month" : "line"); H.tick = tk; }
-  }        // 擦动时指针直接对刻度坐标，不再放大
+  } else if (H.inside) H.hot = hoverItem(unzoom(H.px));
   kick();
 });
 zone.addEventListener("pointerleave", () => { if (!H.down) H.inside = false; kick(); });
 zone.addEventListener("pointerdown", e => {
-  if (e.button !== 0 || !H.inside) return; zone.setPointerCapture(e.pointerId); H.down = { x: e.clientX }; audio(); setTimeout(() => click("line"), 0); kick();   // 按下那一刻响一声
+  if (e.button !== 0 || !H.inside) return; zone.setPointerCapture(e.pointerId);
+  H.down = { x: e.clientX, t: performance.now() }; H.rest = { x: H.px, t: performance.now(), first: true };
+  audio(); setTimeout(() => click("line"), 0); kick();                  // 按下那一刻响一声
 });
 const up = e => {
   if (!H.down) return;
-  if (!H.scrub) goTo(H.hot ?? nearItem(unzoom(H.px)), false);          // 参考站：鼠标点击、松手都不另外出声
-  H.down = null; H.scrub = false;
+  if (!H.scrub && !H.fine) goTo(H.hot ?? nearItem(unzoom(H.px)), false);   // 参考站：鼠标点击、松手都不另外出声
+  H.down = null; H.scrub = false; H.fine = false;
   const r = zoneRect(); H.inside = Math.abs(e.clientY - (r.top + LINE)) <= 20 && e.clientX >= r.left && e.clientX <= r.right; kick();
 };
 zone.addEventListener("pointerup", up); zone.addEventListener("pointercancel", up);
@@ -188,35 +218,49 @@ function frame(now) {
   const dt = Math.min(50, now - last); last = now;
   if (S.g) { const a = glideAt(S.g, now); S.x = a.x; if (a.p >= 1) S.g = null; }
   H.amt = ease(H.amt, H.inside ? 1 : 0, 45, dt);
-  H.scrubAmt = ease(H.scrubAmt, H.scrub ? 1 : 0, 60, dt);
-  H.zoom = ease(H.zoom, H.inside && !H.scrub ? ZOOM : 1, 60, dt);
-  if (H.inside && !H.scrub) H.hot = hoverItem(unzoom(H.px));            // 放大过程中所指的地点也跟着更新
+  H.scrubAmt = ease(H.scrubAmt, H.fine ? 1 : 0, 60, dt);
+  H.zoom = ease(H.zoom, H.inside && !H.fine ? ZOOM : 1, 60, dt);
+  if (H.inside && !H.scrub && !H.fine) H.hot = hoverItem(unzoom(H.px));  // 放大过程中所指的地点也跟着更新
+  if (H.down && !H.fine) { const still = now - H.rest.t; if (still >= (H.rest.first ? 500 : 700)) enterFine(); }
   draw();
-  const busy = !!S.g || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.scrub ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.scrub ? ZOOM : 1)) > .001;
+  const busy = !!S.g || !!H.down || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.fine ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.fine ? ZOOM : 1)) > .001;
   window.__state = { t: now, x: S.x, cur, scrub: H.scrub };
   if (busy) requestAnimationFrame(frame); else running = false;
 }
 function draw() {
   strip.style.transform = `translateX(${innerWidth / 2 - ITEM / 2 - S.x}px)`;
   const Z = x => H.zoomAt + (x - H.zoomAt) * H.zoom;
-  const marker = Lpos[cur], hot = H.inside && !H.scrub ? unzoom(H.px) : null;
-  // 擦动时：指针处打开一个口子，显示当前和前后两个地点的日子
-  const gap = H.scrubAmt, gx = H.scrub || gap > .01 ? Z(U[uOf[cur]].x) : 0, half = 92 * gap;
+  const marker = Lpos[cur], hot = H.inside && !H.fine ? unzoom(H.px) : null;
+  // 细调：日子轮停在按下处，刻度整体平移，让当前地点对准轮心；轮心两侧 92 px 内的刻度隐去
+  const gap = H.scrubAmt, gx = H.fine ? H.anchor : (H.anchorLast ?? 0);
+  // 口子两边各到最外面那格的边，再留一点空（参考里刻度离露出的数字很近）
+  if (H.sel === undefined) H.sel = eOfU[uOf[cur]];
+  const sl = Math.max(0, H.sel - 2), sr = Math.min(E.length - 1, H.sel + 2);
+  const halfL = gap * (E[H.sel].c - E[sl].c + E[sl].w / 2 + 2), halfR = gap * (E[sr].c - E[H.sel].c + E[sr].w / 2 + 2), half = Math.max(halfL, halfR);
+  if (H.fine) H.anchorLast = H.anchor;
+  const shift = gap * ((H.fine ? H.anchor : gx) - Z(marker));
+  const fadeGap = x => { if (gap <= .01) return 1; const h = x < gx ? halfL : halfR; return Math.abs(x - gx) < h + 8 ? Math.max(0, (Math.abs(x - gx) - h) / 8) : 1; };
   ticks.forEach((t, k) => {
-    let x = Z(t.x), h = 8, w = 3, op = .14, col = "#1a1a1a";
-    if (Math.abs(t.x - marker) < C * .999) op = 1;                        // 当前地点那一两根刻度
-    if (gap > .01) { const dx = x - gx; if (Math.abs(dx) < half + 6) op *= Math.max(0, (Math.abs(dx) - half) / 6); const edge = Math.min(x, ZW - x); op *= Math.min(1, edge / 40 + (1 - gap)); }
-    const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2}px)`; el.style.height = h + "px"; el.style.width = w + "px"; el.style.opacity = op; el.style.background = col;
+    const x = Z(t.x) + shift, h = 8, w = 3; let op = Math.abs(t.x - marker) < C * .999 ? 1 : .14;   // 当前地点那一两根刻度
+    op *= fadeGap(x); if (gap > .01) op *= Math.min(1, Math.min(x, ZW - x) / 40 + (1 - gap));
+    const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2}px)`; el.style.opacity = op;
   });
-  seps.forEach((s, k) => { let x = Z(s), op = .28; if (gap > .01 && Math.abs(x - gx) < half + 6) op *= Math.max(0, (Math.abs(x - gx) - half) / 6); sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = op; });
-  // 悬停标签：指针下那根刻度上方的日期
-  // 悬停：指针所指地点（按地点对齐，月界处不会跳到上个月）的位置上立一根橙色长刻度（4×32），上方是它的日期
+  seps.forEach((sx, k) => { const x = Z(sx) + shift; sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = .28 * fadeGap(x); });
+  // 悬停和粗擦：指针所指地点（按月握住）立一根 4×32 的橙色刻度，上方是它的日期
   if (hot !== null && H.amt > .01) { const it = H.hot ?? nearItem(hot), hx = Z(Lpos[it]); lab.textContent = DATES[it]; lab.style.transform = `translate(calc(${hx}px - 50%), ${LINE - 37 - 12}px)`; lab.style.opacity = H.amt;
-    hotEl.style.opacity = H.amt; hotEl.style.transform = `translate(${hx - 2}px, ${LINE - 16 * H.amt - 4 * (1 - H.amt)}px)`; hotEl.style.height = (8 + 24 * H.amt) + "px"; }
-  else { lab.style.opacity = 0; hotEl.style.opacity = 0; }
-  // 擦动：五个日子，中间橙色，上下两道橙色短线
-  const cols = ["#a8a8a8", "#444", "#ff9705", "#444", "#a8a8a8"], OFF = [-65, -35, 0, 35, 66];
-  nums.forEach((el, k) => { const j = uOf[cur] + k - 2; if (j < 0 || j >= U.length || gap < .01) { el.style.opacity = 0; return; } el.textContent = U[j].d.split(" ")[1]; el.style.color = cols[k]; el.style.transform = `translate(calc(${gx + OFF[k] * gap}px - 50%), calc(${LINE}px - 50%))`; el.style.opacity = gap; });
+    hotEl.style.opacity = H.amt; hotEl.style.height = (8 + 24 * H.amt) + "px"; hotEl.style.transform = `translate(${hx - 2}px, ${LINE - 4 - 12 * H.amt}px)`; }
+  else { lab.style.opacity = 0; hotEl.style.opacity = H.fine ? 0 : hotEl.style.opacity * 0; }
+  // 日子轮：选中的橙色居中，前后各两格由深到浅，月份是小号大写
+  pool.forEach(el => el.style.opacity = 0);
+  if (gap > .01) {
+    let n = 0;
+    for (let k = Math.max(0, H.sel - 2); k <= Math.min(E.length - 1, H.sel + 2) && n < pool.length; k++) {      // 轮上只露前后各两格
+      const x = gx + (E[k].c - E[H.sel].c), d = Math.abs(k - H.sel); if (Math.abs(x - gx) > half + 4) continue;
+      const el = pool[n++]; el.textContent = E[k].t; el.style.font = E[k].month ? MONF : NUMF; el.style.letterSpacing = E[k].month ? ".5px" : "0";
+      el.style.color = d === 0 ? "#ff9705" : E[k].month ? "#9a9a9a" : d === 1 ? "#444" : "#a8a8a8";
+      el.style.transform = `translate(calc(${x}px - 50%), calc(${LINE}px - 50%))`; el.style.opacity = gap * Math.max(0, Math.min(1, (half + 4 - Math.abs(x - gx)) / 14));
+    }
+  }
   marks.forEach((el, k) => { el.style.opacity = gap; el.style.transform = `translate(${gx - 2}px, ${LINE + (k ? 19 : -29)}px)`; });
   zone.setAttribute("aria-valuenow", cur + 1); zone.setAttribute("aria-valuetext", DATES[cur]);
 }
