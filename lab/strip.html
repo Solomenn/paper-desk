@@ -279,14 +279,14 @@ zone.addEventListener("pointermove", e => {
 zone.addEventListener("pointerleave", () => { H.py = 999; if (!H.down) H.inside = false; kick(); });
 zone.addEventListener("pointerdown", e => {
   if (e.button !== 0 || !H.inside) return; zone.setPointerCapture(e.pointerId);
-  // 记下按下时标签显示的地点，松手就去那里
-  H.down = { x: e.clientX, t: performance.now(), item: labItem }; H.rest = { x: H.px, t: performance.now(), first: true };
+  // 记下按下那一刻指针所指的地点（按月握住），松手就去那里；不用标签上的字——跨月时标签会在月初停半秒，跟着它会点偏
+  H.down = { x: e.clientX, t: performance.now(), item: H.hot ?? nearItem(unzoom(H.px)) }; H.rest = { x: H.px, t: performance.now(), first: true };
   audio(); kick();
 });
 const up = e => {
   if (!H.down) return;
-  // 点哪去哪：去标签上正显示的那个地点（参考：显示 Jun 3 就落在 Jun 3）；点完后高亮对准它，直到指针再移动 6 px。点击、松手都不另外出声
-  if (!H.scrub && !H.fine) { const it = H.down.item >= 0 ? H.down.item : H.hot ?? nearItem(unzoom(H.px)); goTo(it, false); H.snap = { x: H.px, item: it }; }
+  // 点哪去哪：去按下时指针所指的地点；点完后高亮对准它，直到指针再移动 6 px。点击、松手都不另外出声
+  if (!H.scrub && !H.fine) { const it = H.down.item; goTo(it, false); H.snap = { x: H.px, item: it }; }
   H.down = null; H.scrub = false; H.fine = false;
   const r = zoneRect(); H.inside = Math.abs(e.clientY - (r.top + LINE)) <= 20 && e.clientX >= r.left && e.clientX <= r.right; kick();
 };
