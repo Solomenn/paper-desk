@@ -10,12 +10,12 @@ if (embedded) document.body.classList.add("embed");
 qs("#close").onclick = () => parent.postMessage({type:"paper-desk:radio-close"}, "*");
 
 const stations = [
-  {name:"雪声", freq:"88.1 FM", kind:"snow"},
-  {name:"雨声", freq:"91.7 FM", kind:"rain"},
-  {name:"白噪音", freq:"95.3 FM", kind:"white"},
-  {name:"棕噪音", freq:"99.5 FM", kind:"brown"},
-  {name:"炉火", freq:"103.2 FM", kind:"fire"},
-  {name:"列车", freq:"107.1 FM", kind:"train"}
+  {name:"雪声", note:"风雪 · 寒风", description:"轻柔风雪与远处寒风", freq:"88.1 FM", kind:"snow"},
+  {name:"雨声", note:"细雨 · 雨幕", description:"窗边细雨与连续雨幕", freq:"91.7 FM", kind:"rain"},
+  {name:"白噪音", note:"均匀底噪", description:"均匀宽频底噪，适合专注", freq:"95.3 FM", kind:"white"},
+  {name:"棕噪音", note:"低沉 · 柔和", description:"低沉柔和的低频噪声", freq:"99.5 FM", kind:"brown"},
+  {name:"炉火", note:"木柴 · 噼啪", description:"木柴燃烧与偶尔爆裂声", freq:"103.2 FM", kind:"fire"},
+  {name:"列车", note:"车轮 · 轨道", description:"车轮轰鸣与规律轨道声", freq:"107.1 FM", kind:"train"}
 ];
 let station = +(localStorage.getItem("paper-desk.radio.station") || 0);
 station = Math.max(0, Math.min(stations.length - 1, station));
@@ -26,7 +26,20 @@ let volume = +(localStorage.getItem("paper-desk.radio.volume") || 48);
 const ticks = qs("#ticks");
 stations.forEach((s,i) => {
   const b = document.createElement("button");
-  b.title = s.name; b.onclick = () => setStation(i, true); ticks.appendChild(b);
+  b.type = "button";
+  b.className = "preset";
+  b.title = s.description;
+  b.setAttribute("aria-label", s.name + "：" + s.description);
+  b.setAttribute("aria-pressed", i===station ? "true" : "false");
+  const name = document.createElement("span");
+  name.className = "preset-name";
+  name.textContent = s.name;
+  const note = document.createElement("small");
+  note.className = "preset-note";
+  note.textContent = s.note;
+  b.append(name,note);
+  b.addEventListener("click", () => setStation(i, true));
+  ticks.appendChild(b);
 });
 qs("#volume").value = volume;
 
@@ -136,7 +149,11 @@ function setStation(i, user=false) {
   localStorage.setItem("paper-desk.radio.station",station);
   qs("#stationName").textContent=stations[station].name;
   qs("#stationFreq").textContent=stations[station].freq;
-  [...ticks.children].forEach((b,n)=>b.classList.toggle("on",n===station));
+  [...ticks.children].forEach((b,n)=>{
+    const selected=n===station;
+    b.classList.toggle("on",selected);
+    b.setAttribute("aria-pressed",selected?"true":"false");
+  });
   updateDial();
   if (playing) startBed();
   if (user) { tuneBurst(); clickSound(.025); qs("#hint").classList.add("hide"); }
