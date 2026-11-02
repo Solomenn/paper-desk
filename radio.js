@@ -71,6 +71,20 @@ function clickSound(v=.05) {
   s.buffer=b; f.type="highpass"; f.frequency.value=1300; g.gain.value=v;
   s.connect(f).connect(g).connect(master); s.start();
 }
+function tuneBurst() {
+  if (!playing || !ac || volume===0) return;
+  const length=Math.max(1,Math.floor(ac.sampleRate*.085));
+  const buffer=ac.createBuffer(1,length,ac.sampleRate), data=buffer.getChannelData(0);
+  for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*(.72+Math.random()*.28);
+  const source=ac.createBufferSource(), filter=ac.createBiquadFilter(), gain=ac.createGain();
+  const now=ac.currentTime;
+  source.buffer=buffer; filter.type="bandpass"; filter.frequency.value=1850; filter.Q.value=.65;
+  gain.gain.setValueAtTime(.0001,now);
+  gain.gain.linearRampToValueAtTime(.055*(volume/100),now+.009);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+.085);
+  source.connect(filter).connect(gain).connect(master);
+  source.start(now); source.stop(now+.09);
+}
 function stopBed() {
   clearTimeout(crackTimer); clearTimeout(trainTimer);
   active.forEach(s=>{ try{s.stop();}catch{} }); active=[];
@@ -124,7 +138,7 @@ function setStation(i, user=false) {
   [...ticks.children].forEach((b,n)=>b.classList.toggle("on",n===station));
   updateDial();
   if (playing) startBed();
-  if (user) { clickSound(.045); qs("#hint").classList.add("hide"); }
+  if (user) { tuneBurst(); clickSound(.025); qs("#hint").classList.add("hide"); }
 }
 qs("#power").onclick=()=>setPlaying(!playing);
 qs("#volume").oninput=e=>{
@@ -161,7 +175,7 @@ const rim=new THREE.DirectionalLight(0xfff0d8,1.2); rim.position.set(4,2,-3); sc
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({color:0x453f36,opacity:.12}));
 ground.rotation.x=-Math.PI/2; ground.position.y=-1.18; ground.receiveShadow=true; scene.add(ground);
 
-let radioRoot=new THREE.Group(), tuneDisc=null, knobHit=null, needle=null;
+let radioRoot=new THREE.Group(), tuneDisc=null, needle=null;\nlet dialRotor=null, usingRealModel=false;\nlet dialCenter=new THREE.Vector3(1.1191,-.2879,.5653), dialRadius=.6335, dialPlaneZ=.5903;
 scene.add(radioRoot);
 
 const cream=new THREE.MeshStandardMaterial({color:0xedece5,roughness:.62,metalness:.02});
@@ -228,39 +242,85 @@ async function loadModel() {
 }
 await loadModel();
 
-function updateDial() {
-  const t=station/(stations.length-1);
-  if (tuneDisc && tuneDisc.parent===radioRoot.children[0]) tuneDisc.rotation.z=(-.95+t*1.9);
-  if (needle) {
-    const a=-1.08+t*2.16, cx=1.35, cy=.28, rr=.64;
-    needle.position.x=cx+Math.sin(a)*rr; needle.position.y=cy+Math.cos(a)*rr; needle.rotation.z=Math.PI-a;
-  }
+function stationAngle(i) {
+  return -Math.PI + (i / stations.length) * Math.PI * 2;
 }
+function stationFromAngle(a) {
+  const raw=Math.round(((a+Math.PI)/(Math.PI*2))*stations.length);
+  return ((raw%stations.length)+stations.length)%stations.length;
+}
+function buildDialMarker() {
+  if (!usingRealModel) return;
+  dialRotor=new THREE.Group();
+  dialRotor.position.set(dialCenter.x,dialCenter.y,dialPlaneZ);
+  const ink=new THREE.LineBasicMaterial({color:0x666257,transparent:true,opacity:.82,depthTest:false});
+  const lineGeometry=new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,.19,.002), new THREE.Vector3(0,.545,.002)
+  ]);
+  dialRotor.add(new THREE.Line(lineGeometry,ink));
+  const tip=new THREE.Mesh(
+    new THREE.SphereGeometry(.026,16,12),
+    new THREE.MeshBasicMaterial({color:0x9b8962,depthTest:false})
+  );
+  tip.position.set(0,.555,.006);
+  dialRotor.add(tip);
+  radioRoot.add(dialRotor);
+}
+function updateDial() {
+  const a=stationAngle(station);
+  if (tuneDisc && tuneDisc.parent===radioRoot.children[0]) tuneDisc.rotation.z=a;
+  if (needle) {
+    const cx=1.35, cy=.28, rr=.64;
+    needle.position.x=cx+Math.cos(a)*rr;
+    needle.position.y=cy+Math.sin(a)*rr+.25;
+    needle.rotation.z=a-Math.PI/2;
+  }
+  if (dialRotor) dialRotor.rotation.z=a-Math.PI/2;
+}
+buildDialMarker();
 updateDial();
 
-// drag directly on fallback tuning disc
+// The real T3 dial sits on the front face. Its hit plane is invisible;
+// OrbitControls only receives pointer gestures that begin outside this circle.
 const ray=new THREE.Raycaster(), pointer=new THREE.Vector2();
-let tuning=false, lastX=0, accum=station;
-function hitDial(e) {
-  if (!knobHit) return false;
+const dialPlane=new THREE.Plane(), hitPoint=new THREE.Vector3(), planeNormal=new THREE.Vector3(0,0,1);
+let tuning=false, tuningPointer=null;
+function dialAngleAt(e, requireInside=false) {
   const r=renderer.domElement.getBoundingClientRect();
-  pointer.x=((e.clientX-r.left)/r.width)*2-1; pointer.y=-((e.clientY-r.top)/r.height)*2+1;
+  pointer.x=((e.clientX-r.left)/r.width)*2-1;
+  pointer.y=-((e.clientY-r.top)/r.height)*2+1;
   ray.setFromCamera(pointer,camera);
-  return ray.intersectObject(knobHit,true).length>0;
+  dialPlane.setFromNormalAndCoplanarPoint(planeNormal,new THREE.Vector3(0,0,dialPlaneZ));
+  const p=ray.ray.intersectPlane(dialPlane,hitPoint);
+  if (!p) return null;
+  const dx=p.x-dialCenter.x, dy=p.y-dialCenter.y, distance=Math.hypot(dx,dy);
+  if (requireInside && (distance>dialRadius || distance<.075)) return null;
+  return Math.atan2(dy,dx);
 }
 renderer.domElement.addEventListener("pointerdown",e=>{
-  if(!hitDial(e)) return;
-  tuning=true; lastX=e.clientX; accum=station; controls.enabled=false; renderer.domElement.setPointerCapture(e.pointerId);
-});
+  const a=dialAngleAt(e,true);
+  if(a===null) return;
+  e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+  tuning=true; tuningPointer=e.pointerId; controls.enabled=false;
+  try { renderer.domElement.setPointerCapture(e.pointerId); } catch {}
+  const next=stationFromAngle(a);
+  if(next!==station) setStation(next,true);
+  qs("#hint").classList.add("hide");
+},true);
 renderer.domElement.addEventListener("pointermove",e=>{
-  if(!tuning) return;
-  accum+=(e.clientX-lastX)/55; lastX=e.clientX;
-  const n=Math.max(0,Math.min(stations.length-1,Math.round(accum)));
-  if(n!==station) setStation(n,true);
-});
-function endTune(){ tuning=false; controls.enabled=true; }
-renderer.domElement.addEventListener("pointerup",endTune);
-renderer.domElement.addEventListener("pointercancel",endTune);
+  if(!tuning || e.pointerId!==tuningPointer) return;
+  const a=dialAngleAt(e,false);
+  if(a===null) return;
+  const next=stationFromAngle(a);
+  if(next!==station) setStation(next,true);
+},true);
+function endTune(e) {
+  if(!tuning || (e && e.pointerId!==tuningPointer)) return;
+  tuning=false; tuningPointer=null; controls.enabled=true;
+}
+renderer.domElement.addEventListener("pointerup",endTune,true);
+renderer.domElement.addEventListener("pointercancel",endTune,true);
+renderer.domElement.addEventListener("lostpointercapture",endTune,true);
 
 function resize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
 addEventListener("resize",resize);
