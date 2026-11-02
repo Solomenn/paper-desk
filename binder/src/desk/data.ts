@@ -6,6 +6,7 @@
  *   小票卡册 receipt  paper-desk.receipts.v1：receipt.html 打印后收进来的小票，一天一张
  * 每张都补一个 doneAt（完成、归档、到站、打印的时刻），按它从早到晚排。
  * 项目卡册和便签卡册没有数据时，用 album.html 里同样的示例；车票卡册和小票卡册没有数据就是空册子。
+ * 地址里有 &m=2026-10（从手账书架按月打开）时只留那个月的卡，也不用示例（和 album.html 一样）。
  * 页面打开时读一次（DESK），之后不再读。
  */
 
@@ -16,7 +17,7 @@ export type NoteCard = { id: string; cat?: string; text?: string; doneAt: number
 export type TicketCard = {
   id: string; name?: string; stops?: string[]; minutes: number; start?: number; endAt?: number; seat?: string; no?: string; km?: number; doneAt: number;
 };
-export type ReceiptCard = { id: string; date?: string; img: string; store?: string; done?: number; total?: number; doneAt: number };
+export type ReceiptCard = { id: string; date?: string; store?: string; done?: number; total?: number; doneAt: number };
 
 export type Desk = { proj: ProjCard[]; note: NoteCard[]; ticket: TicketCard[]; receipt: ReceiptCard[] };
 
@@ -36,9 +37,16 @@ function read(): Desk {
   let proj = list(tasks?.done).map((c, i) => ({ ...c, id: String(c.id ?? `p${i}`), doneAt: num(c.doneAt) }) as ProjCard);
   let note = list(getJ("paper-desk.notes-archive.v1")).map((n, i) => ({ ...n, id: String(n.id ?? `n${i}`), doneAt: num(n.archivedAt ?? n.createdAt) }) as NoteCard);
   const ticket = list(getJ("paper-desk.tickets.v1")).map((t, i) => ({ ...t, id: String(t.id ?? t.no ?? `t${i}`), minutes: num(t.minutes), doneAt: num(t.endAt ?? t.end) }) as TicketCard);
-  const receipt = list(getJ("paper-desk.receipts.v1"))
-    .filter((r) => typeof r.img === "string")
-    .map((r, i) => ({ ...r, id: String(r.date ?? `r${i}`), doneAt: num(r.at) }) as ReceiptCard);
+  const receipt = list(getJ("paper-desk.receipts.v1")).map((r, i) => ({ ...r, id: String(r.date ?? `r${i}`), doneAt: num(r.at) }) as ReceiptCard);
+  if (MONTH) {
+    // 只留这个月的（按 doneAt 的年月），不用示例
+    const [y, m] = MONTH.split("-").map(Number);
+    const inMonth = (c: { doneAt: number }) => {
+      const d = new Date(c.doneAt);
+      return d.getFullYear() === y && d.getMonth() + 1 === m;
+    };
+    return { proj: byTime(proj.filter(inMonth)), note: byTime(note.filter(inMonth)), ticket: byTime(ticket.filter(inMonth)), receipt: byTime(receipt.filter(inMonth)) };
+  }
   if (!proj.length) proj = demoProj();
   if (!note.length) note = demoNotes();
   return { proj: byTime(proj), note: byTime(note), ticket: byTime(ticket), receipt: byTime(receipt) };
@@ -64,5 +72,12 @@ function demoProj(): ProjCard[] {
   ];
   return rows.map(([cat, title, goal], i) => ({ id: `demo${i}`, cat, title, goal, minutes: 25, doneAt: now - (9 - i) * day }));
 }
+
+/** 从手账书架按月打开时的月份（地址里的 m=2026-10），否则 null */
+export const MONTH: string | null = (() => {
+  if (typeof location === "undefined") return null;
+  const m = new URLSearchParams(location.search).get("m");
+  return m && /^\d{4}-\d{1,2}$/.test(m) ? m : null;
+})();
 
 export const DESK: Desk = typeof localStorage === "undefined" ? { proj: [], note: [], ticket: [], receipt: [] } : read();

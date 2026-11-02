@@ -767,7 +767,7 @@
   <span class="tsep"></span>
   <button class="tb" id="timerBtn" title="计时器"><span class="tclock"></span></button>
   <button class="tb" data-radio-open title="白噪音收音机"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="8" width="23" height="16" rx="2.4"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="12" r=".75"/><circle cx="11.5" cy="12" r=".75"/><circle cx="8.5" cy="15" r=".75"/><circle cx="11.5" cy="15" r=".75"/><circle cx="8.5" cy="18" r=".75"/><circle cx="11.5" cy="18" r=".75"/><circle cx="8.5" cy="21" r=".75"/><circle cx="11.5" cy="21" r=".75"/></g><circle cx="21" cy="16" r="4.4"/><circle cx="21" cy="16" r="1.05"/></svg></button>
-  <a class="tb" id="albumBtn" href="album.html" title="卡册"><span class="talbum" data-n="0"></span></a>
+  <a class="tb" id="albumBtn" href="binder/?kind=proj" title="卡册"><span class="talbum" data-n="0"></span></a>
   <a class="tb" href="journal.html" title="手账"><span class="tbook"></span></a>
   <a class="tb" href="receipt.html" title="今日小票"><span class="treceipt"></span></a>
   <span class="tsep"></span>
@@ -832,7 +832,7 @@
     // the album button opens this page's album
     const ab = $("#albumBtn");
     if (ab) {
-      ab.href = page === 0 ? "album.html?kind=proj" : "album.html?kind=note";
+      ab.href = page === 0 ? "binder/?kind=proj" : "binder/?kind=note";
       ab.title = page === 0 ? "项目卡册" : "便签卡册（把便签拖到这里归档）";
       const n = page === 0 ? ((load("paper-desk.desk-tasks.v1", {}) || {}).done || []).length : (load("paper-desk.notes-archive.v1", []) || []).length;
       $(".talbum", ab).dataset.n = n;

@@ -4,6 +4,7 @@ import type { LayoutPreset } from "../book/layout";
 import type { ItemKind, Profile } from "../profile/schema";
 import type { Dict } from "./i18n";
 import { deskCount } from "../desk/content";
+import { MONTH } from "../desk/data";
 import { TAB_IDS, type Tab } from "./types";
 
 /*
@@ -40,6 +41,9 @@ export const BOOKLETS: readonly Booklet[] = [
 
 /** The local name of each pouch kind (the English page's; a Chinese page uses i18n's `held`). */
 export const LOCAL_KIND: Record<ItemKind, string> = { card: "名刺", resume: "履歴書", ticket: "入場券", polaroid: "写真", note: "一筆箋" };
+
+/** 返回箭头回哪里：从手账书架按月打开的回书架，否则回这本册子所属的页面 */
+export const backOf = (id: Tab): { href: string; label: string } => (MONTH ? { href: "../journal.html", label: "回到书架" } : booklet(id).back);
 
 export const booklet = (id: Tab): Booklet => BOOKLETS.find((b) => b.id === id) ?? BOOKLETS[0]!;
 

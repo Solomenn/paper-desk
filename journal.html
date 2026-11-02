@@ -308,10 +308,10 @@
   // what each shelf holds, month by month: "y-m" → how many
   const byMonth = (list, ts) => { const m = new Map(); list.forEach(x => { const t = ts(x); if (!t) return; const d = new Date(t), k = `${d.getFullYear()}-${d.getMonth() + 1}`; m.set(k, (m.get(k) || 0) + 1); }); return m; };
   const SHELVES = [
-    { id: "proj", name: "项目", hint: "盖过章的项目", months: byMonth(pd.done || [], t => t.doneAt), href: k => `album.html?kind=proj&m=${k}` },
-    { id: "note", name: "便签", hint: "归档的便签", months: byMonth(get("paper-desk.notes-archive.v1") || [], n => n.archivedAt || n.createdAt), href: k => `album.html?kind=note&m=${k}` },
-    { id: "receipt", name: "小票", hint: "每天的小票", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `album.html?kind=receipt&m=${k}` },
-    { id: "ticket", name: "车票", hint: "坐过的雪国线", months: byMonth(get("paper-desk.tickets.v1") || [], t => t.endAt || t.end), href: k => `album.html?kind=ticket&m=${k}` },
+    { id: "proj", name: "项目", hint: "盖过章的项目", months: byMonth(pd.done || [], t => t.doneAt), href: k => `binder/?kind=proj&m=${k}` },
+    { id: "note", name: "便签", hint: "归档的便签", months: byMonth(get("paper-desk.notes-archive.v1") || [], n => n.archivedAt || n.createdAt), href: k => `binder/?kind=note&m=${k}` },
+    { id: "receipt", name: "小票", hint: "每天的小票", months: byMonth(get("paper-desk.receipts.v1") || [], r => r.at), href: k => `binder/?kind=receipt&m=${k}` },
+    { id: "ticket", name: "车票", hint: "坐过的雪国线", months: byMonth(get("paper-desk.tickets.v1") || [], t => t.endAt || t.end), href: k => `binder/?kind=ticket&m=${k}` },
     { id: "jot", name: "碎碎念", hint: "每个月的手账", journal: true },
   ];
   const FILL = ["#5a3a26", "#6b4430", "#4a3424", "#7a4b2e", "#3f2c1f", "#80563a", "#5e4a36", "#6d3b2b", "#4d3a2a", "#8a6a44"];

@@ -4,7 +4,7 @@ import type { CoverMaterial } from "../book/cover";
 import { hanLangOf, profileHan, type HanLang } from "../fonts";
 import { langName } from "../profile/folio";
 import type { Profile } from "../profile/schema";
-import { BOOKLETS, booklet, caseHex, countOf, MATERIALS } from "./booklets";
+import { BOOKLETS, backOf, booklet, caseHex, countOf, MATERIALS } from "./booklets";
 import { emailOf, writeClipboard } from "./ContactRows";
 import { hasHan, run, textProps, useFontRuns } from "./fonts";
 import { useT, type Dict } from "./i18n";
@@ -330,8 +330,9 @@ export function Colophon({ profile, han }: { profile: Profile; han: HanLang }) {
   );
 }
 
-/** Sound On|Off and Text version →: the prefs row on the page's bottom line. */
+/** Sound On|Off: the prefs row on the page's bottom line (纸桌 2026-11-02: the Text version link is off — the text version is the author's). */
 export function Prefs({ tab }: { tab: Tab }) {
+  void tab;
   const t = useT();
   const { muted, toggle } = useMuted();
   return (
@@ -339,9 +340,6 @@ export function Prefs({ tab }: { tab: Tab }) {
       <button type="button" className="pw" aria-pressed={!muted} aria-keyshortcuts="M" onClick={toggle} data-testid="sound-toggle">
         {t.colophon.sound} <b>{muted ? t.colophon.off : t.colophon.on}</b>
       </button>
-      <a className="pw" href={pageUrl({ view: "text", tab })}>
-        {t.colophon.textVersion} <span className="go" aria-hidden="true">→</span>
-      </a>
     </div>
   );
 }
@@ -646,18 +644,6 @@ function ProfileSheet({ profile, han, tab, material, onMaterial, printed, onClos
   );
 }
 
-/** " →" to the text version, after the no-WebGL line */
-function TextLink({ tab }: { tab: Tab }) {
-  const t = useT();
-  return (
-    <>
-      {" "}
-      <a className="tl" href={pageUrl({ view: "text", tab })} aria-label={t.loading.noGlLink}>
-        →
-      </a>
-    </>
-  );
-}
 
 /* ------------------------------------------------------------------ the shell */
 type ShellProps = {
@@ -746,7 +732,7 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
             {/* phones and the tablet: the switch in the header, at the identity's right (one tap, clear of the booklet tabs) */}
             {phone ? <LangSwitch langs={langs} han={han} tab={tab} /> : null}
             {/* 纸桌：一次只开一本（HANDOFF 第十一节第四阶段第 2 条），没有册子目录；左上角一个箭头回到它所属的页面 */}
-            <a className="back" href={booklet(tab).back.href} aria-label={booklet(tab).back.label} title={booklet(tab).back.label}>
+            <a className="back" href={backOf(tab).href} aria-label={backOf(tab).label} title={backOf(tab).label}>
               <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
                 <path d="M16 10H4M9 5L4 10l5 5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -756,7 +742,6 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
               <CrossFade k={handling} className="handling" ms={300}>
                 <p aria-live="polite">
                   {handling}
-                  {printed ? <TextLink tab={tab} /> : null}
                 </p>
               </CrossFade>
             ) : null}
@@ -784,7 +769,6 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
           {phone && (hint || printed) ? (
             <p className="hint" aria-hidden={printed ? undefined : "true"}>
               {printed ? handling : hint}
-              {printed ? <TextLink tab={tab} /> : null}
             </p>
           ) : null}
           {loading ? (
