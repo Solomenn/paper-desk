@@ -82,50 +82,22 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 
 后续研究重点：把两套色卡的真实色样、不同日光下的偏色、哑光/织物/木材/金属之间的搭配整理成纸桌自己的材质板；不要直接把屏幕截图取色当成实物标准。
 
-### 手账书架：图书馆多排书架方向
+### 手账书架：公共图书馆多排书架
 
-用户明确想要的是 **Public Library Interior** 那种公共图书馆书库：多排、连续、双面可取书的开放式书架形成过道；不是家用独立书柜，也不是底部带厚重柜体的储物柜。
+<badge>当前首选：候选 A</badge>
 
-- 形态参考：<https://www.cgtrader.com/3d-models/interior/other/public-library-interior>。用户喜欢它的书库排列方式；目前售价 **US$14.99**，不作为免费方案。
-- 外观目标：暖白色 / 象牙白金属或哑光喷涂结构；开放式多层书格；视觉轻、直、连续；不加笨重底柜。书脊保留低饱和的米白、灰蓝、浅绿等颜色，不把书和书架全部刷成纯白。
-- 主场景需要的是**双面书架单元 + 端部 / 转角模块**，能拼成多条平行过道；单面靠墙书柜只作次要参考。
+用户已认可 **Public Library and Reading Garden** 作为书架首选方向，进入真实 GLB 模型验收阶段。暂不继续扩展候选，也不直接替换 `journal.html`。
 
-#### 免费候选（第一轮）
-
-1. **优先检查：<https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98> — Library Stack Straight**
-   - CC0 1.0；GLB 约 1.3 MB；77,484 triangles、58,662 vertices、5 种材质。
-   - 尺寸 1.4 × 2.145 × 0.6 m；双面书架、四层搁板、中间隔板，书脊独立建模。
-   - 同一套还有 Library Stack End 和 Library Stack Corner，可拼接连续书库过道；整套 51 个 GLB，合计 9.1 MB。
-   - **风险：** 页面标明这套 51/51 模型由 AI 工具生成；当前缩略图是浅橡木端板和低饱和书脊，并非白色成品。必须先检查原始 GLB 的近景几何、法线、UV、书脊和材质，再决定是否将端板 / 框架改为暖白色。它目前是结构上最接近目标的免费候选，不等于已经通过美术验收。
-
-2. **第二候选：<https://www.innerscene.com/tools/library/3d-parts/double-sided-library-shelving-education-furniture-c2b67492> — Double sided library shelving**
-   - CC0；GLB 约 1.8 MB；标称尺寸 1.1 × 0.7 × 1.8 m。
-   - 单个双面教育 / 图书馆书架，可复制排列成多排。
-   - 页面没有公布三角面数量和详细贴图规格；需要打开 3D 预览确认结构、书籍细节和材质，不凭文件大小推断精度。
-
-3. **第三候选：<https://3dwarehouse.sketchup.com/model/9f4c624e-e285-42eb-9b16-dfb7255c6f6a/Library-Book-Shelf> — Library Book Shelf（Archie M.）**
-   - 双面书架，带书；11,586 polygons、22 种材质、627 KB。
-   - 标称尺寸 1.2 × 0.625 × 2.0 m；原生 SketchUp，需要转换为 GLB。
-   - **授权尚待核实**，确认授权前不进入项目。
-
-4. **墙面书架参考：<https://3dwarehouse.sketchup.com/model/0ce33b92-6188-4ce8-87ff-49e45135404a/Library-Book-Shelves-with-Rolling-Ladder> — Library Book Shelves with Rolling Ladder（Thomas F.）**
-   - 四段连续书架并带滚动梯；7,971 polygons、4 种材质、473 KB。
-   - 单段标称约 115 英寸高、32.5 英寸宽；更接近靠墙连续书架，不是我们优先要的双面过道书架。
-   - 原生 SketchUp；授权尚待核实。
-
-#### 付费对照基准（不购买）
-
-- **Public Library Interior：** <https://www.cgtrader.com/3d-models/interior/other/public-library-interior>
-- 当前售价 US$14.99；约 619,657 polygons / 948,328 triangles；136 objects、75 unique meshes、50 materials、65 张 PBR 贴图（最高 4K），GLTF 约 77 MB。
-- 包含约 35,133 本书、双层环形书库、书梯、阅读桌和完整公共空间。只作为书库排列、书籍密度和细节表现的对照基准。
-
-#### 已排除 / 不作为主候选
-
-- Grab3D 的 Library Room / Bookstore Interior：虽然免费 CC0、可下载 GLB，但属于等距视角的轻量化卡通房间套件，不符合纸桌的实体模型质感。
-- 1DesignTool 的 Bookshelf walls：2,644 triangles、207 KB，明确为 low-poly，且是深桃花心木墙面书架；不符合精度和配色方向。
-- FurniMesh 的 AI 白色家用书架：多数是单体家用储物架，不是公共图书馆双面多排书库；不因面数高就列为优先候选。
-
-**当前状态：书架尚未定稿。** 下一步先对前两款免费双面书架做真实 GLB 检查和 360° 预览，再做暖白材质测试；确认近景质量、书籍细节和拼接效果后再选，不直接把 AI 生成或低多边形模型当成最终资产。
+- **独立预览页：** <https://solomenn.github.io/paper-desk/shelf-preview.html>（单体 / 多排、直线 / 端部 / 转角、原始材质 / 暖白试色、360° 旋转；独立页面，不影响现有手账页）。
+- **模型套件：** <https://3dassets.dev/packs/public-library-and-reading-garden>；CC0 1.0 Universal，可免费商用、可修改，无需署名。
+- **直线书架：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98>；GLB <https://cdn.3dassets.dev/assets/30913/v1/model.glb>；1.4 × 2.145 × 0.6 m，77,484 triangles、58,662 vertices、5 materials，下载约 1.3 MB。双面四层书架、中央隔板、独立建模书脊。
+- **端部组件：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-cb4a4da8>；GLB <https://cdn.3dassets.dev/assets/30914/v1/model.glb>；0.2 × 2.195 × 0.64 m，756 triangles，约 17.7 KB。
+- **转角组件：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-31a8d131>；GLB <https://cdn.3dassets.dev/assets/30915/v1/model.glb>；0.975 × 2.12 × 0.975 m，12,204 triangles、10,586 vertices、4 materials，约 241 KB。
+- **当前原始外观：** 浅橡木色端板，书脊为低饱和灰绿、浅橙、米白等颜色；直线书架底部可见深色踢脚 / 底座。原模型不是白色成品。
+- **暖白试色：** 结构目标色暂用 `#f0eee7`，哑光、低金属度；书脊保持原有低饱和配色。这个颜色仅是预览起点，尚未最终定色。
+- **质量风险：** 3DAssets.dev 标注套件 51/51 个模型均使用 AI 工具生成。面数不能代表模型质量；需要实际检查正反面、侧板厚度、书脊近景、法线、材质分组、重复书籍和底部踢脚板。若底座显得笨重，应评估隐藏或调整，而不是接受厚重底柜。
+- **授权记录：** 来源、作者、CC0 许可已补入 `NOTICE.md`。预览页直接从 CDN 加载模型，没有把 GLB 文件复制进仓库。
+- **后续决策：** 先看实际模型和暖白效果；验收通过后才讨论导入 `journal.html`。候选 B/C/D 暂停，仅在 A 的几何或材质验收失败时作为备选。
 
 共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
