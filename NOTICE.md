@@ -40,13 +40,20 @@ the frame and table as free material (the views in those photos are his and are 
 (1440×962), the platform watermark removed, the glass punched out.
 
 
-## Library shelf candidate A (preview only)
 
-The standalone preview `shelf-preview.html` loads three models directly from the **Public Library and Reading Garden** pack by **3D Assets**:
 
-- Pack: <https://3dassets.dev/packs/public-library-and-reading-garden>
-- `Library Stack Straight`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98> — <https://cdn.3dassets.dev/assets/30913/v1/model.glb>
-- `Library Stack End`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-cb4a4da8> — <https://cdn.3dassets.dev/assets/30914/v1/model.glb>
-- `Library Stack Corner`: <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-31a8d131> — <https://cdn.3dassets.dev/assets/30915/v1/model.glb>
+## Bookshelf Short LOWPOLY — recoloured asset
 
-Licence: **CC0 1.0 Universal** (free commercial use and modification; attribution not required). The pack page reports that AI tools were used for all 51 models. The GLB files are loaded from the source CDN by the preview page; they are not copied into this repository. This is a candidate under review, not yet an adopted production asset.
+- Title: **Bookshelf Short LOWPOLY**
+- Author: **EFX** — <https://sketchfab.com/evan4129>
+- Source: <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>
+- Licence: **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
+- Original uploaded file: `bookshelf_short_lowpoly.glb`.
+- Modified file: `bookshelf_short_offwhite.glb`; only the shelf-structure UV atlas region was recoloured to warm ivory `#E9E2D6`. Book spines and covers retain the source artwork. The 4K base-colour texture is retained; normal and metallic-roughness textures are resized to 2K for a smaller preview asset.
+- Attribution: “Bookshelf Short LOWPOLY” by EFX, licensed under CC BY 4.0. Changes: shelf structure recoloured to warm ivory and PBR textures optimized for browser preview.
+
+## External 3D product previews (reference only)
+
+- **HQ3DMOD POS Receipt Printer**: <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983> — paid model, not downloaded.
+- **LINTEX Silk Wall** official configurator: <https://lintex.com/products/silk-wall/>.
+- **LINTEX Textile Noticeboard** official configurator: <https://lintex.com/products/textile-noticeboard/>.
