@@ -1,5 +1,7 @@
 # 纸桌 · Paper Desk
 
+**3D 模型浏览馆：** [在线查看](https://solomenn.github.io/paper-desk/models.html) · 书架 / 小票机 / LINTEX Silk Wall / Textile Noticeboard
+
 个人效率网页：黑板上的项目卡、软木板上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
 当前只开白天模式（夜间模式的代码还在，切换按钮已关）。
 
