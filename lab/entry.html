@@ -47,14 +47,14 @@ const PAGES = [
   { name: "小票", href: "../receipt.html", model: null },
   { name: "白噪音", href: "../radio.html", model: "t3" },
 ];
-const DATES = PAGES.map((p, i) => "P " + (i + 1));
+const DATES = PAGES.map((p, i) => "P" + (i + 1) + " 1");                   // 每页算一个"月"：页与页之间有长分隔，跨页的咔声更重
 window.PAGES_3D = PAGES;
 /* 竖直位置照参考在 7 个窗口高度下的实测值插值（日期行顶、刻度区顶；宽度不影响），超出范围按两端斜率外推 */
 const VH = [573, 688, 760, 860, 900, 1080, 1440], WHEN = [24, 88, 145, 195, 215, 305, 485], ZONE = [453, 567, 624, 685, 715, 850, 1120];
 function interp(xs, ys, x) { let i = 0; while (i < xs.length - 2 && x > xs[i + 1]) i++; return ys[i] + (ys[i + 1] - ys[i]) * (x - xs[i]) / (xs[i + 1] - xs[i]); }
 function place() { const h = innerHeight; document.getElementById("strip").style.top = (interp(VH, WHEN, h) - 214) + "px"; document.getElementById("zone").style.top = interp(VH, ZONE, h) + "px"; }
 addEventListener("resize", place);
-const N = DATES.length, ITEM = 240, PITCH = ITEM + 32; window.PITCH_3D = PITCH;     // 参考站：物件宽 = 图宽（至少 240），间隔 32；占位都按 240
+const N = DATES.length, ITEM = 240, PITCH = ITEM + 160; window.PITCH_3D = PITCH;    // 物件间距加大（参考是 32），滑动时才看得出在动（用户 2026-11-02）
 const month = DATES.map(d => d.split(" ")[0]), day = DATES.map(d => +d.split(" ")[1]);
 
 /* ── 物件条 ── */
@@ -69,12 +69,12 @@ DATES.forEach((d, i) => {
 const zone = document.getElementById("zone"), ZW = 544, LINE = 58;     // 刻度中线离刻度区顶部 58 px（页面 y≈772）
 const months = []; month.forEach((m, i) => { if (!months.length || months.at(-1).m !== m) months.push({ m, a: i, n: 0 }); months.at(-1).n++; });
 const Lpos = new Float64Array(N), tickOf = new Int32Array(N); const ticks = [], seps = [];
-const TICK_GAP = 40;                                                      // 一页一根刻度，间隔拉大（用户 2026-11-02 定）
+const PER_PAGE = 9;                                                       // 每页一段 9 根小刻度，页与页之间一根长分隔；刻度区宽度同参考（用户 2026-11-02：别简化，要连续的咔声）
 function layout() {
   const avail = ZW - 48;
-  const plan = t => { const ks = months.map(mo => Math.max(1, Math.round(mo.n * t / N))); const slots = ks.reduce((a, b) => a + b, 0) - 1 + (months.length - 1); return { ks, slots, s: avail / slots }; };
+  const plan = t => { const ks = months.map(() => PER_PAGE); const slots = ks.reduce((a, b) => a + b, 0) - 1 + (months.length - 1); return { ks, slots, s: avail / slots }; };
   let p = plan(N); for (let t = N - 1; p.s < 7 && t >= months.length; t--) p = plan(t);
-  const c = TICK_GAP, total = c * p.slots; let u = (ZW - total) / 2 - c / 2, R = 0;
+  const c = Math.min(9, p.s), total = c * p.slots; let u = (ZW - total) / 2 - c / 2, R = 0;
   months.forEach((mo, k) => {
     if (k > 0) { seps.push(u + c / 2); u += c; }
     const r = p.ks[k];
@@ -379,8 +379,8 @@ function draw() {
     }
     op *= fadeGap(x); if (gap > .01) op *= Math.min(1, Math.min(x, ZW - x) / 40 + (1 - gap));
     const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2 + y}px)`; el.style.height = h + "px"; el.style.width = w + "px"; el.style.opacity = op; el.style.background = col;
-    // 滑行中当前位置每越过一根刻度响一声 travel
-    if (S.g && S.g.mode !== "scrub" && k === tickOf[Math.round(it0)] && H.lastTravelTick !== k) {   // 擦动时由擦动自己出声，不再叠 travel
+    // 滑行中当前位置每越过一根小刻度响一声 travel（连续的机械声）
+    if (S.g && S.g.mode !== "scrub" && Math.abs(t.x - mk) <= C / 2 && H.lastTravelTick !== k) {   // 擦动时由擦动自己出声，不再叠 travel
       if (H.lastTravelTick !== undefined) click("travel"); H.lastTravelTick = k; }
   });
   if (!S.g) H.lastTravelTick = undefined;
@@ -415,66 +415,88 @@ draw();
 } }
 </script>
 <script type="module">
-/* ── 3D：一面墙、一个太阳、左侧三扇拱窗（只投影），六个物件各自缩放进 240 px 的格子 ──
-   太阳方向、窗洞形状、墙色、光强都沿用 lab/window-light.html（按 LINTEX 产品图拟合过）；
-   正交相机，1 m = PXM 个 CSS 像素，所以 3D 和物件条的 DOM 像素一一对应 */
+/* ── 3D：墙和窗光原样照搬 lab/window-light.html（同一个取景比例、同一扇窗、48 个太阳方向的软阴影、反射光、拉毛墙），
+   只在加载和窗口改变大小时算一次；物件每帧画在上面。物件投在墙上的影子只扣掉照到那里的阳光（落在窗影里就不再变暗） ── */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
-const P = Object.fromEntries(new URLSearchParams(location.search)), num = (k, d) => (P[k] !== undefined ? +P[k] : d);   // 调参用：?gs=&gx=&gy=&sky=&sun=
-const deg = Math.PI / 180, PXM = 450, YC = 1.5, CELL = 240 / PXM, FIT = 0.86 * CELL, OFF_WALL = 0.012;
-const GS = num("gs", 0.45), GX = num("gx", 2.0), GY = num("gy", 1.0);      // 窗的缩放和位置：亮处罩住前几格，一道窗棂斜影横过物件（试过几组后选定）
+const deg = Math.PI / 180;
 const GOBO = await (await fetch("../assets/objects/lintex-light-gobo.json")).json();
-while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));        // 等切换条脚本把页面列表准备好
+while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));          // 等切换条脚本把页面列表准备好
 const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D;
+const AZ = GOBO.az, EL = GOBO.el, W = GOBO.W;
+// 以下常数与 lab/window-light.html 默认值相同（冷调）
+const SUN = 8.97, SKY = 2.26, ANG = 0.5, NDIR = 48, BOUNCE = 4.2, BSIG = 0.5, WALL = "#f0f0ee";
+const T = { sun: 0xffffff, sky: 0xe8eff3, ground: 0xdfe2e3 }, tint = new THREE.Color(0.95, 0.99, 1.03);
+const YC = 1.5 - 3 * 2.536 / 1140, VIEW_W = 2.536;                          // 画面宽永远是 2.536 m，和窗光页一样
+const OFF_WALL = 0.012, FIT_FRAC = 0.86;
+let wallReady = false;                                                    // 墙的光照算好之前不画
+
 const canvas = document.getElementById("gl");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 60); camera.position.set(0, YC, 10);
 const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 40); camera.position.set(0, YC, 10);
 
-// 墙
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), new THREE.MeshStandardMaterial({ color: "#f0f0ee", roughness: 0.95 }));
-wall.position.set(0, YC, 0); wall.receiveShadow = true; scene.add(wall);
+/* 反射光贴图（同窗光页） */
+const WX0 = -2.2, WX1 = 2.2, WY0 = -0.2, WY1 = 3.6, RES = 200;
+function bounceTexture() {
+  const cw = Math.round((WX1 - WX0) * RES / 4), ch = Math.round((WY1 - WY0) * RES / 4);
+  const c = document.createElement("canvas"); c.width = cw; c.height = ch; const g = c.getContext("2d");
+  g.fillStyle = "#000"; g.fillRect(0, 0, cw, ch);
+  const ce = Math.cos(EL * deg), se = Math.sin(EL * deg), ca = Math.cos(AZ * deg), sa = Math.sin(AZ * deg);
+  const toPx = (x, y) => [(x - WX0) / (WX1 - WX0) * cw, (1 - (y - WY0) / (WY1 - WY0)) * ch];
+  g.fillStyle = "#fff";
+  for (const h of [...GOBO.holes, ...(GOBO.islands || []).map(i => ({ island: i }))]) {
+    if (h.island) g.fillStyle = "#000";
+    g.beginPath();
+    (h.island || h).forEach(([z, y], i) => { const t = z / (ce * sa), X = -W + t * ce * ca, Y = y - t * se; const [px, py] = toPx(X, Y); i ? g.lineTo(px, py) : g.moveTo(px, py); });
+    g.closePath(); g.fill();
+  }
+  g.filter = `blur(${BSIG * RES / 4}px)`; g.drawImage(c, 0, 0); g.filter = "none";
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.NoColorSpace; return tex;
+}
+function stucco() {
+  const c = document.createElement("canvas"); c.width = c.height = 512; const g = c.getContext("2d"), img = g.createImageData(512, 512);
+  let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647; const a = new Float32Array(512 * 512).map(rnd);
+  for (let p = 0; p < 2; p++) { const t = a.slice(); for (let y = 0; y < 512; y++) for (let x = 0; x < 512; x++) { let v = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) v += t[((y + dy + 512) % 512) * 512 + ((x + dx + 512) % 512)]; a[y * 512 + x] = v / 9; } }
+  for (let i = 0; i < a.length; i++) { const v = Math.max(0, Math.min(255, (a[i] - .5) * 900 + 128)); img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255; }
+  g.putImageData(img, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 8); return t;
+}
+const bounce = bounceTexture();
+const wallMat = new THREE.MeshStandardMaterial({ color: WALL, roughness: 0.95, bumpMap: stucco(), bumpScale: 0.35, lightMap: bounce, lightMapIntensity: BOUNCE });
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(WX1 - WX0, WY1 - WY0), wallMat);
+wall.position.set((WX0 + WX1) / 2, (WY0 + WY1) / 2, 0); wall.receiveShadow = true; scene.add(wall);
 
-// 左墙的窗：看不见，只投影（和窗光实验页同一份窗洞数据）
+/* 左墙的窗：只投影（同窗光页，不缩放、不挪动） */
+const gobo = new THREE.Group(); scene.add(gobo);
 {
-  const W = GOBO.W, sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
-  for (const h of GOBO.holes) { const p = new THREE.Path(); p.moveTo(h[0][0], h[0][1]); for (const q of h.slice(1)) p.lineTo(q[0], q[1]); p.closePath(); sh.holes.push(p); }
+  const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
+  for (const h of GOBO.holes) { const q = new THREE.Path(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); sh.holes.push(q); }
   const mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
-  const gobo = new THREE.Group(); gobo.scale.setScalar(GS); gobo.position.set(GX, GY, 0); scene.add(gobo);   // 窗整体缩小，影子才和一排物件相称
   const add = shape => { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false }), mat); m.rotation.y = -Math.PI / 2; m.position.set(-W, 0, 0); m.castShadow = true; gobo.add(m); };
   add(sh);
   for (const h of GOBO.islands || []) { const q = new THREE.Shape(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); add(q); }
 }
 
-// 光：冷调上午（默认，用户 2026-11-02 定）
-const tint = new THREE.Color(0.95, 0.99, 1.03);
-scene.add(new THREE.HemisphereLight(new THREE.Color(0xe8eff3).multiply(tint), new THREE.Color(0xdfe2e3).multiply(tint), num("sky", 3.6)));
-const sun = new THREE.DirectionalLight(0xffffff, num("sun", 6));
+/* 光（同窗光页） */
+const hemi = new THREE.HemisphereLight(new THREE.Color(T.sky).multiply(tint), new THREE.Color(T.ground).multiply(tint), SKY); scene.add(hemi);
+const sun = new THREE.DirectionalLight(T.sun, SUN);
 sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
-Object.assign(sun.shadow.camera, { left: -4.5, right: 4.5, top: 4.5, bottom: -4.5, near: 1, far: 40 });
-sun.shadow.bias = -0.0002; sun.shadow.normalBias = 0.002; sun.shadow.radius = 6; sun.shadow.blurSamples = 16;
-sun.target.position.set(0, YC, 0);
-sun.position.set(-Math.cos(GOBO.el * deg) * Math.cos(GOBO.az * deg), Math.sin(GOBO.el * deg), Math.cos(GOBO.el * deg) * Math.sin(GOBO.az * deg)).multiplyScalar(14).add(sun.target.position);
-scene.add(sun, sun.target);
+Object.assign(sun.shadow.camera, { left: -2.6, right: 2.6, top: 2.6, bottom: -2.6, near: 1, far: 40 });
+sun.shadow.bias = -0.0001; sun.shadow.normalBias = 0.0015;
+sun.target.position.set(0, 1.5, 0); scene.add(sun, sun.target);
+const sunAt = (az, el) => sun.position.set(-Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).multiplyScalar(14).add(sun.target.position);
 
-// 物件
-let off = innerWidth / 2 - 120;                                         // 物件条的左边（DOM 像素），由切换条每帧传进来
-const slots = PAGES_3D.map(() => { const g = new THREE.Group(); scene.add(g); return g; });
-function fitInto(group, obj) {                                            // 缩放到格子里，背面贴近墙（离墙 OFF_WALL）
-  const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-  const k = FIT / Math.max(size.x, size.y);
-  obj.scale.multiplyScalar(k); obj.position.set(-c.x * k, -c.y * k, -box.min.z * k + OFF_WALL);
-  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  group.add(obj); render();
-}
+/* 物件：各自缩放进 240 px 的格子，背面离墙 12 mm */
+const objects = new THREE.Group(); scene.add(objects);
+const slots = PAGES_3D.map(() => { const g = new THREE.Group(); objects.add(g); return g; });
 const loader = new GLTFLoader();
-const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光实验页）
+const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光页）
 const MODELS = {
-  async t3() {                                                            // 和 radio.html 同样的处理：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
+  async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
     const src = (await loader.loadAsync("../assets/radio/t3.glb")).scene; src.updateMatrixWorld(true);
     const sz = new THREE.Box3().setFromObject(src).getSize(new THREE.Vector3()), rot = sz.y > sz.x ? Math.PI / 2 : 0;
     const cream = new THREE.MeshStandardMaterial({ color: 0xedece5, roughness: .62, metalness: .02 });
@@ -484,36 +506,99 @@ const MODELS = {
       const m = new THREE.Mesh(geo, cream); const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 55), edgeMat); e.renderOrder = 2; m.add(e); g.add(m); });
     return g;
   },
-  async silk() {                                                          // 浅蓝哑光玻璃：材质同窗光实验页
+  async silk() {                                                          // 浅蓝哑光玻璃（材质同窗光页）
     const s = (await loader.loadAsync("../assets/objects/silk-wall-2000x1000.glb")).scene;
-    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.75 });
+    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.75, ior: 1.5 });
     s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
   },
-  async textile() { const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene; const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95 });   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
-    s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s; },
+  async textile() {
+    const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
+    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95 });   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
+    s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
+  },
 };
+let PXM = 1;                                                              // 每米多少 CSS 像素（随窗口宽度变）
+function fitInto(group, obj) {
+  group.userData.obj = obj;
+  const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  obj.userData.fit = { size, c, zmin: box.min.z, s0: obj.scale.x };
+  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  group.add(obj); sizeObjects(); render();
+}
+function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变
+  const fit = FIT_FRAC * 240 / PXM;
+  slots.forEach(g => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, k = fit / Math.max(f.size.x, f.size.y);
+    o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.zmin * k + OFF_WALL); });
+}
 PAGES_3D.forEach((p, i) => {
   if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
-  else {                                                                  // 还没有模型：占位方块
-    const m = new THREE.Mesh(new THREE.BoxGeometry(FIT * .8, FIT * .8, 0.02), new THREE.MeshStandardMaterial({ color: "#dcdfe1", roughness: .9 }));
-    fitInto(slots[i], m);
-  }
+  else fitInto(slots[i], new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.02), new THREE.MeshStandardMaterial({ color: "#dcdfe1", roughness: .9 })));   // 还没有模型：占位方块
 });
 
-// 每次物件条移动时：按 DOM 像素摆物件、重画一帧
-function layout() {
-  const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h, false);
-  Object.assign(camera, { left: -w / 2 / PXM, right: w / 2 / PXM, top: h / 2 / PXM, bottom: -h / 2 / PXM }); camera.updateProjectionMatrix();
+/* ── 墙：48 个太阳方向累积（线性），另存一份"只有阳光"的累积，用来让物件的影子只扣掉阳光 ── */
+const quad = mat => { const q = new THREE.Scene(); q.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat)); return q; };
+const cam2 = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const VS = "varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }";
+let rtPass, rtAcc, rtSun, rtVis;
+const addMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, w: { value: 1 } }, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
+  fragmentShader: "uniform sampler2D t; uniform float w; varying vec2 v; void main(){ gl_FragColor = vec4(texture2D(t, v).rgb * w, 1.); }" });
+const outMat = new THREE.ShaderMaterial({ uniforms: { acc: { value: null }, sun: { value: null }, vis: { value: null } }, depthTest: false, depthWrite: false, toneMapped: true, vertexShader: VS,
+  fragmentShader: `uniform sampler2D acc, sun, vis; varying vec2 v; void main(){
+    vec3 c = texture2D(acc, v).rgb - texture2D(sun, v).rgb * (1. - texture2D(vis, v).r);
+    gl_FragColor = vec4(max(c, vec3(0.)), 1.);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }` });
+const addScene = quad(addMat), outScene = quad(outMat);
+const visMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 1 });
+function bakeWall() {                                                     // 只有墙、窗和光：物件不在场
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+  [rtPass, rtAcc, rtSun, rtVis].forEach(r => r && r.dispose());
+  rtPass = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
+  rtAcc = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType });
+  rtSun = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType });
+  rtVis = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType });
+  outMat.uniforms.acc.value = rtAcc.texture; outMat.uniforms.sun.value = rtSun.texture; outMat.uniforms.vis.value = rtVis.texture; addMat.uniforms.t.value = rtPass.texture;
+  objects.visible = false; const tm = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
+  for (const [rt, sunOnly] of [[rtAcc, false], [rtSun, true]]) {
+    renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 1); renderer.clear();
+    hemi.visible = !sunOnly; wallMat.lightMapIntensity = sunOnly ? 0 : BOUNCE;
+    for (let i = 0; i < NDIR; i++) {
+      const a = i * 2.39996, r = ANG * deg * Math.sqrt((i + 0.5) / NDIR);
+      sunAt(AZ * deg + Math.cos(a) * r, EL * deg + Math.sin(a) * r); sun.shadow.needsUpdate = true;
+      renderer.setRenderTarget(rtPass); renderer.render(scene, camera);
+      addMat.uniforms.w.value = 1 / NDIR; renderer.autoClear = false; renderer.setRenderTarget(rt); renderer.render(addScene, cam2); renderer.autoClear = true;
+    }
+  }
+  hemi.visible = true; wallMat.lightMapIntensity = BOUNCE; renderer.toneMapping = tm; objects.visible = true;
+  sunAt(AZ * deg, EL * deg); renderer.setRenderTarget(null); wallReady = true;
 }
+
+/* ── 每帧：① 物件投在墙上的影子（只有物件投影，窗不投）→ rtVis；② 墙 = 累积 − 阳光 ×（1 − 可见度）；③ 物件（窗影照在物件上） ── */
+let off = innerWidth / 2 - 120;
 function render() {
+  if (!wallReady) return;
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120;   // 物件区中心的页面 y
   slots.forEach((g, i) => g.position.set((off + i * PITCH_3D + 120 - innerWidth / 2) / PXM, YC - (top - innerHeight / 2) / PXM, 0));
-  renderer.render(scene, camera);
+  sunAt(AZ * deg, EL * deg); sun.shadow.needsUpdate = true;
+  // ①
+  gobo.visible = false; hemi.visible = false; scene.overrideMaterial = visMat;
+  renderer.setRenderTarget(rtVis); renderer.setClearColor(0xffffff, 1); renderer.clear(); renderer.render(scene, camera);
+  scene.overrideMaterial = null; gobo.visible = true; hemi.visible = true;
+  // ②
+  renderer.setRenderTarget(null); renderer.render(outScene, cam2);
+  // ③
+  wall.visible = false; renderer.autoClear = false; sun.shadow.needsUpdate = true; renderer.render(scene, camera); renderer.autoClear = true; wall.visible = true;
 }
 window.__scene3d = o => { off = o; render(); };
-addEventListener("resize", () => { layout(); render(); });
-layout(); render();
+function layout() {
+  const w = innerWidth, h = innerHeight; PXM = w / VIEW_W;
+  renderer.setSize(w, h, false);
+  Object.assign(camera, { left: -VIEW_W / 2, right: VIEW_W / 2, top: h / 2 / PXM, bottom: -h / 2 / PXM }); camera.updateProjectionMatrix();
+  sizeObjects(); bakeWall(); render(); document.body.dataset.ready = "1";
+}
+let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(layout, 150); });
+layout();
 </script>
 </body>
 </html>
