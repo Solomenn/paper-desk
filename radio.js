@@ -211,10 +211,17 @@ async function loadModel() {
   const loader=new GLTFLoader();
   try {
     const gltf=await loader.loadAsync("assets/radio/t3.glb");
-    radioRoot.clear(); const m=gltf.scene; centerAndFit(m); radioRoot.add(m);
+    radioRoot.clear(); const m=gltf.scene;
+    const edgeMat=new THREE.LineBasicMaterial({color:0x5f5e59,transparent:true,opacity:.18,depthWrite:false});
+    m.traverse(o=>{
+      if(!o.isMesh) return;
+      o.material=cream;
+      const edgeGeo=new THREE.EdgesGeometry(o.geometry,55);
+      const edges=new THREE.LineSegments(edgeGeo,edgeMat);
+      edges.renderOrder=2; o.add(edges);
+    });
+    centerAndFit(m); radioRoot.add(m);
     document.body.classList.add("model-loaded");
-    // If the GLB exposes an obvious dial mesh, use it; otherwise OrbitControls still works and the UI dots tune.
-    m.traverse(o=>{ if(o.isMesh && !knobHit && /dial|tune|knob|wheel/i.test(o.name)){knobHit=o;tuneDisc=o;} });
   } catch {
     const m=buildFallback(); radioRoot.add(m);
   }
