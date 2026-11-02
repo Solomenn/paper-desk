@@ -14,6 +14,7 @@
 | [`album.html`](album.html) | 卡册：项目、便签、车票、小票，按月；车票有时间轴视图 |
 | [`journal.html`](journal.html) | 手账书架：每月一本 |
 | [`receipt.html`](receipt.html) | 今日小票机 |
+| [`radio.html`](radio.html) | 白噪音收音机：Braun T3 实体模型，转调谐盘换台；从桌面和雪国线以浮层打开 |
 
 共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
