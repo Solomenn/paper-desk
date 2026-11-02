@@ -89,7 +89,6 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
   - **高面数备选：<https://www.cgtrader.com/free-3d-models/interior/house-interior/3d-book-shelves-a2154731-e59c-4e2c-8e91-e754db770d55>**。免费，页面标注 521,303 polygons / 522,056 vertices，提供 C4D / FBX / OBJ；FBX 约 5.68 MB；不是 GLB，未明确 PBR/UV，需检查是否真的是多排书库而非普通室内书架。
   - 对照基准：付费 <https://www.cgtrader.com/3d-models/interior/other/public-library-interior> 页面列出约 948k triangles、136 objects、75 unique meshes、50 materials、65 textures（最高 4K），售价约 US$14.99。只作为用户喜欢的书库排列和细节密度参照，不购买。
 - 暂不采用：低多边形卡通图书馆、传统木质古典书架或家用装饰书柜。白色预览目标是暖白色喷涂金属/哑光白色端板，书籍保留克制的低饱和封面色；不是把整组书架和书都刷成纯白。
-- 不采用低多边形卡通图书馆、传统木质古典书架或家用装饰书柜来凑数。先比较模型的实际预览、结构、材质和文件大小，再决定是否能作为白色图书馆书库的基础。
 
 
 共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
