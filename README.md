@@ -84,7 +84,7 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 
 ### 手账书架：公共图书馆多排书架
 
-<badge>当前首选：候选 A</badge>
+**当前首选：候选 A**
 
 用户已认可 **Public Library and Reading Garden** 作为书架首选方向，进入真实 GLB 模型验收阶段。暂不继续扩展候选，也不直接替换 `journal.html`。
 
