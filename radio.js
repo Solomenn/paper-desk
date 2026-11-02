@@ -185,7 +185,8 @@ controls.dampingFactor=.085;
 controls.rotateSpeed=1.14;
 controls.zoomSpeed=.88;
 controls.enablePan=false;
-controls.minDistance=4.2; controls.maxDistance=10;
+// Distance limits are recalculated from the screenshot-matched default framing.
+controls.minDistance=5.2; controls.maxDistance=15;
 controls.minPolarAngle=.58; controls.maxPolarAngle=2.25;
 // Orbit around the radio body center, not a point above it.
 controls.target.set(0,.18,0);
@@ -296,7 +297,29 @@ async function loadModel() {
     const m=buildFallback(); radioRoot.add(m);
   }
 }
+function frameRadioToReferenceSize() {
+  radioRoot.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(radioRoot);
+  const size=bounds.getSize(new THREE.Vector3());
+  const aspect=innerWidth/innerHeight;
+  const verticalFov=THREE.MathUtils.degToRad(camera.fov);
+  const horizontalFov=2*Math.atan(Math.tan(verticalFov/2)*aspect);
+  // Match the supplied 1215×842 reference: about 68% viewport width and 52.5% height.
+  const targetWidthFill=aspect>=1?.68:.86;
+  const targetHeightFill=.525;
+  const distanceForWidth=size.x/(2*Math.tan(horizontalFov/2)*targetWidthFill);
+  const distanceForHeight=size.y/(2*Math.tan(verticalFov/2)*targetHeightFill);
+  const distance=Math.max(distanceForWidth,distanceForHeight);
+  const viewDirection=camera.position.clone().sub(controls.target).normalize();
+  controls.target.set(0,.18,0);
+  camera.position.copy(controls.target).addScaledVector(viewDirection,distance);
+  controls.minDistance=Math.max(3.8,distance*.56);
+  controls.maxDistance=distance*1.62;
+  controls.update();
+  document.body.dataset.radioDefaultDistance=distance.toFixed(2);
+}
 await loadModel();
+frameRadioToReferenceSize();
 setStation(station);
 
 function stationAngle(i) {
