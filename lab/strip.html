@@ -5,28 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>切换条 · 纸桌实验</title>
 <style>
+  /* 字体：Sunghyun Sans（SIL OFL 1.1，作者仓库原文件，见 assets/fonts/）——参考站用的就是它 */
+  @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-SemiBold.woff2") format("woff2"); font-weight: 600; font-display: block; }
   /* 复现 pengzhe.ng 时间轴切换条（桌面版）。数字来自实测，见 docs/pengzhe-strip-notes.md；代码是自己写的，物件用占位方块 */
-  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: "Sunghyun Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   /* 参考站尺寸不随窗口缩放；竖直位置随窗口高度变化，由脚本 place() 按实测表设置 */
   #strip { position: absolute; left: 0; top: 0; height: 900px; will-change: transform; }
   .it { position: absolute; top: 0; width: 240px; text-align: center; }
   .it .when { position: absolute; top: 214px; left: 0; right: 0; color: #8a8a8a; font-weight: 500; font-size: 20px; line-height: 32px; }
   .it .art { position: absolute; left: 0; width: 240px; height: 240px; top: 285px; background: #e9e9e7; border-radius: 2px; }
-  .it .place { position: absolute; top: 557px; left: 0; right: 0; color: #1a1a1a; font-weight: 500; font-size: 20px; line-height: 32px; }
+  .it .place { position: absolute; top: 557px; left: 0; right: 0; color: #1a1a1a; font-weight: 500; font-size: 20px; line-height: 32px; letter-spacing: -.2px; }
   #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: 714.5px; height: 104px; cursor: default; touch-action: none; outline: none; }
   .tk { position: absolute; left: 0; top: 0; width: 3px; height: 8px; border-radius: 999px; background: #1a1a1a; will-change: transform, height, opacity; }
   .sp { position: absolute; left: 0; top: 0; width: 3px; height: 14px; border-radius: 999px; background: #1a1a1a; opacity: .28; }
-  .reel { display: inline-block; position: relative; height: 24px; vertical-align: top; overflow: visible; perspective: 3em; transition: width .52s cubic-bezier(.4,0,.2,1); }
-  .reel > span { position: absolute; left: 0; top: 0; backface-visibility: hidden; }
-  #lab { position: absolute; top: 0; left: 0; font-size: 20px; line-height: 24px; font-weight: 500; color: #1d1d1d; white-space: nowrap; pointer-events: none; transform: translate(-50%, 0); opacity: 0; font-variant-numeric: tabular-nums; }
-  .num { position: absolute; top: 0; left: 0; font-size: 19px; line-height: 24px; font-weight: 500; white-space: nowrap; pointer-events: none; transform: translate(-50%, -50%); font-variant-numeric: tabular-nums; }
+  .reel { display: inline-block; position: relative; height: 24px; vertical-align: top; overflow: visible; white-space: pre; transition: width .52s cubic-bezier(.4,0,.2,1); }
+  .reel > span { position: absolute; left: 0; top: 0; height: 100%; backface-visibility: hidden; }
+  .reel > .gh { width: 100%; pointer-events: none; transform: scaleY(2.33333); }
+  .reel > .gh > span { position: absolute; left: 0; top: 0; height: 100%; }
+  #lab { position: absolute; top: 0; left: 0; font-size: 20px; line-height: 24px; font-weight: 500; color: #1d1d1d; white-space: nowrap; pointer-events: none; transform: translate(-50%, 0); opacity: 0; }
+  .num { position: absolute; top: 0; left: 0; font-size: 17px; line-height: 24px; font-weight: 600; white-space: nowrap; pointer-events: none; transform: translate(-50%, -50%); font-variant-numeric: tabular-nums; }
   .mk { position: absolute; left: 0; top: 0; width: 4px; height: 10px; border-radius: 999px; background: #ff9705; pointer-events: none; }
 </style>
 </head>
 <body>
 <div id="strip"></div>
 <div id="zone" tabindex="0" role="slider" aria-label="时间轴"></div>
-<script>
+<script type="module">
+// 先等字体到位：细调轮里每格的宽度按文字实际宽度算
+await Promise.all(["500 19px", "500 20px", "600 15px"].map(f => document.fonts.load(f + " 'Sunghyun Sans'", "0123456789 JanFebMarAprMayJunJulAugSepOctNovDec"))).catch(() => {});
 /* ── 数据：日期序列照参考站（149 个地点，2025-12 → 2026-10），名字用占位 ── */
 const DATES = "Dec 7,Jan 3,Jan 3,Jan 9,Jan 11,Jan 18,Jan 23,Jan 24,Jan 25,Jan 28,Jan 29,Jan 31,Jan 31,Feb 1,Feb 3,Feb 8,Feb 13,Feb 14,Feb 16,Feb 26,Feb 27,Mar 4,Mar 7,Mar 16,Mar 19,Mar 27,Mar 27,Mar 28,Apr 2,Apr 3,Apr 12,Apr 19,Apr 20,Apr 30,May 3,May 3,May 3,May 12,May 16,May 22,May 22,May 22,May 23,May 25,May 30,Jun 3,Jun 3,Jun 6,Jun 9,Jun 9,Jun 16,Jun 18,Jun 23,Jun 23,Jun 23,Jun 24,Jun 25,Jun 27,Jul 5,Jul 8,Jul 18,Jul 18,Jul 22,Jul 23,Jul 27,Jul 31,Jul 31,Aug 1,Aug 2,Aug 5,Aug 8,Aug 9,Aug 13,Aug 15,Aug 16,Aug 17,Aug 18,Aug 23,Aug 25,Aug 27,Aug 29,Aug 29,Aug 29,Aug 29,Aug 30,Aug 30,Aug 30,Aug 30,Sep 1,Sep 1,Sep 1,Sep 6,Sep 7,Sep 10,Sep 11,Sep 12,Sep 13,Sep 18,Sep 19,Sep 19,Sep 19,Sep 22,Sep 22,Sep 22,Sep 23,Sep 23,Sep 25,Sep 26,Sep 26,Sep 26,Sep 28,Sep 29,Sep 30,Sep 30,Oct 2,Oct 2,Oct 3,Oct 3,Oct 4,Oct 4,Oct 6,Oct 8,Oct 10,Oct 11,Oct 11,Oct 12,Oct 12,Oct 13,Oct 14,Oct 15,Oct 15,Oct 16,Oct 17,Oct 17,Oct 18,Oct 19,Oct 20,Oct 21,Oct 21,Oct 22,Oct 22,Oct 24,Oct 24,Oct 25,Oct 25,Oct 26,Oct 27,Oct 30,Oct 30".split(",");
 /* 竖直位置照参考在 7 个窗口高度下的实测值插值（日期行顶、刻度区顶；宽度不影响），超出范围按两端斜率外推 */
@@ -73,27 +80,63 @@ const nearU = x => { let b = 0, bd = 1e9; U.forEach((u, k) => { const d = Math.a
 const tickEls = ticks.map(() => { const d = document.createElement("div"); d.className = "tk"; zone.append(d); return d; });
 const sepEls = seps.map(x => { const d = document.createElement("div"); d.className = "sp"; zone.append(d); return d; });
 const lab = document.createElement("div"); lab.id = "lab"; zone.append(lab);
-/* 日期标签换字时像滚轮一样翻过去：月份和日子各一个轮，只有变了的那个转；往后翻向上转，往前翻向下转。
-   转一次 520 ms，连续快速换字时缩短到 260 ms（参考的 drum-roll 参数） */
-const reels = [0, 1, 2].map(() => { const r = document.createElement("span"); r.className = "reel"; lab.append(r); return r; });
-reels[1].style.width = ".28em";
-let labItem = -1, rollDur = 520, lastRoll = -1e9;
-const EASE = "cubic-bezier(0.4, 0, 0.2, 1)", ROT = 64;
-function rollTo(reel, text, dir) {
-  const old = reel.lastChild, nu = document.createElement("span"); nu.textContent = text; reel.append(nu);
-  const w = nu.getBoundingClientRect().width; reel.style.width = w + "px";
-  if (!old || !dir) { if (old) old.remove(); return; }
-  const tf = deg => `translateZ(-0.54em) rotateX(${deg}deg) translateZ(0.54em)`;
-  nu.animate([{ transform: tf(-dir * ROT), opacity: 0, filter: "blur(1px)" }, { transform: tf(0), opacity: 1, filter: "blur(0)" }], { duration: rollDur, easing: EASE });
-  old.animate([{ transform: tf(0), opacity: 1 }, { transform: tf(dir * ROT), opacity: 0, filter: "blur(1px)" }], { duration: rollDur, easing: EASE, fill: "forwards" }).finished.then(() => old.remove(), () => {});
+/* 日期标签换字时像滚轮一样翻过去（照参考逐帧实测）：
+   · 跨月：整个日期作为一块一起翻；同月：只翻变了的那一位数字（13→16 只翻个位），多出或少掉的一位宽度从 0 长出 / 缩回
+   · 每次翻动：新字从 -64° 转到 0°、旧字从 0° 转到 64°，曲线和透明度是实测的 25 个关键帧；外面再叠 5 层竖向拉长的模糊残影
+   · 宽度变化 520 ms cubic-bezier(.4,0,.2,1)；翻动时长 520 ms 起，连续快速换字时逐次缩短到 260 ms，停久了再慢慢回到 520 ms */
+const ROLL = [0,.0039,.0173,.043,.0852,.1486,.2366,.3445,.4572,.5597,.6463,.7173,.7756,.8233,.8623,.8945,.9208,.9422,.9594,.973,.9833,.9909,.9961,.9991,1];
+const OP_IN = [0,0,.002,.006,.015,.024,.024,.01,0,.023,.078,.153,.237,.323,.406,.485,.559,.628,.691,.749,.802,.852,.898,.943,1];
+const OP_OUT = [1,.904,.806,.68,.519,.327,.14,.025,0,.016,.032,.038,.037,.032,.026,.02,.014,.01,.006,.003,.002,.001,0,0,0];
+const GH_IN = [0,0,0,.002,.01,.033,.091,.193,.309,.396,.442,.454,.446,.424,.394,.361,.324,.287,.249,.211,.173,.135,.096,.055,0];
+const GH_OUT = [0,.09,.168,.256,.356,.459,.527,.506,.4,.276,.179,.112,.069,.042,.025,.015,.008,.004,.002,.001,0,0,0,0,0];
+const GHOSTS = [[.03, 0], [.0375, .286], [.045, .714], [.0525, 0], [.06, 0]];          // 每层残影的模糊量和权重（实测）
+const tf = (deg, pre = "") => `${pre}perspective(3em) translateZ(-0.54em) rotateX(${deg}deg) translateZ(0.54em)`;
+const kfs = (from, to, ops, pre) => ROLL.map((e, i) => ({ transform: tf(from + (to - from) * e, pre), opacity: ops[i] }));
+const mkReel = () => { const r = document.createElement("span"); r.className = "reel"; return r; };
+function face(m, d) {                                                     // 一个日期：[月份][十位][个位]，各是一个轮
+  const f = document.createElement("span"); f.className = "face"; const ds = d.split("");
+  [m + " ", ds[0] || "", ds[1] || ""].forEach(t => { const r = mkReel(), x = document.createElement("span"); x.className = "cur"; x.textContent = t; r.append(x); f.append(r); });
+  return f;
 }
+const outer = mkReel(); lab.append(outer);
+let labItem = -1, rollDur = 520, lastRoll = -1e9;
+const widthOf = el => { const r = mkReel(); r.style.cssText = "position:absolute;visibility:hidden;transition:none"; r.append(el); lab.append(r); const w = el.getBoundingClientRect().width; r.remove(); return w; };
+function sizeReels(f) { for (const r of f.children) r.style.width = widthOf(r.firstChild.cloneNode(true)) + "px"; }
+function roll(reel, nu, dir) {                                            // 把 reel 里的内容翻成 nu
+  const old = reel.querySelector(":scope > .cur"); nu.classList.add("cur");
+  reel.querySelectorAll(":scope > .gone, :scope > .gh").forEach(e => e.remove());
+  reel.append(nu); reel.style.width = widthOf(nu.cloneNode(true)) + "px";
+  if (!old || !dir) { if (old) old.remove(); return; }
+  old.classList.replace("cur", "gone");
+  const o = { duration: rollDur, easing: "linear" }, s = dir > 0 ? 1 : -1;
+  nu.animate(kfs(-64 * s, 0, OP_IN), o);
+  old.animate(kfs(0, 64 * s, OP_OUT), { ...o, fill: "forwards" }).finished.then(() => old.remove(), () => {});
+  for (const [blur, wt] of GHOSTS) {
+    if (!wt) continue;
+    const g = document.createElement("span"); g.className = "gh"; g.setAttribute("aria-hidden", "true"); g.style.filter = `blur(${blur}em)`; g.style.opacity = wt;
+    const a = nu.cloneNode(true), b = old.cloneNode(true); a.className = b.className = ""; a.getAnimations?.();  g.append(a, b); reel.append(g);
+    a.animate(kfs(-64 * s, 0, GH_IN, "scaleY(0.428571) "), { ...o, fill: "forwards" });
+    b.animate(kfs(0, 64 * s, GH_OUT, "scaleY(0.428571) "), { ...o, fill: "forwards" }).finished.then(() => g.remove(), () => {});
+  }
+}
+let monthAt = -1e9, freezeT = 0;
 function setLabel(it) {
   if (it === labItem) return;
-  const now = performance.now(), gap = now - lastRoll; lastRoll = now;
-  rollDur = gap > 1040 ? 520 : Math.max(260, rollDur + (Math.min(520, Math.max(260, gap)) - rollDur) * (gap < rollDur ? .6 : .25));
+  if (labItem >= 0 && DATES[it] === DATES[labItem]) { labItem = it; return; }   // 同一天的另一个地点：字不变，不算一次翻动
+  const now = performance.now();
+  // 跨进新月份后，标签在这个月的第一个地点停 520 ms 再跟指针（指针一直在动也一样）；这期间再跨月则立刻换
+  if (labItem >= 0 && DATES[it].split(" ")[0] === DATES[labItem].split(" ")[0] && now - monthAt < 520) {
+    if (!freezeT) freezeT = setTimeout(() => { freezeT = 0; kick(); }, 520 - (now - monthAt) + 1); return; }
+  if (labItem >= 0 && DATES[it].split(" ")[0] !== DATES[labItem].split(" ")[0]) monthAt = now;
+  const gap = now - lastRoll; lastRoll = now;
+  if (gap > 260) rollDur = Math.min(520, rollDur + (gap - 260) * .232);    // 隔得久：往回长，约 1.4 s 回到 520 ms
+  else rollDur = 260 + (rollDur - 260) * .6;                                 // 连续换字：每次向 260 ms 收 40%（按参考逐帧时长拟合）
   const dir = labItem < 0 ? 0 : Math.sign(it - labItem), [m, d] = DATES[it].split(" "), [pm, pd] = labItem < 0 ? ["", ""] : DATES[labItem].split(" ");
-  if (m !== pm) rollTo(reels[0], m, dir); if (!reels[1].lastChild) reels[1].textContent = "\u00a0";
-  if (d !== pd || m !== pm) rollTo(reels[2], d, dir);
+  const cur = outer.querySelector(":scope > .cur");
+  if (m !== pm || !cur) { const f = face(m, d); sizeReels(f); roll(outer, f, dir); }
+  else { const ds = d.split(""), ps = pd.split("");
+    [1, 2].forEach(k => { const t = ds[k - 1] || "", pt = ps[k - 1] || ""; if (t !== pt) { const x = document.createElement("span"); x.textContent = t; roll(cur.children[k], x, dir); } });
+    outer.style.width = widthOf(cur.cloneNode(true)) + "px"; }
   labItem = it;
 }
 const hotEl = document.createElement("div"); hotEl.className = "mk"; hotEl.style.opacity = 0; zone.append(hotEl);
@@ -177,20 +220,32 @@ function hoverItem(b) {
   }
   H.month = m; return it;
 }
+/* 标签显示的地点：跟着缓动后的高亮位置走；换月要越过月界 LBL_OVER 格才换（参考实测的迟滞） */
+const LBL_OVER = .75;
+function labelItem(b) {
+  let it = nearItem(b); if (labItem < 0) return it;
+  const k = monthIdx[labItem], m = monthIdx[it];
+  if (m > k && !(k < seps.length && b > seps[k] + LBL_OVER * C)) it = months[k].a + months[k].n - 1;
+  else if (m < k && !(k > 0 && b < seps[k - 1] - LBL_OVER * C)) it = months[k].a;
+  else if (m !== k) it = m > k ? months[m].a : months[m].a + months[m].n - 1;   // 刚换月：先显示这个月从入口那头数起的第一个地点
+  return it;
+}
 const unzoom = x => H.zoomAt + (x - H.zoomAt) / H.zoom;                   // 屏幕 x → 刻度坐标（放大前）
 H.zoomAt = ZW / 2; const ZOOM = 1.072;                                     // 悬停时刻度以刻度区中心放大 7%（由四次点击的落点反推）
 /* 按住不动（离按下点 6 px 内）500 ms，或拖动中停下 150 ms 后再停 550 ms，进入"细调"：
    刻度区中间打开一个日子轮，一格一天（格宽 = 字宽 + 12），指针移多少，轮就转多少 */
 const MON = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"], MONS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const meas = document.createElement("canvas").getContext("2d");
-const tw = (t, f) => { meas.font = f; return meas.measureText(t).width; };
-const NUMF = "500 19px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif", MONF = "600 15px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+/* 轮上的字：Sunghyun Sans SemiBold 17px、等宽数字；月份大写、字距 0.68px、灰色（参考实测）。宽度用真实排版量，含字距和等宽数字 */
+const NUMF = "600 17px 'Sunghyun Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif", MONF = NUMF, MON_LS = ".68px";
+const tw = (t, f, ls = "0") => { const sp = document.createElement("span"); sp.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font:${f};letter-spacing:${ls};font-variant-numeric:tabular-nums`; sp.textContent = t; document.body.append(sp); const w = sp.getBoundingClientRect().width; sp.remove(); return w; };
 const E = []; U.forEach((u, k) => {
   const [m, d] = u.d.split(" ");
   if (k > 0 && U[k - 1].d.split(" ")[0] !== m) E.push({ t: MON[MONS.indexOf(m)], month: true, u: k });
   E.push({ t: d, month: false, u: k });
 });
-let acc = 0; E.forEach(e => { e.w = tw(e.t, e.month ? MONF : NUMF) + (e.month ? 2 : 0) + 12; e.c = acc + e.w / 2; acc += e.w; });
+const FINE_PAD = 12;
+let acc = 0; E.forEach(e => { e.tw = tw(e.t, NUMF, e.month ? MON_LS : "0") - (e.month ? .68 : 0);   /* 字距不算最后一个字母后面那份 */ e.w = e.tw + FINE_PAD; e.c = acc + e.w / 2; acc += e.w; });
 const eOfU = new Int32Array(U.length); E.forEach((e, k) => { if (!e.month) eOfU[e.u] = k; });
 const pool = Array.from({ length: 11 }, () => { const d = document.createElement("div"); d.className = "num"; zone.append(d); return d; });
 function enterFine() {
@@ -207,7 +262,7 @@ function fineMove() {
 }
 zone.addEventListener("pointermove", e => {
   const r = zoneRect(); H.px = e.clientX - r.left; H.py = e.clientY - r.top - LINE; const near = Math.abs(e.clientY - (r.top + LINE)) <= 20 && H.px >= ticks[0].x - 20 && H.px <= ticks.at(-1).x + 20;
-  if (!H.inside && near) { H.inside = true; H.month = -1; H.hot = hoverItem(unzoom(H.px)); click("line"); }
+  if (!H.inside && near) { H.inside = true; H.month = -1; labItem = -1; H.sx = undefined;   /* 重新进入：标签直接显示，不沿用上次的月份 */ H.hot = hoverItem(unzoom(H.px)); click("line"); }
   if (H.down) {
     if (Math.abs(H.px - H.rest.x) > 6) { H.rest = { x: H.px, t: performance.now(), armed: false }; }
     if (!H.scrub && Math.abs(e.clientX - H.down.x) > 3) { H.scrub = true; H.tick = -1; }
@@ -224,12 +279,14 @@ zone.addEventListener("pointermove", e => {
 zone.addEventListener("pointerleave", () => { H.py = 999; if (!H.down) H.inside = false; kick(); });
 zone.addEventListener("pointerdown", e => {
   if (e.button !== 0 || !H.inside) return; zone.setPointerCapture(e.pointerId);
-  H.down = { x: e.clientX, t: performance.now() }; H.rest = { x: H.px, t: performance.now(), first: true };
+  // 记下按下时标签显示的地点，松手就去那里
+  H.down = { x: e.clientX, t: performance.now(), item: labItem }; H.rest = { x: H.px, t: performance.now(), first: true };
   audio(); kick();
 });
 const up = e => {
   if (!H.down) return;
-  if (!H.scrub && !H.fine) { const it = H.hot ?? nearItem(unzoom(H.px)); goTo(it, false); H.snap = { x: H.px, item: it }; }   // 点完后高亮对准所点的地点，直到指针再移动 6 px   // 参考站：鼠标点击、松手都不另外出声
+  // 点哪去哪：去标签上正显示的那个地点（参考：显示 Jun 3 就落在 Jun 3）；点完后高亮对准它，直到指针再移动 6 px。点击、松手都不另外出声
+  if (!H.scrub && !H.fine) { const it = H.down.item >= 0 ? H.down.item : H.hot ?? nearItem(unzoom(H.px)); goTo(it, false); H.snap = { x: H.px, item: it }; }
   H.down = null; H.scrub = false; H.fine = false;
   const r = zoneRect(); H.inside = Math.abs(e.clientY - (r.top + LINE)) <= 20 && e.clientX >= r.left && e.clientX <= r.right; kick();
 };
@@ -277,7 +334,11 @@ function draw() {
   // 口子两边各到最外面那格的边，再留一点空（参考里刻度离露出的数字很近）
   if (H.sel === undefined) H.sel = eOfU[uOf[cur]];
   const sl = Math.max(0, H.sel - 2), sr = Math.min(E.length - 1, H.sel + 2);
-  const halfL = gap * (E[H.sel].c - E[sl].c + E[sl].w / 2 + 2), halfR = gap * (E[sr].c - E[H.sel].c + E[sr].w / 2 + 2), half = Math.max(halfL, halfR);
+  // 格距按缩放后的字宽算：相邻两格中心距 = (各自字宽×缩放)/2 之和 + 12（参考实测：当前 1.1、隔一格 1、隔两格 .93）
+  const SC = [1.1, 1, .93], xs = {}; xs[H.sel] = 0;
+  for (let k = H.sel + 1; k <= Math.min(E.length - 1, H.sel + 2); k++) xs[k] = xs[k - 1] + (SC[k - 1 - H.sel] * E[k - 1].tw + SC[k - H.sel] * E[k].tw) / 2 + FINE_PAD;
+  for (let k = H.sel - 1; k >= Math.max(0, H.sel - 2); k--) xs[k] = xs[k + 1] - (SC[H.sel - k - 1] * E[k + 1].tw + SC[H.sel - k] * E[k].tw) / 2 - FINE_PAD;
+  const halfL = gap * (-xs[sl] + SC[H.sel - sl] * E[sl].tw / 2 + FINE_PAD / 2 + 2), halfR = gap * (xs[sr] + SC[sr - H.sel] * E[sr].tw / 2 + FINE_PAD / 2 + 2), half = Math.max(halfL, halfR);
   if (H.fine) H.anchorLast = H.anchor;
   const shift = gap * ((H.fine ? H.anchor : gx) - Z(marker));
   const fadeGap = x => { if (gap <= .01) return 1; const h = x < gx ? halfL : halfR; return Math.abs(x - gx) < h + 8 ? Math.max(0, (Math.abs(x - gx) - h) / 8) : 1; };
@@ -285,10 +346,10 @@ function draw() {
   const it0 = Math.max(0, Math.min(N - 1.0001, S.x / PITCH)), i0 = Math.floor(it0);
   const mk = Lpos[i0] + (Lpos[Math.min(N - 1, i0 + 1)] - Lpos[i0]) * (it0 - i0);
   const held = hot !== null && H.amt > .001 ? Z(Lpos[H.hot ?? nearItem(hot)]) : null, slot = C * H.zoom;
-  if (held !== null) { let bd = 1e9; ticks.forEach((t, k) => { const dd = Math.abs(Z(t.x) - H.sx); if (dd < bd) { bd = dd; H.hotTick = k; } });
-    // 悬停时高亮每换一根刻度响一声（跨月换成 month）；刚进入、还没完全展开时不响，点击后对准所点那根也不响
-    if (H.lastHot >= 0 && H.hotTick !== H.lastHot && !H.down && !H.snap && H.amt > .9) click(ticks[H.hotTick].month !== ticks[H.lastHot].month ? "month" : "line");
-    H.lastHot = H.hotTick; } else { H.hotTick = -1; H.lastHot = -1; }
+  if (held !== null) { let bd = 1e9, rd = 1e9, rt = -1; ticks.forEach((t, k) => { const dd = Math.abs(Z(t.x) - H.sx), r = Math.abs(Z(t.x) - H.px); if (dd < bd) { bd = dd; H.hotTick = k; } if (r < rd) { rd = r; rt = k; } });
+    // 悬停时指针每换一根刻度响一声（跨月换成 month）；按指针本身算，不按缓动后的高亮算——指针停下后高亮还在追，那段不响。刚进入、还没完全展开时不响，点击后对准所点那根也不响
+    if (H.lastHot >= 0 && rt !== H.lastHot && !H.down && !H.snap && H.amt > .9) click(ticks[rt].month !== ticks[H.lastHot].month ? "month" : "line");
+    H.lastHot = rt; } else { H.hotTick = -1; H.lastHot = -1; }
   ticks.forEach((t, k) => {
     let x = Z(t.x) + shift, h = 8, w = 3, y = 0, op = .14 + .86 * Math.min(1, Math.max(0, (1.5 * C - Math.abs(t.x - mk)) / C)), col = "#1a1a1a";
     if (held !== null) {
@@ -309,7 +370,8 @@ function draw() {
   if (!S.g) H.lastTravelTick = undefined;
   seps.forEach((sx, k) => { const x = Z(sx) + shift; sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = .28 * fadeGap(x); });
   // 悬停和粗擦：指针所指地点（按月握住）立一根 4×32 的橙色刻度，上方是它的日期
-  if (hot !== null && H.amt > .01) { const it = H.hot ?? nearItem(hot), hx = Z(Lpos[it]); setLabel(it); lab.style.transform = `translate(calc(${hx}px - 50%), ${LINE - 37 - 12}px)`; lab.style.opacity = H.amt;
+  // 标签的字跟高亮（缓动后的位置）走，比指针慢半拍，和参考一致
+  if (hot !== null && H.amt > .01) { const it = H.hot ?? nearItem(hot), hx = Z(Lpos[it]); setLabel(H.down ? it : labelItem(unzoom(H.sx))); lab.style.transform = `translate(calc(${hx}px - 50%), ${LINE - 37 - 12}px)`; lab.style.opacity = H.amt;
   }
   else lab.style.opacity = 0;
   // 日子轮：选中的橙色居中，前后各两格由深到浅，月份是小号大写
@@ -317,10 +379,12 @@ function draw() {
   if (gap > .01) {
     let n = 0;
     for (let k = Math.max(0, H.sel - 2); k <= Math.min(E.length - 1, H.sel + 2) && n < pool.length; k++) {      // 轮上只露前后各两格
-      const x = gx + (E[k].c - E[H.sel].c), d = Math.abs(k - H.sel); if (Math.abs(x - gx) > half + 4) continue;
-      const el = pool[n++]; el.textContent = E[k].t; el.style.font = E[k].month ? MONF : NUMF; el.style.letterSpacing = E[k].month ? ".5px" : "0";
-      el.style.color = d === 0 ? "#ff9705" : E[k].month ? "#9a9a9a" : d === 1 ? "#444" : "#a8a8a8";
-      el.style.transform = `translate(calc(${x}px - 50%), calc(${LINE}px - 50%))`; el.style.opacity = gap * Math.max(0, Math.min(1, (half + 4 - Math.abs(x - gx)) / 14));
+      const x = gx + xs[k], d = Math.abs(k - H.sel); if (Math.abs(x - gx) > half + 4) continue;
+      const el = pool[n++]; el.textContent = E[k].t; el.style.font = NUMF; el.style.fontVariantNumeric = "tabular-nums"; el.style.letterSpacing = E[k].month ? MON_LS : "0";
+      // 当前：橙色放大 1.1；隔一格：不透明度 .78；隔两格：.42、缩到 .93（参考实测）
+      el.style.color = d === 0 ? "#ff9500" : E[k].month ? "#8a8a8a" : "#1a1a1a";
+      const sc = SC[d], op = d === 0 ? 1 : d === 1 ? .78 : .42;
+      el.style.transform = `translate(calc(${x}px - 50%), calc(${LINE}px - 50%)) scale(${sc})`; el.style.opacity = op * gap * Math.max(0, Math.min(1, (half + 4 - Math.abs(x - gx)) / 14));
     }
   }
   marks.forEach((el, k) => { el.style.opacity = gap; el.style.transform = `translate(${gx - 2}px, ${LINE + (k ? 19 : -29)}px)`; });

@@ -67,3 +67,9 @@ the frame and table as free material (the views in those photos are his and are 
 ## LINTEX Silk Wall model (`assets/objects/silk-wall-2000x1000.glb`)
 
 - Converted from LINTEX's official Silk Wall 2000×1000 OBJ download (<https://lintex.com/products/silk-wall/>); used for the window-light lab.
+
+## Sunghyun Sans font (`assets/fonts/`)
+
+- Source: <https://github.com/anaclumos/sunghyun-sans> (commit 068baca), files `dist/web/woff2/SunghyunSans-Medium.woff2` and `SunghyunSans-SemiBold.woff2`, unmodified.
+- Licence: **SIL Open Font License 1.1**; full text in `assets/fonts/SunghyunSans-OFL.txt`.
+
