@@ -72,6 +72,15 @@ the frame and table as free material (the views in those photos are his and are 
 
 - Converted from LINTEX's official Textile Noticeboard 2005×1205 download (<https://lintex.com/products/textile-noticeboard/>); placeholder until the object is finalised.
 
+## Entry objects from Sketchfab (`assets/objects/`, used in `lab/entry.html`)
+
+All three are licensed CC BY 4.0 (<https://creativecommons.org/licenses/by/4.0/>) and credited on the page that shows them.
+Changed for all three: textures resized to at most 2048 px and converted to WebP (geometry and materials unchanged).
+
+- `locomotive.glb` — **"Locomotive"** by yanix, <https://sketchfab.com/3d-models/locomotive-d89f7d5a37ef43119e7b6c37b41c69cb> (the 雪国线 object).
+- `postcard-boxes.glb` — **"2 boxes"** by Cozmoth, <https://sketchfab.com/3d-models/2-boxes-3f920e8fd10c4664b5bd1dea3cf7606e> (the boxes the postcards go in).
+- `wooden-shelf.glb` — **"Wooden Shelf"** by Vilson Pistori, <https://sketchfab.com/3d-models/wooden-shelf-67e718a0fc904487a9f735892d9834d3> (the shelf that holds every album).
+
 ## Sunghyun Sans font (`assets/fonts/`)
 
 - Source: <https://github.com/anaclumos/sunghyun-sans> (commit 068baca), files `dist/web/woff2/SunghyunSans-Medium.woff2` and `SunghyunSans-SemiBold.woff2`, unmodified.
