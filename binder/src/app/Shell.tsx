@@ -743,14 +743,8 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
       {folio ? (
         <>
           <aside className="words" aria-label={profile.name}>
-            <Identity profile={profile} han={han} onProfile={compact ? () => setSheet(true) : undefined} />
             {/* phones and the tablet: the switch in the header, at the identity's right (one tap, clear of the booklet tabs) */}
             {phone ? <LangSwitch langs={langs} han={han} tab={tab} /> : null}
-            {f.cls !== "p" && f.cls !== "l" ? (
-              <p className="jo" {...textProps(profile.bio, profile.lang, han)}>
-                {profile.bio}
-              </p>
-            ) : null}
             <Toc profile={profile} tab={shown} onTab={onTab} />
             {land ? <LangSwitch langs={langs} han={han} tab={tab} /> : null}
             {!compact ? (
@@ -763,7 +757,8 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
             ) : null}
             {!compact ? (
               <div className="foot">
-                <Colophon profile={profile} han={han} />
+                {/* 纸桌 2026-11-02: the introduction is off (name, role, clock, bio, contact rows); the source link stays (AGPL-3.0) */}
+                <Colophon profile={{ ...profile, links: [] }} han={han} />
                 {/* the desk: on the column's bottom lines, over Sound and Text version */}
                 <LangSwitch langs={langs} han={han} tab={tab} />
                 <Prefs tab={tab} />
@@ -772,14 +767,7 @@ export function Shell({ profile, langs, fade = null, tab, next, printed = false,
           </aside>
           {f.cls !== "l" ? <Hashira local={hs.local} latin={hs.latin} han={hs.han} /> : null}
           <div className="hands" data-show={showControls || undefined}>
-            {phone ? (
-              <button type="button" className="pf" onClick={() => setSheet(true)} aria-haspopup="dialog">
-                <span className="av" aria-hidden="true" {...textProps(profile.nameLocal ?? profile.name, profile.lang, han)}>
-                  {profile.nameLocal ? Array.from(profile.nameLocal)[0] : (profile.name[0] ?? "")}
-                </span>
-                <span className="pf-t">{t.profile.open}</span>
-              </button>
-            ) : !compact && !printed ? (
+            {!compact && !printed ? (
               <CaseSwitch tab={tab} material={material} onMaterial={onMaterial} />
             ) : (
               <span />
