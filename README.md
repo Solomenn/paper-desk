@@ -83,8 +83,12 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - 形态参考：<https://www.cgtrader.com/3d-models/interior/other/public-library-interior>（用户喜欢其书架排列方式；该模型售价约 US$14.99，不作为免费方案）。
 - 外观目标：白色或暖白色金属/喷涂结构；开放式多层书格；视觉上轻、直、连续；不加笨重底柜。
 - 免费候选仍在筛选中，不能仅凭三角面数量认定质量：
-  - <https://www.innerscene.com/tools/library/3d-parts/double-sided-library-shelving-education-furniture-c2b67492>：CC0、GLB、约 1.8 MB，单个双面书架单元，标称尺寸 1.1 × 0.7 × 1.8 m；可研究重复排列成多排的可能，但几何精度和细节尚待实际检查。
-  - <https://www.cgtrader.com/free-3d-models/interior/house-interior/3d-book-shelves-a2154731-e59c-4e2c-8e91-e754db770d55>：免费，页面标注约 521,303 polygons，提供 C4D / FBX / OBJ 等格式；不是 GLB，PBR/UV 情况未明确，需检查模型内容和授权细节。
+  - **优先检查：<https://3dassets.dev/packs/public-library-and-reading-garden>**。CC0 1.0；51 个独立 GLB，合计 9.1 MB、474,212 triangles；其中 `Library Stack Straight` 是双面书库架，4 层搁板、中间隔板、独立建模的书脊，约 77.5k triangles；另有 Stack End / Stack Corner，可拼接连续过道。整套色调是浅橡木、奶油白、鼠尾草绿和黑钢；书架木质端板可研究改成暖白。**重要限制：页面注明 51/51 模型由 AI 工具生成，必须先看实际 GLB 的几何、书脊、法线和近景材质，不能直接当成 T3 级成品。**
+  - **单体备选：<https://www.innerscene.com/tools/library/3d-parts/double-sided-library-shelving-education-furniture-c2b67492>**。CC0、GLB、约 1.8 MB，标称尺寸 1.1 × 0.7 × 1.8 m；单个双面教育/图书馆书架，可重复排列成多排；页面未公布三角面数量，精度待实际检查。
+  - **几何备选：<https://3dwarehouse.sketchup.com/model/9f4c624e-e285-42eb-9b16-dfb7255c6f6a/Library-Book-Shelf>**。双面书架并带书，11,586 polygons、22 种材质、627 KB，标称 1.2 × 0.625 × 2.0 m；原生 SketchUp，需转换 GLB；具体授权和模型细节待检查。
+  - **高面数备选：<https://www.cgtrader.com/free-3d-models/interior/house-interior/3d-book-shelves-a2154731-e59c-4e2c-8e91-e754db770d55>**。免费，页面标注 521,303 polygons / 522,056 vertices，提供 C4D / FBX / OBJ；FBX 约 5.68 MB；不是 GLB，未明确 PBR/UV，需检查是否真的是多排书库而非普通室内书架。
+  - 对照基准：付费 <https://www.cgtrader.com/3d-models/interior/other/public-library-interior> 页面列出约 948k triangles、136 objects、75 unique meshes、50 materials、65 textures（最高 4K），售价约 US$14.99。只作为用户喜欢的书库排列和细节密度参照，不购买。
+- 暂不采用：低多边形卡通图书馆、传统木质古典书架或家用装饰书柜。白色预览目标是暖白色喷涂金属/哑光白色端板，书籍保留克制的低饱和封面色；不是把整组书架和书都刷成纯白。
 - 不采用低多边形卡通图书馆、传统木质古典书架或家用装饰书柜来凑数。先比较模型的实际预览、结构、材质和文件大小，再决定是否能作为白色图书馆书库的基础。
 
 
