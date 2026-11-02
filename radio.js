@@ -217,10 +217,10 @@ function buildFallback() {
 }
 function centerAndFit(obj) {
   const box=new THREE.Box3().setFromObject(obj), size=box.getSize(new THREE.Vector3()), center=box.getCenter(new THREE.Vector3());
-  obj.position.sub(center);
   const s=5.2/Math.max(size.x,size.y*1.7,size.z*1.3);
+  // Scale the center offset too; Object3D.position is not multiplied by its own scale.
   obj.scale.setScalar(s);
-  obj.position.y=.18;
+  obj.position.set(-center.x*s,-center.y*s+.18,-center.z*s);
   obj.traverse(o=>{ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
 }
 async function loadModel() {
@@ -236,7 +236,7 @@ async function loadModel() {
       const edges=new THREE.LineSegments(edgeGeo,edgeMat);
       edges.renderOrder=2; o.add(edges);
     });
-    centerAndFit(m); radioRoot.add(m);
+    centerAndFit(m); radioRoot.add(m);\n    ground.position.y=-1.36;
     dialCenter.set(1.1191,-.2879,.5653); dialRadius=.6335; dialPlaneZ=.5903;
     usingRealModel=true;
     document.body.classList.add("model-loaded");
