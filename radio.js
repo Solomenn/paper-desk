@@ -201,7 +201,7 @@ function buildFallback() {
   tuneDisc.geometry.rotateX(Math.PI/2); tuneDisc.position.set(1.35,.28,.39); tuneDisc.name="tuner"; root.add(tuneDisc);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.79,.012,12,96),lineMat); ring.position.copy(tuneDisc.position); root.add(ring);
   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.055,64),cream); hub.geometry.rotateX(Math.PI/2); hub.position.set(1.35,.28,.43); root.add(hub);
-  knobHit=tuneDisc;
+  dialCenter.set(1.35,.53,.39); dialRadius=.79; dialPlaneZ=.43;
   // scale ticks
   for(let i=0;i<12;i++) {
     const a=(i/12)*Math.PI*2, len=i%3===0?.16:.10;
@@ -237,6 +237,8 @@ async function loadModel() {
       edges.renderOrder=2; o.add(edges);
     });
     centerAndFit(m); radioRoot.add(m);
+    dialCenter.set(1.1191,-.2879,.5653); dialRadius=.6335; dialPlaneZ=.5903;
+    usingRealModel=true;
     document.body.classList.add("model-loaded");
   } catch {
     const m=buildFallback(); radioRoot.add(m);
@@ -274,7 +276,7 @@ function updateDial() {
   if (needle) {
     const cx=1.35, cy=.28, rr=.64;
     needle.position.x=cx+Math.cos(a)*rr;
-    needle.position.y=cy+Math.sin(a)*rr+.25;
+    needle.position.y=cy+Math.sin(a)*rr;
     needle.rotation.z=a-Math.PI/2;
   }
   if (dialRotor) dialRotor.rotation.z=a-Math.PI/2;
