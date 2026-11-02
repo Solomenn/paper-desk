@@ -131,7 +131,7 @@ qs("#volume").oninput=e=>{
   volume=+e.target.value; localStorage.setItem("paper-desk.radio.volume",volume);
   if (master&&ac) master.gain.setTargetAtTime((volume/100)*.62,ac.currentTime,.05);
 };
-addEventListener("pointerdown",()=>audioCtx(),{once:true});
+addEventListener("pointerdown",()=>{ audioCtx(); if (playing && !active.length) startBed(); },{once:true});
 setStation(station);
 qs("#power").classList.toggle("on",playing);
 
