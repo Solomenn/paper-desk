@@ -1,2 +1,4 @@
 vendor/fonts/
 tools/light/out/
+binder/node_modules/
+binder/dist/

@@ -57,3 +57,13 @@ the frame and table as free material (the views in those photos are his and are 
 - **HQ3DMOD POS Receipt Printer**: <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983> — paid model, not downloaded.
 - **LINTEX Silk Wall** official configurator: <https://lintex.com/products/silk-wall/>.
 - **LINTEX Textile Noticeboard** official configurator: <https://lintex.com/products/textile-noticeboard/>.
+
+## sasshi ring binder (`binder/`)
+
+- Author: **qzz0518** — <https://github.com/qzz0518/sasshi>
+- Licence: **GNU Affero General Public License v3.0** (`binder/LICENSE`); upstream commit recorded in `binder/UPSTREAM`.
+- Vendored unchanged for now (stage 1: faithful reproduction), including the author's sample profile and photos; built by `.github/workflows/pages.yml` and served at `/binder/`.
+
+## LINTEX Silk Wall model (`assets/objects/silk-wall-2000x1000.glb`)
+
+- Converted from LINTEX's official Silk Wall 2000×1000 OBJ download (<https://lintex.com/products/silk-wall/>); used for the window-light lab.

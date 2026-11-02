@@ -1,0 +1,60 @@
+# 纸桌整站发布到 GitHub Pages：根目录的纯 HTML 原样发布，binder/（sasshi 活页夹，需要构建）构建后放到 /binder/。
+# 需要先在 Settings → Pages → Build and deployment → Source 选 GitHub Actions；没切换之前这个流程只提示、不发布。
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      on: ${{ steps.pages.outputs.on }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null)" = workflow ]; then
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::GitHub Pages 还没切到 GitHub Actions：Settings → Pages → Source 选 GitHub Actions，再重跑这个流程。"
+          fi
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.on == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: 构建活页夹
+        working-directory: binder
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          bun run build
+      - name: 组装整站
+        run: |
+          mkdir _site
+          rsync -a --exclude .git --exclude .github --exclude binder --exclude tools --exclude _site ./ _site/
+          mkdir -p _site/binder && cp -r binder/dist/. _site/binder/
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
