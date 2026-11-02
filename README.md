@@ -82,22 +82,24 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 
 后续研究重点：把两套色卡的真实色样、不同日光下的偏色、哑光/织物/木材/金属之间的搭配整理成纸桌自己的材质板；不要直接把屏幕截图取色当成实物标准。
 
-### 手账书架：公共图书馆多排书架
+### 手账书架：Bookshelf Short LOWPOLY（米白版本）
 
-**当前首选：候选 A**
+用户已选定并上传 Sketchfab 的 **Bookshelf Short LOWPOLY**。保留书籍贴图和原材质设计，只将书架结构改为米白色；不再使用此前的公共图书馆 AI 书架候选。
 
-用户已认可 **Public Library and Reading Garden** 作为书架首选方向，进入真实 GLB 模型验收阶段。暂不继续扩展候选，也不直接替换 `journal.html`。
+- **模型来源：** <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>
+- **作者：** EFX（<https://sketchfab.com/evan4129>）；许可：**CC BY 4.0**。
+- **上传原件：** `bookshelf_short_lowpoly.glb`，约 47.7 MB；GLB 内为单 mesh / 单 PBR 材质，书架结构与书籍使用同一张 4K Base Color 图集，另有 Metallic-Roughness 和 Normal 贴图。
+- **改色方法：** 根据 UV 区域只调整书架结构贴图，不漂白书脊和书籍封面；结构目标色 `#E9E2D6`（暖米白）。保留原始书籍图案、法线细节和粗糙度变化。
+- **优化后的模型：** `bookshelf_short_offwhite.glb`，约 14.9 MB；Base Color 保持 4K，Normal / Metallic-Roughness 为 2K。下载件几何为 1 mesh、842 triangles；主要细节来自原始 4K 书籍贴图。
+- **独立浏览包：** 本轮交付的 `paper-desk-object-preview.zip`，包含自动加载 GLB 的 Three.js 浏览页、模型文件和 Windows 启动脚本。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设。
+- **状态：** 米白模型已制作并完成 GLB 结构重读验证；浏览页源码已通过 JavaScript 语法检查。当前是独立验收资产，**尚未替换 `journal.html` 中的书架**。
 
-- **独立预览页：** <https://solomenn.github.io/paper-desk/shelf-preview.html>（单体 / 多排、直线 / 端部 / 转角、原始材质 / 暖白试色、360° 旋转；独立页面，不影响现有手账页）。
-- **模型套件：** <https://3dassets.dev/packs/public-library-and-reading-garden>；CC0 1.0 Universal，可免费商用、可修改，无需署名。
-- **直线书架：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98>；GLB <https://cdn.3dassets.dev/assets/30913/v1/model.glb>；1.4 × 2.145 × 0.6 m，77,484 triangles、58,662 vertices、5 materials，下载约 1.3 MB。双面四层书架、中央隔板、独立建模书脊。
-- **端部组件：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-cb4a4da8>；GLB <https://cdn.3dassets.dev/assets/30914/v1/model.glb>；0.2 × 2.195 × 0.64 m，756 triangles，约 17.7 KB。
-- **转角组件：** <https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-31a8d131>；GLB <https://cdn.3dassets.dev/assets/30915/v1/model.glb>；0.975 × 2.12 × 0.975 m，12,204 triangles、10,586 vertices、4 materials，约 241 KB。
-- **当前原始外观：** 浅橡木色端板，书脊为低饱和灰绿、浅橙、米白等颜色；直线书架底部可见深色踢脚 / 底座。原模型不是白色成品。
-- **暖白试色：** 结构目标色暂用 `#f0eee7`，哑光、低金属度；书脊保持原有低饱和配色。这个颜色仅是预览起点，尚未最终定色。
-- **质量风险：** 3DAssets.dev 标注套件 51/51 个模型均使用 AI 工具生成。面数不能代表模型质量；需要实际检查正反面、侧板厚度、书脊近景、法线、材质分组、重复书籍和底部踢脚板。若底座显得笨重，应评估隐藏或调整，而不是接受厚重底柜。
-- **授权记录：** 来源、作者、CC0 许可已补入 `NOTICE.md`。预览页直接从 CDN 加载模型，没有把 GLB 文件复制进仓库。
-- **后续决策：** 先看实际模型和暖白效果；验收通过后才讨论导入 `journal.html`。候选 B/C/D 暂停，仅在 A 的几何或材质验收失败时作为备选。
+### 其他物件的交互预览入口
+
+- **小票机：HQ3DMOD POS Receipt Printer** — [Sketchfab 3D 预览](https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983)；[CGTrader 产品页](https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer)。售价 US$19，29,078 polygons、29,525 vertices、22 parts、3 materials，4K PBR 贴图；提供 Blender / FBX / OBJ，**尚未购买或下载**，目前只有在线 3D 预览。
+- **项目黑板：LINTEX Silk Wall** — [官方产品页与 3D 配置器](https://lintex.com/products/silk-wall/)。配置器支持 24 种 Silk Glass 颜色；页面说明可导出 OBJ / GLB / STL。
+- **便签板：LINTEX Textile Noticeboard** — [官方产品页与 3D 配置器](https://lintex.com/products/textile-noticeboard/)。配置器可切换尺寸与面料；页面说明可导出 OBJ / GLB / STL。
+- 以上两个 LINTEX 产品页均带官方交互式 3D 配置器；浏览器中可用方向键旋转。当前已确认产品型号，但项目仓库尚未保存各自独立 GLB。
 
 共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
