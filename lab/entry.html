@@ -437,7 +437,7 @@ const AZ = GOBO.az, EL = GOBO.el, W = GOBO.W;
 const SUN = 8.97, SKY = 2.26, ANG = 0.5, NDIR = 48, BOUNCE = 4.2, BSIG = 0.5, WALL = "#f0f0ee";
 const T = { sun: 0xffffff, sky: 0xe8eff3, ground: 0xdfe2e3 }, tint = new THREE.Color(0.95, 0.99, 1.03);
 const YC = 1.5 - 3 * 2.536 / 1140, VIEW_W = 2.536;                          // 画面宽永远是 2.536 m，和窗光页一样
-const OFF_WALL = 0.012, FIT_FRAC = 0.86;
+const OFF_WALL = 0.012;
 let wallReady = false;                                                    // 墙的光照算好之前不画
 
 const canvas = document.getElementById("gl");
@@ -520,7 +520,10 @@ const MODELS = {
     s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
-  async loco() { return (await loader.loadAsync("../assets/objects/locomotive.glb")).scene; },          // 火车头：yanix「Locomotive」
+  async loco() {                                                          // 火车头：yanix「Locomotive」
+    // 模型里车头朝右（+x）；绕竖轴转 −90°，让车头那一端朝着看的人（用户 2026-11-02：露车头，不露车身）
+    const s = (await loader.loadAsync("../assets/objects/locomotive.glb")).scene; s.rotation.y = -Math.PI / 2; return s;
+  },
   async boxes() { return (await loader.loadAsync("../assets/objects/postcard-boxes.glb")).scene; },    // 放明信片的盒子：Cozmoth「2 boxes」
   async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
   async textile() {
@@ -531,11 +534,24 @@ const MODELS = {
 };
 let PXM = 1;                                                              // 每米多少 CSS 像素（随窗口宽度变）
 /* 物件跟着切换条转（用户 2026-11-02：不要像贴纸）：像人走过一排实物，每个物件的转角 =
-     基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"；再整体俯视 TILT 度。
-   例：停在明信片盒子上 → 盒子转 BASE 度，右边的书架多转约 PER 度、露出左侧面，左边的火车头往反方向转、露出右侧面。
-   物件绕自己的中心转（pivot），不绕墙面转，免得转进墙里。三个数可在地址里试：?base=18&per=30&tilt=8 */
+     基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"，总角度不超过 ±MAXYAW。
+   只绕竖轴平着左右转，不俯视、不倾斜：竖线永远是竖的（用户 2026-11-02：斜着转，柜子看着要倒）。
+   幅度不要夸张（用户 2026-11-02）：BASE 15°、PER 20°、MAXYAW 35°。
+   例：停在明信片盒子上 → 盒子转 15°；右边的书架离开一格，转 15° + 20° = 35°，露出左侧面；左边的火车头转 15° − 20° = −5°。
+   物件绕自己的中心转（pivot），不绕墙面转，免得转进墙里。两个数可在地址里试：?base=15&per=20 */
 const Q = new URLSearchParams(location.search);
-const BASE = +(Q.get("base") ?? 18) * deg, PER = +(Q.get("per") ?? 30) * deg, TILT = +(Q.get("tilt") ?? 8) * deg;
+const BASE = +(Q.get("base") ?? 15) * deg, PER = +(Q.get("per") ?? 20) * deg;
+const MAXYAW = 35 * deg;
+const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PITCH_3D / Math.tan(PER)))));
+/* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）：
+   1. 侧影宽 = |宽·cos θ| + |厚·sin θ|（θ 是转角）。停在中间时（θ = BASE）的侧影宽缩放到 WIDTH_PX；
+   2. 太高的再缩小，高不超过 HEIGHT_PX；
+   3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX（只是兜底，现有物件都碰不到）；
+   取三个里最小的缩放。例：火车头宽 2.8、厚 14.6、高 4.1 → 第 1 条，停在中间 260 px 宽、约 165 px 高，转到 35° 时约 430 px 宽；
+   书架宽 0.83、高 1.85 → 第 2 条最紧，高 330 px、宽约 160 px；盒子 → 第 1 条，宽 260 px。
+   所有物件的底边放在同一条线上：格子中心往下 BOTTOM_PX。 */
+const WIDTH_PX = 260, HEIGHT_PX = 330, WIDEST_PX = 440, BOTTOM_PX = 120;
+const sideWidth = (f, a) => Math.abs(f.size.x * Math.cos(a)) + Math.abs(f.size.z * Math.sin(a));
 function fitInto(group, obj) {
   const pivot = new THREE.Group(); group.userData.obj = obj; group.userData.pivot = pivot;
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
@@ -543,12 +559,13 @@ function fitInto(group, obj) {
   obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   pivot.add(obj); group.add(pivot); sizeObjects(); render();
 }
-function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变
-  const fit = FIT_FRAC * 240 / PXM;
-  slots.forEach(g => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, k = fit / Math.max(f.size.x, f.size.y);
-    // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm，和原来一样）
+function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变（PXM：每米多少 CSS 像素）
+  slots.forEach(g => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit;
+    const widest = Math.max(sideWidth(f, MAXYAW), sideWidth(f, -MAXYAW));
+    const k = Math.min(WIDTH_PX / sideWidth(f, BASE), HEIGHT_PX / f.size.y, WIDEST_PX / widest) / PXM;
+    // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm），高度让底边落在格子中心下方 BOTTOM_PX
     o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
-    g.userData.pivot.position.set(0, 0, (f.c.z - f.zmin) * k + OFF_WALL); });
+    g.userData.pivot.position.set(0, -BOTTOM_PX / PXM + f.size.y * k / 2, (f.c.z - f.zmin) * k + OFF_WALL); });
 }
 PAGES_3D.forEach((p, i) => {
   if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
@@ -599,11 +616,10 @@ let off = innerWidth / 2 - 120;
 function render() {
   if (!wallReady) return;
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120;   // 物件区中心的页面 y
-  const D = PITCH_3D / Math.tan(PER);                                      // 视距（CSS 像素）
   slots.forEach((g, i) => {
     const dx = off + i * PITCH_3D + 120 - innerWidth / 2;                  // 这个物件离画面中心多远（CSS 像素，右边为正）
     g.position.set(dx / PXM, YC - (top - innerHeight / 2) / PXM, 0);
-    const pv = g.userData.pivot; if (pv) pv.rotation.set(TILT, BASE + Math.atan(dx / D), 0, "YXZ");
+    const pv = g.userData.pivot; if (pv) pv.rotation.set(0, yawAt(dx), 0);
   });
   sunAt(AZ * deg, EL * deg); sun.shadow.needsUpdate = true;
   // ①
