@@ -227,6 +227,9 @@ async function loadModel() {
   try {
     const gltf=await loader.loadAsync("assets/radio/t3.glb");
     radioRoot.clear(); const m=gltf.scene;
+    // The source GLB has a baked root transform that leaves the radio in portrait orientation.
+    // Rotate the whole scene 90 degrees so its long edge is horizontal, keeping the front facing +Z.
+    m.rotation.z=Math.PI/2;
     const edgeMat=new THREE.LineBasicMaterial({color:0x5f5e59,transparent:true,opacity:.18,depthWrite:false});
     m.traverse(o=>{
       if(!o.isMesh) return;
@@ -236,8 +239,8 @@ async function loadModel() {
       edges.renderOrder=2; o.add(edges);
     });
     centerAndFit(m); radioRoot.add(m);
-    ground.position.y=-1.36;
-    dialCenter.set(1.1191,-.2879,.5653); dialRadius=.6335; dialPlaneZ=.5903;
+    ground.position.y=-1.235;
+    dialCenter.set(1.47603,-.00013,.74556); dialRadius=.83548; dialPlaneZ=.75372;
     usingRealModel=true;
     document.body.classList.add("model-loaded");
   } catch {
