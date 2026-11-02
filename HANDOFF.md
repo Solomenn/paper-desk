@@ -137,19 +137,17 @@
 | 白噪音 | Braun T3 收音机 | 实体模型，已完成 | 不动，作为质量和风格基准 |
 | 卡册 | sasshi 的活页夹（2×4 卡册） | 现在用 paper-flipbook 的 CSS 条带翻页，合不上 | 移植 sasshi |
 | 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | CSS 画的 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
-| 便签 | LINTEX Air Noticeboard | CSS 画的 | 按用户确认的无框矩形造型替换；研究 Forbo Duck Egg 2162 / Blue Berry 2214 色卡 |
+| 便签 | LINTEX Textile Noticeboard | CSS 画的 | 按用户截图确认的米灰织物宽幅矩形、四边包布、无框结构替换 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
-| 手账 | 图书馆多排双面书架 | CSS 画的，用户不满意 | 候选 A 已获用户认可；独立 GLB 暖白预览中，验收通过前不替换页面 |
-- **图书馆书架方向**：用户已认可候选 A「Public Library and Reading Garden」作为首选。目标仍是公共图书馆式多排连续、双面可取书的开放书库过道；结构改为暖白色哑光效果，书脊保留低饱和色，不要厚重底柜。
-- **候选 A 的独立组件**：
-  1. `Library Stack Straight`：双面四层书架、中央隔板、独立建模书脊；1.4 × 2.145 × 0.6 m，77,484 triangles、58,662 vertices、5 materials，GLB 约 1.3 MB。模型页：<https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-9af56b98>；CDN：<https://cdn.3dassets.dev/assets/30913/v1/model.glb>。
-  2. `Library Stack End`：端部展示 / 指示组件；0.2 × 2.195 × 0.64 m，756 triangles。模型页：<https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-cb4a4da8>；CDN：<https://cdn.3dassets.dev/assets/30914/v1/model.glb>。
-  3. `Library Stack Corner`：L 形转角、连续转角搁板；0.975 × 2.12 × 0.975 m，12,204 triangles、4 materials。模型页：<https://3dassets.dev/assets/public-library-and-reading-garden-public-library-and-r-31a8d131>；CDN：<https://cdn.3dassets.dev/assets/30915/v1/model.glb>。
-- **独立预览页**：<https://solomenn.github.io/paper-desk/shelf-preview.html>。直接从 CDN 加载真实 GLB；支持单体 / 多排、直线 / 端部 / 转角、原始材质 / 暖白材质、手动选择材质和 360° 旋转。它是独立验收页，不改动 `journal.html`。
-- **材质目标**：结构暖白试色 `#f0eee7`，哑光；书脊保留原有低饱和灰绿、浅橙、米白等色。试色不是最终定色。
-- **必须检查**：套件页面标注 51/51 模型均使用 AI 工具生成；不可仅凭面数判定质量。检查正反面、侧板、书脊近景、法线、材质分组、重复书籍和底部深色踢脚板。若底座显得笨重，评估隐藏或调整。
-- **授权**：套件为 CC0 1.0，可免费商用和修改；来源与许可记录在 `NOTICE.md`。预览页从 CDN 加载，尚未把 GLB 复制到仓库。
-- **状态**：候选 A 已获用户认可为首选，但**尚未完成模型验收，也未导入手账页**。候选 B/C/D 暂停，仅在 A 验收失败时重新考虑。
+| 手账 | Bookshelf Short LOWPOLY | 已下载并改成暖米白 | 独立 360° 浏览包已交付；尚未替换 `journal.html` |
+- **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
+- **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 14.9 MB。
+- **浏览包**：`paper-desk-object-preview.zip`，包含 `preview.html`、`assets/bookshelf_short_offwhite.glb`、`run-preview.bat` 和 README。支持 360° 旋转、缩放、平移、正面 / 斜视 / 侧面 / 背面预设；独立于现有 `journal.html`。
+- **其他模型预览**：
+  - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
+  - 黑板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
+  - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
+- **状态**：米白书架 GLB 已生成并重新读取验证；预览页 JavaScript 语法检查通过。浏览器 WebGL 的线上运行仍需在用户电脑打开验收；验收通过后再决定是否替换 `journal.html`。
 | 小票 | 小票机 | CSS 画的，页面上还有“样式 / 打印”文字按钮 | 换成实体模型；去掉文字按钮 |
 
 - **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、隐藏安装、官方配置器可导出 GLB）；便签板采用 LINTEX Air Noticeboard 的无框矩形倒角方向（Forbo Bulletin Board 15 色，用户特别喜欢 Duck Egg 2162 和 Blue Berry 2214）。详细色卡已记入 `README.md`，两套色卡要分开管理：Silk Glass 24 色、Forbo Bulletin Board 15 色。产品参考已确认，实际模型仍需下载检查后再导入。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
