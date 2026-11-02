@@ -30,7 +30,6 @@
 | `album.html` | 卡册：项目、便签、车票、小票。车票卡册有时间轴视图 |
 | `journal.html` | 手账书架 |
 | `receipt.html` | 今日小票（票据编辑与打印） |
-| `models.html` | 3D 模型浏览馆：米白书架、HQ3DMOD 小票机、LINTEX Silk Wall、LINTEX Textile Noticeboard |
 | `radio.html` | 白噪音收音机：Braun T3 实体模型（`assets/radio/t3.glb`，Sketchfab「Radio T3」by ludwigangulodi，CC BY 4.0，页面右下角署名），转调谐盘换台（雪声、雨声、白噪音、棕噪音、炉火、列车）。由 `radio-shell.js` 以全屏浮层从桌面和雪国线打开 |
 | `room.css` / `room.js` | 所有页面共用的房间、光照和字体 |
 
@@ -143,13 +142,13 @@
 | 手账 | Bookshelf Short LOWPOLY | 已下载并改成暖米白 | 在线浏览馆可旋转查看；尚未替换 `journal.html` |
 - **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
 - **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 24.7 MB。Base Color 保持 4K，Normal / Metallic-Roughness 缩至 2K；Normal scale 调低至 0.35，以减弱原始深色木纹凹凸。
-- **在线模型浏览馆**：`models.html`，GitHub Pages 地址 <https://solomenn.github.io/paper-desk/models.html>，并已在 `index.html` 工具栏加入立方体入口。四个区块分别嵌入：Bookshelf Short LOWPOLY、HQ3DMOD POS Receipt Printer、LINTEX Silk Wall 官方配置器、LINTEX Textile Noticeboard 官方配置器。书架通过 Sketchfab Viewer API 读取原始 Base Color 贴图，按 UV 图集下方结构区域在线映射暖米白，提供原色 / 米白切换；若 API 不暴露源贴图 URL，会保留原模型并显示提示。打印机使用同作者 Sketchfab 在线预览，购买页另链 CGTrader。两个 LINTEX 官方产品页内嵌 3D 配置器，可按方向键旋转并切换尺寸 / 颜色 / 面料。
+- **在线模型浏览馆**：GPT 做过 `models.html`（四个物件的在线预览），2026-11-02 用户决定撤下，连同工具栏立方体入口一起删了。
 - **其他模型预览**：
   - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
   - 黑板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
   - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
-- **状态**：在线浏览馆、工具栏入口、README 与 HANDOFF 均已推送 `main`；内嵌 JavaScript 语法检查通过。尚未完成线上浏览器实际运行验收：需要确认 Sketchfab viewer、书架 UV 改色以及两个 LINTEX 官方配置器 iframe 均能正常加载。书架改色依赖 Sketchfab Viewer API 是否开放源贴图 URL；页面已准备明确失败提示。当前没有把米白 GLB 二进制上传到仓库，在线书架使用原站模型 + 页面运行时材质修改；本地预览 ZIP 仍保留。通过线上验收后再决定是否替换 `journal.html`。
-| 小票 | HQ3DMOD POS Receipt Printer | `models.html` 已嵌入同作者 Sketchfab 交互预览；尚未购买下载 | 先验收模型外观，再决定是否购买并整合进正式页面 |
+- **状态**：书架米白 GLB 只在本地预览包里，没进仓库；是否替换 `journal.html` 待第四阶段再定。
+| 小票 | HQ3DMOD POS Receipt Printer | 同作者 Sketchfab 有交互预览；尚未购买下载 | 先验收模型外观，再决定是否购买并整合进正式页面 |
 
 - **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
 - **新物件的外观按 T3 的水准和风格来定。** T3 的设计语言是：规整的几何形体、很小且克制的圆角、哑光质感；功能部件本身构成视觉图案；没有多余装饰；文字小而细；只保留一处极小的点缀色，整体简约、优美。新物件不必统一使用哑白色，颜色与材质可按物件用途变化，但形体、克制程度、细节精度和做工必须像同一家人。**明确排除复古、做旧、磨损、乡村风，以及旧教室/旧办公室式的传统木框办公用品外观。** 不因模型几何规整或文件格式合适就判定它符合风格；外观本身必须达到产品设计级完成度，不能指望后期换材质把不合适的模型救回来。先盘点仓库里已有的东西，只补缺口；每件先找现代真实产品参考和模型各角度预览给用户确认，再选模型或制作。
@@ -186,3 +185,16 @@
 - **把自己推荐的图当成用户的东西**：用户把我推荐的石板黑板图发回来，是让我看我推荐了什么，我却当成了他的黑板。
 - **把参考的规矩套到用户身上**：sasshi 禁用素材库模型，那是他的规矩，不是纸桌的。T3 是下载的模型，正是纸桌的标准。
 - **跑题**：讨论中途反复离开主线（切换条加实体物件）。每次回复前先对一下这一节。
+
+## 九、窗光复现（2026-11-02，已上线）
+
+- **页面**：`lab/window-light.html`（<https://solomenn.github.io/paper-desk/lab/window-light.html>），复现 LINTEX Silk Wall 产品图的窗光；右下角两个色点切冷调和暖调（`#warm`）。
+- **做法**：
+  - 太阳有大小：在太阳圆盘里取 48 个方向，每个方向一盏平行光投真阴影，在线性空间平均后统一做 ACES 色调映射，所以没有噪点。路径追踪版因为噪点被放弃。
+  - 窗户：左侧一面看不见的墙，开三扇半圆拱窗、一道横档（`assets/objects/lintex-light-gobo.json`），几何按原图光斑拟合。
+  - 反射光：亮斑轮廓模糊后作为 lightMap。
+  - 板子：离墙 8 mm，太阳投出真影子；四边接触阴影按原图板边剖面逐边量出。
+- **验收**：对照原图 21 项过 20 项。没过的是"边缘位置相关"（0.50，要求 0.75），差在右下两扇窗。板子亮区色相 213°，原图 220°。
+- **工具**：`tools/light/`（检查表、窗户拟合、光照拟合、分区色相、无头渲染），用法见该目录 README。账号里另存了一个 skill `photo-light-match`，记录同一套流程。
+- **和主线的关系**：这束光是第三、四阶段"一个房间、一束光"的雏形。之后所有物件共用同一个太阳方向；sasshi 的窗框和树枝遮挡物也是同一套做法，到时合并，不另起一套。
+- **教训**：前十几轮没先定检查表，凭眼睛调；路径追踪有噪点；逐像素反推窗洞出锯齿。正确顺序见 `tools/light/README.md`。以后复现任何参考，第一步都是先写对照指标。

@@ -1,7 +1,5 @@
 # 纸桌 · Paper Desk
 
-**3D 模型浏览馆：** [在线查看](https://solomenn.github.io/paper-desk/models.html) · 书架 / 小票机 / LINTEX Silk Wall / Textile Noticeboard
-
 个人效率网页：黑板上的项目卡、软木板上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
 当前只开白天模式（夜间模式的代码还在，切换按钮已关）。
 
@@ -93,13 +91,12 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - **上传原件：** `bookshelf_short_lowpoly.glb`，约 47.7 MB；GLB 内为单 mesh / 单 PBR 材质，书架结构与书籍使用同一张 4K Base Color 图集，另有 Metallic-Roughness 和 Normal 贴图。
 - **改色方法：** 根据 UV 区域只调整书架结构贴图，不漂白书脊和书籍封面；结构目标色 `#E9E2D6`（暖米白）。保留原始书籍图案、法线细节和粗糙度变化。
 - **优化后的模型：** `bookshelf_short_offwhite.glb`，约 24.7 MB；Base Color 保持 4K，Normal / Metallic-Roughness 为 2K，并降低原木纹法线强度以适配哑光涂装。几何拓扑保持不变：1 mesh、842 triangles；书籍细节来自原始 4K 贴图。
-- **在线浏览馆：** [models.html · GitHub Pages](https://solomenn.github.io/paper-desk/models.html)。同一页面内提供四个真实交互预览：米白书架（Sketchfab Viewer API 在线改色）、HQ3DMOD 小票打印机（Sketchfab viewer）、LINTEX Silk Wall（官方 3D 配置器）、LINTEX Textile Noticeboard（官方 3D 配置器）。桌面工具栏新增立方体入口。
 - **本地预览包：** `paper-desk-object-preview.zip` 仍保留，包含优化后的米白 GLB、静态预览图和 Windows 启动脚本。
-- **状态：** 米白模型已制作并完成 GLB 结构重读验证；在线浏览馆已推送 `main`，内嵌脚本通过语法检查。书架的在线改色依赖 Sketchfab Viewer API 暴露原始贴图 URL；若该接口不提供贴图，页面会显示原始模型并明确提示。LINTEX 配置器和小票机来自各自原站。在线 iframe / WebGL 的实际浏览器加载仍待用户打开验收；通过后再决定是否替换 `journal.html` 中的书架。
+- **状态：** 米白模型已制作并完成 GLB 结构重读验证；在线浏览馆 `models.html` 已撤下（2026-11-02，用户决定）。是否替换 `journal.html` 中的书架，待第四阶段再定。
 
 ### 其他物件的交互预览入口
 
-四个物件统一在 [在线模型浏览馆](https://solomenn.github.io/paper-desk/models.html) 中查看；下列链接也可单独打开原站。
+下列链接打开各物件原站的交互预览。
 
 - **小票机：HQ3DMOD POS Receipt Printer** — [Sketchfab 3D 预览](https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983)；[CGTrader 产品页](https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer)。售价 US$19，29,078 polygons、29,525 vertices、22 parts、3 materials，4K PBR 贴图；提供 Blender / FBX / OBJ，**尚未购买或下载**，目前只有在线 3D 预览。
 - **项目黑板：LINTEX Silk Wall** — [官方产品页与 3D 配置器](https://lintex.com/products/silk-wall/)。配置器支持 24 种 Silk Glass 颜色；页面说明可导出 OBJ / GLB / STL。
