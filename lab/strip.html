@@ -7,12 +7,13 @@
 <style>
   /* 复现 pengzhe.ng 时间轴切换条（桌面版）。数字来自实测，见 docs/pengzhe-strip-notes.md；代码是自己写的，物件用占位方块 */
   html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-  #strip { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
+  /* 参考站尺寸不随窗口缩放，但整体竖直居中：物件块以画面中线为准，刻度区在 0.75 × 高度 + 40 px（1280–2560 宽实测） */
+  #strip { position: absolute; left: 0; top: calc(50vh - 450px); height: 900px; will-change: transform; }
   .it { position: absolute; top: 0; width: 240px; text-align: center; }
   .it .when { position: absolute; top: 214px; left: 0; right: 0; color: #8a8a8a; font-weight: 500; font-size: 20px; line-height: 32px; }
-  .it .art { position: absolute; left: 0; width: 240px; height: 150px; top: 375px; background: #e9e9e7; border-radius: 2px; }
+  .it .art { position: absolute; left: 0; width: 240px; height: 240px; top: 285px; background: #e9e9e7; border-radius: 2px; }
   .it .place { position: absolute; top: 557px; left: 0; right: 0; color: #1a1a1a; font-weight: 500; font-size: 20px; line-height: 32px; }
-  #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: 714.5px; height: 104px; cursor: default; touch-action: none; outline: none; }
+  #zone { position: absolute; left: 50%; width: 544px; margin-left: -272px; top: calc(75vh + 39.5px); height: 104px; cursor: default; touch-action: none; outline: none; }
   .tk { position: absolute; left: 0; top: 0; width: 3px; height: 8px; border-radius: 999px; background: #1a1a1a; will-change: transform, height, opacity; }
   .sp { position: absolute; left: 0; top: 0; width: 3px; height: 14px; border-radius: 999px; background: #1a1a1a; opacity: .28; }
   .reel { display: inline-block; position: relative; height: 24px; vertical-align: top; overflow: visible; perspective: 3em; transition: width .52s cubic-bezier(.4,0,.2,1); }
@@ -150,7 +151,7 @@ function goTo(i, sound, mode = "jump") {
   const prevMonth = month[cur]; cur = i; S.free = false;
   const now = performance.now(), at = S.g ? glideAt(S.g, now) : { x: S.x, v: 0, p: 1 }, to = i * PITCH;
   const dur = mode === "scrub" ? 280 : mode === "step" ? 380 : Math.min(950, Math.max(520, 460 + Math.abs(to - at.x) * .08));
-  S.g = { from: at.x, to, v0: at.p < 1 ? at.v : 0, t0: now, dur };
+  S.g = { from: at.x, to, v0: at.p < 1 ? at.v : 0, t0: now, dur, mode };
   if (sound) click(month[i] !== prevMonth ? "month" : "line");
   kick();
 }
@@ -211,7 +212,7 @@ zone.addEventListener("pointermove", e => {
     const it = hoverItem(unzoom(H.px)); H.hot = it; if (it !== cur) goTo(it, false, "scrub");
     const b = unzoom(H.px); let tk = 0, bd = 1e9; ticks.forEach((t, j) => { const d = Math.abs(t.x - b); if (d < bd) { bd = d; tk = j; } });
     if (tk !== H.tick) { if (H.tick >= 0) click(ticks[tk].month !== ticks[H.tick].month ? "month" : "line"); H.tick = tk; }
-  } else if (H.inside) { const it = hoverItem(unzoom(H.px)); if (H.hot !== undefined && it !== H.hot) click(month[it] !== month[H.hot] ? "month" : "line"); H.hot = it; }   // 悬停时每换一个地点响一声
+  } else if (H.inside) H.hot = hoverItem(unzoom(H.px));
   kick();
 });
 zone.addEventListener("pointerleave", () => { H.py = 999; if (!H.down) H.inside = false; kick(); });
@@ -278,7 +279,10 @@ function draw() {
   const it0 = Math.max(0, Math.min(N - 1.0001, S.x / PITCH)), i0 = Math.floor(it0);
   const mk = Lpos[i0] + (Lpos[Math.min(N - 1, i0 + 1)] - Lpos[i0]) * (it0 - i0);
   const held = hot !== null && H.amt > .001 ? Z(Lpos[H.hot ?? nearItem(hot)]) : null, slot = C * H.zoom;
-  if (held !== null) { let bd = 1e9; ticks.forEach((t, k) => { const dd = Math.abs(Z(t.x) - H.sx); if (dd < bd) { bd = dd; H.hotTick = k; } }); } else H.hotTick = -1;
+  if (held !== null) { let bd = 1e9; ticks.forEach((t, k) => { const dd = Math.abs(Z(t.x) - H.sx); if (dd < bd) { bd = dd; H.hotTick = k; } });
+    // 悬停时高亮每换一根刻度响一声（跨月换成 month）；刚进入、还没完全展开时不响，点击后对准所点那根也不响
+    if (H.lastHot >= 0 && H.hotTick !== H.lastHot && !H.down && !H.snap && H.amt > .9) click(ticks[H.hotTick].month !== ticks[H.lastHot].month ? "month" : "line");
+    H.lastHot = H.hotTick; } else { H.hotTick = -1; H.lastHot = -1; }
   ticks.forEach((t, k) => {
     let x = Z(t.x) + shift, h = 8, w = 3, y = 0, op = .14 + .86 * Math.min(1, Math.max(0, (1.5 * C - Math.abs(t.x - mk)) / C)), col = "#1a1a1a";
     if (held !== null) {
@@ -293,7 +297,8 @@ function draw() {
     op *= fadeGap(x); if (gap > .01) op *= Math.min(1, Math.min(x, ZW - x) / 40 + (1 - gap));
     const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2 + y}px)`; el.style.height = h + "px"; el.style.width = w + "px"; el.style.opacity = op; el.style.background = col;
     // 滑行中当前位置每越过一根刻度响一声 travel
-    if (S.g && k === tickOf[Math.round(it0)] && H.lastTravelTick !== k) { if (H.lastTravelTick !== undefined) click("travel"); H.lastTravelTick = k; }
+    if (S.g && S.g.mode !== "scrub" && k === tickOf[Math.round(it0)] && H.lastTravelTick !== k) {   // 擦动时由擦动自己出声，不再叠 travel
+      if (H.lastTravelTick !== undefined) click("travel"); H.lastTravelTick = k; }
   });
   if (!S.g) H.lastTravelTick = undefined;
   seps.forEach((sx, k) => { const x = Z(sx) + shift; sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = .28 * fadeGap(x); });
