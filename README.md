@@ -1,6 +1,6 @@
 # 纸桌 · Paper Desk
 
-个人效率网页：黑板上的项目卡、软木板上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
+个人效率网页：项目板（LINTEX Silk Wall 浅蓝玻璃板）上的项目卡、软木板上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
 当前只开白天模式（夜间模式的代码还在，切换按钮已关）。
 
 在线：<https://solomenn.github.io/paper-desk/>　推到 `main` 后 GitHub Pages 自动发布。
@@ -9,7 +9,7 @@
 
 | 页面 | 内容 |
 |---|---|
-| [`index.html`](index.html) | 桌面。黑板：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；左下角打开工具栏（计时器、卡册、手账、小票） |
+| [`index.html`](index.html) | 桌面。项目板：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；左下角打开工具栏（计时器、卡册、手账、小票） |
 | [`focus.html`](focus.html) | 雪国线计时器：上车前选项目、拖行程刻度尺；行驶中是车厢和窗外雪原。下车把分钟数记到项目上 |
 | [`album.html`](album.html) | 卡册：项目、便签、车票、小票，按月；车票有时间轴视图 |
 | [`journal.html`](journal.html) | 手账书架：每月一本 |
@@ -20,7 +20,7 @@
 
 本节记录用户已确认的产品外观参考。它们是**设计方向与选型依据**，不表示对应 3D 模型已经下载、导入或替换现有页面。
 
-### 项目黑板：LINTEX Silk Wall
+### 项目板：LINTEX Silk Wall
 
 用户确认参考图一的方向：**浅蓝色、哑光玻璃、无厚重边框、隐藏安装、薄而完整的矩形板体**。
 
@@ -99,7 +99,7 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 下列链接打开各物件原站的交互预览。
 
 - **小票机：HQ3DMOD POS Receipt Printer** — [Sketchfab 3D 预览](https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983)；[CGTrader 产品页](https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer)。售价 US$19，29,078 polygons、29,525 vertices、22 parts、3 materials，4K PBR 贴图；提供 Blender / FBX / OBJ，**尚未购买或下载**，目前只有在线 3D 预览。
-- **项目黑板：LINTEX Silk Wall** — [官方产品页与 3D 配置器](https://lintex.com/products/silk-wall/)。配置器支持 24 种 Silk Glass 颜色；页面说明可导出 OBJ / GLB / STL。
+- **项目板：LINTEX Silk Wall** — [官方产品页与 3D 配置器](https://lintex.com/products/silk-wall/)。配置器支持 24 种 Silk Glass 颜色；页面说明可导出 OBJ / GLB / STL。
 - **便签板：LINTEX Textile Noticeboard** — [官方产品页与 3D 配置器](https://lintex.com/products/textile-noticeboard/)。配置器可切换尺寸与面料；页面说明可导出 OBJ / GLB / STL。
 - 以上两个 LINTEX 产品页均带官方交互式 3D 配置器；浏览器中可用方向键旋转。当前已确认产品型号，但项目仓库尚未保存各自独立 GLB。
 

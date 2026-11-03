@@ -843,7 +843,7 @@ function fitInto(group, obj) {
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   obj.userData.fit = { size, c, zmin: box.min.z, s0: obj.scale.x };
   obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(addRefl); } });
-  pivot.add(obj); group.add(pivot); sizeObjects(); render();
+  pivot.add(obj); group.add(pivot); sizeObjects(); saveBoardRects(); render();
 }
 function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变（PXM：每米多少 CSS 像素）
   slots.forEach((g, i) => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, t = turnOf(i);   // 按这个模型自己的转角算宽度
@@ -852,6 +852,19 @@ function sizeObjects() {                                                  // 窗
     // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm），高度让底边落在格子中心下方 BOTTOM_PX
     o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
     g.userData.pivot.position.set(0, -BOTTOM_PX / PXM + f.size.y * k / 2, (f.c.z - f.zmin) * k + (OFF_OF[PAGES_3D[i].model] ?? OFF_WALL)); });
+}
+/* 两块板停在画面正中时在墙上占的范围（用户 2026-11-03："照在缩略图是什么样的，放大就是什么样的"）：
+   首页（index.html）的项目板、便签板按这个范围，从这面墙上同一束百叶光里"裁"出那一块放大，见 room.js。
+   为什么取"停在正中"：点进首页再按返回，入口页就停在这块板正中（?at=），进出两头看到的是同一块光。
+   存的是墙上的米数 [左 x, 右 x, 下 y, 上 y]（和窗口大小无关），写进浏览器 paper-desk.boards-at-center.v1；
+   例（1440×900）：蓝板 [-0.255, 0.255, 1.360, 1.615]，布板 [-0.255, 0.255, 1.360, 1.667]。没来过入口页时 room.js 用它自己存的默认值。 */
+function saveBoardRects() {
+  const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120, out = {};
+  slots.forEach((g, i) => { const m = PAGES_3D[i].model, o = g.userData.obj; if (!o || (m !== "silk" && m !== "textile")) return;
+    const f = o.userData.fit, k = o.scale.x / f.s0, w = f.size.x * k * Math.cos(BASE * turnOf(i)), h = f.size.y * k;
+    const bottom = YC - (top - innerHeight / 2) / PXM - BOTTOM_PX / PXM;
+    out[m] = [-w / 2, w / 2, bottom, bottom + h].map(v => +v.toFixed(4)); });
+  try { const old = JSON.parse(localStorage.getItem("paper-desk.boards-at-center.v1") || "{}"); localStorage.setItem("paper-desk.boards-at-center.v1", JSON.stringify({ ...old, ...out })); } catch {}
 }
 PAGES_3D.forEach((p, i) => {
   if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
@@ -1168,7 +1181,7 @@ function layout() {
   const w = innerWidth, h = innerHeight; PXM = w / VIEW_W;
   renderer.setSize(w, h, false);
   Object.assign(camera, { left: -VIEW_W / 2, right: VIEW_W / 2, top: h / 2 / PXM, bottom: -h / 2 / PXM }); camera.updateProjectionMatrix();
-  sizeObjects(); bakeWall(); render(); document.body.dataset.ready = "1";
+  sizeObjects(); saveBoardRects(); bakeWall(); render(); document.body.dataset.ready = "1";
 }
 let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(layout, 150); });
 layout();

@@ -25,7 +25,7 @@
 
 | 页面 | 内容 |
 |---|---|
-| `index.html` | 黑板：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；底部工具栏 |
+| `index.html` | 项目板（Silk Wall）：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；底部工具栏 |
 | `focus.html` | 雪国线计时器：上车前卡片 + 行驶中车厢 |
 | `album.html` | 卡册：项目、便签、车票、小票。车票卡册有时间轴视图 |
 | `journal.html` | 手账书架 |
@@ -145,12 +145,12 @@
 - **在线模型浏览馆**：GPT 做过 `models.html`（四个物件的在线预览），2026-11-02 用户决定撤下，连同工具栏立方体入口一起删了。
 - **其他模型预览**：
   - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
-  - 黑板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
+  - 项目板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
   - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
 - **状态**：书架米白 GLB 只在本地预览包里，没进仓库；是否替换 `journal.html` 待第四阶段再定。
 | 小票 | HQ3DMOD POS Receipt Printer | 同作者 Sketchfab 有交互预览；尚未购买下载 | 先验收模型外观，再决定是否购买并整合进正式页面 |
 
-- **已确认的产品参考**：项目黑板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
+- **已确认的产品参考**：项目板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
 - **新物件的外观按 T3 的水准和风格来定。** T3 的设计语言是：规整的几何形体、很小且克制的圆角、哑光质感；功能部件本身构成视觉图案；没有多余装饰；文字小而细；只保留一处极小的点缀色，整体简约、优美。新物件不必统一使用哑白色，颜色与材质可按物件用途变化，但形体、克制程度、细节精度和做工必须像同一家人。**明确排除复古、做旧、磨损、乡村风，以及旧教室/旧办公室式的传统木框办公用品外观。** 不因模型几何规整或文件格式合适就判定它符合风格；外观本身必须达到产品设计级完成度，不能指望后期换材质把不合适的模型救回来。先盘点仓库里已有的东西，只补缺口；每件先找现代真实产品参考和模型各角度预览给用户确认，再选模型或制作。
 
 ### 3. 阶段和过关标准（先复现，再改造）

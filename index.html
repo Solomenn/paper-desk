@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
-<link rel="stylesheet" href="room.css?v=11">
-<script src="room.js?v=11"></script>
+<link rel="stylesheet" href="room.css?v=12">
+<script src="room.js?v=12"></script>
 <style>
   :root {
     --ink: #2a323a;
@@ -384,8 +384,9 @@
   .tsep { width: 1px; height: 28px; margin: 0 8px; background: rgba(96, 70, 40, .2); }
   .tspace { flex: 1; }
   .pg i { width: 30px; height: 22px; border-radius: 2px; display: block; border: 3px solid #9a6e45; box-shadow: 0 2px 4px rgba(21, 35, 58,.3); transition: transform .2s var(--ease); }
-  .pg[data-p="0"] i { background: #2f3f35; }
-  .pg[data-p="0"] i::after { content: ""; display: block; margin: 5px 4px; height: 2px; background: rgba(244,240,228,.55); box-shadow: 0 5px 0 rgba(244,240,228,.35); }
+  /* 项目页的小图标：LINTEX Silk Wall 浅蓝玻璃板（无框，2026-11-03 从绿黑板换过来），上面两张白卡片 */
+  .pg[data-p="0"] i { background: linear-gradient(160deg, #cbd8d8, #b3c3c4); border: 1px solid rgba(32, 46, 54, .35); position: relative; }
+  .pg[data-p="0"] i::after { content: ""; position: absolute; left: 5px; top: 4px; width: 7px; height: 6px; background: #fbfaf6; box-shadow: 10px 3px 0 #fbfaf6; }
   .pg[data-p="1"] i { background: #c99c69; position: relative; }
   .pg[data-p="1"] i::after { content: ""; position: absolute; left: 5px; top: 3px; width: 9px; height: 9px; background: #f3e2a1; transform: rotate(-6deg); box-shadow: 9px 2px 0 #cfe4cf; }
   .pg::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--stamp); opacity: 0; transition: opacity .2s; }
@@ -743,7 +744,7 @@
 
 <main id="stage">
   <div id="pages">
-    <section class="page" id="chalk"><div class="frame"><i class="picLamp" aria-hidden="true"></i><div class="inner" data-sunlit>
+    <section class="page" id="chalk"><div class="frame"><i class="picLamp" aria-hidden="true"></i><div class="inner" data-sunlit="silk">
       <div class="lanes">
         <div class="lane" data-col="doing"><h3>在做<small></small></h3><div class="cards"></div></div>
         <div class="lane" data-col="todo"><h3>待做<small></small></h3><div class="cards"></div><button class="add" title="新项目">＋</button></div>
@@ -751,7 +752,7 @@
       </div>
       <div class="ledge"><i style="left:12%;width:46px"></i><i style="left:16.5%;width:28px;transform:rotate(-4deg)"></i><i style="left:78%;width:38px;background:#f3d7a4"></i></div>
     </div></div></section>
-    <section class="page" id="cork"><div class="frame"><div class="inner" data-sunlit><div id="notes"></div></div></div></section>
+    <section class="page" id="cork"><div class="frame"><div class="inner" data-sunlit="textile"><div id="notes"></div></div></div></section>
   </div>
 </main>
 
@@ -866,7 +867,7 @@
     store(PAGEKEY, page);
     dispatchEvent(new CustomEvent("deskpage", { detail: page }));
     window.setHashira && setHashira(page === 0 ? "项目" : "便签");
-    // 返回箭头：黑板回入口第 0 格（项目），软木板回第 1 格（便签）
+    // 返回箭头：项目板回入口第 0 格（项目），软木板回第 1 格（便签）
     const eb = $("#entryBack"); if (eb) eb.href = `lab/entry.html?at=${page}`;
     // the album button opens this page's album
     const ab = $("#albumBtn");
@@ -1363,7 +1364,7 @@
     todayList.render(); renderTodayHead();
   }, 30000);
 
-  /* ═════════ projects: index cards on the chalkboard ═════════ */
+  /* ═════════ projects: index cards on the project board (Silk Wall) ═════════ */
   const PKEY = "paper-desk.desk-tasks.v1";
   let S = load(PKEY, null);
   if (!S || !Array.isArray(S.done)) S = { done: [] };
@@ -1700,7 +1701,7 @@
     click: id => { const p = S.projects.find(x => x.id === id); if (p) openDetail(p); },
     menu: id => {
       const p = S.projects.find(x => x.id === id);
-      return [{ label: "打开", fn: () => openDetail(p) }, { label: "放回黑板", fn: () => { p.bar = false; saveP(); Bar.remove("proj", id); if (page !== 0) go(0); renderBoard(); } }];
+      return [{ label: "打开", fn: () => openDetail(p) }, { label: "放回项目板", fn: () => { p.bar = false; saveP(); Bar.remove("proj", id); if (page !== 0) go(0); renderBoard(); } }];
     },
   };
   renderBoard(); saveP();

@@ -22,53 +22,71 @@
     if (!$("#room")) document.body.insertAdjacentHTML("afterbegin", '<div class="desk" id="room" aria-hidden="true"><i class="boards"></i><i class="grain"></i><i class="win"></i><i class="lamp"></i><i class="stove"></i><i class="tooth"></i></div>');
     document.body.insertAdjacentHTML("beforeend", '<i class="cast shade" aria-hidden="true"></i><i class="cast glow" aria-hidden="true"></i>');
     setTheme(root.dataset.theme); root.classList.remove("theming");
-    /* 首页两块板的阳光：和入口页（lab/entry.html）同一束百叶窗光（用户 2026-11-03："把两个板子的光照都统一——改成主页的光照"）。
-       原来是一块窗户形状的亮斑（两格三格的窗棂）照在"在做"那一栏 / 便签页左边 42%，现在换成入口页的百叶条纹，算法照搬：
-       · 参数：先读入口页面板"保存"进浏览器的值（paper-desk.light.v1），没有就用入口页的默认值（LIGHT_DEFAULT，改那边时这里一起改）；
-       · 范围：每块板左边 area（默认 68%）；亮区顶边是一条和条纹平行的斜边，亮区右上角落在离画面上沿 (2.28 - topY) m 处；
-       · 条纹：入口页里窗上的点 (u, v) 落到墙上是 X = -3 + KX·u、Y = v - KY·u，百叶片（v 固定）→ 斜率 -KY/KX 的斜线，
-         竖直方向每隔 pitch 一道；按入口页的比例换成像素（画面宽 = 2.536 m）。默认值算出来往右下斜约 22°，间距约画面宽的 6%；
-       · 暗条宽度：随百叶角度 tilt 变（实测入口页 tilt 20° 时暗条约占 40%），越大越透光；
-       · 拉绳：亮区宽 1/3 处一条细竖线；边缘：入口页的条纹边缘过渡约占周期的 22%，这里用同样的模糊。
-       亮度和混合方式仍是首页原来的（.cast.sun：soft-light、白天 0.7），不改色调。 */
+    /* 首页两块板的阳光：和入口页（lab/entry.html）同一束百叶窗光，而且是同一块光（用户 2026-11-03）。
+       ① "把两个板子的光照都统一——改成主页的光照"；② "照在缩略图是什么样的，放大就是什么样的"。
+       做法：入口页里，板停在画面正中时被百叶光照成什么样，首页这块板就把它原样放大铺满：
+       条纹的斜度、几道、落在哪、边缘多虚，都跟入口页那块小板一样，只是放大了。
+       · 板在哪：入口页把"停在正中时板面在墙上占的长方形"（米）存进 paper-desk.boards-at-center.v1；没去过入口页就用 RECT_DEFAULT。
+         为什么取"停在正中"：首页按返回，入口页就停在这块板正中，进出两头看到的是同一块光。
+       · 光（入口页的算法照搬）：先在"窗上"画——窗上的点 (u, v)，u 沿百叶片方向、v 是高度（米）：
+         亮的窗洞 u 从 U0 到 U1、v 从 0 到 V1（U0、U1、V1 按 area、topY 反推，同入口页 buildWindow）；
+         第 k 片百叶的影子：v = (k + 0.5)·pitch − PHASE 两边、共 dark·pitch 宽的暗带；拉绳：u = 亮区宽 1/3 处，6 mm。
+         再顺着阳光把窗上的点投到板面上：板停在正中时绕竖轴转了 YAW = 15° × 0.25 = 3.75°（入口页 BASE × TURN.silk），
+         所以投到的是转过的板面，不是墙（转过的板上条纹更斜：斜率 0.45，墙上是 0.40，入口页截图量过）。
+         投影是"平面到平面的平行投影"，就是一个仿射变换，直接写成 SVG 的 matrix。
+       · 实测入口页蓝板（1440×900，默认参数）：条纹边缘过渡（10%–90%）约 0.088 × pitch，暗带约占 49%，
+         暗带中心比百叶中心的投影低约 0.082 × pitch（百叶片斜着，影子偏下）；这三个数就是 EDGE、DARK、PHASE。
+       · 放大：按宽度对齐（板宽 = 那块长方形的宽），上下按中心对齐，长宽同一个比例。
+         例：1440×900 下蓝板在入口页约 290 px 宽，首页约 1400 px 宽 → 放大约 4.8 倍，板上约两道半暗带。
+       · 参数：入口页面板"保存"的值（paper-desk.light.v1），没有就用入口页的默认值（LIGHT_DEFAULT，改那边时这里一起改）。
+       · 光画在板自己里面（板的最后一个子元素），翻页时跟着板一起滑（用户 2026-11-03：左右切换时光影浮动——
+         原来光固定在屏幕上、每半秒追一次板的位置，滑动时光先不动、再跳过去）。
+       亮度和混合方式仍是首页原来的（.sunlit：soft-light、白天 0.7），不改色调。 */
     const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, tilt: 20 };
-    const light = () => { const L = { ...LIGHT_DEFAULT }; try { const s = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof s[k] === "number") L[k] = s[k]; } catch {} return L; };
-    let sun = null, seen = "";
-    function paint() {
-      const W = innerWidth, H = innerHeight;   // 画面上那块标了 [data-sunlit] 的板（值 = 亮区占板宽的比例；空 = 用入口页的 area）
-      // 选在画面上露出最多的那一块（翻页时旁边那块会露出一条边，选"第一个在画面上的"会选错，光画到画面外面去）
-      const seenW = e => { const b = e.getBoundingClientRect(); return Math.max(0, Math.min(b.right, W) - Math.max(b.left, 0)); };
-      const t = [...document.querySelectorAll("[data-sunlit]")].sort((a, b) => seenW(b) - seenW(a)).find(e => seenW(e) > 40);
-      const r = t ? t.getBoundingClientRect() : null, L = light();
-      const key = r ? [r.left, r.top, r.width, r.height, W, H, JSON.stringify(L)].map(v => typeof v === "number" ? Math.round(v) : v).join() : "";
-      if (key === seen && (sun || !t)) return;                     // 没动：光照不变
-      seen = key; if (sun) { sun.remove(); sun = null; }
-      if (!t || r.width < 40 || r.right < 0 || r.left > W) return;
+    const RECT_DEFAULT = { silk: [-0.2553, 0.2553, 1.3595, 1.6153], textile: [-0.2552, 0.2552, 1.3595, 1.6669] };   // 1440×900 下量的
+    const VIEW_W = 2.536, WIN = 3, YAW = 15 * 0.25, FRONT = 0.012, EDGE = 0.088, DARK = 0.49, PHASE = 0.082;
+    const read = (k, d) => { const o = { ...d }; try { const s = JSON.parse(localStorage.getItem(k) || "{}"); for (const i in o) if (s[i] !== undefined) o[i] = s[i]; } catch {} return o; };
+    let n = 0;
+    function paintBoard(el) {
+      const w = el.clientWidth, h = el.clientHeight, L = read("paper-desk.light.v1", LIGHT_DEFAULT);
+      const R = read("paper-desk.boards-at-center.v1", RECT_DEFAULT)[el.dataset.sunlit] || RECT_DEFAULT.silk;
+      const key = [w, h, JSON.stringify(L), R.join()].join("|");
+      if (el._sunKey === key) return; el._sunKey = key;
+      if (el._sun) { el._sun.remove(); el._sun = null; }
+      if (w < 40 || h < 40) return;
       const d = Math.PI / 180, tr = L.turn * d, ce = Math.cos(L.el * d), se = Math.sin(L.el * d), ca = Math.cos(L.az * d), sa = Math.sin(L.az * d);
-      const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa), slope = KY / KX;   // 屏幕上往右每 1 px，条纹往下 slope px
-      const PXM = W / 2.536, period = L.pitch * PXM;                    // 条纹竖直方向的间距（px）
-      const frac = +t.dataset.sunlit || L.area, x0 = r.left, x1 = r.left + r.width * frac;
-      const yTopR = r.top + (2.28 - L.topY) * PXM;                      // 亮区右上角
-      const topAt = x => yTopR - (x1 - x) * slope;                      // 亮区顶边：往左上升
-      const dark = Math.max(0.05, Math.min(0.95, 0.4 + (20 - L.tilt) * 0.015));
+      // 窗（同入口页 buildWindow）
+      const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa);
+      const X0 = -VIEW_W / 2 - 0.2, X1 = -VIEW_W / 2 + L.area * VIEW_W;
+      const U0 = (X0 + WIN) / KX, U1 = Math.max(U0 + 0.05, (X1 + WIN) / KX), V1 = L.topY + KY * U1, CORD = U0 + (U1 - U0) / 3;
+      // 窗上的点 → 顺着阳光 → 转了 YAW 的板面（画面上的 X、Y，米）
+      const D = [ce * ca, -se, -ce * sa], N = [Math.sin(YAW * d), 0, Math.cos(YAW * d)], C = [(R[0] + R[1]) / 2, 0, FRONT];
+      const onBoard = (u, v) => { const P = [-WIN + u * Math.sin(tr), v, u * Math.cos(tr)];
+        const t = (N[0] * (C[0] - P[0]) + N[2] * (C[2] - P[2])) / (N[0] * D[0] + N[2] * D[2]); return [P[0] + t * D[0], P[1] + t * D[1]]; };
+      // 画面上的米 → 板上的像素：s = 每像素多少米；那块长方形的中心对着板的中心
+      const s = (R[1] - R[0]) / w, Xc = (R[0] + R[1]) / 2, Yc = (R[2] + R[3]) / 2;
+      const toPx = ([X, Y]) => [w / 2 + (X - Xc) / s, h / 2 - (Y - Yc) / s];
+      const o = toPx(onBoard(0, 0)), pu = toPx(onBoard(1, 0)), pv = toPx(onBoard(0, 1));
+      const M = [pu[0] - o[0], pu[1] - o[1], pv[0] - o[0], pv[1] - o[1], o[0], o[1]].map(x => +x.toFixed(4)).join(" ");
+      const dark = Math.max(0.05, Math.min(0.95, DARK + (20 - L.tilt) * 0.015)), f = x => +x.toFixed(5);
       let bands = "";
-      for (let y = yTopR - (x1 - x0) * slope - period; y < r.bottom + period; y += period) {   // 每道暗条：从亮区左边到右边的一条斜带
-        const a = y + period * (1 - dark), b = y + period;
-        bands += `<polygon points="${x0 - 20},${(a - (x1 - x0 + 20) * 0).toFixed(1)} ${x1 + 20},${(a + (x1 - x0 + 40) * slope).toFixed(1)} ${x1 + 20},${(b + (x1 - x0 + 40) * slope).toFixed(1)} ${x0 - 20},${b.toFixed(1)}" fill="#000"/>`;
+      for (let k = 0; (k + 0.5 - dark / 2 - PHASE) * L.pitch < V1; k++) {   // 每片百叶的影子（窗上横的一条，投到板上是斜的）
+        const v1 = (k + 0.5 - dark / 2 - PHASE) * L.pitch;
+        bands += `<rect x="${f(U0 - 0.5)}" y="${f(v1)}" width="${f(U1 - U0 + 1)}" height="${f(dark * L.pitch)}" fill="#000"/>`;
       }
-      const cx = x0 + (x1 - x0) / 3;                                   // 拉绳
-      const blur = Math.max(1.5, period * 0.22 / 2.56);                // 边缘过渡约占周期 22%（10%–90%）
-      document.body.insertAdjacentHTML("beforeend", `<svg class="cast sun" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-        <filter id="room-sb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter>
-        <clipPath id="room-sc"><rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}"/></clipPath>
-        <mask id="room-sm" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
-          <polygon points="${x0},${topAt(x0).toFixed(1)} ${x1},${yTopR.toFixed(1)} ${x1},${r.bottom} ${x0},${r.bottom}" fill="#fff"/>${bands}
-          <rect x="${(cx - 1.5).toFixed(1)}" y="${r.top}" width="3" height="${r.height}" fill="#000"/></mask></defs>
-        <g clip-path="url(#room-sc)"><g filter="url(#room-sb)"><rect width="${W}" height="${H}" fill="#fffefa" mask="url(#room-sm)"/></g></g></svg>`);
-      sun = document.body.lastElementChild;
+      const blur = Math.max(1, EDGE * L.pitch / 2.56 / s);             // 高斯：10%–90% 过渡 = 2.56 σ
+      const id = "sun" + (++n);
+      el.insertAdjacentHTML("beforeend", `<svg class="sunlit" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs>
+        <filter id="${id}b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter>
+        <mask id="${id}m" maskUnits="userSpaceOnUse" x="-100" y="-100" width="${w + 200}" height="${h + 200}"><g transform="matrix(${M})">
+          <rect x="${f(U0)}" y="0" width="${f(U1 - U0)}" height="${f(V1)}" fill="#fff"/>${bands}
+          <rect x="${f(CORD - 0.003)}" y="0" width="0.006" height="${f(V1)}" fill="#000"/></g></mask></defs>
+        <g filter="url(#${id}b)"><rect x="-100" y="-100" width="${w + 200}" height="${h + 200}" fill="#fffefa" mask="url(#${id}m)"/></g></svg>`);
+      el._sun = el.lastElementChild;
     }
+    const paint = () => document.querySelectorAll("[data-sunlit]").forEach(paintBoard);
     window.roomRelight = paint;
-    // the column moves and resizes (fonts arriving, the board settling in, a page turn, cards added): check twice a second
+    // 板的大小变了（窗口、字体到了）、入口页改了光：重画；翻页滑动不改板的大小，不重画
     paint(); setInterval(paint, 500); addEventListener("resize", paint);
   };
   if (document.body) start(); else addEventListener("DOMContentLoaded", start);
