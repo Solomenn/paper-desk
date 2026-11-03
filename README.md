@@ -103,7 +103,7 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - **便签板：LINTEX Textile Noticeboard** — [官方产品页与 3D 配置器](https://lintex.com/products/textile-noticeboard/)。配置器可切换尺寸与面料；页面说明可导出 OBJ / GLB / STL。
 - 以上两个 LINTEX 产品页均带官方交互式 3D 配置器；浏览器中可用方向键旋转。当前已确认产品型号，但项目仓库尚未保存各自独立 GLB。
 
-共用：`room.css` / `room.js`（房间、白天光照、字体），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
+共用：`room.css` / `room.js`（房间、字体、没有 WebGL 时的平面墙），`room3d.js`（3D 墙和百叶光，入口页和各页共用），`board3d.js`（首页两块板、项目卡、便签的 3D），`wall3d.js`（卡册、手账、小票的 3D 墙），`paint-dom.js`（把网页按排好的样子画成 3D 贴图），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
 ## 文档
 

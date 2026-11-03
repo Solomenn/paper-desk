@@ -83,3 +83,9 @@ body { line-break: strict; word-break: normal; hanging-punctuation: allow-end; }
 .seal { display: inline-block; width: 46px; height: 46px; cursor: pointer; transform: rotate(-3deg); opacity: .9; transition: transform .2s; }
 .seal:hover { transform: rotate(-3deg) scale(1.06); }
 .seal svg { width: 100%; height: 100%; display: block; mix-blend-mode: multiply; }
+
+/* 3D 的墙和光（room3d.js：首页由 board3d.js 用，卡册、手账、小票由 wall3d.js 用，2026-11-03）：胶片感那一层（四角压暗 + 细颗粒，同入口页） */
+#film3d::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 75% 70% at 50% 50%, rgba(0,0,0,0) 55%, rgba(20,22,24,.28) 100%); opacity: var(--vig, 0); }
+#film3d::after { content: ""; position: absolute; inset: -50%; background-image: var(--grain); background-size: 256px 256px; mix-blend-mode: overlay; opacity: var(--gr, 0); transform: translate(var(--gx, 0), var(--gy, 0)); }
+/* 3D 的墙画好以后，room.js 那张按公式画的平面墙和几层叠光就收起来（没有 WebGL 时它们留着当替补） */
+body.w3d #room, body.w3d .cast { display: none !important; }

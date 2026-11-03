@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
-<link rel="stylesheet" href="room.css?v=14">
+<link rel="stylesheet" href="room.css?v=15">
 <script src="room.js?v=14"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/"
+} }
+</script>
 <style>
   :root {
     --ink: #2a323a;
@@ -711,6 +717,20 @@
   #chalk .ledge i:nth-child(1) { left: 8% !important; width: 52px !important; background: linear-gradient(90deg, #2b3036 0 78%, #1b1e22 78%) !important; }   /* 黑笔：笔帽颜色深一点 */
   #chalk .ledge i:nth-child(2) { left: 40% !important; width: 50px !important; background: linear-gradient(90deg, #e9ecec 0 74%, #2f5fa0 74%) !important; }   /* 蓝笔：白笔杆、蓝笔帽 */
   #chalk .ledge i:nth-child(3) { left: 70% !important; width: 48px !important; background: linear-gradient(90deg, #e9ecec 0 74%, #b5342b 74%) !important; }   /* 红笔 */
+  /* ═════════ 首页两块板的 3D（board3d.js，2026-11-03）：板、板上的字、笔槽、项目卡、便签、图钉都由 3D 画，光照和入口页同一份（room3d.js）。
+     网页版留在原位、变透明，点击拖动打字照旧；正在编辑的卡、便签显示网页版的字（纸还是 3D 的）。没有 WebGL 时这些规则都不生效 ═════════ */
+  #gl3d, #dust3d { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+  #film3d { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  body.b3d #room, body.b3d .cast, body.b3d .sunlit { display: none !important; }
+  body.b3d .page .frame, body.b3d .page .inner { background: transparent !important; box-shadow: none !important; }
+  body.b3d .page .frame::before, body.b3d .page .frame::after, body.b3d .page .inner::before, body.b3d .page .inner::after { display: none !important; }
+  body.b3d .x3d { opacity: 0 !important; }
+  body.b3d .x3dp::before, body.b3d .x3dp::after { opacity: 0 !important; }
+  body.b3d .pcard.x3d.edit3d { opacity: 1 !important; }
+  body.b3d .pcard.x3d.edit3d .sheetc { background: transparent !important; box-shadow: none !important; }
+  body.b3d .pcard.x3d.edit3d .sheetc::before, body.b3d .pcard.x3d.edit3d .grip { display: none !important; }
+  body.b3d .note.editing .sheet.x3d { opacity: 1 !important; background: transparent !important; box-shadow: none !important; }
+  body.b3d .note.editing .sheet.x3d::before, body.b3d .note.editing .sheet.x3d::after { display: none !important; }
 </style>
 <script src="sound.js"></script>
 <script src="preload.js" defer></script>
@@ -2609,5 +2629,6 @@
   requestAnimationFrame(frame);
 })();
 </script>
+<script type="module" src="board3d.js?v=2"></script>
 </body>
 </html>
