@@ -550,9 +550,10 @@ const W = GOBO.W;
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
    refl   反光：亮墙反弹到物件暗面上的光               ao    闭塞阴影：物件根部、边缘一圈墙上的天光和反射光减弱多少
    haze   光柱：窗和墙之间的空气被阳光照亮的强度（用户 2026-11-02：默认开启；0.12，再大会冲淡反差）
+   hazeD  光柱只算墙前多厚一层空气（m）；0 = 自动（见"光柱和条纹在物件上弯折能共存"那段）
    默认值的来由见下面"阳光像真的"那段。 */
 const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, tilt: 20, ang: 0.21,
-  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35, haze: 0.12 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
+  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35, haze: 0.12, hazeD: 0 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
 const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
@@ -834,16 +835,17 @@ const blurMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, dir: 
 const blurScene = quad(blurMat);
 /* 闭塞阴影（用户 2026-11-02，素描五大调子里"投影贴着物体的根部最深"）：物件和墙挨得近的地方，天光和反射光也照不进去。
    每帧把物件的轮廓画成白色（1/4 大小），横竖模糊两遍，得到从物件边缘往外渐淡的一圈；合成墙时这一圈里的 amb 按 ao 减弱。 */
-let rtAoA, rtAoB;
+let rtAoA, rtAoB, rtObj;
 const aoMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 function bakeAO() {
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(1, sz.x >> 2), h = Math.max(1, sz.y >> 2);
-  if (!rtAoA || rtAoA.width !== w || rtAoA.height !== h) { [rtAoA, rtAoB].forEach(r => r && r.dispose()); rtAoA = new THREE.WebGLRenderTarget(w, h); rtAoB = new THREE.WebGLRenderTarget(w, h); }
+  if (!rtAoA || rtAoA.width !== w || rtAoA.height !== h) { [rtAoA, rtAoB, rtObj].forEach(r => r && r.dispose()); rtAoA = new THREE.WebGLRenderTarget(w, h); rtAoB = new THREE.WebGLRenderTarget(w, h); rtObj = new THREE.WebGLRenderTarget(w, h); }
   wall.visible = false; gobo.visible = false; scene.overrideMaterial = aoMat;
-  renderer.setRenderTarget(rtAoA); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(scene, camera);
+  renderer.setRenderTarget(rtObj); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(scene, camera);   // 物件轮廓（不模糊）：光柱也用它，被物件挡住的像素不叠光柱
   scene.overrideMaterial = null; wall.visible = true; gobo.visible = true;
+  let first = true;
   for (const step of [0.75, 1.5]) {                                        // 只在贴着物件的窄窄一圈（约 50 px）；宽了会把物件周围一大片墙压暗，边缘发虚
-    blurMat.uniforms.t.value = rtAoA.texture; blurMat.uniforms.dir.value.set(step / w, 0); renderer.setRenderTarget(rtAoB); renderer.render(blurScene, cam2);
+    blurMat.uniforms.t.value = first ? rtObj.texture : rtAoA.texture; first = false; blurMat.uniforms.dir.value.set(step / w, 0); renderer.setRenderTarget(rtAoB); renderer.render(blurScene, cam2);
     blurMat.uniforms.t.value = rtAoB.texture; blurMat.uniforms.dir.value.set(0, step / h); renderer.setRenderTarget(rtAoA); renderer.render(blurScene, cam2);
   }
   outMat.uniforms.ao.value = rtAoA.texture; outMat.uniforms.aoAmt.value = L.ao;
@@ -855,13 +857,13 @@ function bakeAO() {
    实测（2026-11-02）：正面看出不来一道道光柱，只是亮区蒙一层均匀的雾、反差被冲淡——要看出光柱，视线得顺着光片看过去，
    可窗转了 63°（为了让条纹落在物件上会弯折），每条视线穿过好几片光和影子，平均成了雾。用户要默认开启：0.12。 */
 const hazeMat = new THREE.ShaderMaterial({
-  uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 } },
+  uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 }, depth: { value: 1.6 }, obj: { value: null } },
   transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
   fragmentShader: `#include <packing>
-    uniform sampler2D sm; uniform mat4 smat; uniform vec2 vMin, vSize; uniform float amt, wallX, tanTurn; varying vec2 v;
+    uniform sampler2D sm, obj; uniform mat4 smat; uniform vec2 vMin, vSize; uniform float amt, wallX, tanTurn, depth; varying vec2 v;
     void main(){
       vec2 xy = vMin + v * vSize;                                            // 这个像素在墙上的世界坐标
-      float zEnd = tanTurn > 0.001 ? min(1.6, (xy.x + wallX) / tanTurn) : 1.6;   // 走到窗所在那面墙为止
+      float zEnd = tanTurn > 0.001 ? min(depth, (xy.x + wallX) / tanTurn) : depth;   // 只算墙前 depth 厚的一层空气，也不超过窗所在那面墙
       if (zEnd <= 0.0) discard;
       float rot = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
       float lit = 0.0;
@@ -870,14 +872,29 @@ const hazeMat = new THREE.ShaderMaterial({
         if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0) continue;
         lit += step(sc.z - 0.0005, unpackRGBAToDepth(texture2D(sm, sc.xy)));
       }
-      gl_FragColor = vec4(vec3(lit / 24.0 * amt * zEnd / 1.6), 1.0);         // 空气越厚（离窗越远的像素走得越长）光柱越亮
+      gl_FragColor = vec4(vec3(lit / 24.0 * amt * (1.0 - texture2D(obj, v).r)), 1.0);   // 被物件挡住的像素不叠：视线先碰到物件，后面的空气看不见
     }` });
 const hazeScene = quad(hazeMat);
+/* 光柱和"条纹在物件上弯折"能共存（用户 2026-11-02："我觉得要求不矛盾"）：
+   每片光（一条百叶缝漏下来的光，是一张斜着的薄片）上的点，离墙每往前 1 m，在画面上往下错开 shift（错开率）。
+   · 条纹落在物件上：物件深 d，条纹错开 shift × d —— 要看得出弯折，shift 不能太小；
+   · 光柱：视线穿过 D 厚的空气，这层里的光片在画面上被拖开 shift × D —— 不超过条纹间距的一半（pitch / 2），一道道光柱才分得开。
+   所以光柱只算墙前 D = (pitch / 2) / shift 厚的一层空气（hazeD = 0 时自动算；以前算 1.6 m，糊成一层雾）。
+   shift = |n.z / n.y|，n = 百叶片方向 × 阳光方向（光片的法线）。
+   例：窗转 63°、太阳方位 18° → shift ≈ 0.79，D ≈ 9.5 cm（光柱只是贴着墙的一薄层）；窗转 28° → shift ≈ 0.3，D ≈ 25 cm。 */
+function hazeAutoDepth() {
+  const tr = L.turn * deg, s = new THREE.Vector3(Math.sin(tr), 0, Math.cos(tr));
+  const d = new THREE.Vector3(Math.cos(L.el * deg) * Math.cos(L.az * deg), -Math.sin(L.el * deg), -Math.cos(L.el * deg) * Math.sin(L.az * deg));
+  const n = s.clone().cross(d), shift = Math.abs(n.z / (Math.abs(n.y) > 1e-4 ? n.y : 1e-4));
+  return Math.max(0.05, Math.min(1.6, (L.pitch / 2) / Math.max(shift, 1e-3)));
+}
+window.__hazeDepth = () => hazeAutoDepth();
 function drawHaze() {
   if (L.haze <= 0 || !sun.shadow.map) return;
   hazeMat.uniforms.sm.value = sun.shadow.map.texture; hazeMat.uniforms.smat.value.copy(sun.shadow.matrix);
   hazeMat.uniforms.vMin.value.set(camera.left, camera.position.y + camera.bottom); hazeMat.uniforms.vSize.value.set(camera.right - camera.left, camera.top - camera.bottom);
   hazeMat.uniforms.amt.value = L.haze; hazeMat.uniforms.wallX.value = W; hazeMat.uniforms.tanTurn.value = Math.tan(L.turn * deg);
+  hazeMat.uniforms.depth.value = L.hazeD > 0 ? L.hazeD : hazeAutoDepth(); hazeMat.uniforms.obj.value = rtObj ? rtObj.texture : null;
   renderer.autoClear = false; renderer.render(hazeScene, cam2); renderer.autoClear = true;
 }
 /* 反光（用户 2026-11-02，五大调子里的"反光"）：物件背光的一面会被旁边亮的墙照亮，暗面不是死黑，靠近亮墙的一侧更亮。
@@ -1031,7 +1048,7 @@ if (new URLSearchParams(location.search).get("tune") === "1") {
     ["亮区", [["area", "面积（占画面宽）", 0.1, 1, 0.01], ["topY", "斜边高度 m", 0.8, 3.2, 0.01]]],
     ["窗户和太阳", [["turn", "窗墙朝向 °", 0, 70, 1], ["az", "太阳方位 °", 15, 70, 1], ["el", "太阳仰角 °", 10, 70, 1],
                    ["pitch", "条纹间距 m", 0.06, 0.4, 0.005], ["tilt", "百叶角度 °（越大越透光）", -30, 60, 1], ["ang", "边缘软硬 °", 0, 0.6, 0.01]]],
-    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["refl", "反光", 0, 3, 0.05], ["ao", "闭塞阴影", 0, 1, 0.01], ["haze", "光柱", 0, 0.5, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
+    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["refl", "反光", 0, 3, 0.05], ["ao", "闭塞阴影", 0, 1, 0.01], ["haze", "光柱", 0, 0.5, 0.01], ["hazeD", "光柱厚度 m（0 自动）", 0, 1.6, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
   ];
   const fmt = (v, st) => st >= 1 ? String(Math.round(v)) : v.toFixed(st < 0.01 ? 3 : 2);
   const inputs = {};
