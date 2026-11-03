@@ -291,10 +291,6 @@ export async function paintDOM(root, o = {}) {
   // 量的时候先把 root 和 o.flatten 里各元素的变形（旋转、抬起时的透视倾斜）去掉；3D 物体自己会转、会弯
   const flat = [root, ...(o.flatten || [])].filter(Boolean), keep = flat.map(e => [e.style.transform, e.style.transition]);
   flat.forEach(e => { e.style.transition = "none"; e.style.transform = "none"; });
-  const R0 = root.getBoundingClientRect().toJSON(), R = R0;
-  const W = Math.max(1, Math.round(R.width * scale)), H = Math.max(1, Math.round(R.height * scale));
-  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
-  const g = cv.getContext("2d"); g.scale(scale, scale);
   const els = [root, ...root.querySelectorAll("*")], skipped = [];
   /* 用到的 url() 背景图要先加载。分三步，量和画那一段一口气做完、中间不让出（2026-11-03 修：原来在"临时恢复网页版样子"之后才去等图片，
      等的时候别的贴图画完把样子改了回去，便签页的软木板（当时还是软木）量到的是透明背景，贴图是空的）：
@@ -306,10 +302,15 @@ export async function paintDOM(root, o = {}) {
     if (urls.length) {
       flat.forEach((e, i) => { e.style.transform = keep[i][0]; });
       await loadUrls(urls);
-      flat.forEach(e => { e.style.transform = "none"; }); Object.assign(R0, root.getBoundingClientRect().toJSON());
+      flat.forEach(e => { e.style.transform = "none"; });
     }
   }
   if (o.before) o.before();                                              // 量之前：调用方临时恢复网页版的样子（同步做完再还原，中间不刷新画面，所以不闪）
+  // 先恢复样子、再量大小、再开画布（2026-11-03 修：原来先量后恢复，手账书脊临时拉高后顶边上移，上半截画到了画布外面）
+  const R = root.getBoundingClientRect().toJSON();
+  const W = Math.max(1, Math.round(R.width * scale)), H = Math.max(1, Math.round(R.height * scale));
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d"); g.scale(scale, scale);
   const jobs = [];
   for (const el of els) {
     if (skipped.some(s => s.contains(el))) continue;

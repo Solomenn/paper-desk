@@ -28,7 +28,7 @@
 | `index.html` | 项目板（Silk Wall）：项目卡（在做 / 待做 / 做完）；便签板（Textile Noticeboard）：便签；顶部今日台历；底部工具栏 |
 | `focus.html` | 雪国线计时器：上车前卡片 + 行驶中车厢 |
 | `album.html` | 卡册：项目、便签、车票、小票。车票卡册有时间轴视图 |
-| `journal.html` | 手账书架（3D 米白书架；卡册待做成实体放进去，暂时空着） |
+| `journal.html` | 手账书架（3D 米白书架，上层放着五本实体卡册（项目、便签、明信片、车票，加碎碎念）） |
 | `receipt.html` | 今日小票（票据编辑与打印） |
 | `radio.html` | 白噪音收音机：Braun T3 实体模型（`assets/radio/t3.glb`，Sketchfab「Radio T3」by ludwigangulodi，CC BY 4.0，页面右下角署名），转调谐盘换台（雪声、雨声、白噪音、棕噪音、炉火、列车）。由 `radio-shell.js` 以全屏浮层从桌面和雪国线打开 |
 | `room.css` / `room.js` | 所有页面共用的房间、字体；没有 WebGL 时的平面墙 |
@@ -38,7 +38,8 @@
 - **白天光照和背景墙**（2026-11-03 起是真 3D 光）：入口页、首页、卡册、手账、小票共用 `room3d.js`（three.js：墙、百叶窗、太阳、近硬远软的软影、反射光、闭塞阴影、高光溢出、光柱、浮尘、胶片感、ACES），参数读入口页面板保存的值，画面和墙 1:1（画面宽 2.536 m）。光是静止的（"光的缓慢变化"已取消）。
   - 首页（`board3d.js`）：Silk Wall 板、Textile Noticeboard 便签板（都是官方带材质模型）、项目卡、便签、磁铁、图钉都是 3D 物体，贴图由 `paint-dom.js` 按网页排好的样子逐字画出；网页版留在原位、变透明，交互照旧；正在编辑的卡和便签显示网页版的字。
   - 首页两页的窗形用百叶窗之前那一版入口页的拱窗（`room3d.js` 的 `window: "arch"`：三扇半圆拱窗 + 横档，太阳方位 35°、仰角 32°），强度参数同入口页；暗部天光、反射光 × 1.5（2026-11-03）。入口页、卡册、手账、小票仍是百叶窗。
-  - 卡册、手账、小票（`wall3d.js`）：只有 3D 的墙和光；页面上的东西（卡册、书架、小票机）仍是网页画的，不受 3D 光照。
+  - 卡册、小票（`wall3d.js`）：只有 3D 的墙和光；页面上的东西（卡册、小票机）仍是网页画的，不受 3D 光照。
+  - 手账（`wall3d.js` + `shelf3d.js`）：3D 书架里插着五本 3D 卡册。前四本的外壳由 `/binder/` 自己的代码生成（`binder/src/shelf.ts` → 构建出的 `/binder/shelf.js`：同一份 `createBinder`、同样的封面材质颜色、按卡数算的厚度、按版式算的板子尺寸），合上；碎碎念用同样的活页夹，封面另给（沙色布面、金色烫印）。真实尺寸：便签、明信片两本板高 36 cm，比书架每层（约 33–34 cm）高，所以平放摞着，书脊仍朝外；其他三本竖插。书脊上的纸标签（册名、卡数）是这里加的，`/binder/` 里打开的那本没有。金属环在书里面，书外看不见；没有环境贴图，金属在 3D 光下偏暗。
   - 没有 WebGL 时退回 `room.js` 按公式画的平面墙（2D，形状同入口页，颜色从截图量的）。
 - **工具栏图标**（`index.html`）：小火车（计时器，行程中会冒汽）、卡册、手账、小票。写实小物件风格，统一放在 32px 方框内，**不要像素风**。
 - **项目和计时联动**：在计时页选“在做”的项目上车，下车时把分钟数累加到项目的 `p.focus`。项目卡上显示“🚂 1 小时 20 分”这样的累计时间。
@@ -144,7 +145,7 @@
 | 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | 2026-11-03 已换：首页项目板用 CSS 画成 Silk Wall（官方 350 Crisp 色、无框、玻璃边、离墙影子、Slim Pen Tray）；入口页用官方配置器导出的模型 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
 | 便签 | LINTEX Textile Noticeboard | 2026-11-03 已换：首页便签页和入口页都用 LINTEX 带材质的官方模型（27829OMV，面料 Blazer Lite LTH39） | 软木板加木框不再使用 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
-| 手账 | 入口页的米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`） | 2026-11-03 已换：`journal.html` 用 3D 书架（`wall3d.js`），网页书柜隐藏 | 书架先空着；下一步把卡册做成实体放进去 |
+| 手账 | 入口页的米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`） | 2026-11-03 已换：`journal.html` 用 3D 书架（`wall3d.js`），网页书柜隐藏；五本 3D 卡册已放进去（`shelf3d.js`） | — |
 - **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
 - **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 24.7 MB。Base Color 保持 4K，Normal / Metallic-Roughness 缩至 2K；Normal scale 调低至 0.35，以减弱原始深色木纹凹凸。
 - **在线模型浏览馆**：GPT 做过 `models.html`（四个物件的在线预览），2026-11-02 用户决定撤下，连同工具栏立方体入口一起删了。

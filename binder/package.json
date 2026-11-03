@@ -7,7 +7,7 @@
   "description": "A physical-feeling folio for personal pages: ring-binder albums (cards, postcards) and a resume folio with a clear pouch of objects under real physics.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build -c vite.shelf.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "bun test src",

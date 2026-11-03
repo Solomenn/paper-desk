@@ -56,7 +56,7 @@
   .spine.empty { filter: saturate(.55) brightness(.9); }
   .spine.now::after { content: ""; position: absolute; right: 7px; top: -1px; width: 7px; height: 26px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
 
-  /* 3D 书架画好以后（wall3d.js 给 body 加 shelf3d），网页画的书柜和书隐藏，位置留着给 3D 书架对齐（2026-11-03：书架先空着） */
+  /* 3D 书架画好以后（wall3d.js 给 body 加 shelf3d），网页画的书柜和书隐藏，位置留着给 3D 书架对齐；书架里的五本卡册由 shelf3d.js 放进 3D 书架 */
   body.shelf3d .case { visibility: hidden; }
   /* 书架模型的署名（CC BY 4.0 要求在页面上署名；样式同入口页右下角），3D 书架出现时才显示 */
   .credit3d { display: none; position: fixed; z-index: 8; right: 18px; bottom: 18px; font-size: 10px; color: rgba(55,59,56,.42); }
@@ -349,8 +349,11 @@
     const W = Math.min(1120, innerWidth - 120);
     cas.style.width = W + "px";
     const nowY = new Date().getFullYear();
+    /* 交给 3D 书架（shelf3d.js）：每一层是哪一类、每本是几年几月、几张、网页书脊是哪个元素（点它就打开，同原来） */
+    const out = [];
     SHELVES.forEach((S, si) => {
       const row = el("div", "lrow"); row.dataset.k = S.id;
+      const rowOut = { kind: S.id, name: S.name, journal: !!S.journal, items: [] }; out.push(rowOut);
       row.innerHTML = `<span class="plaque" title="${S.hint}">${S.name}</span>`;
       const R = rng(si * 7919 + 17);
       let list;
@@ -374,11 +377,13 @@
         if (S.journal) { sp.addEventListener("click", () => openBook(x.b, sp)); x.b.spine = sp; }
         else sp.href = S.href(`${x.y}-${x.m}`);
         row.appendChild(sp);
+        rowOut.items.push({ sp, y: x.y, m: x.m, n: x.n, title: sp.title });
       });
       row.insertAdjacentHTML("beforeend", '<span class="bend"></span>' + filler(R, W - 120 - lead - mineW - 30));
       cas.appendChild(row);
     });
     shelf.appendChild(cas);
+    window.__shelfRows = out; dispatchEvent(new CustomEvent("shelfrender"));
   }
 
 
@@ -782,6 +787,6 @@
 })();
 </script>
 <span class="credit3d"><a href="https://sketchfab.com/3d-models/wooden-shelf-67e718a0fc904487a9f735892d9834d3" target="_blank" rel="noreferrer">Wooden Shelf</a> · Vilson Pistori · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
-<script type="module" src="wall3d.js?v=2"></script>
+<script type="module" src="wall3d.js?v=3"></script>
 </body>
 </html>
