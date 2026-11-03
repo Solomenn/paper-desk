@@ -63,7 +63,7 @@ const VH = [573, 688, 760, 860, 900, 1080, 1440], WHEN = [24, 88, 145, 195, 215,
 function interp(xs, ys, x) { let i = 0; while (i < xs.length - 2 && x > xs[i + 1]) i++; return ys[i] + (ys[i + 1] - ys[i]) * (x - xs[i]) / (xs[i + 1] - xs[i]); }
 function place() { const h = innerHeight; document.getElementById("strip").style.top = (interp(VH, WHEN, h) - 214) + "px"; document.getElementById("zone").style.top = interp(VH, ZONE, h) + "px"; }
 addEventListener("resize", place);
-const N = DATES.length, ITEM = 240, PITCH = ITEM + 160; window.PITCH_3D = PITCH;    // 物件间距加大（参考是 32），滑动时才看得出在动（用户 2026-11-02）
+const N = DATES.length, ITEM = 240, PITCH = ITEM + 100; window.PITCH_3D = PITCH;    // 格距 340 px（用户 2026-11-02：照参考图收紧间距；物件宽约 290，物件之间空约 50 px）
 const month = DATES.map(d => d.split(" ")[0]), day = DATES.map(d => +d.split(" ")[1]);
 
 /* ── 物件条 ── */
@@ -624,11 +624,11 @@ const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PI
 /* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）：
    1. 侧影宽 = |宽·cos θ| + |厚·sin θ|（θ 是转角）。停在中间时（θ = BASE）的侧影宽缩放到 WIDTH_PX；
    2. 太高的再缩小，高不超过 HEIGHT_PX；
-   3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX（只是兜底，现有物件都碰不到）；
-   取三个里最小的缩放。例：火车头宽 2.8、厚 14.6、高 4.1 → 第 1 条，停在中间 260 px 宽、约 165 px 高，转到 35° 时约 430 px 宽；
-   书架宽 0.83、高 1.85 → 第 2 条最紧，高 330 px、宽约 160 px；盒子 → 第 1 条，宽 260 px。
+   3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX，免得压到邻格太多；
+   取三个里最小的缩放。例：火车头宽 2.8、厚 14.6、高 4.1 → 第 3 条最紧，停在中间约 245 px 宽、155 px 高，转到 35° 时 400 px 宽；
+   书架宽 0.83、高 1.85 → 第 2 条最紧，高 360 px、宽约 175 px；盒子 → 第 1 条，宽 290 px。
    所有物件的底边放在同一条线上：格子中心往下 BOTTOM_PX。 */
-const WIDTH_PX = 260, HEIGHT_PX = 330, WIDEST_PX = 440, BOTTOM_PX = 120;
+const WIDTH_PX = 290, HEIGHT_PX = 360, WIDEST_PX = 400, BOTTOM_PX = 120;   // 用户 2026-11-02：放大模型（参考图楼宽约占格距 3/4）
 const sideWidth = (f, a) => Math.abs(f.size.x * Math.cos(a)) + Math.abs(f.size.z * Math.sin(a));
 function fitInto(group, obj) {
   const pivot = new THREE.Group(); group.userData.obj = obj; group.userData.pivot = pivot;
