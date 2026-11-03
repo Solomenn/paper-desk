@@ -214,6 +214,7 @@ const AT = Math.max(0, Math.min(N - 1, Math.round(+new URLSearchParams(location.
 const S = { x: AT * PITCH, v: 0, free: false, g: null };
 // 3D 部分加载得比切换条晚，第一次画时先问这里：物件条现在的位置（和上面 __scene3d 收到的是同一个数）
 window.__stripOff = () => innerWidth / 2 - ITEM / 2 - S.x;
+const F = { on: false, raw: 0, target: 0, wheel: false, samples: [], timer: 0 };   // 滚轮和拖动的自由移动（见下面"滚轮和拖动"）
 function glideAt(g, t) {
   const p = Math.min(1, Math.max(0, (t - g.t0) / g.dur)), p2 = p * p, p3 = p2 * p, m = g.v0 * g.dur;
   return { p, x: (2 * p3 - 3 * p2 + 1) * g.from + (p3 - 2 * p2 + p) * m + (3 * p2 - 2 * p3) * g.to,
@@ -222,6 +223,7 @@ function glideAt(g, t) {
 const settled = () => !S.g;
 let cur = AT;                                                           // 当前地点
 function goTo(i, sound, mode = "jump") {
+  F.on = false; clearTimeout(F.timer);                                   // 点击、键盘跳转时，结束滚轮和拖动的自由移动
   i = Math.max(0, Math.min(N - 1, i)); if (i === cur && !S.free) return;
   const prevMonth = month[cur]; cur = i; S.free = false;
   const now = performance.now(), at = S.g ? glideAt(S.g, now) : { x: S.x, v: 0, p: 1 }, to = i * PITCH;
@@ -327,12 +329,58 @@ zone.addEventListener("keydown", e => {
     PageDown: months[mi].a < cur ? months[mi].a : months[Math.max(0, mi - 1)].a, PageUp: mi < months.length - 1 ? months[mi + 1].a : N - 1 }[e.key];
   if (k === undefined) return; e.preventDefault(); goTo(k, true, e.key.startsWith("Arrow") ? "step" : "jump");
 });
-/* 物件条上的横向滚轮：原生式自由滚动，不吸附，也不出声 */
+/* ── 滚轮和拖动（用户 2026-11-02：打磨手感）──
+   F.raw：切换条"想去"的位置（拉过头时还没加弹性的数）；S.x = band(F.raw) 是画出来的位置。
+   1. 滚轮（物件那一排、刻度轴上都算）：每次滚动加到目标 F.target；每帧 F.raw 往目标追一段（约 70 ms 追上），
+      鼠标滚轮一格一格的跳动就被抹平；触控板本来就连续，照样跟手。
+   2. 拖动：在物件那一排按住左右拖，1:1 跟手（手往右，物件条往右）。拖过 5 px 才算拖，松手时不会误点进物件页面。
+   3. 停下：滚轮停 140 ms 或拖动松手 → 取最近 100 ms 的速度，算"照这个速度再滑 180 ms 会到哪"，取离那里最近的一格，
+      带着当前速度滑进去（滑行曲线同点击跳转：起点带速度、终点速度 0 的三次曲线）。
+   4. 两头有弹性：拉过第一格或最后一格时越拉越费劲，最多拉出 RB px，停下后弹回。
+   例：触控板往左一扫 → 物件条跟着手滑；手离开后触控板自己的惯性还在发滚动 → 继续跟；惯性没了 140 ms → 停在最近的一格。 */
+const MAXX = (N - 1) * PITCH, RB = 140;
+const band = r => r < 0 ? -RB * (1 - 1 / (1 + -r / RB)) : r > MAXX ? MAXX + RB * (1 - 1 / (1 + (r - MAXX) / RB)) : r;
+function freeStart(wheel) {
+  if (!F.on) { F.on = true; F.raw = F.target = S.x; F.samples = []; }
+  F.wheel = wheel; S.g = null; S.free = true;
+}
+function freeSet(raw) {                                                  // 设一个新位置，记下时刻和位置（算速度用）
+  F.raw = raw; S.x = band(raw); cur = Math.max(0, Math.min(N - 1, Math.round(S.x / PITCH)));
+  const now = performance.now(); F.samples.push({ t: now, x: S.x }); while (F.samples.length > 2 && now - F.samples[0].t > 100) F.samples.shift();
+}
+function freeEnd() {
+  if (!F.on) return; F.on = false; clearTimeout(F.timer);
+  const a = F.samples[0], b = F.samples.at(-1), v = a && b && b.t - a.t > 8 ? (b.x - a.x) / (b.t - a.t) : 0;   // 像素 / 毫秒
+  const i = Math.max(0, Math.min(N - 1, Math.round((S.x + v * 180) / PITCH))), to = i * PITCH;
+  cur = i; S.free = false;
+  S.g = { from: S.x, to, v0: Math.max(-4, Math.min(4, v)), t0: performance.now(), dur: Math.min(700, Math.max(320, 300 + Math.abs(to - S.x) * .6)), mode: "free" };
+  kick();
+}
 addEventListener("wheel", e => {
-  if (zone.contains(e.target)) return; e.preventDefault();
-  S.free = true; S.g = null; S.x = Math.max(0, Math.min((N - 1) * PITCH, S.x + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY)));
-  cur = Math.round(S.x / PITCH); kick();
+  e.preventDefault();
+  const d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? PITCH : 1);
+  freeStart(true); F.target = Math.max(-RB * 3, Math.min(MAXX + RB * 3, F.target + d));
+  clearTimeout(F.timer); F.timer = setTimeout(freeEnd, 140); kick();
 }, { passive: false });
+const D = { down: null, drag: false, eatClick: false };
+addEventListener("pointerdown", e => {
+  if (e.button !== 0 || zone.contains(e.target)) return;                 // 刻度轴上按住是擦动，不是拖动
+  D.down = { x: e.clientX, raw: F.on ? F.raw : S.x }; D.drag = false;
+});
+addEventListener("pointermove", e => {
+  if (!D.down) return;
+  const dx = e.clientX - D.down.x;
+  if (!D.drag && Math.abs(dx) > 5) { D.drag = true; freeStart(false); document.body.style.cursor = "grabbing"; }
+  if (D.drag) { F.target = D.down.raw - dx; freeSet(F.target); kick(); }
+});
+const dragUp = () => {
+  if (!D.down) return;
+  if (D.drag) { D.eatClick = true; setTimeout(() => D.eatClick = false, 0); document.body.style.cursor = ""; freeEnd(); }
+  D.down = null; D.drag = false;
+};
+addEventListener("pointerup", dragUp); addEventListener("pointercancel", dragUp);
+addEventListener("click", e => { if (D.eatClick) { e.preventDefault(); e.stopPropagation(); } }, true);   // 拖完松手不算点击
+addEventListener("dragstart", e => e.preventDefault());                   // 物件是链接：别让浏览器拖起链接
 
 /* ── 每帧 ── */
 const ease = (a, b, tau, dt) => a + (b - a) * (1 - Math.exp(-dt / tau));
@@ -341,6 +389,7 @@ function kick() { if (!running) { running = true; last = performance.now(); requ
 function frame(now) {
   const dt = Math.min(50, now - last); last = now;
   if (S.g) { const a = glideAt(S.g, now); S.x = a.x; if (a.p >= 1) S.g = null; }
+  if (F.on && F.wheel) freeSet(F.raw + (F.target - F.raw) * (1 - Math.exp(-dt / 70)));   // 滚轮：往目标追（约 70 ms）
   H.amt = ease(H.amt, H.inside ? 1 : 0, 60, dt);                          // 橙色刻度约 0.2 s 长到 33 px（参考实测）
   H.pre = !H.inside && Math.abs(H.py ?? 999) < 46 ? Math.min(1, Math.max(0, 1 - (Math.abs(H.py) - 20) / 26)) : ease(H.pre || 0, 0, 60, dt);   // 离刻度线 46 px 内开始，越近越明显
   H.scrubAmt = ease(H.scrubAmt, H.fine ? 1 : 0, 60, dt);
@@ -351,7 +400,7 @@ function frame(now) {
   if (H.inside && !H.scrub && !H.fine) H.hot = hoverItem(unzoom(H.px));  // 放大过程中所指的地点也跟着更新
   if (H.down && !H.fine) { const still = now - H.rest.t; if (still >= (H.rest.first ? 500 : 700)) enterFine(); }
   draw();
-  const busy = !!S.g || (H.pre || 0) > .002 || !!H.down || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.fine ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.fine ? ZOOM : 1)) > .001 || (!H.snap && Math.abs((H.sx ?? 0) - H.px) > .1);
+  const busy = !!S.g || F.on || (H.pre || 0) > .002 || !!H.down || Math.abs(H.amt - (H.inside ? 1 : 0)) > .002 || Math.abs(H.scrubAmt - (H.fine ? 1 : 0)) > .002 || Math.abs(H.zoom - (H.inside && !H.fine ? ZOOM : 1)) > .001 || (!H.snap && Math.abs((H.sx ?? 0) - H.px) > .1);
   window.__state = { t: now, x: S.x, cur, scrub: H.scrub };
   if (busy) requestAnimationFrame(frame); else running = false;
 }
@@ -395,10 +444,10 @@ function draw() {
     op *= fadeGap(x); if (gap > .01) op *= Math.min(1, Math.min(x, ZW - x) / 40 + (1 - gap));
     const el = tickEls[k]; el.style.transform = `translate(${x - w / 2}px, ${LINE - h / 2 + y}px)`; el.style.height = h + "px"; el.style.width = w + "px"; el.style.opacity = op; el.style.background = col;
     // 滑行中当前位置每越过一根小刻度响一声 travel（连续的机械声）
-    if (S.g && S.g.mode !== "scrub" && Math.abs(t.x - mk) <= C / 2 && H.lastTravelTick !== k) {   // 擦动时由擦动自己出声，不再叠 travel
+    if (((S.g && S.g.mode !== "scrub") || F.on) && Math.abs(t.x - mk) <= C / 2 && H.lastTravelTick !== k) {   // 滑行、滚轮、拖动时都响；擦动时由擦动自己出声，不再叠 travel
       if (H.lastTravelTick !== undefined) click("travel"); H.lastTravelTick = k; }
   });
-  if (!S.g) H.lastTravelTick = undefined;
+  if (!S.g && !F.on) H.lastTravelTick = undefined;
   seps.forEach((sx, k) => { const x = Z(sx) + shift; sepEls[k].style.transform = `translate(${x - 1.5}px, ${LINE - 7}px)`; sepEls[k].style.opacity = .28 * fadeGap(x); });
   // 悬停和粗擦：指针所指地点（按月握住）立一根 4×32 的橙色刻度，上方是它的日期
   // 标签的字跟高亮（缓动后的位置）走，比指针慢半拍，和参考一致
