@@ -549,9 +549,11 @@ const W = GOBO.W;
    sun/sky/bounce  阳光、天光、反射光的强度             sunK/skyK  阳光、天光的色温（K）；0 = 原来的颜色（阳光纯白、天光窗光页的冷调）
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
    默认值的来由见下面"阳光像真的"那段。 */
-const LIGHT_DEFAULT = { area: 0.5, topY: 1.9, az: 35, el: 32, turn: 35, pitch: 0.15, slat: 0.055, ang: 0.12,
-  sun: 10, sky: 1.6, bounce: 2.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };
+const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, slat: 0.055, ang: 0.21,
+  sun: 10, sky: 1.6, bounce: 2.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };                  // 用户 2026-11-02 在调节面板里调好的一组
 const L = { ...LIGHT_DEFAULT };
+/* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
+try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
 { const q = new URLSearchParams(location.search); for (const k in L) if (q.get(k) !== null && q.get(k) !== "") L[k] = +q.get(k); }
 window.__light = L;
 /* 阳光像真的（用户 2026-11-02 给了三张参考图：百叶窗照片、树影油画、胶片；逐项量了亮部/暗部的亮度 L*、色温 b*、饱和度 C*）：
@@ -648,7 +650,8 @@ function buildGobo() {
   gobo.children.slice().forEach(m => { m.geometry.dispose(); gobo.remove(m); });
   const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
   for (const h of GOBO.holes) { const q = new THREE.Path(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); sh.holes.push(q); }
-  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.03, bevelEnabled: false }), goboMat);
+  // 厚 4 mm（原来 3 cm）：光斜着穿过窗时，厚的洞壁会挡掉一截，拉绳的影子被拉宽到 40 多 px、透光的缝也变窄（用户 2026-11-02：板上的光很奇怪）
+  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: false }), goboMat);
   m.rotation.y = L.turn * deg - Math.PI / 2; m.position.set(-W, 0, 0);    // 形状的 x 轴 → 百叶片方向 (sin turn, 0, cos turn)
   m.castShadow = true; gobo.add(m);
 }
@@ -723,7 +726,10 @@ const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PI
 /* 单个模型的转动幅度（用户 2026-11-02：火车的旋转幅度太大，缩小一点，直接放大火车）：转角 = 上面算出的角 × TURN。
    火车头车身长，转到最斜时很宽，"最宽不超过 WIDEST_PX"那条把它压得很小；转角减半后最斜时窄了，那条放松，火车就大了。
    例：火车头 TURN 0.5 → 停在中间转 7.5°，最多 17.5°；大小约是原来的 1.5 倍（停在中间宽约 265 px、高约 230 px）。 */
-const TURN = { loco: 0.5 };
+/* 两块板（silk 蓝色玻璃板、textile 米色布板）转角 × 0.25（用户 2026-11-02：板子上的光很奇怪）：
+   太阳方位 18° 时光几乎贴着墙扫过来，板子停在中间再转 15°，板面和光只剩约 3°，照得很暗、条纹也被拉斜，和墙上对不上；
+   平的板子转起来本来也看不出多少立体感。× 0.25 后停在中间约 4°、最多约 9°。 */
+const TURN = { loco: 0.5, silk: 0.25, textile: 0.25 };
 const turnOf = i => TURN[PAGES_3D[i].model] ?? 1;
 /* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）：
    1. 侧影宽 = |宽·cos θ| + |厚·sin θ|（θ 是转角）。停在中间时（θ = BASE）的侧影宽缩放到 WIDTH_PX；
@@ -898,7 +904,8 @@ layout();
 
 /* ── 阳光调节面板（用户 2026-11-02：给我一个阳光调整的 UI，自己调面积、角度、窗户位置）──
    地址后加 ?tune=1 才显示。拖滑块：数值马上变，松手后（或停 0.3 秒后）重算墙上的光（约 1 秒）。
-   调过的值写回地址栏（刷新不丢，也能把地址发给别人）；"复制参数"复制这些值，"恢复默认"回到 LIGHT_DEFAULT。
+   调过的值写回地址栏；"保存"存进这个浏览器（刷新、从别的页面回来都还在）；"复制参数"复制这些值；
+   "恢复默认"回到 LIGHT_DEFAULT，并清掉保存的值。
    色温不放进面板（用户：不要改色调）。 */
 function applyLight() {                                                   // 参数改了以后：重建窗、反射光贴图、灯光，重算墙
   buildWindow(); buildGobo();
@@ -917,7 +924,7 @@ if (new URLSearchParams(location.search).get("tune") === "1") {
   const inputs = {};
   box.innerHTML = GROUPS.map(([t, items]) => `<h4>${t}</h4>` + items.map(([k, name, lo, hi, st]) =>
     `<label>${name}<input type="range" data-k="${k}" min="${lo}" max="${hi}" step="${st}"><output data-o="${k}"></output></label>`).join("")).join("") +
-    `<div class="row"><button data-act="copy">复制参数</button><button data-act="reset">恢复默认</button></div><div class="busy"></div>`;
+    `<div class="row"><button data-act="save">保存</button><button data-act="copy">复制参数</button><button data-act="reset">恢复默认</button></div><div class="busy"></div>`;
   const busy = box.querySelector(".busy");
   const sync = () => { for (const [, items] of GROUPS) for (const [k, , , , st] of items) { const el = box.querySelector(`[data-k=${k}]`); el.value = L[k]; box.querySelector(`[data-o=${k}]`).textContent = fmt(L[k], st); } };
   const toUrl = () => {                                                   // 只把和默认值不同的写进地址栏
@@ -929,7 +936,11 @@ if (new URLSearchParams(location.search).get("tune") === "1") {
   box.addEventListener("input", e => { const k = e.target.dataset.k; if (!k) return; L[k] = +e.target.value; box.querySelector(`[data-o=${k}]`).textContent = fmt(L[k], +e.target.step); later(); });
   box.addEventListener("click", e => {
     const act = e.target.dataset.act; if (!act) return;
-    if (act === "reset") { Object.assign(L, LIGHT_DEFAULT); sync(); later(); }
+    if (act === "reset") { Object.assign(L, LIGHT_DEFAULT); try { localStorage.removeItem("paper-desk.light.v1"); } catch (e) {} sync(); later(); }
+    if (act === "save") {                                                 // 存进这个浏览器：刷新、从别的页面回来都还在
+      try { localStorage.setItem("paper-desk.light.v1", JSON.stringify(Object.fromEntries(Object.keys(LIGHT_DEFAULT).map(k => [k, L[k]])))); busy.textContent = "已保存（这个浏览器里）"; }
+      catch (e) { busy.textContent = "这个浏览器不让保存，请用“复制参数”"; }
+    }
     if (act === "copy") {
       const diff = Object.fromEntries(Object.keys(LIGHT_DEFAULT).map(k => [k, L[k]]));
       const text = JSON.stringify(diff);
