@@ -678,6 +678,38 @@
   .picLamp::before { left: 50%; top: -3px; width: 30px; height: 6px; margin-left: -15px; border-radius: 2px; background: linear-gradient(180deg, #e6c47c, #7a5622); }
   .picLamp::after { left: 6px; right: 6px; bottom: -1px; height: 3px; border-radius: 0 0 6px 6px; background: #4a3416; }
   html:not([data-theme="day"]) .picLamp::after { background: #fff2cf; box-shadow: 0 2px 6px 1px rgba(255, 214, 140, .9), 0 6px 26px 6px rgba(255, 190, 110, .45); }
+
+  /* ═════════ 项目板换成 LINTEX Silk Wall（用户 2026-11-03："点击进去的黑板可以被换掉了"）═════════
+     照入口页用的官方配置器模型：2000×1000，Silk Glass 350 Crisp（官方颜色 = 线性 0.527 / 0.617 / 0.617，约 #bfcdcd），
+     4 mm 哑光玻璃，没有框，边缘是同色的玻璃边，用暗藏挂件挂在离墙 12 mm 的地方（所以有一道往右下错开的柔和影子）。
+     上面那几段墨绿呢面、胡桃木框、金色字、画框灯都被这一段盖掉（白天、夜晚两种主题都盖；首页没有设主题，一直走"夜晚"那组）。
+     字和线换成深灰蓝的白板笔色；胡桃木边换成官方配件 Slim Pen Tray（一条浅色金属细笔槽，放三支白板笔）。 */
+  #chalk .frame { padding: 0; border-radius: 3px; background: none;
+    box-shadow: 0 0 0 .5px rgba(78, 98, 102, .5), 3px 4px 3px -1px rgba(21, 35, 58, .16), 8px 14px 22px -8px rgba(21, 35, 58, .3); }   /* 玻璃边 + 离墙 12 mm 的影子 */
+  #chalk .frame::before, #chalk .frame::after { display: none; }
+  #chalk .inner, html:not([data-theme="day"]) #chalk .inner, html[data-theme="day"] #chalk .inner { inset: 0; border-radius: 3px; background-color: #bfcdcd;
+    background-image:
+      radial-gradient(85% 95% at 12% -5%, rgba(255, 255, 255, .26), rgba(255, 255, 255, 0) 70%),             /* 左上方窗户来的光，哑光玻璃上一片柔和的亮 */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 -.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),   /* 哑光玻璃很细的颗粒 */
+      linear-gradient(180deg, #c5d2d2, #bccbcb 60%, #b5c4c4);
+    background-size: auto, 220px 220px, auto;
+    box-shadow: inset 0 0 0 1px rgba(150, 170, 172, .85), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(90, 110, 114, .25); }   /* 同色玻璃边：上沿受光略亮，下沿略暗 */
+  html:not([data-theme="day"]) #chalk .inner::after { display: none; }
+  #chalk .lane h3 { color: rgba(32, 46, 54, .8); text-shadow: none; }
+  #chalk .lane h3 small { color: rgba(32, 46, 54, .45); }
+  #chalk .lane h3::before { background: linear-gradient(90deg, rgba(32, 46, 54, 0), rgba(32, 46, 54, .32)); box-shadow: none; }
+  #chalk .lane h3::after { background: linear-gradient(270deg, rgba(32, 46, 54, 0), rgba(32, 46, 54, .32)); box-shadow: none; }
+  #chalk .lane + .lane::before { background: linear-gradient(180deg, rgba(32, 46, 54, 0), rgba(32, 46, 54, .22) 12%, rgba(32, 46, 54, .22) 88%, rgba(32, 46, 54, 0)); box-shadow: none; }
+  #chalk .lane .add { color: rgba(32, 46, 54, .5); }
+  #chalk .lane .add:hover { color: rgba(32, 46, 54, .9); }
+  #chalk .lane.over .cards { background: rgba(32, 46, 54, .05); }
+  /* Slim Pen Tray：贴在玻璃下沿左边的一条浅色金属细槽，三支白板笔平躺在里面（原来的三根粉笔 <i> 换个样子） */
+  #chalk .ledge { left: 5%; right: auto; width: 26%; bottom: 0; height: 9px; border-radius: 1px 1px 3px 3px;
+    background: linear-gradient(180deg, #f1f3f3, #d8dddd 45%, #b9c0c1); box-shadow: 0 2px 3px rgba(21, 35, 58, .22), inset 0 1px 0 rgba(255, 255, 255, .9); }
+  #chalk .ledge i { display: block; bottom: 5px; height: 6px; border-radius: 3px; transform: none !important; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); }
+  #chalk .ledge i:nth-child(1) { left: 8% !important; width: 52px !important; background: linear-gradient(90deg, #2b3036 0 78%, #1b1e22 78%) !important; }   /* 黑笔：笔帽颜色深一点 */
+  #chalk .ledge i:nth-child(2) { left: 40% !important; width: 50px !important; background: linear-gradient(90deg, #e9ecec 0 74%, #2f5fa0 74%) !important; }   /* 蓝笔：白笔杆、蓝笔帽 */
+  #chalk .ledge i:nth-child(3) { left: 70% !important; width: 48px !important; background: linear-gradient(90deg, #e9ecec 0 74%, #b5342b 74%) !important; }   /* 红笔 */
 </style>
 <script src="sound.js"></script>
 <script src="preload.js" defer></script>
@@ -803,7 +835,7 @@
 <script>
 /* ═════════ The desk: today's calendar on the left, one board at a time on the right ═════════
    Calendar: the small things to tick off today. Unfinished ones carry over; finished ones stay for the day. Its back is today's jottings.
-   项目 (chalkboard): every project is an index card under Doing / To do / Done. Open one to work on it; stamp it when it's done
+   项目 (LINTEX Silk Wall glass board since 2026-11-03; it was a chalkboard): every project is an index card under Doing / To do / Done. Open one to work on it; stamp it when it's done
    and it goes into the album.
    便签 (corkboard): the sticky notes, in the second script below. */
 (() => {

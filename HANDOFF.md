@@ -136,7 +136,7 @@
 |---|---|---|---|
 | 白噪音 | Braun T3 收音机 | 实体模型，已完成 | 不动，作为质量和风格基准 |
 | 卡册 | sasshi 的活页夹（2×4 卡册） | 现在用 paper-flipbook 的 CSS 条带翻页，合不上 | 移植 sasshi |
-| 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | CSS 画的 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
+| 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | 2026-11-03 已换：首页项目板用 CSS 画成 Silk Wall（官方 350 Crisp 色、无框、玻璃边、离墙影子、Slim Pen Tray）；入口页用官方配置器导出的模型 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
 | 便签 | LINTEX Textile Noticeboard | CSS 画的 | 按用户截图确认的米灰织物宽幅矩形、四边包布、无框结构替换 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
 | 手账 | Bookshelf Short LOWPOLY | 已下载并改成暖米白 | 在线浏览馆可旋转查看；尚未替换 `journal.html` |
