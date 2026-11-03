@@ -34,7 +34,7 @@ export type Booklet = {
 
 export const BOOKLETS: readonly Booklet[] = [
   { id: "proj", color: "seiji", foil: "silver", material: "leather", local: "项目卡册", layout: "idCard2x4", kind: "cards", back: { href: "../#board", label: "回到黑板" } },
-  { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../#notes", label: "回到软木板" } },
+  { id: "note", color: "ginnezu", foil: "blind", material: "cloth", local: "便签卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../#notes", label: "回到便签板" } },
   { id: "ticket", color: "seiji", foil: "silver", material: "leather", local: "车票卡册", kind: "tickets", back: { href: "../focus.html", label: "回到站台" } },
   { id: "postcard", color: "ginnezu", foil: "blind", material: "cloth", local: "明信片卡册", layout: "postcard2x3", kind: "postcards", back: { href: "../receipt.html", label: "返回" } },
 ];

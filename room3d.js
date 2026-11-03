@@ -328,10 +328,12 @@ function bakeBleed() {
   }
   outMat.uniforms.bleed.value = rtColA.texture; outMat.uniforms.bleedAmt.value = L.bleed;
 }
-const nzMat = new THREE.ShaderMaterial({ side: THREE.DoubleSide,
-  vertexShader: "varying vec3 vN; varying float vZ; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vZ = w.z; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }",
+/* 都在镜头坐标里算（2026-11-03：手账页的书架能转，镜头不再总是正对着墙）：法线、深度都是镜头看过去的；深度存"离墙上画面正中那一点
+   往镜头多远"（uD = 镜头到那一点的距离；正对墙时就是离墙的深度 z，和原来一样）。 */
+const nzMat = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { uD: { value: 10 } },
+  vertexShader: "uniform float uD; varying vec3 vN; varying float vZ; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); vZ = mv.z + uD; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * mv; }",
   fragmentShader: "varying vec3 vN; varying float vZ; void main(){ vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n; gl_FragColor = vec4(n.xy, vZ, 1.0); }" });
-  // r、g = 法线的 x、y（z 由它们算出，看得见的面都朝镜头，z ≥ 0）；b = 离墙的深度 z（原值存，数小精度高：原来存 z + 1，半精度只到约 1 mm，布板上一片噪点）；a = 1 表示这里有物件
+  // r、g = 法线的 x、y（镜头坐标；z 由它们算出，看得见的面都朝镜头，z ≥ 0）；b = 深度（见上）（原值存，数小精度高：原来存 z + 1，半精度只到约 1 mm，布板上一片噪点）；a = 1 表示这里有物件
 const oaoMat = new THREE.ShaderMaterial({ uniforms: { nz: { value: null }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, R: { value: 0.03 } }, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
   fragmentShader: `uniform sampler2D nz; uniform vec2 vMin, vSize; uniform float R; varying vec2 v;
     void main(){
@@ -348,39 +350,51 @@ const oaoMat = new THREE.ShaderMaterial({ uniforms: { nz: { value: null }, vMin:
       gl_FragColor = vec4(vec3(occ / 12.0), 1.0);
     }` });
 const oaoScene = quad(oaoMat);
+/* 画面四角在世界里的位置、视线方向（光柱、物体闭塞用；镜头可以转） */
+const _p = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], _f = new THREE.Vector3();
+function viewRays() {
+  camera.updateMatrixWorld(); _p[0].set(-1, -1, -1).unproject(camera); _p[1].set(1, -1, -1).unproject(camera); _p[2].set(-1, 1, -1).unproject(camera);
+  camera.getWorldDirection(_f); return { org: _p[0], ax: _p[1].clone().sub(_p[0]), ay: _p[2].clone().sub(_p[0]), fwd: _f };
+}
+function wallDist() {                                                      // 镜头沿视线到墙（z = 0）多远
+  camera.updateMatrixWorld(); camera.getWorldDirection(_f); return _f.z < -1e-4 ? -camera.position.z / _f.z : 10;
+}
 function bakeObjAO() {
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(1, sz.x >> 1), h = Math.max(1, sz.y >> 1);
   if (!rtNZ || rtNZ.width !== w || rtNZ.height !== h) { [rtNZ, rtOaoA, rtOaoB].forEach(r => r && r.dispose());
     rtNZ = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
     rtOaoA = new THREE.WebGLRenderTarget(w, h); rtOaoB = new THREE.WebGLRenderTarget(w, h); }
   wall.visible = false; gobo.visible = false; leaves.visible = false; scene.overrideMaterial = nzMat;
+  nzMat.uniforms.uD.value = wallDist();
   renderer.setRenderTarget(rtNZ); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
   scene.overrideMaterial = null; wall.visible = true; gobo.visible = true; leaves.visible = true; renderer.setClearColor(0x000000, 1);
-  oaoMat.uniforms.nz.value = rtNZ.texture; oaoMat.uniforms.vMin.value.set(camera.left, camera.position.y + camera.bottom); oaoMat.uniforms.vSize.value.set(camera.right - camera.left, camera.top - camera.bottom);
+  oaoMat.uniforms.nz.value = rtNZ.texture; oaoMat.uniforms.vMin.value.set(camera.left / camera.zoom, camera.bottom / camera.zoom); oaoMat.uniforms.vSize.value.set((camera.right - camera.left) / camera.zoom, (camera.top - camera.bottom) / camera.zoom);   // 镜头坐标里画面的范围
   renderer.setRenderTarget(rtOaoA); renderer.render(oaoScene, cam2);
   blurMat.uniforms.t.value = rtOaoA.texture; blurMat.uniforms.dir.value.set(1 / w, 0); renderer.setRenderTarget(rtOaoB); renderer.render(blurScene, cam2);
   blurMat.uniforms.t.value = rtOaoB.texture; blurMat.uniforms.dir.value.set(0, 1 / h); renderer.setRenderTarget(rtOaoA); renderer.render(blurScene, cam2);
   LX.oao.value = rtOaoA.texture; LX.oaoAmt.value = L.aoObj;
 }
 /* 光柱（用户 2026-11-02，第 7 项，丁达尔效应）：空气里的浮尘被阳光照亮，窗和墙之间出现一道道光柱。
-   每个像素沿视线从墙（z = 0）往前走到窗所在的那面墙为止（再往前是屋外，不算），等距取 24 个点，
+   每个像素沿视线从墙（z = 0）往回（朝镜头）走到窗所在的那面墙为止（再往前是屋外，不算），等距取 24 个点，
    用阳光的阴影深度图查每个点在不在阳光里（百叶、窗框、物件挡住的点不算）；在阳光里的点占多少，就叠多少白色雾光（× haze）。
    纯白、叠加在最后，不改色调。画完物件之后再画，用的是那时的阴影图（含百叶和物件）。
    实测（2026-11-02）：正面看出不来一道道光柱，只是亮区蒙一层均匀的雾、反差被冲淡——要看出光柱，视线得顺着光片看过去，
    可窗转了 63°（为了让条纹落在物件上会弯折），每条视线穿过好几片光和影子，平均成了雾。用户要默认开启：0.12。 */
 const hazeMat = new THREE.ShaderMaterial({
-  uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 }, depth: { value: 1.6 }, obj: { value: null } },
+  uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, org: { value: new THREE.Vector3() }, ax: { value: new THREE.Vector3() }, ay: { value: new THREE.Vector3() }, fwd: { value: new THREE.Vector3(0, 0, -1) }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 }, depth: { value: 1.6 }, obj: { value: null } },
   transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
   fragmentShader: `#include <packing>
-    uniform sampler2D sm, obj; uniform mat4 smat; uniform vec2 vMin, vSize; uniform float amt, wallX, tanTurn, depth; varying vec2 v;
+    uniform sampler2D sm, obj; uniform mat4 smat; uniform vec3 org, ax, ay, fwd; uniform float amt, wallX, tanTurn, depth; varying vec2 v;
     void main(){
-      vec2 xy = vMin + v * vSize;                                            // 这个像素在墙上的世界坐标
+      vec3 o = org + v.x * ax + v.y * ay, p0 = o + fwd * (-o.z / fwd.z);      // 这个像素的视线落在墙上的那一点（世界坐标）
+      vec2 xy = p0.xy;
       float zEnd = tanTurn > 0.001 ? min(depth, (xy.x + wallX) / tanTurn) : depth;   // 只算墙前 depth 厚的一层空气，也不超过窗所在那面墙
       if (zEnd <= 0.0) discard;
       float rot = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
       float lit = 0.0;
       for (int i = 0; i < 24; i++) {
-        vec4 sc = smat * vec4(xy, (float(i) + rot) / 24.0 * zEnd, 1.0); sc.xyz /= sc.w;
+        float zi = (float(i) + rot) / 24.0 * zEnd;                          // 离墙 zi 处：从墙上那一点顺着视线往回走到这个深度
+        vec4 sc = smat * vec4(p0 - fwd * (zi / -fwd.z), 1.0); sc.xyz /= sc.w;
         if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0) continue;
         lit += step(sc.z - 0.0005, unpackRGBAToDepth(texture2D(sm, sc.xy)));
       }
@@ -404,7 +418,7 @@ window.__hazeDepth = () => hazeAutoDepth();
 function drawHaze() {
   if (L.haze <= 0 || !sun.shadow.map) return;
   hazeMat.uniforms.sm.value = sun.shadow.map.texture; hazeMat.uniforms.smat.value.copy(sun.shadow.matrix);
-  hazeMat.uniforms.vMin.value.set(camera.left, camera.position.y + camera.bottom); hazeMat.uniforms.vSize.value.set(camera.right - camera.left, camera.top - camera.bottom);
+  { const r = viewRays(); hazeMat.uniforms.org.value.copy(r.org); hazeMat.uniforms.ax.value.copy(r.ax); hazeMat.uniforms.ay.value.copy(r.ay); hazeMat.uniforms.fwd.value.copy(r.fwd); }
   hazeMat.uniforms.amt.value = L.haze; hazeMat.uniforms.wallX.value = W; hazeMat.uniforms.tanTurn.value = Math.tan(L.turn * deg);
   hazeMat.uniforms.depth.value = L.hazeD > 0 ? L.hazeD : hazeAutoDepth(); hazeMat.uniforms.obj.value = rtObj ? rtObj.texture : null;
   renderer.autoClear = false; renderer.render(hazeScene, cam2); renderer.autoClear = true;

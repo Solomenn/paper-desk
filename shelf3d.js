@@ -5,9 +5,12 @@
      碎碎念用同样的活页夹，封面另给（沙色布面、金色烫印）。
    · 书脊朝外插在书架上，靠左侧板从左往右，书脊离隔板前沿 1 cm。册子是真实尺寸：便签、明信片两本板子高 36 cm，比书架每层（约 33–34 cm）高，
      竖着插不进，就书脊朝外平放摞在右边；其他三本竖着插。放在第一层能竖着放下的那层。
-   · 书脊标签：原版活页夹的书脊是纯色的，插在书架上只看得见书脊、分不出哪本，所以在书脊上加一张纸标签（像活页夹书脊的插卡口），
-     竖排印册名，下面一行小字是卡数。这是这里加的，/binder/ 里打开的那本没有。
-   · 鼠标指着一本：往外抽出 4 cm；点它：前四本打开 /binder/?kind=…，碎碎念打开手账（最近一个月那本，同原来点书脊）。
+   · 书脊烫印：原版活页夹的书脊是素的，插在书架上只看得见书脊、分不出哪本，所以在书脊上烫印册名（竖排；平放的两本横排），
+     上下各一道细线，最下面一行小字是卡数。材质和这本封面上的烫印同一种（项目、车票：银；便签、明信片：压印，同色压深；碎碎念：金），
+     字体同封面（宋体 500，等网页字体到了再画）。这是这里加的，/binder/ 里打开的那本书脊上没有。
+     （第一版是一张米白纸标签，用户 2026-11-03："卡册的背脊不够精致"，换成烫印。）
+   · 封面材质：用访客在 /binder/ 里选过的（同一个浏览器里存着），没选过用默认。
+   · 鼠标指着一本：往外抽出 4 cm；点它（按下到松开没怎么移动；拖动是转书架，不算点）：前四本打开 /binder/?kind=…，碎碎念打开手账（最近一个月那本，同原来点书脊）。
    · 书架每一层在哪：往模型里射线探测——从上往下找隔板的上表面，从中间往左右找侧板，从前往后找背板和隔板前沿。 */
 export async function setupShelf(R, shelfModel, onChange) {
   const THREE = R.THREE;
@@ -50,25 +53,6 @@ export async function setupShelf(R, shelfModel, onChange) {
     { tab: "jot", name: "碎碎念", journal: true },
   ];
   const rows = window.__shelfRows || [], jot = rows.find(r => r.journal);
-  const label = (name, sub, w, h, horiz) => {                            // 书脊标签：米白卡纸，册名竖排（平放的那几本横排），加一行小字卡数；尺寸 w × h（m）
-    const k = 8, W = w * 1000, H = h * 1000, c = document.createElement("canvas"); c.width = Math.round(W * k); c.height = Math.round(H * k);
-    const g = c.getContext("2d"); g.scale(k, k);                          // 下面的单位都是 mm
-    g.fillStyle = "#f4f1e8"; g.fillRect(0, 0, W, H);
-    g.strokeStyle = "rgba(60,55,45,.35)"; g.lineWidth = 0.4; g.strokeRect(1.2, 1.2, W - 2.4, H - 2.4);
-    g.fillStyle = "#2b2f33"; g.textAlign = "center"; g.textBaseline = "middle";
-    const serif = `"Noto Serif SC", "Source Han Serif SC", "Songti SC", serif`;
-    if (horiz) {
-      const fs = Math.min(H * 0.55, (W - 30) / Math.max(4, name.length) * 0.9);
-      g.font = `600 ${fs}px ${serif}`; g.fillText(name, W / 2 - 6, H / 2);
-      g.fillStyle = "rgba(43,47,51,.6)"; g.textAlign = "right"; g.font = `${Math.min(H * 0.32, 3.2)}px ui-monospace, Menlo, monospace`; g.fillText(sub, W - 4, H / 2);
-    } else {
-      const fs = Math.min(W * 0.55, (H - 18) / Math.max(4, name.length) * 0.82);
-      g.font = `600 ${fs}px ${serif}`;
-      [...name].forEach((ch, i) => g.fillText(ch, W / 2, 8 + fs * 0.6 + i * fs * 1.12));
-      g.fillStyle = "rgba(43,47,51,.6)"; g.font = `${Math.min(W * 0.32, 3.2)}px ui-monospace, Menlo, monospace`; g.fillText(sub, W / 2, H - 5);
-    }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
-  };
   const items = [];
   for (const B of BOOKS) {
     let res;
@@ -101,16 +85,14 @@ export async function setupShelf(R, shelfModel, onChange) {
   const bay = bays.find(b => H(b) > upTall + 0.01) || bays[bays.length - 1];
 
   let x = bay ? bay.x0 + 0.012 : 0, stackX = 0, stackY = 0;
-  const addLabel = (m, w, h, px, py, horiz) => {
-    const sub = m.book.journal ? `${jot ? jot.items.length : 0} 个月` : `${m.count} 张`;
-    const lab = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: label(m.book.name, sub, w, h, horiz), roughness: 0.85 }));
-    R.addRefl(lab.material); lab.receiveShadow = true; lab.position.set(px, py, 0.0006); m.holder.add(lab);
-  };
+  /* 书脊烫印（binder 的 spineFoil：和这本封面烫印同一种材质，金、银或压印）：先等字体到了再画，画好再补上去 */
+  const foils = [];
+  const addFoil = (m, w, h, px, py, horiz) => foils.push({ m, w, h, px, py, horiz });
   const zOf = m => Math.max(bay.zf - 0.01, bay.zb + m.depth + 0.002);   // 书脊离前沿 1 cm；册子比这层深的（车票册板宽 36 cm），往外挪到顶着背板为止
-  for (const m of items.filter(m => !m.lie)) {                         // 竖着插：书脊标签宽 = 厚度的 62%，高 = 书高的 55%
+  for (const m of items.filter(m => !m.lie)) {                         // 竖着插：书脊烫印宽 = 厚度的 70%，高 = 书高的 80%
     if (!bay) break;
     m.holder.position.set(L2(x), L2(bay.y0), L2(zOf(m))); m.holder.scale.setScalar(1 / s0); m.base = m.holder.position.z;
-    addLabel(m, m.thick * 0.62, m.height * 0.55, m.thick / 2, m.height * 0.56, false);
+    addFoil(m, m.thick * 0.7, m.height * 0.8, m.thick / 2, m.height * 0.5, false);
     x += m.thick + 0.004;
   }
   stackX = x + 0.02;
@@ -119,8 +101,15 @@ export async function setupShelf(R, shelfModel, onChange) {
     const lay = new THREE.Group(); lay.add(m.g); m.holder.add(lay);
     lay.rotation.z = -Math.PI / 2; lay.position.y = m.thick;            // 竖放时 x∈[0,厚] y∈[0,高] → 平放 x∈[0,高] y∈[0,厚]
     m.holder.position.set(L2(stackX), L2(bay.y0 + stackY), L2(zOf(m))); m.holder.scale.setScalar(1 / s0); m.base = m.holder.position.z;
-    addLabel(m, m.height * 0.55, m.thick * 0.62, m.height / 2, m.thick / 2, true);
+    addFoil(m, m.height * 0.8, m.thick * 0.7, m.height / 2, m.thick / 2, true);
     stackY += m.thick + 0.001;
+  }
+  onChange();
+  for (const f of foils) {
+    const { m } = f, sub = m.book.journal ? `${jot ? jot.items.length : 0} 个月` : `${m.count} 张`;
+    try { await lib.fontsFor(m.res, [m.book.name, sub]); } catch (e) { console.warn("字体", e); }
+    const mesh = lib.spineFoil(m.res, m.book.name, sub, f.w, f.h, f.horiz); if (!mesh) continue;
+    R.addRefl(mesh.material); mesh.position.set(f.px, f.py, 0.0004); m.holder.add(mesh);
   }
   onChange();
 
@@ -139,10 +128,13 @@ export async function setupShelf(R, shelfModel, onChange) {
   };
   const onPage = e => !e.target.closest("a, button, input, textarea, #reader, .ibtn, .back");
   addEventListener("pointermove", e => {
-    const m = onPage(e) ? pick(e) : null;
+    const m = onPage(e) && !e.buttons ? pick(e) : null;                  // 按着键在拖（转书架）时不抽书
     if (m !== hover) { if (hover) hover.target = 0; hover = m; if (m) m.target = 1; document.body.style.cursor = m ? "pointer" : ""; kick(); }
   });
+  let down = null;                                                       // 按下的位置：松开时离它超过 6 px 就是拖动（在转书架），不算点
+  addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; }, true);
   addEventListener("click", e => {
+    if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
     if (!onPage(e)) return; const m = pick(e); if (!m) return;
     if (m.book.journal) { const it = jot && jot.items[jot.items.length - 1]; if (it) it.sp.click(); }
     else location.href = m.book.href;

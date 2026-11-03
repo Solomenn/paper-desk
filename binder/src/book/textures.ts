@@ -315,7 +315,7 @@ export function drawSheetNormal(width: number, L: BookLayout = CARD): HTMLCanvas
   return hc;
 }
 
-function boxBlur(src: Float32Array, w: number, h: number, r: number) {
+export function boxBlur(src: Float32Array, w: number, h: number, r: number) {
   const tmp = new Float32Array(w * h);
   const dst = new Float32Array(w * h);
   const n = r * 2 + 1;
@@ -520,7 +520,7 @@ export function drawClothMaps(n = 256): { albedo: HTMLCanvasElement; normal: HTM
  * neighbours by row and column index (no closure, no modulo per pixel) — the serif stamp's map (≈ 2000 × 300 px) took ≈ 40 ms on a
  * loaded machine in a language switch
  */
-function heightToNormal(hf: Float32Array, w: number, h: number, strength: number, wrap: boolean) {
+export function heightToNormal(hf: Float32Array, w: number, h: number, strength: number, wrap: boolean) {
   const c = canvas(w, h);
   const ctx = c.getContext("2d")!;
   const out = ctx.createImageData(w, h);

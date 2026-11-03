@@ -1,7 +1,7 @@
 /*
  * 纸桌的四本册子读什么数据：和 album.html 读的是同一份（同一个网站，浏览器里的数据共用）。
  *   项目卡册 proj     paper-desk.desk-tasks.v1 里的 done：黑板上做完的项目卡
- *   便签卡册 note     paper-desk.notes-archive.v1：软木板上归档的便签
+ *   便签卡册 note     paper-desk.notes-archive.v1：便签板上归档的便签
  *   车票卡册 ticket   paper-desk.tickets.v1：雪国线坐完的车票
  *   明信片卡册 postcard  一天一张明信片；数据还存在 receipt.html 写的 paper-desk.receipts.v1 里（每天完成几件）
  * 每张都补一个 doneAt（完成、归档、到站、打印的时刻），按它从早到晚排。
