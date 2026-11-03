@@ -548,9 +548,10 @@ const W = GOBO.W;
    pitch/slat  百叶片间距、每片挡光的高度（m）         ang   软阴影：太阳方向散开的半径（度），只管影子边缘软硬
    sun/sky/bounce  阳光、天光、反射光的强度             sunK/skyK  阳光、天光的色温（K）；0 = 原来的颜色（阳光纯白、天光窗光页的冷调）
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
+   refl   反光：亮墙反弹到物件暗面上的光               ao    闭塞阴影：物件根部、边缘一圈墙上的天光和反射光减弱多少
    默认值的来由见下面"阳光像真的"那段。 */
 const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, slat: 0.055, ang: 0.21,
-  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
+  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
 const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
@@ -721,7 +722,7 @@ const MODELS = {
   async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
     const src = (await loader.loadAsync("../assets/radio/t3.glb")).scene; src.updateMatrixWorld(true);
     const sz = new THREE.Box3().setFromObject(src).getSize(new THREE.Vector3()), rot = sz.y > sz.x ? Math.PI / 2 : 0;
-    const cream = new THREE.MeshStandardMaterial({ color: 0xedece5, roughness: .62, metalness: .02 });
+    const cream = new THREE.MeshStandardMaterial({ color: 0xedece5, roughness: .45, metalness: .02 });   // 粗糙度 .62 → .45：阳光下圆角上有柔和的高光（用户 2026-11-02，五大调子里的"高光"）
     const edgeMat = new THREE.LineBasicMaterial({ color: 0x5f5e59, transparent: true, opacity: .18, depthWrite: false });
     const g = new THREE.Group();
     src.traverse(o => { if (!o.isMesh) return; const geo = o.geometry.clone(); geo.applyMatrix4(o.matrixWorld); if (rot) geo.rotateZ(rot);
@@ -730,7 +731,7 @@ const MODELS = {
   },
   async silk() {                                                          // 浅蓝哑光玻璃（材质同窗光页）
     const s = (await loader.loadAsync("../assets/objects/silk-wall-2000x1000.glb")).scene;
-    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.75, ior: 1.5, flatShading: true });
+    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.3, ior: 1.5, flatShading: true });   // 清漆粗糙度 .75 → .3：玻璃表面有反光（高光）
     /* flatShading：每个三角面用自己的平面法线（用户 2026-11-02：板上的条纹往右一点点淡掉，"你见过阴影是这样子的吗"）。
        原来只用补出来的法线（35° 以内的棱抹平），边上的倒角被抹平时把板面法线也拉歪了，平板被照得像曲面：
        转到 35° 时（太阳水平方向和墙约成 33°，板面已经背光）左边还亮、往右渐暗，条纹一路淡掉。
@@ -782,7 +783,7 @@ function fitInto(group, obj) {
   const pivot = new THREE.Group(); group.userData.obj = obj; group.userData.pivot = pivot;
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   obj.userData.fit = { size, c, zmin: box.min.z, s0: obj.scale.x };
-  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(addRefl); } });
   pivot.add(obj); group.add(pivot); sizeObjects(); render();
 }
 function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变（PXM：每米多少 CSS 像素）
@@ -805,9 +806,10 @@ const VS = "varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy,
 let rtPass, rtAcc, rtSun, rtVis, rtGlowA, rtGlowB, rtMask;
 const addMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, w: { value: 1 } }, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
   fragmentShader: "uniform sampler2D t; uniform float w; varying vec2 v; void main(){ gl_FragColor = vec4(texture2D(t, v).rgb * w, 1.); }" });
-const outMat = new THREE.ShaderMaterial({ uniforms: { acc: { value: null }, sun: { value: null }, vis: { value: null }, glow: { value: null }, glowAmt: { value: 0 } }, depthTest: false, depthWrite: false, toneMapped: true, vertexShader: VS,
-  fragmentShader: `uniform sampler2D acc, sun, vis, glow; uniform float glowAmt; varying vec2 v; void main(){
-    vec3 c = texture2D(acc, v).rgb - texture2D(sun, v).rgb * (1. - texture2D(vis, v).r);
+const outMat = new THREE.ShaderMaterial({ uniforms: { acc: { value: null }, sun: { value: null }, vis: { value: null }, glow: { value: null }, glowAmt: { value: 0 }, ao: { value: null }, aoAmt: { value: 0 } }, depthTest: false, depthWrite: false, toneMapped: true, vertexShader: VS,
+  fragmentShader: `uniform sampler2D acc, sun, vis, glow, ao; uniform float glowAmt, aoAmt; varying vec2 v; void main(){
+    vec3 s = texture2D(sun, v).rgb, amb = texture2D(acc, v).rgb - s;        // amb：天光 + 反射光（墙上除了阳光以外的光）
+    vec3 c = amb * (1. - aoAmt * texture2D(ao, v).r) + s * texture2D(vis, v).r;   // 闭塞：物件周围一圈 amb 变弱；阳光只被物件的影子挡
     c += texture2D(glow, v).rgb * glowAmt;                                   // 高光溢出：阳光层大范围模糊后叠回来，亮条边上也微微发亮
     gl_FragColor = vec4(max(c, vec3(0.)), 1.);
     #include <tonemapping_fragment>
@@ -823,6 +825,36 @@ const blurMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, dir: 
     for (int i = 1; i < 7; i++) { c += texture2D(t, v + dir * float(i)).rgb * w[i]; c += texture2D(t, v - dir * float(i)).rgb * w[i]; }
     gl_FragColor = vec4(c, 1.); }` });
 const blurScene = quad(blurMat);
+/* 闭塞阴影（用户 2026-11-02，素描五大调子里"投影贴着物体的根部最深"）：物件和墙挨得近的地方，天光和反射光也照不进去。
+   每帧把物件的轮廓画成白色（1/4 大小），横竖模糊两遍，得到从物件边缘往外渐淡的一圈；合成墙时这一圈里的 amb 按 ao 减弱。 */
+let rtAoA, rtAoB;
+const aoMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+function bakeAO() {
+  const sz = renderer.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(1, sz.x >> 2), h = Math.max(1, sz.y >> 2);
+  if (!rtAoA || rtAoA.width !== w || rtAoA.height !== h) { [rtAoA, rtAoB].forEach(r => r && r.dispose()); rtAoA = new THREE.WebGLRenderTarget(w, h); rtAoB = new THREE.WebGLRenderTarget(w, h); }
+  wall.visible = false; gobo.visible = false; scene.overrideMaterial = aoMat;
+  renderer.setRenderTarget(rtAoA); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(scene, camera);
+  scene.overrideMaterial = null; wall.visible = true; gobo.visible = true;
+  for (const step of [0.75, 1.5]) {                                        // 只在贴着物件的窄窄一圈（约 50 px）；宽了会把物件周围一大片墙压暗，边缘发虚
+    blurMat.uniforms.t.value = rtAoA.texture; blurMat.uniforms.dir.value.set(step / w, 0); renderer.setRenderTarget(rtAoB); renderer.render(blurScene, cam2);
+    blurMat.uniforms.t.value = rtAoB.texture; blurMat.uniforms.dir.value.set(0, step / h); renderer.setRenderTarget(rtAoA); renderer.render(blurScene, cam2);
+  }
+  outMat.uniforms.ao.value = rtAoA.texture; outMat.uniforms.aoAmt.value = L.ao;
+}
+/* 反光（用户 2026-11-02，五大调子里的"反光"）：物件背光的一面会被旁边亮的墙照亮，暗面不是死黑，靠近亮墙的一侧更亮。
+   高光溢出那张图（墙上的阳光大范围模糊）正好是"画面上每一处附近有多少亮墙"；物件的每个像素去这张图里查，补上这么多反光。
+   光从墙那边来：朝墙的面（背面）全收，朝侧面的收一半，正对镜头的面不收（看的方向是 -z，所以权重 = 0.5 - 0.5 × 法线的 z）。 */
+const REFL = { tex: { value: null }, res: { value: new THREE.Vector2(1, 1) }, amt: { value: 0 } };
+function addRefl(mat) {
+  if (!mat || mat.userData.refl) return; mat.userData.refl = true;
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.reflTex = REFL.tex; sh.uniforms.reflRes = REFL.res; sh.uniforms.reflAmt = REFL.amt;
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform sampler2D reflTex; uniform vec2 reflRes; uniform float reflAmt;")
+      .replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse += diffuseColor.rgb * texture2D( reflTex, gl_FragCoord.xy / reflRes ).rgb * reflAmt * clamp( 0.5 - 0.5 * normal.z, 0.0, 1.0 );");
+  };
+  mat.customProgramCacheKey = () => "refl"; mat.needsUpdate = true;
+}
 function bakeGlow() {
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(1, sz.x >> 2), h = Math.max(1, sz.y >> 2);
   [rtGlowA, rtGlowB].forEach(r => r && r.dispose());
@@ -834,6 +866,7 @@ function bakeGlow() {
     src = rtGlowB.texture;
   }
   outMat.uniforms.glow.value = rtGlowB.texture; outMat.uniforms.glowAmt.value = L.glow;
+  REFL.tex.value = rtGlowB.texture; REFL.res.value.copy(sz); REFL.amt.value = L.refl;
 }
 /* 浮尘（第 5 点）：亮区图缩到 1/8 读回来，浮尘只在亮的地方显示（亮条里看得见，暗条和没光的地方看不见）。 */
 const maskMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
@@ -886,6 +919,7 @@ function render() {
   gobo.visible = false; hemi.visible = false; scene.overrideMaterial = visMat;
   renderer.setRenderTarget(rtVis); renderer.setClearColor(0xffffff, 1); renderer.clear(); renderer.render(scene, camera);
   scene.overrideMaterial = null; gobo.visible = true; hemi.visible = true;
+  bakeAO();                                                               // 闭塞阴影（物件动了就要重画）
   // ②
   renderer.setRenderTarget(null); renderer.render(outScene, cam2);
   // ③
@@ -957,7 +991,7 @@ if (new URLSearchParams(location.search).get("tune") === "1") {
     ["亮区", [["area", "面积（占画面宽）", 0.1, 1, 0.01], ["topY", "斜边高度 m", 0.8, 3.2, 0.01]]],
     ["窗户和太阳", [["turn", "窗墙朝向 °", 0, 70, 1], ["az", "太阳方位 °", 15, 70, 1], ["el", "太阳仰角 °", 10, 70, 1],
                    ["pitch", "条纹间距 m", 0.06, 0.4, 0.005], ["slat", "每片挡光 m", 0.01, 0.3, 0.005], ["ang", "边缘软硬 °", 0, 0.6, 0.01]]],
-    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
+    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["refl", "反光", 0, 3, 0.05], ["ao", "闭塞阴影", 0, 1, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
   ];
   const fmt = (v, st) => st >= 1 ? String(Math.round(v)) : v.toFixed(st < 0.01 ? 3 : 2);
   const inputs = {};
