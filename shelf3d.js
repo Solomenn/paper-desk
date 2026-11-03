@@ -150,5 +150,7 @@ export async function setupShelf(R, shelfModel, onChange) {
     onChange();
     if (moving) anim = requestAnimationFrame(step); else last = 0;
   }
-  return () => {};
+  // 给 shelf-nav.js：书架每一层的位置（这里的坐标是模型缩放 s0、放在原点时的；toWorld 换成现在场景里的位置）
+  const api = () => {}; api.bays = bays; api.toWorld = v => shelfModel.localToWorld(v.clone().divideScalar(s0));
+  return api;
 }
