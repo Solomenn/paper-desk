@@ -82,8 +82,9 @@ const Lpos = new Float64Array(N), tickOf = new Int32Array(N); const ticks = [], 
 /* 刻度条两头各多出 EXT 根刻度（用户 2026-11-02：再往左右延伸，让最右的木柜也能完全拖进左边的阳光里）：
    多出来的刻度图案照旧（从格子往外数，第 1、11、21… 根是长刻度，其余是小刻度），间距不变，所以刻度区变宽；
    它们和别的刻度一样能指、能点、能拖，属于最近的那一格（左边算第一格，右边算最后一格）。
-   EXT 怎么定：墙上阳光照到 x≈260 以左（木柜那么高的范围里，1440 宽的窗口实测）。点到最右那根时，切换条停在
-   最后一格再往右 (4 + EXT) × STEP = 17 × 34 = 578 px，木柜中心在 x≈140，左右边缘约 55–230，整个在阳光里，也没出画面。 */
+   EXT 怎么定：当时墙上的阳光只照到 x≈260 以左（1440 宽的窗口实测），点到最右那根时，切换条停在
+   最后一格再往右 (4 + EXT) × STEP = 17 × 34 = 578 px，木柜中心在 x≈140，左右边缘约 55–230，整个在阳光里，也没出画面。
+   后来窗换成百叶窗（见 3D 部分），亮区扩到画面左边约 3/4，木柜停在中间也在光里；拖到最右照样整个在光里。 */
 const EXT = 13;
 const PER_PAGE = 9;                                                       // 每页一段 9 根小刻度，页与页之间一根长分隔；刻度区宽度同参考（用户 2026-11-02：别简化，要连续的咔声）
 function layout() {
@@ -526,6 +527,26 @@ const GOBO = await (await fetch("../assets/objects/lintex-light-gobo.json")).jso
 while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));          // 等切换条脚本把页面列表准备好
 const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D;
 const AZ = GOBO.az, EL = GOBO.el, W = GOBO.W;
+/* 窗的形状换成百叶窗（用户 2026-11-02，参考图：百叶的光斜着铺满大半面墙，物件挡住光、投出影子，更有体积感）。
+   太阳方向、强度、天光、反射光都不动（还是 lintex-light-gobo.json 里的 az 35°、el 32° 和下面那组常数），只换窗上开的洞。
+   左墙（x = -W）上的点 (z, y) 顺着阳光落到后墙：X = -W + z·cot(az) ≈ -3 + 1.43·z，Y = y - z·tan(el)/sin(az) ≈ y - 1.09·z。
+   所以：窗的竖边（z 固定）→ 后墙上的竖线；百叶的横片（y 固定）→ 后墙上往右下斜的线（斜率约 -0.76），和参考图一样。
+   · 窗宽 z 从 Z0 到 Z1：亮区从画面最左（X ≈ -1.27）一直到中线右边约 0.7 m，约占画面宽的 3/4；
+   · 窗顶 Y1B：投到后墙是一条斜边，从画面右上角斜着切过去（参考图亮区右上那条斜边）；窗底 Y0 投到画面下面；
+   · 百叶：横片间距 PITCH_B，每片挡 SLAT，亮条比暗条宽；画面里约 10 道条纹。
+     不能再细：太阳有 0.5° 大（ANG），光从窗走到后墙约 4 m，墙上的影子边缘会糊开 3–4 cm；
+     间距 9 cm 时条纹只有 3–5 cm 宽，糊开后几乎看不见（实测），15 cm 时亮条约 7.6 cm、暗条约 4.4 cm，看得清；
+   · 一根竖拉绳（参考图里那根细线）：z = CORD，宽 CORD_W，投成一条细竖线。
+   例：窗上 z = 2.0、y = 3.0 的点 → 后墙 X ≈ -0.14、Y ≈ 0.82（画面中间偏下）。 */
+{
+  const Z0 = 0.9, Z1 = 2.6, Y0 = 0, Y1B = 4.6, PITCH_B = 0.15, SLAT = 0.055, CORD = 1.45, CORD_W = 0.012;
+  const cols = [[Z0, CORD - CORD_W / 2], [CORD + CORD_W / 2, Z1]];             // 拉绳把每条缝分成左右两段
+  GOBO.holes = []; GOBO.islands = [];
+  for (let y = Y0; y + PITCH_B <= Y1B + 1e-9; y += PITCH_B) {
+    const a = y + SLAT, b = y + PITCH_B;                                    // 一片百叶挡住 y..a，a..b 是透光的缝
+    for (const [za, zb] of cols) GOBO.holes.push([[za, a], [zb, a], [zb, b], [za, b]]);
+  }
+}
 // 以下常数与 lab/window-light.html 默认值相同（冷调）
 const SUN = 8.97, SKY = 2.26, ANG = 0.5, NDIR = 48, BOUNCE = 4.2, BSIG = 0.5, WALL = "#f0f0ee";
 const T = { sun: 0xffffff, sky: 0xe8eff3, ground: 0xdfe2e3 }, tint = new THREE.Color(0.95, 0.99, 1.03);
