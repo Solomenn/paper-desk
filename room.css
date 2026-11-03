@@ -17,13 +17,17 @@
 }
 html[data-theme="night"] { --on-wall: #e6dcc8; --on-wall2: rgba(230, 220, 200, .55); color-scheme: dark; }
 html { background: var(--walnut); }
-html[data-theme="day"] { background: #e6e2da; }
+html[data-theme="day"] { background: #8c9294; }
 html body { background: transparent !important; font-family: var(--sans); }
 html body::before { display: none !important; }
 
 /* ───────── the wall: boards, grain, and the light on them ───────── */
 .desk { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; background: #2b2119; transition: background 1.2s; }
-html[data-theme="day"] .desk { background: #e9e8e4; }   /* day = the train's morning: neutral, cool, clear */
+html[data-theme="day"] .desk { background: #8c9294; }   /* day: the entry page's wall (room.js paintWall draws the sun on it); this is its shade */
+/* 白天的墙 = 入口页那面粗灰泥墙（用户 2026-11-03）：木板、木纹、右上角的窗光都收起来，墙由 room.js 画（svg.wall），颗粒用 .tooth */
+.desk svg.wall { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .65s; }
+html[data-theme="day"] .desk .boards, html[data-theme="day"] .desk .grain, html[data-theme="day"] .desk .win { display: none; }
+html:not([data-theme="day"]) .desk svg.wall { display: none; }
 .desk > i { position: absolute; inset: 0; transition: opacity 1.2s; }
 .desk .boards { background:
   repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 1px, rgba(255,240,220,.05) 1px 2px, transparent 2px 128px),
@@ -39,7 +43,7 @@ html[data-theme="day"] .desk .grain { opacity: .35; mix-blend-mode: multiply; }
 html[data-theme="day"] .desk .lamp { opacity: 0; }
 /* the stove, down in the left corner: it breathes */
 .desk .stove { background: radial-gradient(46% 52% at 0% 100%, rgba(217, 120, 63, .38), rgba(217, 120, 63, .1) 50%, transparent 75%); animation: ember 5.2s ease-in-out infinite; }
-html[data-theme="day"] .desk .stove { opacity: 0; }
+html[data-theme="day"] .desk .stove { display: none; }   /* 原来是 opacity: 0，但炉火的闪烁动画一直在改 opacity，白天左下角总有一团暖光；入口页没有（2026-11-03） */
 /* the window, off to the right: cold — moonlight and snow at night, a broad patch of snow light by day */
 .desk .win { background: linear-gradient(270deg, rgba(150, 175, 215, .14), transparent 38%); }
 html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 15%, rgba(255, 255, 255, .8), rgba(240, 245, 252, .35) 45%, transparent 75%); }
@@ -53,6 +57,7 @@ html[data-theme="day"] .desk .win { background: radial-gradient(70% 90% at 100% 
 .cast.shade { mix-blend-mode: multiply; background: radial-gradient(85% 80% at 50% 28%, #fff6ea 0%, #f0e2cc 42%, #b9a38a 82%, #8f7a64 100%); opacity: .82; }
 .cast.glow { mix-blend-mode: screen; background: radial-gradient(40% 45% at 0% 100%, rgba(217, 120, 63, .16), transparent 70%); animation: ember 5.2s ease-in-out infinite; }
 html[data-theme="day"] .cast.shade { background: radial-gradient(120% 110% at 92% 8%, transparent 42%, rgba(172, 188, 214, .62) 100%); opacity: .75; }   /* the shade is sky-blue, not grey */
+html[data-theme="day"] .cast.shade { opacity: 0; }   /* 2026-11-03：入口页没有四角的暗角，白天去掉（和入口页对齐） */
 html[data-theme="day"] .cast.glow { opacity: 0; }
 /* day: one clear patch of morning sun on what you're working on (room.js, [data-sunlit]) */
 .cast.sun { mix-blend-mode: soft-light; opacity: 0; }

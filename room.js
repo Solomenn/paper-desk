@@ -84,7 +84,63 @@
         <g filter="url(#${id}b)"><rect x="-100" y="-100" width="${w + 200}" height="${h + 200}" fill="#fffefa" mask="url(#${id}m)"/></g></svg>`);
       el._sun = el.lastElementChild;
     }
-    const paint = () => document.querySelectorAll("[data-sunlit]").forEach(paintBoard);
+    /* 背景墙：和入口页的墙一样（用户 2026-11-03："把我们的背景统一，和主页入口对齐"）。原来是一排竖着的浅色木板 + 木纹 + 右上角的窗光 + 四角的天蓝暗角。
+       入口页的墙是一面白色粗灰泥墙，左边被百叶光照着、右边在阴影里；这里按同一套光画出来（跟着入口页面板"保存"的参数变）：
+       · 颜色是从入口页截图（1440×900，默认参数）量的，单位是 0–255 的屏幕亮度：
+         亮条约 250（WALL_LIT），亮区里的暗带约 196（WALL_BAND：百叶片半透光、还有反光，所以比阴影亮），
+         阴影里紧挨亮区约 168、往右越来越暗，离亮区 0.81 m 处约 140，再往右不变（WALL_SHADE0 → WALL_SHADE1，略偏蓝）；
+         暗带约占条纹间距的 40%，边缘过渡（10%–90%）约占间距的 22%（墙离窗远，比板上虚）。
+       · 墙在画面上怎么摆：
+         - 卡册、手账、小票：和入口页一样 1:1——画面宽 = 2.536 m，画面正中对着墙上 (0, YC)，就像站在入口页同一个位置看这面墙；
+         - 首页（项目、便签）：和板上的光一起放大（见上面 paintBoard），墙上的条纹和板上的条纹接得上——
+           板面在墙上的那块长方形对着屏幕上的板，四周的墙按同样的倍数铺开（1440×900 下约 4.8 倍）。
+           两块板在墙上的长方形高度不同（布板高 5 cm），翻页时墙换一张、淡入淡出。
+       · 粗灰泥的颗粒：沿用原来的细噪点层（.tooth）。 */
+    const WALL_LIT = "#fbfbfa", WALL_BAND = "#c3c5c5", WALL_SHADE0 = "#a3a9ab", WALL_SHADE1 = "#8c9294", WALL_DARK = 0.40, WALL_EDGE = 0.22;
+    const YC = 1.5 - 3 * 2.536 / 1140;                                  // 入口页画面正中对着的墙高（m）
+    let wallKey = "", wallN = 0;
+    function paintWall() {
+      const room = document.getElementById("room"); if (!room) return;
+      const W = innerWidth, H = innerHeight, L = read("paper-desk.light.v1", LIGHT_DEFAULT);
+      // 屏幕上的点 (x0, y0) 对着墙上的 (Xc, Yc)，每像素 s 米
+      let s = VIEW_W / W, Xc = 0, Yc = YC, x0 = W / 2, y0 = H / 2;
+      const boards = [...document.querySelectorAll("[data-sunlit]")];
+      if (boards.length) {
+        const el = boards[window.Desk && Desk.page ? Desk.page() : 0] || boards[0], pg = el.closest(".page"), host = document.getElementById("pages");
+        const R = read("paper-desk.boards-at-center.v1", RECT_DEFAULT)[el.dataset.sunlit] || RECT_DEFAULT.silk;
+        const r = el.getBoundingClientRect(), pr = pg ? pg.getBoundingClientRect() : r, hr = host && host.parentElement ? host.parentElement.getBoundingClientRect() : { left: 0 };
+        const left = hr.left + (r.left - pr.left);                       // 这块板翻到眼前时在屏幕上的左边（翻页滑动中也按停好时算）
+        s = (R[1] - R[0]) / el.clientWidth; Xc = (R[0] + R[1]) / 2; Yc = (R[2] + R[3]) / 2; x0 = left + el.clientWidth / 2; y0 = r.top + el.clientHeight / 2;
+      }
+      const key = [W, H, s, Xc, Yc, x0, y0, JSON.stringify(L)].map(v => typeof v === "number" ? v.toFixed(5) : v).join("|");
+      if (key === wallKey) return; wallKey = key;
+      const d = Math.PI / 180, tr = L.turn * d, ce = Math.cos(L.el * d), se = Math.sin(L.el * d), ca = Math.cos(L.az * d), sa = Math.sin(L.az * d);
+      const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa);
+      const X0 = -VIEW_W / 2 - 0.2, X1 = -VIEW_W / 2 + L.area * VIEW_W;
+      const U0 = (X0 + WIN) / KX, U1 = Math.max(U0 + 0.05, (X1 + WIN) / KX), V1 = L.topY + KY * U1, CORD = U0 + (U1 - U0) / 3;
+      const px = X => x0 + (X - Xc) / s, py = Y => y0 - (Y - Yc) / s, f = x => +x.toFixed(5);
+      // 窗上的点 (u, v) → 墙上 (X = -3 + KX·u, Y = v - KY·u) → 屏幕：一个仿射变换
+      const M = [KX / s, KY / s, 0, -1 / s, px(-WIN), py(0)].map(x => +x.toFixed(4)).join(" ");
+      let bands = "";
+      for (let k = 0; (k + 0.5 - WALL_DARK / 2) * L.pitch < V1; k++)
+        bands += `<rect x="${f(U0 - 0.5)}" y="${f((k + 0.5 - WALL_DARK / 2) * L.pitch)}" width="${f(U1 - U0 + 1)}" height="${f(WALL_DARK * L.pitch)}" fill="${WALL_BAND}"/>`;
+      const blur = Math.max(1, WALL_EDGE * L.pitch / 2.56 / s), id = "wall" + (++wallN);
+      const svg = `<svg class="wall" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
+        <linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="${px(X1).toFixed(1)}" y1="0" x2="${px(X1 + 0.81).toFixed(1)}" y2="0">
+          <stop offset="0" stop-color="${WALL_SHADE0}"/><stop offset="1" stop-color="${WALL_SHADE1}"/></linearGradient>
+        <clipPath id="${id}c"><rect transform="matrix(${M})" x="${f(U0)}" y="0" width="${f(U1 - U0)}" height="${f(V1)}"/></clipPath>
+        <filter id="${id}b" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter></defs>
+        <rect width="${W}" height="${H}" fill="url(#${id}g)"/>
+        <g filter="url(#${id}b)"><g clip-path="url(#${id}c)"><g transform="matrix(${M})">
+          <rect x="${f(U0 - 0.5)}" y="-1" width="${f(U1 - U0 + 1)}" height="${f(V1 + 2)}" fill="${WALL_LIT}"/>${bands}
+          <rect x="${f(CORD - 0.003)}" y="0" width="0.006" height="${f(V1)}" fill="${WALL_BAND}"/></g></g></g></svg>`;
+      const old = [...room.querySelectorAll("svg.wall")];
+      room.insertAdjacentHTML("afterbegin", svg);
+      const now = room.firstElementChild;
+      if (old.length) { now.style.opacity = 0; requestAnimationFrame(() => { now.style.opacity = 1; }); setTimeout(() => old.forEach(e => e.remove()), 700); }
+    }
+    addEventListener("deskpage", () => setTimeout(paintWall, 0));
+    const paint = () => { document.querySelectorAll("[data-sunlit]").forEach(paintBoard); paintWall(); };
     window.roomRelight = paint;
     // 板的大小变了（窗口、字体到了）、入口页改了光：重画；翻页滑动不改板的大小，不重画
     paint(); setInterval(paint, 500); addEventListener("resize", paint);
