@@ -549,10 +549,10 @@ const W = GOBO.W;
    sun/sky/bounce  阳光、天光、反射光的强度             sunK/skyK  阳光、天光的色温（K）；0 = 原来的颜色（阳光纯白、天光窗光页的冷调）
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
    refl   反光：亮墙反弹到物件暗面上的光               ao    闭塞阴影：物件根部、边缘一圈墙上的天光和反射光减弱多少
-   haze   光柱：窗和墙之间的空气被阳光照亮的强度（默认 0：正面看只是一层均匀的雾，见"光柱"那段）
+   haze   光柱：窗和墙之间的空气被阳光照亮的强度（用户 2026-11-02：默认开启；0.12，再大会冲淡反差）
    默认值的来由见下面"阳光像真的"那段。 */
 const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, tilt: 20, ang: 0.21,
-  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35, haze: 0 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
+  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35, haze: 0.12 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
 const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
@@ -853,7 +853,7 @@ function bakeAO() {
    用阳光的阴影深度图查每个点在不在阳光里（百叶、窗框、物件挡住的点不算）；在阳光里的点占多少，就叠多少白色雾光（× haze）。
    纯白、叠加在最后，不改色调。画完物件之后再画，用的是那时的阴影图（含百叶和物件）。
    实测（2026-11-02）：正面看出不来一道道光柱，只是亮区蒙一层均匀的雾、反差被冲淡——要看出光柱，视线得顺着光片看过去，
-   可窗转了 63°（为了让条纹落在物件上会弯折），每条视线穿过好几片光和影子，平均成了雾。所以默认 0，面板里可以拉起来看。 */
+   可窗转了 63°（为了让条纹落在物件上会弯折），每条视线穿过好几片光和影子，平均成了雾。用户要默认开启：0.12。 */
 const hazeMat = new THREE.ShaderMaterial({
   uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 } },
   transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
