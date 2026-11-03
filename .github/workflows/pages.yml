@@ -53,6 +53,9 @@ jobs:
           rsync -a --exclude .git --exclude .github --exclude binder --exclude tools --exclude _site ./ _site/
           mkdir -p _site/binder && cp -r binder/dist/. _site/binder/
           touch _site/.nojekyll
+          # 缓存名换成这次提交的编号：浏览器发现 sw.js 变了，会删掉旧缓存、重新下载改过的文件（见 sw.js 开头）
+          sed -i "s/paper-desk-site-dev/paper-desk-site-${GITHUB_SHA::7}/" _site/sw.js
+          grep -q "paper-desk-site-${GITHUB_SHA::7}" _site/sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

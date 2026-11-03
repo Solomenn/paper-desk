@@ -2,7 +2,10 @@
    页面保持可交互；Service Worker 在后台分批下载所有页面、图片、音效和 3D 资源。 */
 "use strict";
 
-const CACHE_NAME = "paper-desk-site-v7";
+// 缓存名：发布时 .github/workflows/pages.yml 把 "dev" 换成这次提交的编号（如 paper-desk-site-3f2a9c1）。
+// 每次发布 sw.js 都不一样 → 浏览器装上新的 Service Worker → activate 时删掉旧缓存 → 改过的模型、图片重新下载。
+// 以前这里写死 v7，改了模型没人改它，访问过的浏览器就一直用缓存里的旧模型（用户 2026-11-02：木柜还是深棕色）。
+const CACHE_NAME = "paper-desk-site-dev";
 const CACHE_PREFIX = "paper-desk-site-";
 const OLD_CACHE_PREFIX = "paper-desk-carriage-";
 const FONT_ORIGIN = "https://cdn.jsdelivr.net";
@@ -71,7 +74,7 @@ function makeRequest(url) {
   return new Request(url.href, {
     method: "GET",
     credentials: "same-origin",
-    cache: "force-cache"
+    cache: "no-cache"   // 先问服务器文件变了没有：没变只回 304，用本地的；变了才下载。原来是 force-cache，浏览器缓存里有旧文件就直接拿旧的
   });
 }
 
