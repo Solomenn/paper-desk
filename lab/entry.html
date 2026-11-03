@@ -16,6 +16,18 @@
   .it .when { position: absolute; top: 214px; left: 0; right: 0; color: #8a8a8a; font-weight: 500; font-size: 20px; line-height: 32px; }
   .it .art { position: absolute; left: 0; width: 240px; height: 240px; top: 285px; cursor: pointer; }
   #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  /* 阳光调节面板（?tune=1 才显示） */
+  #tune { position: fixed; right: 16px; top: 16px; z-index: 5; width: 280px; max-height: calc(100vh - 32px); overflow: auto; padding: 12px 14px; box-sizing: border-box;
+    background: rgba(255,255,255,.92); border: 1px solid rgba(0,0,0,.08); border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.08);
+    font: 12px/1.4 -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; color: #222; cursor: auto; }
+  #tune h4 { margin: 10px 0 4px; font-size: 12px; font-weight: 600; color: #666; }
+  #tune h4:first-child { margin-top: 0; }
+  #tune label { display: grid; grid-template-columns: 92px 1fr 44px; align-items: center; gap: 6px; margin: 3px 0; }
+  #tune input[type=range] { width: 100%; }
+  #tune output { text-align: right; font-variant-numeric: tabular-nums; color: #555; }
+  #tune .row { display: flex; gap: 6px; margin-top: 10px; }
+  #tune button { flex: 1; padding: 5px 0; border: 1px solid rgba(0,0,0,.15); border-radius: 6px; background: #fff; font: inherit; cursor: pointer; }
+  #tune .busy { margin-top: 6px; color: #999; min-height: 1.4em; }
   #dust { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }   /* 浮尘：叠在 3D 上面、切换条下面 */
   /* 模型署名（CC BY 4.0 要求在页面上署名），样式同 radio.html */
   .credit { position: fixed; z-index: 8; right: 18px; bottom: 18px; font-size: 10px; color: rgba(55,59,56,.42); }
@@ -43,6 +55,7 @@
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
 <canvas id="gl"></canvas>
 <canvas id="dust"></canvas>
+<div id="tune" hidden></div>
 <div id="strip"></div>
 <div id="zone" tabindex="0" role="slider" aria-label="页面"></div>
 <script src="../preload.js" defer></script>
@@ -882,6 +895,50 @@ function layout() {
 }
 let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(layout, 150); });
 layout();
+
+/* ── 阳光调节面板（用户 2026-11-02：给我一个阳光调整的 UI，自己调面积、角度、窗户位置）──
+   地址后加 ?tune=1 才显示。拖滑块：数值马上变，松手后（或停 0.3 秒后）重算墙上的光（约 1 秒）。
+   调过的值写回地址栏（刷新不丢，也能把地址发给别人）；"复制参数"复制这些值，"恢复默认"回到 LIGHT_DEFAULT。
+   色温不放进面板（用户：不要改色调）。 */
+function applyLight() {                                                   // 参数改了以后：重建窗、反射光贴图、灯光，重算墙
+  buildWindow(); buildGobo();
+  const old = wallMat.lightMap; wallMat.lightMap = bounceTexture(); wallMat.needsUpdate = true; if (old) old.dispose();
+  lightColors(); bakeWall(); render();
+}
+if (new URLSearchParams(location.search).get("tune") === "1") {
+  const box = document.getElementById("tune"); box.hidden = false;
+  const GROUPS = [
+    ["亮区", [["area", "面积（占画面宽）", 0.1, 1, 0.01], ["topY", "斜边高度 m", 0.8, 3.2, 0.01]]],
+    ["窗户和太阳", [["turn", "窗墙朝向 °", 0, 70, 1], ["az", "太阳方位 °", 15, 70, 1], ["el", "太阳仰角 °", 10, 70, 1],
+                   ["pitch", "条纹间距 m", 0.06, 0.4, 0.005], ["slat", "每片挡光 m", 0.01, 0.3, 0.005], ["ang", "边缘软硬 °", 0, 0.6, 0.01]]],
+    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
+  ];
+  const fmt = (v, st) => st >= 1 ? String(Math.round(v)) : v.toFixed(st < 0.01 ? 3 : 2);
+  const inputs = {};
+  box.innerHTML = GROUPS.map(([t, items]) => `<h4>${t}</h4>` + items.map(([k, name, lo, hi, st]) =>
+    `<label>${name}<input type="range" data-k="${k}" min="${lo}" max="${hi}" step="${st}"><output data-o="${k}"></output></label>`).join("")).join("") +
+    `<div class="row"><button data-act="copy">复制参数</button><button data-act="reset">恢复默认</button></div><div class="busy"></div>`;
+  const busy = box.querySelector(".busy");
+  const sync = () => { for (const [, items] of GROUPS) for (const [k, , , , st] of items) { const el = box.querySelector(`[data-k=${k}]`); el.value = L[k]; box.querySelector(`[data-o=${k}]`).textContent = fmt(L[k], st); } };
+  const toUrl = () => {                                                   // 只把和默认值不同的写进地址栏
+    const q = new URLSearchParams(location.search); for (const k in LIGHT_DEFAULT) { if (L[k] !== LIGHT_DEFAULT[k]) q.set(k, L[k]); else q.delete(k); }
+    history.replaceState(null, "", location.pathname + "?" + q.toString());
+  };
+  let t = 0;
+  const later = () => { clearTimeout(t); busy.textContent = "重算中…"; t = setTimeout(() => { applyLight(); toUrl(); busy.textContent = ""; }, 300); };
+  box.addEventListener("input", e => { const k = e.target.dataset.k; if (!k) return; L[k] = +e.target.value; box.querySelector(`[data-o=${k}]`).textContent = fmt(L[k], +e.target.step); later(); });
+  box.addEventListener("click", e => {
+    const act = e.target.dataset.act; if (!act) return;
+    if (act === "reset") { Object.assign(L, LIGHT_DEFAULT); sync(); later(); }
+    if (act === "copy") {
+      const diff = Object.fromEntries(Object.keys(LIGHT_DEFAULT).map(k => [k, L[k]]));
+      const text = JSON.stringify(diff);
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => busy.textContent = "已复制", () => { busy.textContent = text; });
+    }
+  });
+  ["pointerdown", "pointermove", "wheel", "keydown"].forEach(ev => box.addEventListener(ev, e => e.stopPropagation()));   // 面板上的操作不传给切换条
+  sync();
+}
 
 /* 浮尘（第 5 点，参考胶片那张）：60 粒很小的白色光点，慢慢往上、往右飘，偶尔闪一下；
    每粒的亮度 × 它所在位置的亮区值（dustMask 读回来的那张图），所以只在亮条里看得见。
