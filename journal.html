@@ -56,6 +56,12 @@
   .spine.empty { filter: saturate(.55) brightness(.9); }
   .spine.now::after { content: ""; position: absolute; right: 7px; top: -1px; width: 7px; height: 26px; background: #c9a24a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
 
+  /* 3D 书架画好以后（wall3d.js 给 body 加 shelf3d），网页画的书柜和书隐藏，位置留着给 3D 书架对齐（2026-11-03：书架先空着） */
+  body.shelf3d .case { visibility: hidden; }
+  /* 书架模型的署名（CC BY 4.0 要求在页面上署名；样式同入口页右下角），3D 书架出现时才显示 */
+  .credit3d { display: none; position: fixed; z-index: 8; right: 18px; bottom: 18px; font-size: 10px; color: rgba(55,59,56,.42); }
+  .credit3d a { color: inherit; text-decoration: none; } .credit3d a:hover { text-decoration: underline; }
+  body.shelf3d .credit3d { display: block; }
   /* ═════════ the library: a walnut bookcase, one shelf for each kind, a book for each month ═════════ */
   #shelf { gap: 0; }
   .case { position: relative; padding: 18px 22px 8px; border-radius: 4px;
@@ -775,6 +781,7 @@
   if (want) { const b = books.find(x => `${x.y}-${x.m}` === want); if (b) setTimeout(() => openBook(b, b.spine), 300); }
 })();
 </script>
-<script type="module" src="wall3d.js?v=1"></script>
+<span class="credit3d"><a href="https://sketchfab.com/3d-models/wooden-shelf-67e718a0fc904487a9f735892d9834d3" target="_blank" rel="noreferrer">Wooden Shelf</a> · Vilson Pistori · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
+<script type="module" src="wall3d.js?v=2"></script>
 </body>
 </html>

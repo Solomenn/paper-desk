@@ -12,7 +12,7 @@
 | [`index.html`](index.html) | 桌面。项目板：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；左下角打开工具栏（计时器、卡册、手账、小票） |
 | [`focus.html`](focus.html) | 雪国线计时器：上车前选项目、拖行程刻度尺；行驶中是车厢和窗外雪原。下车把分钟数记到项目上 |
 | [`album.html`](album.html) | 卡册：项目、便签、车票、小票，按月；车票有时间轴视图 |
-| [`journal.html`](journal.html) | 手账书架：每月一本 |
+| [`journal.html`](journal.html) | 手账书架：入口页的米白实体书架（3D）；卡册待做成实体放进去，暂时空着 |
 | [`receipt.html`](receipt.html) | 今日小票机 |
 | [`radio.html`](radio.html) | 白噪音收音机：Braun T3 实体模型，转调谐盘换台；从桌面和雪国线以浮层打开 |
 
@@ -92,7 +92,7 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - **改色方法：** 根据 UV 区域只调整书架结构贴图，不漂白书脊和书籍封面；结构目标色 `#E9E2D6`（暖米白）。保留原始书籍图案、法线细节和粗糙度变化。
 - **优化后的模型：** `bookshelf_short_offwhite.glb`，约 24.7 MB；Base Color 保持 4K，Normal / Metallic-Roughness 为 2K，并降低原木纹法线强度以适配哑光涂装。几何拓扑保持不变：1 mesh、842 triangles；书籍细节来自原始 4K 贴图。
 - **本地预览包：** `paper-desk-object-preview.zip` 仍保留，包含优化后的米白 GLB、静态预览图和 Windows 启动脚本。
-- **状态：** 米白模型已制作并完成 GLB 结构重读验证；在线浏览馆 `models.html` 已撤下（2026-11-02，用户决定）。是否替换 `journal.html` 中的书架，待第四阶段再定。
+- **状态：** 米白模型已制作并完成 GLB 结构重读验证；在线浏览馆 `models.html` 已撤下（2026-11-02，用户决定）。没有采用：2026-11-03 `journal.html` 改用入口页那个米白书架（`wooden-shelf.glb`）。
 
 ### 其他物件的交互预览入口
 

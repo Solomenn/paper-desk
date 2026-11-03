@@ -28,7 +28,7 @@
 | `index.html` | 项目板（Silk Wall）：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；底部工具栏 |
 | `focus.html` | 雪国线计时器：上车前卡片 + 行驶中车厢 |
 | `album.html` | 卡册：项目、便签、车票、小票。车票卡册有时间轴视图 |
-| `journal.html` | 手账书架 |
+| `journal.html` | 手账书架（3D 米白书架；卡册待做成实体放进去，暂时空着） |
 | `receipt.html` | 今日小票（票据编辑与打印） |
 | `radio.html` | 白噪音收音机：Braun T3 实体模型（`assets/radio/t3.glb`，Sketchfab「Radio T3」by ludwigangulodi，CC BY 4.0，页面右下角署名），转调谐盘换台（雪声、雨声、白噪音、棕噪音、炉火、列车）。由 `radio-shell.js` 以全屏浮层从桌面和雪国线打开 |
 | `room.css` / `room.js` | 所有页面共用的房间、字体；没有 WebGL 时的平面墙 |
@@ -144,7 +144,7 @@
 | 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | 2026-11-03 已换：首页项目板用 CSS 画成 Silk Wall（官方 350 Crisp 色、无框、玻璃边、离墙影子、Slim Pen Tray）；入口页用官方配置器导出的模型 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
 | 便签 | LINTEX Textile Noticeboard | CSS 画的 | 按用户截图确认的米灰织物宽幅矩形、四边包布、无框结构替换 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
-| 手账 | Bookshelf Short LOWPOLY | 已下载并改成暖米白 | 在线浏览馆可旋转查看；尚未替换 `journal.html` |
+| 手账 | 入口页的米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`） | 2026-11-03 已换：`journal.html` 用 3D 书架（`wall3d.js`），网页书柜隐藏 | 书架先空着；下一步把卡册做成实体放进去 |
 - **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
 - **米白改色**：通过 UV 区域只修改书架结构的 Base Color，目标色 `#E9E2D6`；书脊、封面、书籍颜色不漂白。保留原始 Normal 与 Metallic-Roughness 信息，Normal / Metallic-Roughness 缩至 2K，Base Color 保持 4K。优化 GLB `bookshelf_short_offwhite.glb` 约 24.7 MB。Base Color 保持 4K，Normal / Metallic-Roughness 缩至 2K；Normal scale 调低至 0.35，以减弱原始深色木纹凹凸。
 - **在线模型浏览馆**：GPT 做过 `models.html`（四个物件的在线预览），2026-11-02 用户决定撤下，连同工具栏立方体入口一起删了。
@@ -152,7 +152,7 @@
   - 小票机：HQ3DMOD POS Receipt Printer，Sketchfab <https://sketchfab.com/3d-models/pos-receipt-printer-4daf4e22d9d34b949d0ae7cbf3902983>，CGTrader <https://www.cgtrader.com/3d-models/industrial/other/pos-receipt-printer>。US$19，29,078 polygons、4K PBR、22 parts；尚未购买或下载。
   - 项目板：LINTEX Silk Wall 官方 3D 配置器 <https://lintex.com/products/silk-wall/>；24 色，配置器可导出 OBJ / GLB / STL。
   - 便签板：LINTEX Textile Noticeboard 官方 3D 配置器 <https://lintex.com/products/textile-noticeboard/>；可切换尺寸与面料，配置器可导出 OBJ / GLB / STL。
-- **状态**：书架米白 GLB 只在本地预览包里，没进仓库；是否替换 `journal.html` 待第四阶段再定。
+- **状态**：EFX 的 Bookshelf Short 没有采用；2026-11-03 手账页改用入口页那个米白书架（`wooden-shelf.glb`），页面右下角署名。
 | 小票 | HQ3DMOD POS Receipt Printer | 同作者 Sketchfab 有交互预览；尚未购买下载 | 先验收模型外观，再决定是否购买并整合进正式页面 |
 
 - **已确认的产品参考**：项目板采用 LINTEX Silk Wall 的浅蓝哑光玻璃方向（24 色、4 mm 玻璃、离墙 12 mm，官方配置器可导出 GLB）；便签板采用 **LINTEX Textile Noticeboard** 的米灰织物宽幅矩形方向（四边包布、无外露边框、隐藏安装，官方配置器可导出 GLB）。Forbo Bulletin Board 15 色仅保留为旧 Air Noticeboard 色卡研究参考，不是当前便签板型号；Silk Glass 24 色与 Forbo 色卡分开管理。详细记录见 `README.md`。模型来源不限（下载授权可用的，或自己建），每个都记进 `NOTICE.md`：来源链接、作者、授权。CC BY 要在页面上署名，像 T3 那样。
