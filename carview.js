@@ -60,6 +60,21 @@
   const X0 = 4916 - 528;                                              // at rest the window shows the photograph exactly as taken
   let A = null, ready = false;
   Promise.all(["skyp.webp", "land.webp", "snow.webp"].map(n => img(`assets/view/${n}?v=2`))).then(([sky, land, snow]) => { A = { sky, land, snow }; ready = !!(sky && land && snow); });
+  /* 黑夜（用户 2026-11-03："夜景素材直接用车票黑夜背景就行"）：窗外换成上车前那页黑夜的背景照片（assets/tyl/snow-background.webp：
+     雪夜里的山、湖、松林；和那页一样暂借自听雨来信，以后要换成自己的）。只有一张照片，分不出远近，所以整张一起慢慢往后滑；
+     照片不是首尾相接的全景，接缝处用左右镜像的一份接上（照片、镜像、照片……），看不出断口。飘雪照旧。 */
+  let NIGHT = null; img("assets/tyl/snow-background.webp").then(i => { NIGHT = i; });
+  const isNight = () => document.documentElement.dataset.theme === "night";
+  let nightPos = 0;
+  function nightView(dt) {
+    const s = LH / NIGHT.height, w = NIGHT.width * s;                  // 按窗的高度铺满
+    nightPos += dt * vel * LW * 0.05;                                   // 全速时每秒滑过窗宽的 5%
+    const p = ((nightPos % (2 * w)) + 2 * w) % (2 * w);
+    for (let x = -p, k = 0; x < LW; x += w, k++) {
+      if (k % 2 === 0) g.drawImage(NIGHT, x, 0, w, LH);
+      else { g.save(); g.translate(x + w, 0); g.scale(-1, 1); g.drawImage(NIGHT, 0, 0, w, LH); g.restore(); }
+    }
+  }
   const SP = 505 / 270;                                               // the old speeds were in canvas px of a 270-row window
   const VH = 9 * SP * 2;                                              // the hills, band px per second
   const vSnow = r => (9 + (r / 2 + 2) * 3.2) * SP * 2;                // the snow, row r below the horizon
@@ -82,8 +97,10 @@
     const dt = Math.min(.1, (now - last) / 1000); last = now;
     if (!car.classList.contains("on")) return;
     if (!sized) { layout(); sized = true; }
-    if (!ready) return;
+    const night = isNight() && NIGHT;
+    if (!ready && !night) return;
     vel += (Math.min(1, (+window.trainSpeed || 0) * 6) - vel) * Math.min(1, dt * 1.2);
+    if (night) nightView(dt); else {
     // the sky exactly as photographed, sun and all: it stays (it is infinitely far)
     g.drawImage(A.sky, 0, TOP, VW, HZ + 12 - TOP, 0, 0, VW * K, Y(HZ + 12));
     // the hills and the forest line: slow
@@ -92,6 +109,7 @@
     for (let r = 0; r < A.snow.height; r += STEP) {
       const p = rowPos[r / STEP] += dt * vel * vSnow(r);
       span(A.snow, r, STEP, p, Y(HZ - 4 + r), STEP * K + .7);
+    }
     }
     // a few flakes glinting in the air
     const fs = Math.max(1, Math.round(LH / 300));

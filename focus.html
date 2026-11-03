@@ -181,6 +181,7 @@
   #car #hudName { font: 500 13.5px/1 var(--serif); letter-spacing: .04em; color: var(--ink2); border-bottom: 0; margin-right: 4px; }
   #car #hudName:empty::before { color: var(--mute2); font-weight: 400; }
   #car #off, #car #sndT, #car #radioT { top: 2.2vh; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--mute2) !important; opacity: .0; transition: opacity .3s, color .2s; }
+  #car #radioT { position: absolute; left: 130px; border: 0; cursor: pointer; }   /* 收音机：排在声音按钮右边（原来没定位，叠在返回箭头上） */
   #car:hover #off, #car:hover #sndT, #car:hover #radioT { opacity: .92; }
   #car #off:hover, #car #sndT:hover, #car #radioT:hover { color: var(--ink2) !important; opacity: 1; }
   /* the line: a long glass slip along the bottom, a hairline track, small dots, names in quiet type */
@@ -228,7 +229,6 @@
     background: #1d221ecc; color: #e6e2c8; box-shadow: 0 0 0 1px #d8d2a838, 0 6px 18px #0006; backdrop-filter: blur(6px); }
   #dayBtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
   #dayBtn .moon, html[data-theme="day"] #dayBtn .sun { display: none; } html[data-theme="day"] #dayBtn .moon { display: block; }
-  body:has(#car.on) #dayBtn { display: none; }   /* 坐车时不显示：车厢和窗外只有白天那一套，切了也不变 */
   html[data-theme="day"] #dayBtn { background: #eef2f6dd; color: #2f3a48; box-shadow: 0 0 0 1px #2f3a4822, 0 6px 18px #0002; }
 </style>
 <script src="preload.js" defer></script>
@@ -774,6 +774,6 @@
 })();
 </script>
 <!-- the carriage: the reference window with the footage playing through its glass -->
-<script src="carview.js?v=15"></script>
+<script src="carview.js?v=16"></script>
 </body>
 </html>
