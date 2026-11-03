@@ -99,7 +99,8 @@ async function start() {
   const sphere = new THREE.SphereGeometry(1, 24, 16);
   const KIND = {
     card: {
-      face: el => el.classList.contains("mini") ? el : $(".face.f > .sheetc", el) || el, flatten: () => [],
+      // 翻到背面的卡（.flipc.back）画背面那张纸
+      face: el => el.classList.contains("mini") ? el : $(el.classList.contains("back") ? ".face.b > .sheetc" : ".face.f > .sheetc", el) || el, flatten: () => [],
       geo: cardGeo, thick: CARD_T, sideColor: () => "#f6f4ee", z0: () => SILK_FRONT(), hideEl: el => el,
       // 只有输入框、多行输入框里在打字才算编辑（点勾选框时按钮也会拿到焦点，那不算）
       editing: el => { const a = document.activeElement; return !!a && el.contains(a) && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable); },
