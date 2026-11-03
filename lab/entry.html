@@ -84,7 +84,7 @@ const Lpos = new Float64Array(N), tickOf = new Int32Array(N); const ticks = [], 
    它们和别的刻度一样能指、能点、能拖，属于最近的那一格（左边算第一格，右边算最后一格）。
    EXT 怎么定：当时墙上的阳光只照到 x≈260 以左（1440 宽的窗口实测），点到最右那根时，切换条停在
    最后一格再往右 (4 + EXT) × STEP = 17 × 34 = 578 px，木柜中心在 x≈140，左右边缘约 55–230，整个在阳光里，也没出画面。
-   后来窗换成百叶窗（见 3D 部分），亮区扩到画面左边约 3/4，木柜停在中间也在光里；拖到最右照样整个在光里。 */
+   后来窗换成百叶窗（见 3D 部分），亮区是画面左边 1/3（到 x ≈ 480）；木柜拖到最右时中心在 x ≈ 140，照样整个在光里。 */
 const EXT = 13;
 const PER_PAGE = 9;                                                       // 每页一段 9 根小刻度，页与页之间一根长分隔；刻度区宽度同参考（用户 2026-11-02：别简化，要连续的咔声）
 function layout() {
@@ -535,16 +535,16 @@ const AZ = GOBO.az, EL = GOBO.el, W = GOBO.W;
    表面每往前凸 10 cm，条纹大约错开 3.7 cm：火车车身、驾驶室、锅炉的起伏都会让条纹弯折、断开。
    窗上的点（u 沿百叶片方向、v 是高度）在世界里是 (-W + u·sin35°, v, u·cos35°)，顺着阳光落到后墙：
    X ≈ -3 + 1.74·u，Y ≈ v - 0.89·u。所以百叶片（v 固定）→ 后墙上往右下斜的线（斜率约 -0.51，约 27°）。
-   · 窗宽 u 从 U0 到 U1：投到 X ≈ -1.45 到 1.6，两边都在画面外，亮区左右不露出窗的竖边；
-   · 窗顶 V1：投到后墙是一条斜边，从画面左上（Y ≈ 2.7，画面外）斜到右边中下（Y ≈ 1.15），亮区的轮廓就是这条斜边；
-     斜边以下都是亮区，约占画面的 2/3 以上；窗底 V0 投到画面下面；
+   · 亮区只占画面左边 1/3（用户 2026-11-02）：画面宽对应墙上 X 从 -1.27 到 1.27，左 1/3 到 X ≈ -0.42 为止；
+   · 窗宽 u 从 U0 到 U1：投到 X ≈ -1.45（画面左边外）到 -0.42（左 1/3 处），亮区右边是窗的竖边；
+   · 窗顶 V1：投到后墙是一条斜边，从亮区左上（Y ≈ 2.43，画面外）斜到右上（Y ≈ 1.9），只切掉亮区右上角一小块；窗底 V0 投到画面下面；
    · 百叶：横片间距 PITCH_B，每片挡 SLAT，亮条比暗条宽；画面里约 10 道条纹。
      不能再细：光从窗走到后墙约 4 m，墙上影子边缘会糊开；间距 9 cm 时条纹糊得看不见（实测），15 cm 看得清；
    · 一根竖拉绳（参考图里那根细线）：u = CORD，宽 CORD_W（6 mm），投成一条细竖线，落在 X ≈ -0.93。
-   例：窗上 u = 2.0、v = 3.0 的点 → 后墙 X ≈ 0.49、Y ≈ 1.22（画面中间偏右）。 */
+   例：窗上 u = 1.3、v = 2.0 的点 → 后墙 X ≈ -0.73、Y ≈ 0.84（画面左边、中间偏下）。 */
 const WIN_TURN = 35 * Math.PI / 180;
 {
-  const U0 = 0.89, U1 = 2.64, V0 = 0, V1 = 3.5, PITCH_B = 0.15, SLAT = 0.055, CORD = 1.19, CORD_W = 0.006;
+  const U0 = 0.89, U1 = 1.48, V0 = 0, V1 = 3.22, PITCH_B = 0.15, SLAT = 0.055, CORD = 1.19, CORD_W = 0.006;
   const cols = [[U0, CORD - CORD_W / 2], [CORD + CORD_W / 2, U1]];             // 拉绳把每条缝分成左右两段
   GOBO.holes = []; GOBO.islands = [];
   for (let v = V0; v + PITCH_B <= V1 + 1e-9; v += PITCH_B) {
@@ -628,15 +628,6 @@ const objects = new THREE.Group(); scene.add(objects);
 const slots = PAGES_3D.map(() => { const g = new THREE.Group(); objects.add(g); return g; });
 const loader = new GLTFLoader();
 const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光页）
-/* 两块板加厚（用户 2026-11-02：边缘要有体积，现在像纸片；影子的角度也很怪）。
-   导出的模型宽 2 m，玻璃板只有 4 mm 厚、布板 16 mm；缩到画面里 290 px 宽，厚度只剩 0.6 px 和 2.3 px：
-   转过去也看不见侧面，像纸片；板子其实转了 15°（往右到 35°），一边离墙远、一边离墙近，墙上的影子是斜的平行四边形，
-   可画面里看不出板子在转，影子就像没有来由。
-   厚度改成宽度的 12%（BOARD_DEPTH = 0.24 m，像绷在深框上的画布）：只在厚度方向（z）拉长，宽和高不变。
-   8% 时实测侧面只露 5–8 px，还是薄；12%：停在中间转 15° → 侧面约 9 px；往右转到 35° → 约 21 px；
-   墙上的影子往右下错开约 45 px（和条纹同一个方向）。 */
-const BOARD_DEPTH = 0.24;
-const thick = (g, t) => { g.scale(1, 1, BOARD_DEPTH / t); return g; };   // t：模型原来的厚度（m）
 const MODELS = {
   async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
     const src = (await loader.loadAsync("../assets/radio/t3.glb")).scene; src.updateMatrixWorld(true);
@@ -655,7 +646,7 @@ const MODELS = {
        原来只用补出来的法线（35° 以内的棱抹平），边上的倒角被抹平时把板面法线也拉歪了，平板被照得像曲面：
        转到 35° 时（太阳水平方向和墙约成 33°，板面已经背光）左边还亮、往右渐暗，条纹一路淡掉。
        改成平面法线后：板面朝着太阳时条纹清楚，和墙上一样；转过 33° 背光时整块均匀变暗，像真的板转过身。米色布板同样处理。 */
-    s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = thick(normals(o.geometry), 0.004); } }); return s;
+    s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
   async loco() {                                                          // 火车头：yanix「Locomotive」
@@ -667,7 +658,7 @@ const MODELS = {
   async textile() {
     const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
     const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 平面法线，原因见上面玻璃板   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
-    s.traverse(o => { if (o.isMesh) { o.geometry = thick(normals(o.geometry), 0.016); o.material = fabric; } }); return s;
+    s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
   },
 };
 let PXM = 1;                                                              // 每米多少 CSS 像素（随窗口宽度变）
