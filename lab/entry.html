@@ -636,7 +636,11 @@ const MODELS = {
   },
   async silk() {                                                          // 浅蓝哑光玻璃（材质同窗光页）
     const s = (await loader.loadAsync("../assets/objects/silk-wall-2000x1000.glb")).scene;
-    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.75, ior: 1.5 });
+    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.75, ior: 1.5, flatShading: true });
+    /* flatShading：每个三角面用自己的平面法线（用户 2026-11-02：板上的条纹往右一点点淡掉，"你见过阴影是这样子的吗"）。
+       原来只用补出来的法线（35° 以内的棱抹平），边上的倒角被抹平时把板面法线也拉歪了，平板被照得像曲面：
+       转到 35° 时（太阳水平方向和墙约成 33°，板面已经背光）左边还亮、往右渐暗，条纹一路淡掉。
+       改成平面法线后：板面朝着太阳时条纹清楚，和墙上一样；转过 33° 背光时整块均匀变暗，像真的板转过身。米色布板同样处理。 */
     s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
@@ -648,7 +652,7 @@ const MODELS = {
   async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
   async textile() {
     const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
-    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95 });   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
+    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 平面法线，原因见上面玻璃板   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
     s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
   },
 };
