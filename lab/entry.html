@@ -16,6 +16,7 @@
   .it .when { position: absolute; top: 214px; left: 0; right: 0; color: #8a8a8a; font-weight: 500; font-size: 20px; line-height: 32px; }
   .it .art { position: absolute; left: 0; width: 240px; height: 240px; top: 285px; cursor: pointer; }
   #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #dust { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }   /* 浮尘：叠在 3D 上面、切换条下面 */
   /* 模型署名（CC BY 4.0 要求在页面上署名），样式同 radio.html */
   .credit { position: fixed; z-index: 8; right: 18px; bottom: 18px; font-size: 10px; color: rgba(55,59,56,.42); }
   .credit a { color: inherit; text-decoration: none; } .credit a:hover { text-decoration: underline; }
@@ -41,6 +42,7 @@
   <a href="https://sketchfab.com/3d-models/radio-t3-aad3d54384904cfc9b3df8791d254c5c" target="_blank" rel="noreferrer">T3</a> · ludwigangulodi ·
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
 <canvas id="gl"></canvas>
+<canvas id="dust"></canvas>
 <div id="strip"></div>
 <div id="zone" tabindex="0" role="slider" aria-label="页面"></div>
 <script src="../preload.js" defer></script>
@@ -526,39 +528,62 @@ const deg = Math.PI / 180;
 const GOBO = await (await fetch("../assets/objects/lintex-light-gobo.json")).json();
 while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));          // 等切换条脚本把页面列表准备好
 const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D;
-const AZ = GOBO.az, EL = GOBO.el, W = GOBO.W;
-/* 窗的形状换成百叶窗（用户 2026-11-02，参考图：百叶的光斜着铺满大半面墙，物件挡住光、投出影子，更有体积感）。
-   太阳方向、强度、天光、反射光都不动（还是 lintex-light-gobo.json 里的 az 35°、el 32° 和下面那组常数），只换窗。
-   窗所在的墙绕竖轴转 WIN_TURN = 35°（用户 2026-11-02：火车上的条纹"就这么直直下来"，阳光像假的）：
-   窗开在正侧墙（x = -W）上时，水平的百叶片正好和镜头视线（z 方向）平行，每片挡出的影子是一张包含视线方向的"薄片"，
-   正着看过去不管表面离墙多远、怎么起伏，条纹都是一条直线，像贴在画面上。墙转 35° 后百叶片不再和视线平行，
-   表面每往前凸 10 cm，条纹大约错开 3.7 cm：火车车身、驾驶室、锅炉的起伏都会让条纹弯折、断开。
-   窗上的点（u 沿百叶片方向、v 是高度）在世界里是 (-W + u·sin35°, v, u·cos35°)，顺着阳光落到后墙：
-   X ≈ -3 + 1.74·u，Y ≈ v - 0.89·u。所以百叶片（v 固定）→ 后墙上往右下斜的线（斜率约 -0.51，约 27°）。
-   · 亮区只占画面左边 1/3（用户 2026-11-02）：画面宽对应墙上 X 从 -1.27 到 1.27，左 1/3 到 X ≈ -0.42 为止；
-   · 窗宽 u 从 U0 到 U1：投到 X ≈ -1.45（画面左边外）到 -0.42（左 1/3 处），亮区右边是窗的竖边；
-   · 窗顶 V1：投到后墙是一条斜边，从亮区左上（Y ≈ 2.43，画面外）斜到右上（Y ≈ 1.9），只切掉亮区右上角一小块；窗底 V0 投到画面下面；
-   · 百叶：横片间距 PITCH_B，每片挡 SLAT，亮条比暗条宽；画面里约 10 道条纹。
-     不能再细：光从窗走到后墙约 4 m，墙上影子边缘会糊开；间距 9 cm 时条纹糊得看不见（实测），15 cm 看得清；
-   · 一根竖拉绳（参考图里那根细线）：u = CORD，宽 CORD_W（6 mm），投成一条细竖线，落在 X ≈ -0.93。
-   例：窗上 u = 1.3、v = 2.0 的点 → 后墙 X ≈ -0.73、Y ≈ 0.84（画面左边、中间偏下）。 */
-const WIN_TURN = 35 * Math.PI / 180;
-{
-  const U0 = 0.89, U1 = 1.48, V0 = 0, V1 = 3.22, PITCH_B = 0.15, SLAT = 0.055, CORD = 1.19, CORD_W = 0.006;
+const W = GOBO.W;
+/* ── 阳光参数（用户 2026-11-02）：全部集中在 L 里，地址栏可以逐项覆盖（如 ?area=0.4&sunK=4000），调节面板也改这一组 ──
+   area   亮区占画面宽的比例（0.5 = 左边一半）       topY  亮区右上角那条斜边落在墙上的高度（m；画面上沿约 2.28）
+   az/el  太阳方位角、仰角（度）                       turn  窗所在的墙绕竖轴转多少度（0 = 正侧墙）
+   pitch/slat  百叶片间距、每片挡光的高度（m）         ang   软阴影：太阳方向散开的半径（度），只管影子边缘软硬
+   sun/sky/bounce  阳光、天光、反射光的强度             sunK/skyK  阳光、天光的色温（K）；0 = 原来的颜色（阳光纯白、天光窗光页的冷调）
+   glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
+   默认值的来由见下面"阳光像真的"那段。 */
+const LIGHT_DEFAULT = { area: 0.5, topY: 1.9, az: 35, el: 32, turn: 35, pitch: 0.15, slat: 0.055, ang: 0.12,
+  sun: 10, sky: 1.6, bounce: 2.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };
+const L = { ...LIGHT_DEFAULT };
+{ const q = new URLSearchParams(location.search); for (const k in L) if (q.get(k) !== null && q.get(k) !== "") L[k] = +q.get(k); }
+window.__light = L;
+/* 阳光像真的（用户 2026-11-02 给了三张参考图：百叶窗照片、树影油画、胶片；逐项量了亮部/暗部的亮度 L*、色温 b*、饱和度 C*）：
+   1. 反差：参考图亮/暗光量比 12–67 倍，我们只有 1.5 倍（暗部 L* 81，天光和反射光补得太多）。
+      → 阳光 8.97 → 10，天光 2.26 → 1.6，反射光 4.2 → 2.2：反差加大，但入口页要清爽，不压成暗场（试过天光 0.7 太暗）。
+   2、3. 冷暖、饱和度：试过阳光 4300 K 暖白 + Neutral 色调映射，用户 2026-11-02 否了（"不要改我的色调！我不要这种黄昏"）：
+      颜色保持原样——阳光纯白、天光窗光页的冷调、ACES 色调映射。sunK / skyK 留着，默认 0（原来的颜色）。
+   4. 边缘软硬已经接近（照片里过渡约占条纹周期 22%），不动。
+   5. 空气感：最亮的地方往外晕一圈光（高光溢出，glow，很淡）；光里飘一点浮尘（dust），只在亮区里看得见；系统要求减少动态效果时不显示。 */
+const kelvin = K => {                                                     // 色温 → 颜色（Tanner Helland 的近似公式，输出 sRGB）
+  const t = K / 100; let r, g, b;
+  r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+  g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+  b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
+  const c = v => Math.max(0, Math.min(255, v)) / 255;
+  return new THREE.Color().setRGB(c(r), c(g), c(b), THREE.SRGBColorSpace);
+};
+/* 窗：百叶窗，开在左边、绕竖轴转了 turn 度的墙上（turn = 0 时百叶片和视线平行，条纹在物件上永远是直线，像贴上去的）。
+   窗上的点（u 沿百叶片方向、v 是高度）在世界里是 (-W + u·sin(turn), v, u·cos(turn))，顺着阳光落到后墙：
+   X = -W + KX·u，Y = v - KY·u（KX、KY 由 turn、az、el 算出；默认值下 X ≈ -3 + 1.74·u，Y ≈ v - 0.89·u）。
+   百叶片（v 固定）→ 后墙上往右下斜的线；窗的竖边（u 固定）→ 后墙上的竖线。所以按面积反推窗：
+   · 窗左边 U0：投到画面左边外（X = -VIEW_W/2 - 0.2）；窗右边 U1：投到 X = -VIEW_W/2 + area·VIEW_W（亮区右边）；
+   · 窗顶 V1：亮区右上角那点落在 Y = topY，斜边往左上走出画面；窗底 0：投到画面下面；
+   · 一根竖拉绳（参考图里那根细线）：放在亮区宽度的 1/3 处，宽 6 mm。
+   例：area 0.5 → 亮区到画面正中（X = 0），U1 ≈ 1.72，V1 ≈ 3.43。 */
+const WINDOW = {};
+function buildWindow() {
+  const ce = Math.cos(L.el * deg), se = Math.sin(L.el * deg), ca = Math.cos(L.az * deg), sa = Math.sin(L.az * deg), tr = L.turn * deg;
+  const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa);
+  const X0 = -VIEW_W / 2 - 0.2, X1 = -VIEW_W / 2 + L.area * VIEW_W;
+  const U0 = (X0 + W) / KX, U1 = Math.max(U0 + 0.05, (X1 + W) / KX), V1 = L.topY + KY * U1;
+  const CORD = U0 + (U1 - U0) / 3, CORD_W = 0.006;
   const cols = [[U0, CORD - CORD_W / 2], [CORD + CORD_W / 2, U1]];             // 拉绳把每条缝分成左右两段
   GOBO.holes = []; GOBO.islands = [];
-  for (let v = V0; v + PITCH_B <= V1 + 1e-9; v += PITCH_B) {
-    const a = v + SLAT, b = v + PITCH_B;                                    // 一片百叶挡住 v..a，a..b 是透光的缝
+  for (let v = 0; v + L.pitch <= V1 + 1e-9; v += L.pitch) {
+    const a = v + L.slat, b = v + L.pitch;                                  // 一片百叶挡住 v..a，a..b 是透光的缝
     for (const [ua, ub] of cols) GOBO.holes.push([[ua, a], [ub, a], [ub, b], [ua, b]]);
   }
+  Object.assign(WINDOW, { U0, U1, V1, KX, KY });
 }
-// 以下常数与 lab/window-light.html 默认值相同（冷调）
-const SUN = 8.97, SKY = 2.26, ANG = 0.12, NDIR = 48, BOUNCE = 4.2, BSIG = 0.5, WALL = "#f0f0ee";
+const NDIR = 48, BSIG = 0.5, WALL = "#f0f0ee";
 /* ANG：墙上软阴影用的 48 个太阳方向散开的半径（度），只管影子边缘软硬，不影响亮度。窗光页原来是 0.5。
    换成百叶窗后改成 0.12（用户 2026-11-02：墙上的条纹不像光，很奇怪）：0.5° 在 4 m 外糊开约 7 cm，比 4.4 cm 宽的暗条还宽，
    暗条一直漏进阳光，墙上暗条/亮条只有 230/245，物件身上（每帧只用一个太阳方向，边缘锐利）却是 165/235，同一束光两种样子。
    0.12° 糊开约 1.7 cm：墙上条纹和物件身上一样清楚，暗条真正暗下去。 */
-const T = { sun: 0xffffff, sky: 0xe8eff3, ground: 0xdfe2e3 }, tint = new THREE.Color(0.95, 0.99, 1.03);
 const YC = 1.5 - 3 * 2.536 / 1140, VIEW_W = 2.536;                          // 画面宽永远是 2.536 m，和窗光页一样
 const OFF_WALL = 0.012;
 let wallReady = false;                                                    // 墙的光照算好之前不画
@@ -573,18 +598,18 @@ const scene = new THREE.Scene();
 
 /* 反射光贴图（同窗光页） */
 const WX0 = -2.2, WX1 = 2.2, WY0 = -0.2, WY1 = 3.6, RES = 200;
-function bounceTexture() {
+function bounceTexture() {                                               // 窗洞顺着阳光投到后墙的位置，模糊后当反射光（阳光的颜色）
   const cw = Math.round((WX1 - WX0) * RES / 4), ch = Math.round((WY1 - WY0) * RES / 4);
   const c = document.createElement("canvas"); c.width = cw; c.height = ch; const g = c.getContext("2d");
   g.fillStyle = "#000"; g.fillRect(0, 0, cw, ch);
-  const ce = Math.cos(EL * deg), se = Math.sin(EL * deg), ca = Math.cos(AZ * deg), sa = Math.sin(AZ * deg);
+  const ce = Math.cos(L.el * deg), se = Math.sin(L.el * deg), ca = Math.cos(L.az * deg), sa = Math.sin(L.az * deg), tr = L.turn * deg;
   const toPx = (x, y) => [(x - WX0) / (WX1 - WX0) * cw, (1 - (y - WY0) / (WY1 - WY0)) * ch];
-  g.fillStyle = "#fff";
+  g.fillStyle = L.sunK ? "#" + kelvin(L.sunK).getHexString(THREE.SRGBColorSpace) : "#fff";
   for (const h of [...GOBO.holes, ...(GOBO.islands || []).map(i => ({ island: i }))]) {
     if (h.island) g.fillStyle = "#000";
     g.beginPath();
-    (h.island || h).forEach(([u, y], i) => {                              // 窗上的点 (u, y) → 世界 (px, y, pz)（窗墙转了 WIN_TURN）→ 顺着阳光落到后墙
-      const px = -W + u * Math.sin(WIN_TURN), pz = u * Math.cos(WIN_TURN), t = pz / (ce * sa), X = px + t * ce * ca, Y = y - t * se;
+    (h.island || h).forEach(([u, y], i) => {                              // 窗上的点 (u, y) → 世界 (px, y, pz)（窗墙转了 turn）→ 顺着阳光落到后墙
+      const px = -W + u * Math.sin(tr), pz = u * Math.cos(tr), t = pz / (ce * sa), X = px + t * ce * ca, Y = y - t * se;
       const [qx, qy] = toPx(X, Y); i ? g.lineTo(qx, qy) : g.moveTo(qx, qy); });
     g.closePath(); g.fill();
   }
@@ -598,25 +623,35 @@ function stucco() {
   for (let i = 0; i < a.length; i++) { const v = Math.max(0, Math.min(255, (a[i] - .5) * 900 + 128)); img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255; }
   g.putImageData(img, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 8); return t;
 }
-const bounce = bounceTexture();
-const wallMat = new THREE.MeshStandardMaterial({ color: WALL, roughness: 0.95, bumpMap: stucco(), bumpScale: 0.35, lightMap: bounce, lightMapIntensity: BOUNCE });
+buildWindow();
+const wallMat = new THREE.MeshStandardMaterial({ color: WALL, roughness: 0.95, bumpMap: stucco(), bumpScale: 0.35, lightMap: bounceTexture(), lightMapIntensity: L.bounce });
 const wall = new THREE.Mesh(new THREE.PlaneGeometry(WX1 - WX0, WY1 - WY0), wallMat);
 wall.position.set((WX0 + WX1) / 2, (WY0 + WY1) / 2, 0); wall.receiveShadow = true; scene.add(wall);
 
-/* 左墙的窗：只投影（同窗光页，不缩放、不挪动） */
+/* 左墙的窗：只投影（不画出来）；改了阳光参数时整个重建 */
 const gobo = new THREE.Group(); scene.add(gobo);
-{
+const goboMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+function buildGobo() {
+  gobo.children.slice().forEach(m => { m.geometry.dispose(); gobo.remove(m); });
   const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
   for (const h of GOBO.holes) { const q = new THREE.Path(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); sh.holes.push(q); }
-  const mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
-  const add = shape => { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false }), mat); m.rotation.y = WIN_TURN - Math.PI / 2; m.position.set(-W, 0, 0);   /* 形状的 x 轴 → 百叶片方向 (sin35°, 0, cos35°) */ m.castShadow = true; gobo.add(m); };
-  add(sh);
-  for (const h of GOBO.islands || []) { const q = new THREE.Shape(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); add(q); }
+  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.03, bevelEnabled: false }), goboMat);
+  m.rotation.y = L.turn * deg - Math.PI / 2; m.position.set(-W, 0, 0);    // 形状的 x 轴 → 百叶片方向 (sin turn, 0, cos turn)
+  m.castShadow = true; gobo.add(m);
 }
+buildGobo();
 
 /* 光（同窗光页） */
-const hemi = new THREE.HemisphereLight(new THREE.Color(T.sky).multiply(tint), new THREE.Color(T.ground).multiply(tint), SKY); scene.add(hemi);
-const sun = new THREE.DirectionalLight(T.sun, SUN);
+const hemi = new THREE.HemisphereLight(0xffffff, 0xffffff, L.sky); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, L.sun);
+const tint = new THREE.Color(0.95, 0.99, 1.03);                          // 窗光页的冷调（原来的颜色）
+function lightColors() {                                                  // sunK / skyK 为 0 时用原来的颜色：阳光纯白，天光 #e8eff3、地面 #dfe2e3，都乘冷调
+  sun.color.copy(L.sunK ? kelvin(L.sunK) : new THREE.Color(0xffffff)); sun.intensity = L.sun;
+  hemi.color.copy(L.skyK ? kelvin(L.skyK) : new THREE.Color(0xe8eff3).multiply(tint));
+  hemi.groundColor.copy(L.skyK ? kelvin(L.skyK) : new THREE.Color(0xdfe2e3).multiply(tint)); hemi.intensity = L.sky;
+  wallMat.lightMapIntensity = L.bounce;
+}
+lightColors();
 sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
 Object.assign(sun.shadow.camera, { left: -2.6, right: 2.6, top: 2.6, bottom: -2.6, near: 1, far: 40 });
 sun.shadow.bias = -0.0001; sun.shadow.normalBias = 0.0015;
@@ -710,17 +745,50 @@ PAGES_3D.forEach((p, i) => {
 const quad = mat => { const q = new THREE.Scene(); q.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat)); return q; };
 const cam2 = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const VS = "varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }";
-let rtPass, rtAcc, rtSun, rtVis;
+let rtPass, rtAcc, rtSun, rtVis, rtGlowA, rtGlowB, rtMask;
 const addMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, w: { value: 1 } }, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
   fragmentShader: "uniform sampler2D t; uniform float w; varying vec2 v; void main(){ gl_FragColor = vec4(texture2D(t, v).rgb * w, 1.); }" });
-const outMat = new THREE.ShaderMaterial({ uniforms: { acc: { value: null }, sun: { value: null }, vis: { value: null } }, depthTest: false, depthWrite: false, toneMapped: true, vertexShader: VS,
-  fragmentShader: `uniform sampler2D acc, sun, vis; varying vec2 v; void main(){
+const outMat = new THREE.ShaderMaterial({ uniforms: { acc: { value: null }, sun: { value: null }, vis: { value: null }, glow: { value: null }, glowAmt: { value: 0 } }, depthTest: false, depthWrite: false, toneMapped: true, vertexShader: VS,
+  fragmentShader: `uniform sampler2D acc, sun, vis, glow; uniform float glowAmt; varying vec2 v; void main(){
     vec3 c = texture2D(acc, v).rgb - texture2D(sun, v).rgb * (1. - texture2D(vis, v).r);
+    c += texture2D(glow, v).rgb * glowAmt;                                   // 高光溢出：阳光层大范围模糊后叠回来，亮条边上也微微发亮
     gl_FragColor = vec4(max(c, vec3(0.)), 1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }` });
 const addScene = quad(addMat), outScene = quad(outMat);
+/* 高光溢出（第 5 点）：把"只有阳光"那层缩到 1/4 大小，横竖各模糊两遍（越来越宽），得到一圈柔和的光晕，合成墙时按 glow 叠回去。
+   只在墙算好时做一次，不占每帧的时间。 */
+const blurMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, dir: { value: new THREE.Vector2() } }, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
+  fragmentShader: `uniform sampler2D t; uniform vec2 dir; varying vec2 v; void main(){
+    float w[7]; w[0] = .1964; w[1] = .1748; w[2] = .1216; w[3] = .0660; w[4] = .0280; w[5] = .0093; w[6] = .0024;
+    vec3 c = texture2D(t, v).rgb * w[0];
+    for (int i = 1; i < 7; i++) { c += texture2D(t, v + dir * float(i)).rgb * w[i]; c += texture2D(t, v - dir * float(i)).rgb * w[i]; }
+    gl_FragColor = vec4(c, 1.); }` });
+const blurScene = quad(blurMat);
+function bakeGlow() {
+  const sz = renderer.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(1, sz.x >> 2), h = Math.max(1, sz.y >> 2);
+  [rtGlowA, rtGlowB].forEach(r => r && r.dispose());
+  rtGlowA = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType }); rtGlowB = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType });
+  let src = rtSun.texture;
+  for (const step of [2, 4]) {                                            // 两遍：先窄后宽，光晕边缘自然
+    blurMat.uniforms.t.value = src; blurMat.uniforms.dir.value.set(step / w, 0); renderer.setRenderTarget(rtGlowA); renderer.render(blurScene, cam2);
+    blurMat.uniforms.t.value = rtGlowA.texture; blurMat.uniforms.dir.value.set(0, step / h); renderer.setRenderTarget(rtGlowB); renderer.render(blurScene, cam2);
+    src = rtGlowB.texture;
+  }
+  outMat.uniforms.glow.value = rtGlowB.texture; outMat.uniforms.glowAmt.value = L.glow;
+}
+/* 浮尘（第 5 点）：亮区图缩到 1/8 读回来，浮尘只在亮的地方显示（亮条里看得见，暗条和没光的地方看不见）。 */
+const maskMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
+  fragmentShader: "uniform sampler2D t; varying vec2 v; void main(){ vec3 c = texture2D(t, v).rgb; gl_FragColor = vec4(vec3(clamp(dot(c, vec3(.3, .6, .1)) * .25, 0., 1.)), 1.); }" });
+const maskScene = quad(maskMat);
+const DUST = { w: 0, h: 0, px: null };
+function dustMask() {
+  DUST.w = Math.max(1, Math.round(innerWidth / 8)); DUST.h = Math.max(1, Math.round(innerHeight / 8));
+  if (rtMask) rtMask.dispose(); rtMask = new THREE.WebGLRenderTarget(DUST.w, DUST.h);
+  maskMat.uniforms.t.value = rtSun.texture; renderer.setRenderTarget(rtMask); renderer.render(maskScene, cam2);
+  DUST.px = new Uint8Array(DUST.w * DUST.h * 4); renderer.readRenderTargetPixels(rtMask, 0, 0, DUST.w, DUST.h, DUST.px); renderer.setRenderTarget(null);
+}
 const visMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 1 });
 function bakeWall() {                                                     // 只有墙、窗和光：物件不在场
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
@@ -733,16 +801,16 @@ function bakeWall() {                                                     // 只
   objects.visible = false; const tm = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
   for (const [rt, sunOnly] of [[rtAcc, false], [rtSun, true]]) {
     renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 1); renderer.clear();
-    hemi.visible = !sunOnly; wallMat.lightMapIntensity = sunOnly ? 0 : BOUNCE;
+    hemi.visible = !sunOnly; wallMat.lightMapIntensity = sunOnly ? 0 : L.bounce;
     for (let i = 0; i < NDIR; i++) {
-      const a = i * 2.39996, r = ANG * deg * Math.sqrt((i + 0.5) / NDIR);
-      sunAt(AZ * deg + Math.cos(a) * r, EL * deg + Math.sin(a) * r); sun.shadow.needsUpdate = true;
+      const a = i * 2.39996, r = L.ang * deg * Math.sqrt((i + 0.5) / NDIR);
+      sunAt(L.az * deg + Math.cos(a) * r, L.el * deg + Math.sin(a) * r); sun.shadow.needsUpdate = true;
       renderer.setRenderTarget(rtPass); renderer.render(scene, camera);
       addMat.uniforms.w.value = 1 / NDIR; renderer.autoClear = false; renderer.setRenderTarget(rt); renderer.render(addScene, cam2); renderer.autoClear = true;
     }
   }
-  hemi.visible = true; wallMat.lightMapIntensity = BOUNCE; renderer.toneMapping = tm; objects.visible = true;
-  sunAt(AZ * deg, EL * deg); renderer.setRenderTarget(null); wallReady = true;
+  hemi.visible = true; wallMat.lightMapIntensity = L.bounce; renderer.toneMapping = tm; objects.visible = true;
+  sunAt(L.az * deg, L.el * deg); bakeGlow(); renderer.setRenderTarget(null); wallReady = true; dustMask();
 }
 
 /* ── 每帧：① 物件投在墙上的影子（只有物件投影，窗不投）→ rtVis；② 墙 = 累积 − 阳光 ×（1 − 可见度）；③ 物件（窗影照在物件上） ── */
@@ -756,7 +824,7 @@ function render() {
     // 转角 = 跟着切换条的角度 + 鼠标拿在手里的倾斜（hold）；"XYZ"：先左右转，再绕画面的横轴上下转，竖线保持竖直
     const pv = g.userData.pivot, h = hold[i]; if (pv) pv.rotation.set(h.x, yawAt(dx) * turnOf(i) + h.y, 0, "XYZ");
   });
-  sunAt(AZ * deg, EL * deg); sun.shadow.needsUpdate = true;
+  sunAt(L.az * deg, L.el * deg); sun.shadow.needsUpdate = true;
   // ①
   gobo.visible = false; hemi.visible = false; scene.overrideMaterial = visMat;
   renderer.setRenderTarget(rtVis); renderer.setClearColor(0xffffff, 1); renderer.clear(); renderer.render(scene, camera);
@@ -814,6 +882,36 @@ function layout() {
 }
 let rz = 0; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(layout, 150); });
 layout();
+
+/* 浮尘（第 5 点，参考胶片那张）：60 粒很小的白色光点，慢慢往上、往右飘，偶尔闪一下；
+   每粒的亮度 × 它所在位置的亮区值（dustMask 读回来的那张图），所以只在亮条里看得见。
+   系统要求减少动态效果、或 L.dust = 0 时不画；页面切到后台时停。约 30 帧/秒，每帧只画 60 个点。 */
+{
+  const cv = document.getElementById("dust"), g = cv.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const motes = Array.from({ length: 60 }, () => ({ x: rnd(), y: rnd(), r: 0.5 + rnd() * 1.3, vx: 0.004 + rnd() * 0.01, vy: -(0.006 + rnd() * 0.012), ph: rnd() * 6.28, sp: 0.6 + rnd() * 1.4 }));
+  let last = 0;
+  const lit = (x, y) => { if (!DUST.px) return 0; const i = Math.min(DUST.w - 1, Math.max(0, Math.floor(x / 8))), j = Math.min(DUST.h - 1, Math.max(0, DUST.h - 1 - Math.floor(y / 8))); return DUST.px[(j * DUST.w + i) * 4] / 255; };
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (document.hidden || t - last < 33) return;
+    const dt = Math.min(0.1, (t - last) / 1000); last = t;
+    const w = innerWidth, h = innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    if (still || !L.dust) return;
+    const col = L.sunK ? kelvin(L.sunK).lerp(new THREE.Color(1, 1, 1), 0.5) : new THREE.Color(1, 1, 1), rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
+    for (const m of motes) {
+      m.x += m.vx * dt * 0.3; m.y += m.vy * dt * 0.3;
+      if (m.y < -0.02) { m.y = 1.02; m.x = rnd(); } if (m.x > 1.02) m.x = -0.02;
+      const x = m.x * w, y = m.y * h, a = lit(x, y) * (0.35 + 0.35 * Math.sin(t / 1000 * m.sp + m.ph));
+      if (a < 0.02) continue;
+      g.fillStyle = `rgba(${rgb},${a.toFixed(3)})`; g.beginPath(); g.arc(x, y, m.r, 0, 6.2832); g.fill();
+    }
+  }
+  requestAnimationFrame(frame);
+}
 </script>
 </body>
 </html>
