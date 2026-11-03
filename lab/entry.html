@@ -236,16 +236,16 @@ place();
 const H = { month: -1, inside: false, amt: 0, px: 0, zoom: 1, scrub: false, scrubAmt: 0, down: null, item: -1 };
 const zoneRect = () => zone.getBoundingClientRect();
 const nearItem = x => { let b = 0, bd = 1e9; for (let i = 0; i < N; i++) { const d = Math.abs(Lpos[i] - x); if (d < bd) { bd = d; b = i; } } return b; };
-// 悬停时"握住"当前月份：指针越过月界一格以上才换月，否则停在本月的第一个或最后一个地点
+// 每个地点属于第几个"月"（入口页：每个物件是一个月，一个月一个地点）
 const monthIdx = new Int32Array(N); months.forEach((m, k) => { for (let i = m.a; i < m.a + m.n; i++) monthIdx[i] = k; });
+/* 指针指着哪一格：离指针最近的那根小刻度属于哪一格，就是哪一格（入口页每一格是一个物件）。
+   参考站按月份分组，有"握住当前月份"的规则：越过月份分隔后还要再走一根刻度才换月。入口页不要这条（用户 2026-11-02）：
+   从左往右划过去、点下一格紧挨长分隔的第一根刻度，原来选中的还是上一格，切换条滑到上一格，像点了又弹回来。 */
 function hoverItem(b) {
-  let it = nearItem(b), m = monthIdx[it];
-  if (H.month >= 0 && m !== H.month) {
-    const k = H.month, right = m > k;
-    const over = right ? (k < seps.length && b > seps[k] + C) : (k > 0 && b < seps[k - 1] - C);
-    if (!over) { const mo = months[k]; it = right ? mo.a + mo.n - 1 : mo.a; m = k; }
-  }
-  H.month = m; return it;
+  let k = 0, bd = 1e9;
+  ticks.forEach((t, j) => { const d = Math.abs(t.x - b); if (d < bd) { bd = d; k = j; } });
+  const m = ticks[k].month;
+  H.month = m; return months[m].a;
 }
 /* 标签显示的地点：跟着缓动后的高亮位置走；换月要越过月界 LBL_OVER 格才换（参考实测的迟滞） */
 const LBL_OVER = .75;
