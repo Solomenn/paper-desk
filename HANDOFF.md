@@ -25,7 +25,7 @@
 
 | 页面 | 内容 |
 |---|---|
-| `index.html` | 项目板（Silk Wall）：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；底部工具栏 |
+| `index.html` | 项目板（Silk Wall）：项目卡（在做 / 待做 / 做完）；便签板（Textile Noticeboard）：便签；顶部今日台历；底部工具栏 |
 | `focus.html` | 雪国线计时器：上车前卡片 + 行驶中车厢 |
 | `album.html` | 卡册：项目、便签、车票、小票。车票卡册有时间轴视图 |
 | `journal.html` | 手账书架（3D 米白书架；卡册待做成实体放进去，暂时空着） |
@@ -36,7 +36,7 @@
 
 - **字体统一**：宋体（Noto Serif SC）、黑体（Noto Sans SC）、霞鹜文楷，统一放在 `room.css`。文楷只用于手写内容，界面用宋体或黑体。
 - **白天光照和背景墙**（2026-11-03 起是真 3D 光）：入口页、首页、卡册、手账、小票共用 `room3d.js`（three.js：墙、百叶窗、太阳、近硬远软的软影、反射光、闭塞阴影、高光溢出、光柱、浮尘、胶片感、ACES），参数读入口页面板保存的值，画面和墙 1:1（画面宽 2.536 m）。光是静止的（"光的缓慢变化"已取消）。
-  - 首页（`board3d.js`）：Silk Wall 板（官方模型）、软木板加木框、项目卡、便签、磁铁、图钉都是 3D 物体，贴图由 `paint-dom.js` 按网页排好的样子逐字画出；网页版留在原位、变透明，交互照旧；正在编辑的卡和便签显示网页版的字。
+  - 首页（`board3d.js`）：Silk Wall 板、Textile Noticeboard 便签板（都是官方带材质模型）、项目卡、便签、磁铁、图钉都是 3D 物体，贴图由 `paint-dom.js` 按网页排好的样子逐字画出；网页版留在原位、变透明，交互照旧；正在编辑的卡和便签显示网页版的字。
   - 首页两页的窗形用百叶窗之前那一版入口页的拱窗（`room3d.js` 的 `window: "arch"`：三扇半圆拱窗 + 横档，太阳方位 35°、仰角 32°），强度参数同入口页；暗部天光、反射光 × 1.5（2026-11-03）。入口页、卡册、手账、小票仍是百叶窗。
   - 卡册、手账、小票（`wall3d.js`）：只有 3D 的墙和光；页面上的东西（卡册、书架、小票机）仍是网页画的，不受 3D 光照。
   - 没有 WebGL 时退回 `room.js` 按公式画的平面墙（2D，形状同入口页，颜色从截图量的）。
@@ -88,7 +88,7 @@
 - [ ] 替换借用的 `assets/tyl/*` 素材（听雨来信）。
 - [ ] 夜间模式（暂缓）。场景已定为白天。
 - [ ] **下一阶段的主线见第八节。**
-- [ ] 删除不再使用的旧文件：`carriage.js`、`ride.js`、`assets/ride/`、`assets/cabin-day*`、`assets/3d/cabin.glb` 等。删之前先确认没有页面引用。
+- [ ] 删除不再使用的旧文件：`assets/objects/textile-noticeboard-2005x1205.glb`（白模，2026-11-03 起不用）、`carriage.js`、`ride.js`、`assets/ride/`、`assets/cabin-day*`、`assets/3d/cabin.glb` 等。删之前先确认没有页面引用。
 
 ## 六、技术备忘
 
@@ -142,7 +142,7 @@
 | 白噪音 | Braun T3 收音机 | 实体模型，已完成 | 不动，作为质量和风格基准 |
 | 卡册 | sasshi 的活页夹（2×4 卡册） | 现在用 paper-flipbook 的 CSS 条带翻页，合不上 | 移植 sasshi |
 | 项目 | LINTEX Silk Wall 浅蓝哑光玻璃板 | 2026-11-03 已换：首页项目板用 CSS 画成 Silk Wall（官方 350 Crisp 色、无框、玻璃边、离墙影子、Slim Pen Tray）；入口页用官方配置器导出的模型 | 按用户确认的产品参考替换；浅蓝色，薄板、无厚木框 |
-| 便签 | LINTEX Textile Noticeboard | CSS 画的 | 按用户截图确认的米灰织物宽幅矩形、四边包布、无框结构替换 |
+| 便签 | LINTEX Textile Noticeboard | 2026-11-03 已换：首页便签页和入口页都用 LINTEX 带材质的官方模型（27829OMV，面料 Blazer Lite LTH39） | 软木板加木框不再使用 |
 | 雪国线 | 小火车 | 只有工具栏小图标 | 换成实体模型 |
 | 手账 | 入口页的米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`） | 2026-11-03 已换：`journal.html` 用 3D 书架（`wall3d.js`），网页书柜隐藏 | 书架先空着；下一步把卡册做成实体放进去 |
 - **书架模型**：用户已选定 Sketchfab「Bookshelf Short LOWPOLY」，作者 EFX（<https://sketchfab.com/evan4129>），来源 <https://sketchfab.com/3d-models/bookshelf-short-lowpoly-e2eb14aedca24c22a80220e8d72c379c>，许可 CC BY 4.0。原件 `bookshelf_short_lowpoly.glb` 约 47.7 MB，单 mesh / 单 PBR 材质；书架结构与书籍贴图共用 4K Base Color 图集。
@@ -246,7 +246,7 @@
     2. 墙 = 累积光照 − 阳光 ×（1 − 可见度）；
     3. 把物件画在上面。
   - 用户批评过我私自缩小、挪动窗户（"之前的原样放上去不就行"）。**以后照搬就是照搬，不要自作主张。**
-  - **物件**：T3（同 `radio.js` 的处理）、Silk Wall（补算法线，浅蓝玻璃）、Textile（补算法线；颜色暂用 Oyster Shell `#C4BDB1`，面料未定）。其余三格是浅灰占位方块。点物件跳到现有页面。
+  - **物件**：T3（同 `radio.js` 的处理）、Silk Wall（补算法线，浅蓝玻璃）、Textile（2026-11-03 起用 LINTEX 带材质的官方模型，面料 Blazer Lite LTH39）。其余三格是浅灰占位方块。点物件跳到现有页面。
   - **等用户反馈**：手感、光的效果，以及物件偏淡、上下空白的问题。
 
 ### 踩过的坑

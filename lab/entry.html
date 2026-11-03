@@ -583,13 +583,12 @@ const MODELS = {
   },
   async boxes() { return (await loader.loadAsync("../assets/objects/postcard-boxes.glb")).scene; },    // 放明信片的盒子：Cozmoth「2 boxes」
   async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
-  async textile() {
-    const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
-    /* flatShading：每个三角面用自己的平面法线（用户 2026-11-02：板上的条纹往右一点点淡掉，"你见过阴影是这样子的吗"）。
-       导出的模型没有法线，补出来的法线（35° 以内的棱抹平）把边上的倒角抹平时，连带把板面法线拉歪，平板被照得像曲面，条纹一路淡掉。 */
-    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
-    s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
+  async textile() {                                                       // 米灰布面便签板：LINTEX 下载页的带材质模型（用户 2026-11-03 找到的 27829OMV）
+    /* 2500 × 1200 mm、厚 16 mm，面料 Blazer Lite LTH39，材质全用官方的（颜色图、凹凸图、环境遮蔽图），模型自带法线。
+       原来用的 2005 × 1205 白模没有材质，颜色是自己暂定的 Oyster Shell #C4BDB1，还要补法线、用 flatShading，现在都不用了。 */
+    return (await loader.loadAsync("../assets/objects/textile-noticeboard-2500x1200-lth39.glb")).scene;
   },
+
 };
 /* 物件跟着切换条转（用户 2026-11-02：不要像贴纸）：像人走过一排实物，每个物件的转角 =
      基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"，总角度不超过 ±MAXYAW。

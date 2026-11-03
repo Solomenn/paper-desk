@@ -10,7 +10,7 @@
      底边离玻璃 3 mm；小卡按网页的倾斜角度转；拖着走的那张（.ghost）离玻璃 3 cm；被拖起的原卡（.lifted）30% 透明；
    · 磁铁：小球压扁成 0.7，颜色取每栏的颜色，表面有清漆高光。
    便签页：
-   · 软木板：12 mm 厚的板，正面贴网页画出来的软木和木框；四边木框再凸出 6 mm（阳光下框会在软木上投出影子）；
+   · 板：LINTEX Textile Noticeboard 官方模型（面料 Blazer Lite LTH39，厚 16 mm），拉到网页上便签板的大小；
    · 便签：0.1 mm 厚，上面 25% 是背胶、贴平，往下慢慢翘起，底边离板 4 mm；拿起来时按网页里便签的"抬起"程度（--lift，0–1）离板，最多 4 cm；
    · 图钉：红色亮面小球；拔下来拿在手里（.pin.free.held）离板 2 cm。
    网页版都还在原来的位置，只是透明了：点击、拖动、打字照旧由网页处理，3D 每一帧照着网页摆。
@@ -71,17 +71,21 @@ async function start() {
   const ledge = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [ledgeSide, ledgeSide, ledgeSide, ledgeSide, ledgeFront, ledgeSide]);
   ledge.castShadow = ledge.receiveShadow = true; objects.add(ledge);
 
-  /* ════════ 便签页的板：软木（12 mm 厚）+ 四边木框（再凸出 6 mm） ════════ */
-  const CORK_D = 0.012, FRAME_D = 0.006;
-  const woodSide = mat(new THREE.MeshStandardMaterial({ color: 0x6b4426, roughness: 0.7 }));
-  const corkFront = mat(new THREE.MeshStandardMaterial({ roughness: 0.95 }));
-  const cork = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [woodSide, woodSide, woodSide, woodSide, corkFront, woodSide]);
-  cork.castShadow = cork.receiveShadow = true; objects.add(cork);
-  const bars = [0, 1, 2, 3].map(() => {                                  // 上、下、左、右四条框：正面用同一张图的对应那一块
-    const front = mat(new THREE.MeshStandardMaterial({ roughness: 0.7 }));
-    const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [woodSide, woodSide, woodSide, woodSide, front, woodSide]);
-    m.castShadow = m.receiveShadow = true; objects.add(m); return { m, front };
-  });
+  /* ════════ 便签页的板：LINTEX Textile Noticeboard 官方模型（用户 2026-11-03 从 LINTEX 下载页找到的带材质 GLB：27829OMV，
+     2500 × 1200 mm，厚 16 mm，面料 Blazer Lite LTH39，官方的颜色图、凹凸图、环境遮蔽图），替换原来自己画的软木板加木框。
+     宽高拉到网页上便签板（#cork .frame）的大小，厚度不变（背面贴墙，布面离墙 16 mm）。
+     拉伸不等比时织纹会被拉扁：按拉伸比例反过来调贴图的重复次数，织纹保持原来的疏密和方向。 ════════ */
+  const textile = new THREE.Group(); objects.add(textile);
+  let texFit = null;
+  new GLTFLoader().loadAsync("assets/objects/textile-noticeboard-2500x1200-lth39.glb").then(g => {
+    const s = g.scene, maps = [];
+    s.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      mat(m); for (const k of ["map", "normalMap"]) if (m[k]) maps.push({ t: m[k], ry: m[k].repeat.y }); }); } });
+    const box = new THREE.Box3().setFromObject(s);
+    texFit = { model: s, size: box.getSize(new THREE.Vector3()), c: box.getCenter(new THREE.Vector3()), min: box.min.z, front: box.max.z - box.min.z, maps };
+    textile.add(s); dirty = true;
+  }).catch(e => console.error("textile", e));
+  const TEXTILE_FRONT = () => texFit ? texFit.front : 0.016;            // 布面离墙（m）
 
   /* ════════ 纸：项目卡和便签 ════════ */
   // 一张 1 × 1 的薄片：从顶边往下 flat 这一段是平的，再往下慢慢翘，底边离板 lift（二次曲线）；每张只改 x、y 的缩放
@@ -109,7 +113,7 @@ async function start() {
     },
     note: {
       face: el => $(".sheet", el), flatten: el => [el], skipPseudo: (el, w) => el.classList.contains("sheet") && w === "::after",   // .sheet::after 是假的阴影，3D 里有真的
-      geo: noteGeo, thick: NOTE_T, sideColor: el => getComputedStyle(el).getPropertyValue("--c").trim() || "#f3e2a1", z0: () => CORK_D,
+      geo: noteGeo, thick: NOTE_T, sideColor: el => getComputedStyle(el).getPropertyValue("--c").trim() || "#f3e2a1", z0: () => TEXTILE_FRONT(),
       editing: el => el.classList.contains("editing"), hideEl: el => $(".sheet", el),
     },
   };
@@ -146,22 +150,21 @@ async function start() {
   }
 
   /* ── 网页一变就重画贴图：MutationObserver + 输入；字体到了全部重画 ── */
-  let dirty = true, printDirty = true, corkDirty = true, sig = "";
+  let dirty = true, printDirty = true, sig = "";
   const markFrom = t => {
     const el = t && (t.nodeType === 1 ? t : t.parentElement); if (!el) return;
     const host = el.closest(".pcard, .mini, .note");
     if (host) { const it = items.get(host); if (it) it.dirty = true; }
     else if (el.closest("#chalk")) printDirty = true;
-    else if (el.closest("#cork")) corkDirty = true;
   };
   new MutationObserver(ms => { for (const m of ms) markFrom(m.target); dirty = true; })
     .observe($("#pages"), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class", "value"] });
   new MutationObserver(() => { dirty = true; }).observe(document.body, { childList: true });   // 拖动时的 .ghost、拿在手里的图钉挂在 body 上
   addEventListener("input", e => { markFrom(e.target); dirty = true; });
   addEventListener("focusin", e => markFrom(e.target)); addEventListener("focusout", e => setTimeout(() => markFrom(e.target), 0));
-  const repaintAll = () => { items.forEach(it => it.dirty = true); printDirty = corkDirty = true; };
+  const repaintAll = () => { items.forEach(it => it.dirty = true); printDirty = true; };
   document.fonts?.ready.then(repaintAll); document.fonts?.addEventListener?.("loadingdone", repaintAll);
-  let printing = false, corking = false;
+  let printing = false;
   async function paintPrint() {
     if (printing) return; printing = true; printDirty = false;
     try {
@@ -171,17 +174,7 @@ async function start() {
       dirty = true;
     } finally { printing = false; }
   }
-  async function paintCork() {
-    if (corking) return; corking = true; corkDirty = false;
-    try {
-      // 网页版的软木和木框在 3D 开着时是透明的（body.b3d）；画贴图那一刻临时去掉 b3d、画完马上加回（同步，不闪）。
-      // .sunlit 是 room.js 在没有 WebGL 时用的平面光（2D），去掉 b3d 时它会露出来，不能画进贴图
-      const cv = await paintDOM(corkFrame, { scale: SCALE, skip: el => el.matches("#notes, .sunlit"), before: () => document.body.classList.remove("b3d"), after: () => document.body.classList.add("b3d") });
-      const t = newTex(cv), old = corkFront.map; corkFront.map = t; corkFront.needsUpdate = true; old?.dispose();
-      bars.forEach(b => { b.front.map?.dispose(); b.front.map = t.clone(); b.front.needsUpdate = true; });   // 共用同一张图，各取一块（见 place）
-      dirty = true;
-    } finally { corking = false; }
-  }
+
 
   /* ── 每一帧照网页摆好 ── */
   const angleOf = el => { const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(el).transform); if (!m) return [0, 1]; const v = m[1].split(",").map(Number); return [Math.atan2(v[1], v[0]), Math.hypot(v[0], v[1])]; };
@@ -195,14 +188,15 @@ async function start() {
     if (silkFit) { const sx = wl(br.width) / silkFit.size.x, sy = wl(br.height) / silkFit.size.y; silkFit.model.scale.set(sx, sy, 1); silkFit.model.position.set(-silkFit.c.x * sx, -silkFit.c.y * sy, 0); silk.position.set(wx(br.left + br.width / 2), wy(br.top + br.height / 2), 0); }
     print.scale.set(wl(br.width), wl(br.height), 1); print.position.set(wx(br.left + br.width / 2), wy(br.top + br.height / 2), z0 + 0.0002);
     if (ledgeEl) { const lr = ledgeEl.getBoundingClientRect(); ledge.visible = silkOn && lr.width > 0; ledge.scale.set(wl(lr.width), wl(lr.height), 0.008); ledge.position.set(wx(lr.left + lr.width / 2), wy(lr.top + lr.height / 2), z0 + 0.004); }
-    // 便签页的板：软木 + 四条框
-    const fr = corkFrame.getBoundingClientRect(), corkOn = onStage(fr), fw = fr.width, fh = fr.height, pad = parseFloat(getComputedStyle(corkFrame).paddingTop) || 14;
-    cork.visible = corkOn; cork.scale.set(wl(fw), wl(fh), CORK_D); cork.position.set(wx(fr.left + fw / 2), wy(fr.top + fh / 2), CORK_D / 2);
-    [[0, 0, fw, pad], [0, fh - pad, fw, pad], [0, pad, pad, fh - 2 * pad], [fw - pad, pad, pad, fh - 2 * pad]].forEach(([x, y, w, h], i) => {
-      const b = bars[i]; b.m.visible = corkOn;
-      b.m.scale.set(wl(w), wl(h), FRAME_D); b.m.position.set(wx(fr.left + x + w / 2), wy(fr.top + y + h / 2), CORK_D + FRAME_D / 2);
-      if (b.front.map) { b.front.map.repeat.set(w / fw, h / fh); b.front.map.offset.set(x / fw, 1 - (y + h) / fh); }
-    });
+    // 便签页的板：Textile Noticeboard，拉到网页上便签板的大小，背面贴墙
+    const fr = corkFrame.getBoundingClientRect(), corkOn = onStage(fr);
+    textile.visible = corkOn;
+    if (texFit) {
+      const sx = wl(fr.width) / texFit.size.x, sy = wl(fr.height) / texFit.size.y;
+      texFit.model.scale.set(sx, sy, 1); texFit.model.position.set(-texFit.c.x * sx, -texFit.c.y * sy, -texFit.min);
+      textile.position.set(wx(fr.left + fr.width / 2), wy(fr.top + fr.height / 2), 0);
+      texFit.maps.forEach(m => { m.t.repeat.y = m.ry * sy / sx; });   // 织纹不被拉扁
+    }
     // 纸
     for (const it of items.values()) {
       const el = it.el, r = el.getBoundingClientRect(), face = it.K.face(el);
@@ -232,7 +226,7 @@ async function start() {
       const held = free && el.classList.contains("held"), pr = r.width / 2, lz = liftOf(el.closest(".note")) * 0.04;
       setPlanes(p.userData.planes, !free, null);
       p.scale.set(wl(pr), wl(pr), wl(pr) * 0.8);
-      p.position.set(wx(r.left + pr), wy(r.top + r.height / 2), CORK_D + NOTE_T + 0.0003 + lz + (held ? 0.02 : 0) + wl(pr) * 0.8 * 0.6);
+      p.position.set(wx(r.left + pr), wy(r.top + r.height / 2), TEXTILE_FRONT() + NOTE_T + 0.0003 + lz + (held ? 0.02 : 0) + wl(pr) * 0.8 * 0.6);
     }
   }
   function signature() {
@@ -259,7 +253,6 @@ async function start() {
     sync();
     for (const it of items.values()) if (it.dirty || it.editing !== it.K.editing(it.el)) paintItem(it);
     if (printDirty) paintPrint();
-    if (corkDirty) paintCork();
     const s = signature(); if (s !== sig) { sig = s; dirty = true; }
     if (dirty) { dirty = false; R.render(); }
   }

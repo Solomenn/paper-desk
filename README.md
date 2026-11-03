@@ -1,6 +1,6 @@
 # 纸桌 · Paper Desk
 
-个人效率网页：项目板（LINTEX Silk Wall 浅蓝玻璃板）上的项目卡、软木板上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
+个人效率网页：项目板（LINTEX Silk Wall 浅蓝玻璃板）上的项目卡、便签板（LINTEX Textile Noticeboard 织物板）上的便签、今日台历、雪国线专注计时、卡册、手账和小票。
 当前只开白天模式（夜间模式的代码还在，切换按钮已关）。
 
 在线：<https://solomenn.github.io/paper-desk/>　推到 `main` 后 GitHub Pages 自动发布。
@@ -9,7 +9,7 @@
 
 | 页面 | 内容 |
 |---|---|
-| [`index.html`](index.html) | 桌面。项目板：项目卡（在做 / 待做 / 做完）；软木板：便签；顶部今日台历；左下角打开工具栏（计时器、卡册、手账、小票） |
+| [`index.html`](index.html) | 桌面。项目板：项目卡（在做 / 待做 / 做完）；便签板：便签；顶部今日台历；左下角打开工具栏（计时器、卡册、手账、小票） |
 | [`focus.html`](focus.html) | 雪国线计时器：上车前选项目、拖行程刻度尺；行驶中是车厢和窗外雪原。下车把分钟数记到项目上 |
 | [`album.html`](album.html) | 卡册：项目、便签、车票、小票，按月；车票有时间轴视图 |
 | [`journal.html`](journal.html) | 手账书架：入口页的米白实体书架（3D）；卡册待做成实体放进去，暂时空着 |
@@ -72,7 +72,7 @@
 
 **B. Textile Noticeboard 当前面料系列**
 
-官方配置器当前列出 Linen、Blazer Lite、Cara、Fiji、Cura 等面料系列。截图只确认米灰色织物外观，尚未确定具体系列、色号或织物纹理。后续应以官方配置器的真实面料样本为准；不要把 Forbo Bulletin Board 的 Duck Egg 2162、Blue Berry 2214 等色号当成 Textile Noticeboard 的面料色号。
+官方配置器当前列出 Linen、Blazer Lite、Cara、Fiji、Cura 等面料系列。**2026-11-03 定为 Blazer Lite LTH39**：用的是 LINTEX 下载页带材质的官方模型（27829OMV，`assets/objects/textile-noticeboard-2500x1200-lth39.glb`），织纹来自官方的颜色图和凹凸图。后续应以官方配置器的真实面料样本为准；不要把 Forbo Bulletin Board 的 Duck Egg 2162、Blue Berry 2214 等色号当成 Textile Noticeboard 的面料色号。
 
 **C. Silk Wall 使用的 Silk Glass® 色卡（24 色）**
 
@@ -132,7 +132,7 @@ python3 serve.py          # http://localhost:8000（换端口：python3 serve.py
 | `paper-desk.today.v1` | 今日的事项 |
 | `paper-desk.todaymemo.v1` | 每天的碎碎念 |
 | `paper-desk.desk-tasks.v1` | 项目卡（含累计专注分钟数）和做完的项目 |
-| `paper-desk.memos.v1` / `paper-desk.notes-archive.v1` | 软木板上的便签 / 归档的便签 |
+| `paper-desk.memos.v1` / `paper-desk.notes-archive.v1` | 便签板上的便签 / 归档的便签 |
 | `paper-desk.trip.v1` / `paper-desk.tickets.v1` | 当前行程 / 坐过的车票 |
 | `paper-desk.trip.min` · `.trip.wheels` · `.trip.lamp` | 雪国线：上次选的时长、车轮声开关、灯光设置 |
 | `paper-desk.receipts.v1` | 每天的小票 |

@@ -297,7 +297,7 @@ export async function paintDOM(root, o = {}) {
   const g = cv.getContext("2d"); g.scale(scale, scale);
   const els = [root, ...root.querySelectorAll("*")], skipped = [];
   /* 用到的 url() 背景图要先加载。分三步，量和画那一段一口气做完、中间不让出（2026-11-03 修：原来在"临时恢复网页版样子"之后才去等图片，
-     等的时候别的贴图画完把样子改了回去，软木板量到的是透明背景，贴图是空的）：
+     等的时候别的贴图画完把样子改了回去，便签页的软木板（当时还是软木）量到的是透明背景，贴图是空的）：
      ① 恢复网页版样子 → 记下要哪些图 → 马上还原（同步）；② 等图片加载（这时页面是平常的样子）；③ 再恢复样子，量、画，最后还原。 */
   if (!o.noUrl) {
     if (o.before) o.before();

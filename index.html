@@ -393,7 +393,7 @@
   /* 项目页的小图标：LINTEX Silk Wall 浅蓝玻璃板（无框，2026-11-03 从绿黑板换过来），上面两张白卡片 */
   .pg[data-p="0"] i { background: linear-gradient(160deg, #cbd8d8, #b3c3c4); border: 1px solid rgba(32, 46, 54, .35); position: relative; }
   .pg[data-p="0"] i::after { content: ""; position: absolute; left: 5px; top: 4px; width: 7px; height: 6px; background: #fbfaf6; box-shadow: 10px 3px 0 #fbfaf6; }
-  .pg[data-p="1"] i { background: #c99c69; position: relative; }
+  .pg[data-p="1"] i { background: linear-gradient(160deg, #b0b1ab, #9c9d97); border: 1px solid rgba(40, 42, 40, .35); position: relative; }   /* 便签板：LINTEX Textile Noticeboard 灰色织物（Blazer Lite LTH39，2026-11-03 从软木换过来），无框 */
   .pg[data-p="1"] i::after { content: ""; position: absolute; left: 5px; top: 3px; width: 9px; height: 9px; background: #f3e2a1; transform: rotate(-6deg); box-shadow: 9px 2px 0 #cfe4cf; }
   .pg::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--stamp); opacity: 0; transition: opacity .2s; }
   .pg.on::after { opacity: 1; }
@@ -721,8 +721,12 @@
      网页版留在原位、变透明，点击拖动打字照旧；正在编辑的卡、便签显示网页版的字（纸还是 3D 的）。没有 WebGL 时这些规则都不生效 ═════════ */
   #gl3d, #dust3d { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
   #film3d { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  /* 便签板在网页版（没有 WebGL 时）也改成织物板的样子：灰色布面（官方面料颜色图平均 #a7a8a2），原来木框那一圈也涂成布面（便签区域大小不变） */
+  #cork .frame { background: #a7a8a2 !important; box-shadow: 0 0 0 .5px rgba(40, 42, 40, .4), 0 2px 3px rgba(21, 35, 58, .18), 0 26px 44px -22px rgba(21, 35, 58, .55) !important; }
+  #cork .frame::before, #cork .frame::after { display: none !important; }
+  #cork .inner { background-color: #a7a8a2 !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .48  0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") !important; box-shadow: none !important; }
   body.b3d #room, body.b3d .cast, body.b3d .sunlit { display: none !important; }
-  body.b3d .page .frame, body.b3d .page .inner { background: transparent !important; box-shadow: none !important; }
+  body.b3d .page .frame, body.b3d .page .inner, body.b3d #cork .frame, body.b3d #cork .inner { background: transparent !important; box-shadow: none !important; }
   body.b3d .page .frame::before, body.b3d .page .frame::after, body.b3d .page .inner::before, body.b3d .page .inner::after { display: none !important; }
   body.b3d .x3d { opacity: 0 !important; }
   body.b3d .x3dp::before, body.b3d .x3dp::after { opacity: 0 !important; }
@@ -858,7 +862,7 @@
    Calendar: the small things to tick off today. Unfinished ones carry over; finished ones stay for the day. Its back is today's jottings.
    项目 (LINTEX Silk Wall glass board since 2026-11-03; it was a chalkboard): every project is an index card under Doing / To do / Done. Open one to work on it; stamp it when it's done
    and it goes into the album.
-   便签 (corkboard): the sticky notes, in the second script below. */
+   便签 (the noticeboard: LINTEX Textile Noticeboard in 3D since 2026-11-03; it was a corkboard): the sticky notes, in the second script below. */
 (() => {
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
@@ -887,7 +891,7 @@
     store(PAGEKEY, page);
     dispatchEvent(new CustomEvent("deskpage", { detail: page }));
     window.setHashira && setHashira(page === 0 ? "项目" : "便签");
-    // 返回箭头：项目板回入口第 0 格（项目），软木板回第 1 格（便签）
+    // 返回箭头：项目板回入口第 0 格（项目），便签板回第 1 格（便签）
     const eb = $("#entryBack"); if (eb) eb.href = `lab/entry.html?at=${page}`;
     // the album button opens this page's album
     const ab = $("#albumBtn");
@@ -1790,8 +1794,8 @@
 })();
 </script>
 <script>
-/* ═════════ the corkboard: sticky notes you drag, twist, pin, fold into a strip ═════════
-   Everything here is in board units: (0, 0) is the corkboard's top-left corner. */
+/* ═════════ the noticeboard (#cork; a corkboard until 2026-11-03): sticky notes you drag, twist, pin, fold into a strip ═════════
+   Everything here is in board units: (0, 0) is the board's top-left corner. */
 (() => {
   "use strict";
 
@@ -2024,7 +2028,7 @@
     n.t = { x: Math.min(r.right - 80, r.left + 120 + barEl.querySelectorAll(".chip").length * 140) - BR.left, y: r.top + 22 - BR.top, a: 0, s: .18 };
     n.liftT = .5;
   }
-  // back from the cord onto the corkboard
+  // back from the cord onto the noticeboard
   function fromBar(n) {
     const later = Desk.page() !== 1;
     if (later) Desk.go(1);
@@ -2044,14 +2048,14 @@
       const n = notes.find(m => m.id === id);
       if (!n || !n.bar) return null;
       const el = document.createElement("div");
-      el.textContent = firstLine(n) || "空白便签"; el.title = (n.text || "") + "\n（点一下放回软木板）";
+      el.textContent = firstLine(n) || "空白便签"; el.title = (n.text || "") + "\n（点一下放回便签板）";
       el.style.setProperty("--c", CATS[n.cat].c);
       return el;
     },
     click: id => { const n = notes.find(m => m.id === id); if (n) fromBar(n); },
     menu: id => {
       const n = notes.find(m => m.id === id);
-      return [{ label: "放回软木板", fn: () => fromBar(n) }, "-",
+      return [{ label: "放回便签板", fn: () => fromBar(n) }, "-",
         { label: "扔掉", danger: true, fn: () => { n.el.remove(); notes = notes.filter(x => x !== n); Bar.remove("note", id); save(); } }];
     },
   };
@@ -2629,6 +2633,6 @@
   requestAnimationFrame(frame);
 })();
 </script>
-<script type="module" src="board3d.js?v=4"></script>
+<script type="module" src="board3d.js?v=5"></script>
 </body>
 </html>

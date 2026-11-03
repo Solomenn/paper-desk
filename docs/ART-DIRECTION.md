@@ -57,7 +57,7 @@
 |---|---|
 | Braun T3 收音机 | 哑白，原样不动 |
 | 项目板 LINTEX Silk Wall | 浅蓝哑光玻璃，暂用 `#b6d0d2`；24 色色号未锁定 |
-| 便签板 LINTEX Textile Noticeboard | 米灰织物，面料系列和色号未锁定 |
+| 便签板 LINTEX Textile Noticeboard | 面料 Blazer Lite LTH39（2026-11-03 用户选定，用官方带材质模型） |
 | 手账书架 Bookshelf Short | 暖米白 `#E9E2D6`，书本保持原色 |
 | 卡册（sasshi 活页夹） | 沿用 sasshi 的材质，第四阶段换成纸桌内容 |
 | 小票机 HQ3DMOD POS | 未购买，待验收外观 |

@@ -72,9 +72,10 @@ the frame and table as free material (the views in those photos are his and are 
 
 - Exported from the LINTEX Silk Wall configurator (<https://lintex.com/products/silk-wall/#configurator>), 2000×1000, colour Silk Glass 350 Crisp; includes glass, painted back, edge, backplate, rails and magnets with LINTEX's materials. The illustrative wall screws are removed at load time. Used in `lab/entry.html`.
 
-## LINTEX Textile Noticeboard model (`assets/objects/textile-noticeboard-2005x1205.glb`)
+## LINTEX Textile Noticeboard model (`assets/objects/textile-noticeboard-2500x1200-lth39.glb`)
 
-- Converted from LINTEX's official Textile Noticeboard 2005×1205 download (<https://lintex.com/products/textile-noticeboard/>); placeholder until the object is finalised.
+- LINTEX's official Textile Noticeboard model with materials, article 27829OMV, 2500×1200×16 mm, fabric Blazer Lite LTH39 (albedo, bump and ambient-occlusion maps by LINTEX), from LINTEX's downloads (<https://media.lintex.com/?product=textile-noticeboard>; product page <https://lintex.com/products/textile-noticeboard/>). Unmodified. Used in `lab/entry.html` and on the notes page of `index.html`.
+- The earlier `textile-noticeboard-2005x1205.glb` (converted from the untextured official download) is no longer used by any page.
 
 ## Entry objects from Sketchfab (`assets/objects/`, used in `lab/entry.html`)
 

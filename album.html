@@ -285,7 +285,7 @@
   document.title = KINDS[KIND].name + " · 纸桌";
   document.body.classList.add("kind-" + KIND);
   // each album belongs to its page: the arrow goes back there
-  { const h = $("#home"); h.href = { proj: "./#board", note: "./#notes", receipt: "receipt.html", ticket: "focus.html" }[KIND]; h.title = { proj: "回到项目板", note: "回到软木板", receipt: "回到小票", ticket: "回到站台" }[KIND]; }
+  { const h = $("#home"); h.href = { proj: "./#board", note: "./#notes", receipt: "receipt.html", ticket: "focus.html" }[KIND]; h.title = { proj: "回到项目板", note: "回到便签板", receipt: "回到小票", ticket: "回到站台" }[KIND]; }
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -587,7 +587,7 @@
         $(".tx", zc).textContent = t.text || "";
         $("h2", cap).textContent = (t.text || "便签").split("\n")[0].slice(0, 24);
         $(".when", cap).textContent = (t.createdAt ? `写于 ${fmt(t.createdAt)}` : "") + ` · 归档 ${fmt(t.doneAt)}`;
-        $(".steps", cap).innerHTML = t.id && !String(t.id).startsWith("dn") ? `<button class="putback">放回软木板</button>` : "";
+        $(".steps", cap).innerHTML = t.id && !String(t.id).startsWith("dn") ? `<button class="putback">放回便签板</button>` : "";
         const pb = $(".putback", cap);
         if (pb) pb.onclick = e => {
           e.stopPropagation();
