@@ -550,7 +550,7 @@ const W = GOBO.W;
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
    默认值的来由见下面"阳光像真的"那段。 */
 const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, slat: 0.055, ang: 0.21,
-  sun: 10, sky: 1.6, bounce: 2.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };                  // 用户 2026-11-02 在调节面板里调好的一组
+  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
 const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
@@ -558,11 +558,49 @@ try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{
 window.__light = L;
 /* 阳光像真的（用户 2026-11-02 给了三张参考图：百叶窗照片、树影油画、胶片；逐项量了亮部/暗部的亮度 L*、色温 b*、饱和度 C*）：
    1. 反差：参考图亮/暗光量比 12–67 倍，我们只有 1.5 倍（暗部 L* 81，天光和反射光补得太多）。
-      → 阳光 8.97 → 10，天光 2.26 → 1.6，反射光 4.2 → 2.2：反差加大，但入口页要清爽，不压成暗场（试过天光 0.7 太暗）。
+      → 阳光 8.97 → 10，天光 2.26 → 1.0，反射光 4.2 → 1.2：亮条/背光墙 2.7 倍（实测），颜色不变；入口页还要清爽，不压成暗场。
    2、3. 冷暖、饱和度：试过阳光 4300 K 暖白 + Neutral 色调映射，用户 2026-11-02 否了（"不要改我的色调！我不要这种黄昏"）：
       颜色保持原样——阳光纯白、天光窗光页的冷调、ACES 色调映射。sunK / skyK 留着，默认 0（原来的颜色）。
-   4. 边缘软硬已经接近（照片里过渡约占条纹周期 22%），不动。
+   4. 边缘软硬：近硬远软（用户 2026-11-02："近的投影边缘很硬，远的边缘模糊"），见下面"影子按距离变软"。
    5. 空气感：最亮的地方往外晕一圈光（高光溢出，glow，很淡）；光里飘一点浮尘（dust），只在亮区里看得见；系统要求减少动态效果时不显示。 */
+/* ── 影子按距离变软（用户 2026-11-02，学画画的经验：离得近的投影边缘硬，离得远的边缘模糊）──
+   太阳不是一个点，有大小（半径 ang 度）：挡光的东西离受光面越远，影子边缘糊开越宽，宽度 = 距离 × tan(ang)。
+   three.js 自带的阴影不管远近，边缘一样硬，所以把它的阴影采样换掉（PCSS）：
+   1. 在受光点周围的深度图里采 16 个点，找出挡光的东西，求它们的平均深度（离受光点多远）；
+   2. 糊开半径 = 这个距离 × tan(ang)（换算成深度图上的大小）；
+   3. 在这个半径里再采 32 个点，算有多少比例被挡住 → 影子的深浅。
+   墙上的条纹（窗离墙 2–3 m → 糊开约 1 cm）、物件身上的条纹、物件投在墙上的影子（贴墙处几乎不糊，火车头离墙约 30 cm → 约 1 mm）都按这一条走。
+   墙也不再叠 48 个太阳方向（NDIR = 1），一遍就算完，调节面板重算更快。 */
+const SHADOW_CHUNK = THREE.ShaderChunk.shadowmap_pars_fragment;
+function usePCSS() {
+  const far = 40, near = 1, size = 5.2, mapSize = 4096;                   // 和下面 sun.shadow.camera 的设置一致
+  const scale = (far - near) * Math.tan(L.ang * deg) / size;              // 深度差 1（= 39 m）→ 深度图上的糊开半径
+  const search = Math.max(scale * 0.13, 4 / mapSize);                     // 找遮挡物的范围：最远约 5 m 的遮挡物
+  const f = v => v.toFixed(7);
+  const pcss = `
+	float pcssShadow( sampler2D sm, vec2 uv, float zR ) {
+		float rot = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ) * 6.2832;   // 每个像素转一个角度，免得出条纹
+		float sum = 0.0, n = 0.0;
+		for ( int i = 0; i < 16; i ++ ) {
+			float r = sqrt( ( float( i ) + 0.5 ) / 16.0 ), a = float( i ) * 2.39996 + rot;
+			float d = unpackRGBAToDepth( texture2D( sm, uv + vec2( cos( a ), sin( a ) ) * r * ${f(search)} ) );
+			if ( d < zR ) { sum += d; n += 1.0; }
+		}
+		if ( n < 1.0 ) return 1.0;                                        // 周围没有挡光的东西：全亮
+		float pen = max( ( zR - sum / n ) * ${f(scale)}, ${f(1.2 / mapSize)} );   // 糊开半径：遮挡物越远越大，最小约 1 个像素
+		float lit = 0.0;
+		for ( int i = 0; i < 32; i ++ ) {
+			float r = sqrt( ( float( i ) + 0.5 ) / 32.0 ), a = float( i ) * 2.39996 + rot;
+			lit += texture2DCompare( sm, uv + vec2( cos( a ), sin( a ) ) * r * pen, zR );
+		}
+		return lit / 32.0;
+	}
+`;
+  THREE.ShaderChunk.shadowmap_pars_fragment = SHADOW_CHUNK
+    .replace("float getShadow(", pcss + "\n\tfloat getShadow(")
+    .replace("#if defined( SHADOWMAP_TYPE_PCF )", "#if defined( SHADOWMAP_TYPE_PCF )\n\t\t\tshadow = pcssShadow( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#elif defined( PCSS_REPLACED_THE_PCF_BRANCH )");
+}
+usePCSS();
 const kelvin = K => {                                                     // 色温 → 颜色（Tanner Helland 的近似公式，输出 sRGB）
   const t = K / 100; let r, g, b;
   r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
@@ -594,7 +632,7 @@ function buildWindow() {
   }
   Object.assign(WINDOW, { U0, U1, V1, KX, KY });
 }
-const NDIR = 48, BSIG = 0.5, WALL = "#f0f0ee";
+const NDIR = 1, BSIG = 0.5, WALL = "#f0f0ee";                         // 墙的软阴影交给 PCSS（见"影子按距离变软"），一遍就够
 /* ANG：墙上软阴影用的 48 个太阳方向散开的半径（度），只管影子边缘软硬，不影响亮度。窗光页原来是 0.5。
    换成百叶窗后改成 0.12（用户 2026-11-02：墙上的条纹不像光，很奇怪）：0.5° 在 4 m 外糊开约 7 cm，比 4.4 cm 宽的暗条还宽，
    暗条一直漏进阳光，墙上暗条/亮条只有 230/245，物件身上（每帧只用一个太阳方向，边缘锐利）却是 165/235，同一束光两种样子。
@@ -822,7 +860,7 @@ function bakeWall() {                                                     // 只
     renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 1); renderer.clear();
     hemi.visible = !sunOnly; wallMat.lightMapIntensity = sunOnly ? 0 : L.bounce;
     for (let i = 0; i < NDIR; i++) {
-      const a = i * 2.39996, r = L.ang * deg * Math.sqrt((i + 0.5) / NDIR);
+      const a = i * 2.39996, r = NDIR > 1 ? L.ang * deg * Math.sqrt((i + 0.5) / NDIR) : 0;   // 只算一遍时就用太阳正中的方向
       sunAt(L.az * deg + Math.cos(a) * r, L.el * deg + Math.sin(a) * r); sun.shadow.needsUpdate = true;
       renderer.setRenderTarget(rtPass); renderer.render(scene, camera);
       addMat.uniforms.w.value = 1 / NDIR; renderer.autoClear = false; renderer.setRenderTarget(rt); renderer.render(addScene, cam2); renderer.autoClear = true;
@@ -908,6 +946,7 @@ layout();
    "恢复默认"回到 LIGHT_DEFAULT，并清掉保存的值。
    色温不放进面板（用户：不要改色调）。 */
 function applyLight() {                                                   // 参数改了以后：重建窗、反射光贴图、灯光，重算墙
+  usePCSS(); scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); visMat.needsUpdate = true;   // ang 变了：影子着色代码重新编译
   buildWindow(); buildGobo();
   const old = wallMat.lightMap; wallMat.lightMap = bounceTexture(); wallMat.needsUpdate = true; if (old) old.dispose();
   lightColors(); bakeWall(); render();
