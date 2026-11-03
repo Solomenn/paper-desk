@@ -16,115 +16,146 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: #070d18; font-family: var(--sans); color: #e8eef5; user-select: none; -webkit-user-select: none; }
   body { line-break: strict; }
 
-  /* ═════════ setting off (after 听雨来信's writing desk): a dark board in a snowy night; you write the task in the light of the
-     little engine's lamp, which runs along its rail under the words and puffs steam at every key ═════════ */
-  #board { position: fixed; inset: 0; z-index: 5; overflow-y: auto; overflow-x: hidden; transition: opacity .9s, transform 1.2s var(--ease); background: #151c26;
-    --ink: #dedccb; --light: .7; --spread: 72%; }
+  /* ═════════ 上车前这一页：一比一照"听雨来信"的写信页（用户 2026-11-03："先专注一比一还原，之后再谈改造"）。
+     版式、颜色、字、动效的数都是从它的 style.css / app.js 量来的，代码是这里重写的；照片和打字头图片暂借它的（assets/tyl/），以后换成自己的。
+     和它不同的只有三处：信封按钮 = 上车；写的字是这一程的名字；返回箭头回入口。还原期间暂时去掉了：点选项目、行程刻度尺、收音机按钮。 ═════════ */
+  #board { position: fixed; inset: 0; z-index: 5; overflow-y: auto; overflow-x: hidden; transition: opacity .9s, transform 1.2s var(--ease);
+    --ink: #dedccb; --tserif: 'Songti SC', 'Noto Serif CJK SC', 'Noto Serif SC', 'STSong', 'SimSun', serif; --tsans: system-ui, -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+    --head-x: 25%; --light: .65; --reach: 1.6; --spread: 72%; color: var(--ink); font: 16px/1.6 var(--tsans); background: #191c19; color-scheme: dark; user-select: text; -webkit-user-select: text; }
   #board.gone { opacity: 0; transform: scale(1.03); pointer-events: none; }
-  .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-    color: #d7d9c6; text-decoration: none; font-size: 20px; transition: background .2s; }
-  .home:hover { background: #bfc8b315; }
-  #bgc, #snow0 { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  #bgc { z-index: 0; } #snow0 { z-index: 6; }
-  #board .shell { position: relative; z-index: 2; width: min(920px, calc(100% - 64px)); margin: auto; padding: 26px 0 34px; transition: opacity .7s, transform .9s var(--ease); }
+  #board button, #board input, #board textarea, #board select { font: inherit; -webkit-tap-highlight-color: transparent; }
+  #board button { cursor: pointer; border: 0; background: none; color: inherit; touch-action: manipulation; }
+  #board button:focus-visible, #board select:focus-visible, #board input:focus-visible { outline: 2px solid #dcd4a4; outline-offset: 5px; }
+  #board svg, #tylDlg svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
+  .icon-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  /* 背景：雪、雨两张照片，切天气时淡入淡出；上面一层压暗 */
+  #board .scenery { position: fixed; inset: 0; z-index: 0; background: #191c19; }
+  #board .scene { position: absolute; inset: -1px; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.4s; }
+  #board .rain-scene { background-image: url(assets/tyl/rain-background.webp); }
+  #board .snow-scene { background-image: url(assets/tyl/snow-background.webp); }
+  #board[data-weather=rain] .rain-scene, #board[data-weather=snow] .snow-scene { opacity: 1; }
+  #board .scene-shade { position: absolute; inset: 0; background: linear-gradient(#0c131930, #10171442 60%, #0a110f77); }
+  /* 白天（这一页自己的白天 / 黑夜按钮）：雪景换成白天那张，雨景不变 */
+  html[data-theme="day"] #board .snow-scene { background-image: url(assets/snow-day.webp); }
+  html[data-theme="day"] #board .scene-shade { background: linear-gradient(#ffffff10, #dfe8f020 60%, #33404a40); }
+  html[data-theme="day"] #board .topbar .icon-button, html[data-theme="day"] #board .wordmark, html[data-theme="day"] #board .count, html[data-theme="day"] #board .weather-toolbar .icon-button { color: #2f3a48; }   /* 白天背景亮，顶上的字和图标用深色 */
+  html[data-theme="day"] #board .weather-toolbar .icon-button.active { color: #1c232b; }
+  #weather { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+  #board .shell { width: min(920px, calc(100% - 64px)); margin: auto; padding: 28px 0 34px; position: relative; transition: opacity .7s, transform .9s var(--ease); }
   #board.sent .shell { opacity: 0; transform: translateY(30px); pointer-events: none; }
-  #board .topbar { height: 55px; display: flex; align-items: center; justify-content: center; position: relative; }
-  #tkCount { display: none !important; }
-  #board .wordmark { font: 14px var(--serif); letter-spacing: .38em; color: var(--ink); opacity: .62; }
-  #board .tops { position: absolute; right: 0; display: flex; align-items: center; gap: 16px; }
-  #board .count { font: 13px var(--mono); letter-spacing: .16em; color: #c1c7b9; }
-  #board .ibtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #d7d9c6; text-decoration: none; transition: background .2s; }
-  #board .ibtn:hover { background: #bfc8b315; }
-  #board .ibtn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
-  #board .gap { height: 80px; }
-  .paper { position: relative; isolation: isolate; height: 520px; border-radius: 100px 100px 0 0; overflow: hidden; background: linear-gradient(180deg, #34352f, #373830);
-    box-shadow: 0 -1px 0 #cad0bf13, 0 15px 70px #04090430; }
-  .paper .grain { position: absolute; inset: 0; pointer-events: none; opacity: .2;
+  #board .topbar { height: 55px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 6; }
+  #board .icon-button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #d7d9c6; transition: color .2s, background .2s, opacity .2s; text-decoration: none; }
+  #board .icon-button:hover { background: #bfc8b315; }
+  #board .icon-button svg { width: 26px; height: 26px; }
+  #board .wordmark { position: absolute; left: 50%; transform: translateX(-50%); font: 14px var(--tserif); letter-spacing: .38em; opacity: .62; white-space: nowrap; }
+  #board .top-actions { display: flex; align-items: center; gap: 18px; }
+  #board .count { font: 13px ui-monospace, monospace; letter-spacing: .16em; color: #c1c7b9; }
+  #board .weather-toolbar { height: 114px; display: flex; gap: 17px; justify-content: center; align-items: center; position: relative; z-index: 6; }
+  #board .weather-toolbar .icon-button { opacity: .65; }
+  #board .weather-toolbar .icon-button.active, #board .weather-toolbar .icon-button[aria-expanded=true] { opacity: 1; color: #eee9c9; }
+  #board .weather-toolbar svg { width: 30px; height: 30px; }
+  /* 信纸 */
+  #board .paper { position: relative; isolation: isolate; height: 540px; border-radius: 100px 100px 0 0; background: linear-gradient(180deg, #34352ffc, #373830f8); overflow: hidden; box-shadow: 0 -1px 0 #cad0bf13, 0 15px 70px #04090430; }
+  #board .grain { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .2;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%239c9c86' filter='url(%23n)' opacity='.38' d='M0 0h140v140H0z'/%3E%3C/svg%3E"); }
-  /* the lamp's beam: from the engine's headlamp, up over the words */
-  .beam { position: absolute; left: var(--lx, 30%); top: 0; width: 640px; height: var(--bh, 330px); transform: translateX(-50%) rotate(var(--tilt, 6deg)); transform-origin: 50% 100%;
-    filter: blur(12px); opacity: var(--light); pointer-events: none; z-index: 1; }
-  .beam::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, #fce3aaee 0, #e8d5a69c 23%, #d2c9a629 53%, transparent 76%);
+  /* 灯光：从打字头往上照的一束，边缘模糊 */
+  #board .spotlight { position: absolute; left: var(--head-x); top: 0; width: calc(420px * var(--reach)); height: 315px; transform: translateX(-50%); filter: blur(12px); opacity: var(--light);
+    transition: left .22s ease, opacity .2s, width .3s; pointer-events: none; z-index: 1; }
+  #board .spotlight::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, #fce3aaee 0, #e8d5a69c 23%, #d2c9a629 53%, transparent 76%);
     clip-path: polygon(calc(50% - var(--spread) / 2) 0, calc(50% + var(--spread) / 2) 0, 50% 100%); }
-  #steam { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
-  .writing { position: relative; z-index: 3; margin: 70px 11% 0; }
-  #free { width: 100%; border: 0; outline: 0; background: transparent; padding: 8px 4px; font: 26px/1.8 var(--serif); letter-spacing: .05em; color: #ece6cb; caret-color: #f1e5b4; }
-  #free::placeholder { color: #c0c0aa; opacity: .6; }
-  #mirror { position: absolute; visibility: hidden; white-space: pre; font: 26px/1.8 var(--serif); letter-spacing: .05em; padding: 8px 4px; }
-  #tasks { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 18px; min-height: 30px; }
-  #tasks button { border: 0; background: none; padding: 2px 0; font: 19px var(--serif); letter-spacing: .06em; color: #d8d2b8; opacity: .6; cursor: pointer; transition: opacity .2s, color .2s; max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #tasks button:hover { opacity: .95; }
-  #tasks button.on { opacity: 1; color: #f3ead0; text-decoration: underline; text-underline-offset: 7px; text-decoration-color: #f1e5b466; }
-  #tasks .none { font: 14px var(--serif); color: #a5a79a; opacity: .7; }
-  .mechanism { position: absolute; left: 0; right: 0; top: 318px; height: 92px; z-index: 3; pointer-events: none; }
-  .mechanism .rail { position: absolute; top: 58px; left: -1%; right: -1%; height: 7px; border-radius: 2px; background: linear-gradient(#5d635c, #2a2f2a 45%, #0b0e0c 80%, #3a3f38); box-shadow: 0 2px 3px #0008; }
-  .mechanism .ties { position: absolute; top: 65px; left: -1%; right: -1%; height: 9px; background: repeating-linear-gradient(90deg, #1e1b17 0 16px, transparent 16px 38px); opacity: .9; }
-  #loco { position: absolute; left: var(--hx, 30%); top: -10px; width: 150px; height: 75px; transform: translateX(-50%); filter: drop-shadow(0 4px 3px #0009); }
-  #loco svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .controls { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; padding: 20px 34px; display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 26px; align-items: end; background: #3a3c321e; }
-  .controls label > span { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 17px; color: #b0b4a1; font: 12px var(--mono); letter-spacing: .05em; }
-  .controls output { white-space: nowrap; font-family: var(--hand); font-size: 13px; }
-  #board input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; cursor: pointer; background:
-    repeating-linear-gradient(90deg, transparent 0, transparent calc(12.5% - 1px), #b4b6a130 calc(12.5% - 1px), #b4b6a130 12.5%),
-    linear-gradient(#969e744d, #969e744d) center / 100% 1px no-repeat; }
-  #board input#ride { background: repeating-linear-gradient(90deg, #b4b6a140 0 1px, transparent 1px calc(20% - .2px)) 0 0 / calc(100% + 1px) 100%, linear-gradient(#969e744d, #969e744d) center / 100% 1px no-repeat; }
-  #board input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 21px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; }
-  #board input[type=range]::-moz-range-thumb { width: 5px; height: 18px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; }
-  .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 70px; padding: 14px 30px; border-radius: 0 0 28px 28px; background: #20241fe8; color: #a7ae9d; }
-  .foot .q { display: inline-flex; align-items: center; gap: 9px; border: 0; background: none; padding: 9px 0; font: 14px var(--hand); color: #bdc4b1; cursor: pointer; }
-  .foot .q:hover { color: #f4f0da; }
-  .foot .hint { font-size: 13px; letter-spacing: .1em; }
-  .go { border: 0; border-radius: 7px; padding: 11px 22px; font: 15px var(--hand); letter-spacing: .3em; color: #293128; background: #d2d6bd; cursor: pointer; transition: background .2s; }
-  .go:hover { background: #e5e7d4; }
-  /* the ticket, once you set off: it comes up out of the night and is punched */
-  /* the ride dial: a fine ruler you drag (with a flick it coasts), one tick a station; it settles on a ride length with a heavier click */
-  #board input#ride, .controls #rideO { display: none; }   /* the dial's own numbers say it */
-  html[data-theme="day"] .controls label > span { margin: 0; }
-  #dial { position: relative; height: 46px; overflow: hidden; cursor: grab; touch-action: none; outline: none;
-    -webkit-mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
-  #dial:active { cursor: grabbing; }
-  #dial .dt { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
-  #dial .dt i { position: absolute; top: 6px; width: 1px; height: 9px; background: rgba(28, 35, 43, .28); }
-  #dial .dt i.f { height: 5px; top: 8px; background: rgba(28, 35, 43, .16); }
-  #dial .dt i.m { height: 17px; top: 2px; width: 1.5px; background: rgba(28, 35, 43, .55); }
-  #dial .dt b { position: absolute; top: 25px; transform: translateX(-50%); font: 400 11px var(--sans); color: #5d6873; letter-spacing: .04em; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
-  #dial .dt b.on { color: #1c232b; font-weight: 500; }
-  #dial .needle { position: absolute; left: 50%; top: 0; width: 2px; height: 22px; margin-left: -1px; border-radius: 1px; background: #2f4f73; box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
-  #dial:focus-visible .needle { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(47, 79, 115, .35); }
+  #board .typing-area { position: relative; margin: 72px 11% 0; height: 268px; z-index: 3; }
+  #board .typing-area textarea { width: 100%; height: 100%; padding: 12px 4px 60px; border: 0; outline: 0; resize: none; overflow-y: auto; color: #ece6cb; background: transparent;
+    font: 24px/1.85 var(--tserif); letter-spacing: .05em; caret-color: #f1e5b4; scrollbar-width: thin; scrollbar-color: #95967e45 transparent; }
+  #board .typing-area textarea::placeholder { color: #c0c0aa; opacity: .65; }
+  #caretMirror { visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; white-space: pre-wrap; overflow-wrap: break-word; padding: 12px 4px 60px; font: 24px/1.85 var(--tserif); letter-spacing: .05em; pointer-events: none; }
+  /* 打字机：一根导轨、轨上九股细线、打字头；每打一个字，打字头往下顿 2 px（0.12 秒），右边闪一下火花 */
+  #board .mechanism { position: absolute; left: 0; right: 0; top: 342px; height: 92px; z-index: 3; pointer-events: none; }
+  #board .rail { position: absolute; top: 22px; left: -1%; right: -1%; height: 21px; background: linear-gradient(#141714, #5a6059 17%, #282d28 36%, #090d0b 65%, #343932); box-shadow: 0 3px 4px #0008; border-radius: 3px; }
+  #board .carriage { position: absolute; width: 126px; height: 98px; left: var(--head-x); top: -29px; transform: translateX(-50%); transition: left .18s ease; }
+  #board .carriage img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 3px #0008); }
+  #board .spark { position: absolute; right: 15px; top: 53px; width: 3px; height: 20px; border-radius: 100%; background: #f4e8b3; opacity: 0; box-shadow: 0 0 12px #e9d997; }
+  #board .carriage.strike { animation: tyl-strike .12s ease; }
+  #board .carriage.strike .spark { animation: tyl-spark .2s ease; }
+  #board .carriage.leave { transition: left 1.6s cubic-bezier(.5, 0, .9, .4); left: 118%; }   /* 上车：打字头顺着导轨开走 */
+  #wave { position: absolute; inset: -15px 0; width: 100%; height: 100px; opacity: .36; }
+  /* 雪、雨落到信纸上：一圈微光（雪是一朵小雪花），散开消失 */
+  #board .impacts { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 7; border-radius: inherit; }
+  #board .impact { position: absolute; border-radius: 50%; width: 42px; height: 42px; transform: translate(-50%, -50%); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); animation: tyl-impact-rain .9s ease-out forwards;
+    background: radial-gradient(circle, #f4ecd225 5%, transparent 45%, #d8e4e628 64%, transparent 72%); border: .5px solid #edf2d422; }
+  #board .impact.snow { background: radial-gradient(circle, #f4faff75, #ebf5ff20 45%, transparent 70%); border: 0; animation: tyl-impact-snow 1.2s ease-out forwards; }
+  #board .impact.snow::after { content: "❄"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #fff9; font: 15px serif; }
+  /* 灯光三根滑块 + 明亮信纸 */
+  #board .light-controls { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 34px; display: grid; grid-template-columns: 1fr 1fr 1fr 46px; gap: 26px; align-items: end; background: #3a3c321e; z-index: 5; }
+  #board .light-controls label > span { display: flex; justify-content: space-between; color: #b0b4a1; font: 12px ui-monospace, monospace; letter-spacing: .05em; gap: 8px; margin-bottom: 17px; }
+  #board .light-controls output { white-space: nowrap; }
+  #board .light-controls .icon-button { align-self: center; }
+  #board input[type=range], #tylDlg input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; cursor: pointer; margin: 0; vertical-align: middle; touch-action: manipulation;
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(12.5% - 1px), #b4b6a130 calc(12.5% - 1px), #b4b6a130 12.5%), linear-gradient(#969e744d, #969e744d) center / 100% 1px no-repeat; }
+  #board input[type=range]::-webkit-slider-thumb, #tylDlg input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 8px; height: 21px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; box-shadow: 0 0 0 3px #ced7bd09; }
+  #board input[type=range]::-moz-range-thumb, #tylDlg input[type=range]::-moz-range-thumb { width: 5px; height: 18px; border: 2px solid #dedfca; border-radius: 1px; background: #7b826f; }
+  #board .foot { background: #20241fe8; border-radius: 0 0 28px 28px; padding: 21px 30px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #a7ae9d; min-height: 70px; }
+  #board .quiet-button { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; color: #bdc4b1; padding: 9px 0; }
+  #board .quiet-button:hover { color: #f4f0da; }
+  #board .quiet-button svg { width: 18px; height: 18px; }
+  #board.light-paper .paper { background: #e7e2d1; }
+  #board.light-paper .typing-area textarea { color: #424536; }
+  #board.light-paper .typing-area textarea::placeholder { color: #6d705f; }
+  #board.light-paper .light-controls span { color: #6c715f; }
+  #board.light-paper .spotlight { opacity: 0; }
+  #board.light-paper .light-controls .icon-button { color: #5b624f; }
+  #board.light-paper input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
+  /* 设置：此刻的天气 */
+  #tylDlg { width: min(420px, calc(100% - 32px)); border: 1px solid #8b918746; border-radius: 22px; background: #252c29f5; color: #dedccb; padding: 26px; box-shadow: 0 22px 100px #0007; max-height: 88dvh; overflow: auto;
+    backdrop-filter: blur(24px); font: 16px/1.6 system-ui, -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; color-scheme: dark; user-select: text; }
+  #tylDlg::backdrop { background: #0c130e66; backdrop-filter: blur(5px); }
+  #tylDlg button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+  #tylDlg .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  #tylDlg h2 { font: 400 22px 'Songti SC', 'Noto Serif CJK SC', 'Noto Serif SC', 'STSong', 'SimSun', serif; margin: 0; }
+  #tylDlg .x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #d7d9c6; }
+  #tylDlg .x svg { width: 20px; }
+  #tylDlg .secondary { font-size: 13px; color: #a5b1a4; margin: 1em 0; }
+  #tylDlg .setting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px 22px; margin: 27px 0; }
+  #tylDlg .setting-grid label, #tylDlg .volume-label { font-size: 14px; }
+  #tylDlg .setting-grid output, #tylDlg .volume-label output { float: right; color: #a7ae9b; font: 12px/22px ui-monospace, monospace; }
+  #tylDlg .setting-grid input, #tylDlg .volume-label input { display: block; margin-top: 12px; }
+  #tylDlg .setting-divider { height: 1px; background: #c2cbb01b; margin: 25px 0; }
+  #tylDlg .music-label { font-size: 14px; }
+  #tylDlg select { display: block; width: 100%; margin: 10px 0 20px; border: 1px solid #b2bfa32b; border-radius: 8px; padding: 11px; background: #18251f; color: #d5dbcb; font: inherit; }
+  #tylDlg .volume-label { display: block; }
+  #tylDlg .settings-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 22px; }
+  #tylDlg .check-label { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  #tylDlg input[type=checkbox] { accent-color: #afbc9c; width: 16px; height: 16px; }
+  #tylDlg .quiet-button { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; color: #bdc4b1; padding: 9px 0; }
+  @keyframes tyl-strike { 50% { transform: translate(-50%, 2px); } }
+  @keyframes tyl-spark { 20% { opacity: 1; } }
+  @keyframes tyl-impact-rain { 0% { opacity: 0; scale: .3; } 25% { opacity: .9; } 100% { opacity: 0; scale: 1.7; backdrop-filter: blur(0); } }
+  @keyframes tyl-impact-snow { 0% { opacity: 0; scale: .4; } 25% { opacity: .8; } 100% { opacity: 0; scale: 1.5; backdrop-filter: blur(0); } }
+  /* 宽屏：它在自己量到的宽 ≥ 1400 px 时上面留得更多、信纸更高；这一页按 0.75 缩着画（见下），所以换算成窗口 ≥ 1050 px */
+  @media (min-width: 1050px) { #board .shell { padding-top: 46px; } #board .weather-toolbar { height: 142px; } #board .paper { height: 590px; } #board .typing-area { height: 315px; }
+    #board .mechanism { top: 386px; } #board .spotlight { height: 360px; } }
+  /* 手机 */
+  @media (max-width: 680px) { #board .shell { width: calc(100% - 24px); padding: 18px 0 25px; } #board .topbar { height: 48px; padding: 0 9px; } #board .wordmark { font-size: 12px; letter-spacing: .2em; }
+    #board .top-actions { gap: 5px; } #board .count { font-size: 11px; letter-spacing: .05em; } #board .topbar .icon-button { width: 38px; } #board .topbar .icon-button svg { width: 23px; }
+    #board .weather-toolbar { height: 98px; gap: 17px; } #board .weather-toolbar svg { width: 27px; height: 27px; } #board .weather-toolbar .icon-button { width: 40px; }
+    #board .paper { height: clamp(405px, 62svh, 510px); border-radius: 60px 60px 0 0; } #board .typing-area { margin: 55px 9% 0; height: calc(100% - 188px); }
+    #board .typing-area textarea, #caretMirror { font-size: 21px; line-height: 1.85; padding-top: 7px; } #board .mechanism { top: auto; bottom: 112px; height: 58px; }
+    #board .carriage { width: 103px; height: 78px; top: -21px; } #board .rail { height: 17px; } #board .spotlight { top: 12px; height: calc(100% - 190px); }
+    #board .light-controls { padding: 18px 18px 25px; gap: 13px; grid-template-columns: 1fr 1fr 1fr 30px; } #board .light-controls label > span { font-size: 9px; gap: 2px; margin-bottom: 13px; }
+    #board .light-controls .icon-button { width: 30px; height: 32px; } #board .light-controls .icon-button svg { width: 27px; } #board .light-controls label output { font-size: 9px; }
+    #board input[type=range]::-webkit-slider-thumb { height: 19px; width: 7px; } #board .foot { padding: 14px 18px; flex-wrap: wrap; gap: 3px 12px; min-height: 76px; border-radius: 0 0 22px 22px; }
+    #board .foot .quiet-button { font-size: 13px; } #draftStatus { font-size: 11px; } #inputHint { font-size: 12px; } #tylDlg { padding: 23px; } #tylDlg h2 { font-size: 21px; } }
+  @media (prefers-reduced-motion: reduce) { #board .scene, #board .carriage { transition: none; } #board .impact { animation-duration: .3s; } }
+  /* 大小照它在浏览器 75% 时的样子（用户 2026-11-03："能否把 75 的大小设置成默认的 100 的尺寸"）：卡片、顶栏、车票、到站框、角上的按钮按 0.75 画（CSS zoom，
+     字、线、圆角、间距一起缩，同浏览器缩放）；背景照片、雪、坐车时的车厢和窗外铺满屏幕，不缩。窗口窄于 700 px（手机）不缩。
+     坐车时顶上那条站名线没缩：它的左右按屏幕宽的 18% 定，缩了会偏到左边。 */
+  @media (min-width: 700px) { #board .shell, #tylDlg, .home, #dayBtn, #car #off, #car #sndT, #car #radioT, #tkSlot, #arrive .box { zoom: .75; } }
   #tkStage { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; opacity: 0; transform: translateY(26px); transition: opacity .7s, transform .9s var(--ease); }
   #board.sent #tkStage { opacity: 1; transform: none; }
-  html[data-theme="day"] .paper { background: linear-gradient(180deg, #e9e4d4, #e3ddcb); }
-  html[data-theme="day"] #free { color: #424536; caret-color: #6b5a2a; } html[data-theme="day"] #free::placeholder { color: #6d705f; }
-  html[data-theme="day"] #tasks button { color: #4b4e3f; } html[data-theme="day"] #tasks button.on { color: #2c2f24; }
-  /* by day: high-key winter sun — the paper lies in pale blue shade, the lamp throws near-white light into it, a little flare at the lamp */
-  html[data-theme="day"] .paper { background: linear-gradient(180deg, #d4dce6, #ccd5df); }
-  html[data-theme="day"] .foot { background: #c3ccd6e8; } html[data-theme="day"] .controls { background: #c9d2dc40; }
-  html[data-theme="day"] .beam { opacity: calc(var(--light) * 1.6); mix-blend-mode: screen; filter: blur(12px); }
-  html[data-theme="day"] .beam::before { background: radial-gradient(ellipse at 50% 100%, #ffffff 0, #fffdf6ee 22%, #fff8eaa0 50%, #ffffff30 68%, transparent 80%); }
-  html[data-theme="day"] .controls label > span { color: #6c715f; } html[data-theme="day"] .controls { background: #00000008; }
-  html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
-  html[data-theme="day"] .foot { background: #bfc9d4e8; color: #4f5a66; } html[data-theme="day"] .foot .q { color: #4f5444; }
-  html[data-theme="day"] #board .wordmark, html[data-theme="day"] #board .ibtn { color: #2f3a48; } html[data-theme="day"] .home { background: rgba(20,24,30,.22); }
-  /* ── the setting-off card: paper by day too, like the night's（用户 2026-11-03：白天的从磨砂玻璃改回原来的纸质）——
-     上面那层淡蓝阴影里的纸（#d4dce6 → #ccd5df，带纸纹 .grain），底栏同色不透明；不透出后面的雪景 ── */
-  html[data-theme="day"] .paper { box-shadow: 0 -1px 0 #ffffff40, 0 15px 70px #1a2a3a2a; }
-  html[data-theme="day"] .foot { box-shadow: 0 18px 34px -18px rgba(21, 35, 58, .45); color: #5d6873; }
-  html[data-theme="day"] .foot .q { color: #5d6873; } html[data-theme="day"] .foot .q:hover { color: #1c232b; }
-  /* the lamp's light and spread keep their defaults; only the ride length is set here, across the whole width */
-  .controls label:has(#light), .controls label:has(#spread) { display: none; }
-  .controls { grid-template-columns: 1fr; padding: 18px 34px 20px; }
-  html[data-theme="day"] .controls { background: none; box-shadow: inset 0 1px 0 rgba(21, 35, 58, .06); }
-  html[data-theme="day"] .controls label > span { justify-content: flex-end; margin-bottom: 12px; }
-  html[data-theme="day"] .controls output { font: 500 13px var(--sans); letter-spacing: .06em; color: #1c232b; font-variant-numeric: tabular-nums; }
-  html[data-theme="day"] #board input#ride { height: 20px; background: repeating-linear-gradient(90deg, rgba(28, 35, 43, .22) 0 1px, transparent 1px calc(20% - .2px)) 0 50% / calc(100% + 1px) 7px no-repeat,
-    linear-gradient(rgba(28, 35, 43, .16), rgba(28, 35, 43, .16)) center / 100% 1px no-repeat; }
-  html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; border: 2.5px solid #fff; border-radius: 50%; background: #2f4f73; box-shadow: 0 1px 4px rgba(21, 35, 58, .35); }
-  html[data-theme="day"] #board input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border: 2.5px solid #fff; border-radius: 50%; background: #2f4f73; box-shadow: 0 1px 4px rgba(21, 35, 58, .35); }
-  html[data-theme="day"] .go { border-radius: 999px; padding: 10px 26px; font: 500 14px var(--sans); letter-spacing: .14em; color: #fff; background: #2f4f73;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, .25) inset, 0 8px 18px -10px rgba(21, 35, 58, .7); transition: background .2s, transform .2s var(--ease); }
-  html[data-theme="day"] .go:hover { background: #3a5f88; transform: translateY(-1px); }
-  @media (max-width: 680px) { .paper { height: 470px; border-radius: 60px 60px 0 0; } .writing { margin: 50px 9% 0; } .mechanism { top: 268px; } .controls { padding: 16px 18px 22px; gap: 13px; } }
-
+  /* 返回箭头：上车前在顶栏左头（#board 里那个），坐车时用左上角这个 */
+  .home { position: fixed; left: 22px; top: 20px; z-index: 30; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #d7d9c6; text-decoration: none; font-size: 20px; transition: background .2s; }
+  .home:hover { background: #bfc8b315; }
+  body:not(:has(#car.on)) .home { display: none; }
   /* ═════════ the ticket: ticket.js (after sasshi's admission ticket) ═════════ */
   #tkSlot .tkt { --tw: min(560px, 88vw); }
 
@@ -212,19 +243,6 @@
   #arrive .ghost { color: #c9d5e3; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
   @media (prefers-reduced-motion: reduce) { #board, #car { transition: none; } }
 
-  /* ═════════ the setting-off page, reproduced after 听雨来信 (snow mode): its photo, its snow, its cable and its head.
-     TEMPORARY: assets/tyl/* are 听雨来信's own images, used to get the look right first; to be replaced with our own. ═════════ */
-  #board { background: #191c19 url(assets/tyl/snow-background.webp) center / cover no-repeat; }
-  #board::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(#0c131930, #10171442 60%, #0a110f77); }
-  html[data-theme="day"] #board { background-image: url(assets/snow-day.webp); }   /* by day a sunlit snowy wood (Poly Haven, CC0) */
-  html[data-theme="day"] #board::before { background: linear-gradient(#ffffff10, #dfe8f020 60%, #33404a40); }
-  #bgc { display: none; }
-  .mechanism .ties { display: none; }
-  .mechanism .rail { top: 22px; height: 21px; border-radius: 3px; background: linear-gradient(#141714, #5a6059 17%, #282d28 36%, #090d0b 65%, #343932); box-shadow: 0 3px 4px #0008; }
-  #wave { position: absolute; left: 0; right: 0; top: -15px; width: 100%; height: 100px; opacity: .36; }
-  #loco { visibility: hidden; }
-  #head { position: absolute; left: var(--hx, 30%); top: -29px; width: 126px; height: 98px; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 4px 3px #0008); }
-  #steam { display: none; }
   #dayBtn { position: fixed; right: 18px; bottom: 18px; z-index: 50; width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
     background: #1d221ecc; color: #e6e2c8; box-shadow: 0 0 0 1px #d8d2a838, 0 6px 18px #0006; backdrop-filter: blur(6px); }
   #dayBtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
@@ -236,36 +254,74 @@
 </head>
 <body>
 <a class="home" href="lab/entry.html?at=2" title="回到入口">←</a>
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 2v20M3.4 7l17.2 10M3.4 17L20.6 7M8.5 4.5L12 7l3.5-2.5M8.5 19.5L12 17l3.5 2.5M3.5 11l3.9-.8-.8-3.8M17.4 17.6l-.8-3.8 3.9-.8M3.5 13l3.9.8-.8 3.8M17.4 6.4l-.8 3.8 3.9.8"/></symbol>
+  <symbol id="i-rain" viewBox="0 0 24 24"><path d="M5 15a4 4 0 0 1-.2-8A6 6 0 0 1 16 5a5 5 0 0 1 3 10H5ZM7 18l-1 3m6-3-1 3m6-3-1 3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M3 5h9m4 0h5M3 12h3m4 0h11M3 19h12m4 0h2"/><circle cx="14" cy="5" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="17" cy="19" r="2"/></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 5l9 8 9-8"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4.2 4.2l2 2m11.6 11.6 2 2M4.2 19.8l2-2M17.8 6.2l2-2"/></symbol>
+  <symbol id="i-audio" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m10 4-8 8 8 8M2 12h20"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+</defs></svg>
 
-<!-- setting off -->
-<section id="board">
-  <canvas id="bgc"></canvas>
+<!-- setting off：一比一照"听雨来信"的写信页 -->
+<section id="board" data-weather="snow">
+  <div class="scenery" aria-hidden="true"><div class="scene rain-scene"></div><div class="scene snow-scene"></div><div class="scene-shade"></div></div>
+  <canvas id="weather" aria-hidden="true"></canvas>
   <div class="shell">
-    <header class="topbar"><span class="wordmark"></span>
-      <div class="tops"><span class="count" id="tkCount"></span><a class="ibtn" href="binder/?kind=ticket" title="车票卡册">
-        <svg viewBox="0 0 24 24"><path d="M3 7h13v10H3zM16 7h5v10h-5"/><path d="M16 9v1M16 12v1M16 15v1"/></svg></a></div></header>
-    <div class="gap"></div>
-    <div class="paper">
-      <i class="grain"></i>
-      <i class="beam" id="beam"></i>
-      <canvas id="steam"></canvas>
-      <div class="writing">
-        <span id="mirror"></span>
-        <input id="free" maxlength="40" spellcheck="false" autocomplete="off" aria-label="这一程，专注什么">
-        <div id="tasks"></div>
+    <header class="topbar">
+      <a class="icon-button" href="lab/entry.html?at=2" title="回到入口" aria-label="回到入口"><svg><use href="#i-back"/></svg></a>
+      <span class="wordmark">雪国线</span>
+      <div class="top-actions"><span id="count" class="count">0 / 3 000</span>
+        <button class="icon-button" id="go" title="上车" aria-label="上车"><svg><use href="#i-envelope"/></svg></button></div>
+    </header>
+    <nav class="weather-toolbar" aria-label="天气">
+      <button class="icon-button weather-choice" data-weather="snow" title="雪天 · 再点一次关闭" aria-label="雪天" aria-pressed="false"><svg><use href="#i-snow"/></svg></button>
+      <button class="icon-button weather-choice" data-weather="rain" title="雨天 · 再点一次关闭" aria-label="雨天" aria-pressed="false"><svg><use href="#i-rain"/></svg></button>
+      <button class="icon-button" id="settingsBtn" title="调节天气和声音" aria-label="调节天气和声音" aria-expanded="false"><svg><use href="#i-settings"/></svg></button>
+    </nav>
+    <div class="paper" id="paper">
+      <div class="grain" aria-hidden="true"></div>
+      <div class="spotlight" aria-hidden="true"></div>
+      <div class="typing-area">
+        <label class="sr-only" for="free">这一程，专注什么</label>
+        <textarea id="free" placeholder="写下你的第一句话。" spellcheck="false" autocomplete="off" aria-describedby="inputHint"></textarea>
+        <div id="caretMirror" aria-hidden="true"></div>
       </div>
-      <div class="mechanism"><i class="ties"></i><i class="rail"></i><canvas id="wave"></canvas><div id="loco"></div><img id="head" src="assets/tyl/mechanical-head.webp" alt=""></div>
-      <div class="controls">
-        <label><span></span><input id="light" type="range" min="15" max="100" value="70"></label>
-        <label><span></span><input id="spread" type="range" min="30" max="100" value="72"></label>
-        <label><span><output id="rideO">先坐一站</output></span><input id="ride" type="range" min="0" max="5" step="1" value="0"><div id="dial" tabindex="0" role="slider" aria-label="行程"><div class="dt"></div><i class="needle"></i></div></label>
+      <div class="mechanism" aria-hidden="true"><div class="rail"></div><canvas id="wave"></canvas>
+        <div class="carriage" id="carriage"><img src="assets/tyl/mechanical-head.webp" alt=""><span class="spark"></span></div></div>
+      <div id="impacts" class="impacts" aria-hidden="true"></div>
+      <div class="light-controls">
+        <label><span>LIGHT <output id="light-out">柔光</output></span><input id="light" type="range" min="10" max="100" value="65" aria-label="灯光亮度"></label>
+        <label><span>SPREAD <output id="spread-out">144°</output></span><input id="spread" type="range" min="60" max="170" value="144" aria-label="照射角度"></label>
+        <label><span>REACH <output id="reach-out">160%</output></span><input id="reach" type="range" min="70" max="220" value="160" aria-label="照射范围"></label>
+        <button id="daylight" class="icon-button" title="切换明亮信纸" aria-label="切换明亮信纸" aria-pressed="false"><svg><use href="#i-sun"/></svg></button>
       </div>
     </div>
-    <footer class="foot"><button class="q" id="sndB"></button><button class="q" id="radioB" data-radio-open title="白噪音收音机" aria-label="白噪音收音机"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="8" width="23" height="16" rx="2.4"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="12" r=".75"/><circle cx="11.5" cy="12" r=".75"/><circle cx="8.5" cy="15" r=".75"/><circle cx="11.5" cy="15" r=".75"/><circle cx="8.5" cy="18" r=".75"/><circle cx="11.5" cy="18" r=".75"/><circle cx="8.5" cy="21" r=".75"/><circle cx="11.5" cy="21" r=".75"/></g><circle cx="21" cy="16" r="4.4"/><circle cx="21" cy="16" r="1.05"/></svg></button><span class="hint"></span><button class="go" id="go">上车</button></footer>
+    <footer class="foot">
+      <button id="audioBtn" class="quiet-button"><svg><use href="#i-audio"/></svg><span id="audioLabel">开启声音</span></button>
+      <span id="inputHint">点击信纸，开始写信</span>
+      <span id="draftStatus">草稿留在此设备</span>
+    </footer>
   </div>
   <div id="tkStage"><div id="tkSlot"></div></div>
-  <canvas id="snow0"></canvas>
 </section>
+<dialog id="tylDlg">
+  <div class="dialog-heading"><h2>此刻的天气</h2><button class="x" id="dlgClose" aria-label="关闭调节"><svg><use href="#i-close"/></svg></button></div>
+  <p class="secondary" id="weatherDesc">雪夜的微风，轻轻掠过</p>
+  <div class="setting-grid">
+    <label>大小 <output id="size-out">45%</output><input id="size" type="range" min="10" max="100" value="45"></label>
+    <label>速度 <output id="speed-out">40%</output><input id="speed" type="range" min="10" max="100" value="40"></label>
+    <label>密度 <output id="density-out">45%</output><input id="density" type="range" min="0" max="100" value="45"></label>
+    <label>环境声音量 <output id="ambient-out">45%</output><input id="ambient" type="range" min="0" max="100" value="45"></label>
+  </div>
+  <div class="setting-divider"></div>
+  <label class="music-label" for="music">背景音乐</label>
+  <select id="music"><option value="none">只听天气</option><option value="piano">慢慢 · 轻钢琴</option><option value="ambient">晚安 · 柔和氛围</option></select>
+  <label class="volume-label">音乐音量 <output id="musicVolume-out">25%</output><input id="musicVolume" type="range" min="0" max="100" value="25"></label>
+  <div class="settings-bottom"><label class="check-label"><input id="impact" type="checkbox" checked> 雨雪触纸微光</label><button id="settingsAudio" class="quiet-button">试听声音</button></div>
+</dialog>
 
 <!-- the carriage -->
 <section id="car">
@@ -299,7 +355,7 @@
   document.documentElement.dataset.theme = DAY ? "day" : "night";
   addEventListener("keydown", e => { if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey && !e.target.closest("input, textarea, [contenteditable]")) toggleDay(); });
   function toggleDay() {
-    DAY = !DAY; put(THEME, DAY ? "day" : "night"); document.documentElement.dataset.theme = DAY ? "day" : "night"; paintBg && paintBg();
+    DAY = !DAY; put(THEME, DAY ? "day" : "night"); document.documentElement.dataset.theme = DAY ? "day" : "night";
     dispatchEvent(new Event("deskTheme"));
   }
   const dayBtn = document.createElement("button"); dayBtn.id = "dayBtn"; dayBtn.title = "白天 / 夜晚（D）";
@@ -310,16 +366,15 @@
   const KM = 5;
   const LINE = "雪国线";
 
-  /* ───────── what to ride with: Doing projects, today's undone items, or anything you write ───────── */
+  /* ───────── 这一程叫什么：写在信纸上的字（第一行）；和"在做"的项目同名时，坐的分钟记到那个项目上 ───────── */
   const tasks = [];
   ((get("paper-desk.desk-tasks.v1", {}) || {}).projects || []).filter(p => p.col === "doing" && (p.title || "").trim()).forEach(p => tasks.push({ name: p.title, proj: p.id }));
-  (get("paper-desk.today.v1", []) || []).filter(i => i && !i.done && (i.text || "").trim() && !i.sub).slice(0, 6).forEach(i => tasks.push({ name: i.text }));
   const RIDES = [5, 15, 25, 45, 60, 90];
-  let pick = null, minutes = RIDES.includes(get("paper-desk.trip.min", 5)) ? get("paper-desk.trip.min", 5) : 5;
-  const tEl = $("#tasks"), FREE = $("#free");
-  tasks.forEach(t => { const b = document.createElement("button"); b.textContent = t.name; b.title = t.name; b.onclick = () => { pick = t; FREE.value = t.name; FREE.focus(); FREE.setSelectionRange(t.name.length, t.name.length); draw(); chuff(.5); }; t.el = b; tEl.appendChild(b); });
-  if (!tasks.length) tEl.innerHTML = '';   // nothing to pick: the question above is enough
-  FREE.addEventListener("input", () => { const v = FREE.value.trim(); pick = tasks.find(t => t.name === v) || (v ? { name: v } : null); draw(); });
+  // 行程长短：还原期间没有刻度尺，用上次选的（没选过：先坐一站，坐到自己下车为止）
+  let minutes = RIDES.includes(get("paper-desk.trip.min", 5)) ? get("paper-desk.trip.min", 5) : 5;
+  const FREE = $("#free");
+  const tripName = () => (FREE.value.split("\n").find(l => l.trim()) || "").trim().slice(0, 40);
+  const pickOf = name => tasks.find(t => t.name === name) || null;
   // where today's trains start, and the stations of a trip: 先坐一站 shows just the next one (the ride goes on as long as you like)
   const OFF = (new Date().getDate() * 5) % STATIONS.length;
   const nameAt = (off, k) => STATIONS[(off + k) % STATIONS.length];
@@ -329,95 +384,10 @@
   $("#tkSlot").innerHTML = Ticket.html({ minutes, stops: stopsFor(minutes), seat, no });
   const TK = $("#tkSlot .tkt"); Ticket.physics(TK);
   const fillTicket = (tk, t) => Ticket.fill(tk, Object.assign({ no, seat }, t));
-  function draw() {
-    tasks.forEach(t => t.el.classList.toggle("on", t === pick));
-    $("#rideO").textContent = minutes === 5 ? "先坐一站" : `${minutes} 分`;
-    $("#ride").value = RIDES.indexOf(minutes);
-    fillTicket(TK, { name: pick ? pick.name : "", minutes, open: minutes === 5, stops: stopsFor(minutes), seat, no });
-    aimLoco();
-  }
-  { const n = (get(TICKETS, []) || []).length; $("#tkCount").textContent = n ? `${n} 张` : ""; }
-
-  /* the lamp: brightness and how wide the beam opens (kept) */
-  const BD = $("#board"), lamp = get("paper-desk.trip.lamp", { light: 70, spread: 72 });
-  function lampUI() {
-    BD.style.setProperty("--light", (lamp.light / 100).toFixed(2)); BD.style.setProperty("--spread", lamp.spread + "%");
-    $("#light").value = lamp.light; $("#spread").value = lamp.spread;
-    
-  }
-  ["light", "spread"].forEach(k => $("#" + k).addEventListener("input", e => { lamp[k] = +e.target.value; lampUI(); put("paper-desk.trip.lamp", lamp); }));
-  $("#ride").addEventListener("input", e => { minutes = RIDES[+e.target.value]; put("paper-desk.trip.min", minutes); draw(); });
-  lampUI();
-
-
-  /* ───────── the little engine: a tank engine on a rail under the words, its headlamp lighting them ───────── */
-  $("#loco").innerHTML = `<svg viewBox="0 0 200 100" aria-hidden="true"><defs>
-    <linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5d4c"/><stop offset=".45" stop-color="#3b3d33"/><stop offset="1" stop-color="#202219"/></linearGradient>
-    <linearGradient id="lgC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c4f40"/><stop offset="1" stop-color="#2a2c24"/></linearGradient>
-    <radialGradient id="lgL"><stop offset="0" stop-color="#fff6d8"/><stop offset=".5" stop-color="#ffe2a0"/><stop offset="1" stop-color="#c79a46"/></radialGradient></defs>
-    <path d="M6 50h34v36H6z" fill="url(#lgC)"/><path d="M6 50q6-8 12-2 6-7 12-1 5-5 10 3z" fill="#141511"/>
-    <path d="M42 26h50v60H42z" fill="url(#lgC)"/><path d="M38 20q29-9 58 0v6H38z" fill="#24261f"/>
-    <path d="M52 34h28v20H52z" fill="#ffcf86"/><path d="M66 34v20M52 44h28" stroke="#3b3d33" stroke-width="2.5"/><path d="M52 34h28v20H52z" fill="none" stroke="#24261f" stroke-width="3"/>
-    <circle cx="56" cy="68" r="3" fill="#f1b640"/><circle cx="64" cy="68" r="3" fill="#e0662d"/><circle cx="72" cy="68" r="3" fill="#191a15"/>
-    <rect x="88" y="44" width="92" height="34" rx="17" fill="url(#lgB)"/>
-    <path d="M100 45v32M128 45v32M154 45v32" stroke="#b9a46a" stroke-width="1.6" opacity=".7"/><path d="M92 50h84" stroke="#b9a46a" stroke-width="1" opacity=".5"/>
-    <path d="M160 44v-26h12v26z" fill="#24261f"/><path d="M156 13h20l-2 6h-16z" fill="#2c2e26"/><path d="M156 13h20" stroke="#b9a46a" stroke-width="1.4"/>
-    <path d="M117 45a10 10 0 0 1 20 0z" fill="#b9a46a"/><path d="M98 45a6 6 0 0 1 12 0z" fill="#3b3d33"/>
-    <rect x="176" y="30" width="12" height="13" rx="2" fill="#24261f"/><circle cx="188" cy="36.5" r="5" fill="url(#lgL)"/><circle cx="188" cy="36.5" r="9" fill="#ffe2a0" opacity=".18"/>
-    <path d="M6 80h182v7H6z" fill="#161712"/><path d="M180 80h10v8h-10z" fill="#7a2f22"/><path d="M188 86l12 13h-12z" fill="#24261f"/>
-    <g class="wh" data-r="7" transform="translate(16 92)"><circle r="7" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-6 0h12M0-6v12" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.6" fill="#b9a46a"/></g>
-    <g class="wh" data-r="7" transform="translate(32 92)"><circle r="7" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-6 0h12M0-6v12" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.6" fill="#b9a46a"/></g>
-    <g class="wh" data-r="8" transform="translate(66 91)"><circle r="8" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-7 0h14M0-7v14" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.8" fill="#b9a46a"/></g>
-    <g class="wh" data-r="14" transform="translate(110 86)"><circle r="14" fill="#1a1b16" stroke="#3d3f35" stroke-width="2.4"/><path d="M-13 0h26M0-13v26M-9-9l18 18M9-9l-18 18" stroke="#3d3f35" stroke-width="1.5"/><circle r="2.6" fill="#b9a46a"/></g>
-    <g class="wh" data-r="14" transform="translate(142 86)"><circle r="14" fill="#1a1b16" stroke="#3d3f35" stroke-width="2.4"/><path d="M-13 0h26M0-13v26M-9-9l18 18M9-9l-18 18" stroke="#3d3f35" stroke-width="1.5"/><circle r="2.6" fill="#b9a46a"/></g>
-    <g class="wh" data-r="8" transform="translate(174 91)"><circle r="8" fill="#1a1b16" stroke="#3d3f35" stroke-width="2"/><path d="M-7 0h14M0-7v14" stroke="#3d3f35" stroke-width="1.4"/><circle r="1.8" fill="#b9a46a"/></g>
-    <path id="rod" d="M110 92H142" stroke="#9c8a58" stroke-width="3" stroke-linecap="round"/></svg>`;
-  const LOCO = $("#loco"), PAPER = $(".paper"), wheels = [...LOCO.querySelectorAll(".wh")].map(g => ({ g, r: +g.dataset.r, t: g.getAttribute("transform") }));
-  const loco = { x: 0, tx: 0, ang: 0, leave: 0 };
-  // the engine stands under the end of what you've written (where the caret is), its lamp lighting the words
-  function aimLoco() {
-    const pw = PAPER.clientWidth, wr = $(".writing"), left = wr.offsetLeft;
-    $("#mirror").textContent = FREE.value.slice(0, FREE.selectionStart ?? FREE.value.length) || "";
-    const w = FREE.value ? $("#mirror").getBoundingClientRect().width : 0;
-    loco.tx = Math.max(100, Math.min(pw - 110, left + w - 40));
-  }
-  ["keyup", "click", "select"].forEach(ev => FREE.addEventListener(ev, aimLoco));
-  addEventListener("resize", () => { aimLoco(); fitSteam(); });
-
-  /* steam: a puff at every key, a wisp now and then while it waits, a great cloud when it sets off */
-  const SC = $("#steam"), sg = SC.getContext("2d"), puffs = [];
-  let SW = 0, SH = 0;
-  function fitSteam() { const r = PAPER.getBoundingClientRect(); SW = r.width; SH = r.height; SC.width = SW * DPR; SC.height = SH * DPR; }
-  fitSteam();
-  const PUFF = (() => { const n = 64, o = document.createElement("canvas"); o.width = o.height = n; const g = o.getContext("2d"), gr = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
-    gr.addColorStop(0, "rgba(236,234,224,.9)"); gr.addColorStop(.5, "rgba(226,226,216,.4)"); gr.addColorStop(1, "rgba(220,220,210,0)"); g.fillStyle = gr; g.fillRect(0, 0, n, n); return o; })();
-  function chimney() { const m = $(".mechanism"), k = LOCO.offsetWidth / 200; return { x: loco.x - LOCO.offsetWidth / 2 + 166 * k, y: m.offsetTop + LOCO.offsetTop + 12 * k }; }
-  function puff(n, big) {
-    const c = chimney();
-    for (let i = 0; i < n; i++) puffs.push({ x: c.x + (Math.random() - .5) * 6, y: c.y, vx: (big ? -30 : -8) + (Math.random() - .5) * (big ? 90 : 18), vy: -(big ? 40 : 26) - Math.random() * (big ? 60 : 20),
-      r: big ? 6 + Math.random() * 6 : 5, gr: big ? 22 + Math.random() * 26 : 16, a: big ? .3 : .4, life: big ? -i * .05 : 0, max: big ? 2.6 + Math.random() : 2.2 });
-  }
+  function draw() { fillTicket(TK, { name: tripName(), minutes, open: minutes === 5, stops: stopsFor(minutes), seat, no }); }
+  const BD = $("#board"), PAPER = $("#paper");
   let ac2 = null;
-  // a soft chuff: a breath of filtered noise
-  function chuff(v = 1) {
-    puff(2, false);
-    try {
-      ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)();
-      if (!wheelsOn) return;
-      const b = ac2.createBuffer(1, ac2.sampleRate * .25, ac2.sampleRate), d = b.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ac2.sampleRate * .06));
-      const o = ac2.createBufferSource(), f = ac2.createBiquadFilter(), g = ac2.createGain(); o.buffer = b; f.type = "bandpass"; f.frequency.value = 1400 + Math.random() * 500; f.Q.value = .7;
-      g.gain.value = .05 * v; o.connect(f).connect(g).connect(ac2.destination); o.start();
-    } catch {}
-  }
-  /* ───────── the ride dial: drag the ruler (it coasts if flicked), a click at every station it passes, and it settles on a
-     ride length (先坐一站, 15, 25, 45, 60, 90) with a heavier click ───────── */
-  const DIAL = $("#dial"), DT = $(".dt", DIAL), SP = 44, MAXM = 90;    // px per station (5 minutes); a fine tick every minute
-  const xOf = m => (m - 5) / KM * SP;
-  for (let m = 5; m <= MAXM; m++) { const t = document.createElement("i"); t.style.left = xOf(m) + "px"; t.className = RIDES.includes(m) ? "m" : m % KM ? "f" : ""; DT.appendChild(t); }
-  RIDES.forEach(m => { const b = document.createElement("b"); b.textContent = m === 5 ? "一站" : m; b.style.left = xOf(m) + "px"; b.dataset.m = m; DT.appendChild(b); });
-  let dpos = xOf(minutes), dvel = 0, dragging = false, lastX = 0, lastT = 0, settleTo = null, lastTick = Math.round(dpos / SP);
-  const nearest = p => RIDES.reduce((a, m) => Math.abs(xOf(m) - p) < Math.abs(xOf(a) - p) ? m : a, RIDES[0]);
+  // 站过站时"咔"一声（坐车时用）
   function tickSound(heavy) {
     try {
       ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)(); if (!wheelsOn) return;
@@ -429,147 +399,176 @@
         sg2.gain.setValueAtTime(.12, t0); sg2.gain.exponentialRampToValueAtTime(.001, t0 + .08); s.connect(sg2).connect(ac2.destination); s.start(t0); s.stop(t0 + .09); }
     } catch {}
   }
-  function placeDial() {
-    DT.style.transform = `translateX(${(DIAL.clientWidth / 2 - dpos).toFixed(1)}px)`;
-    const k = Math.round(dpos / SP); if (k !== lastTick) { lastTick = k; if (!settleTo || Math.abs(dvel) > 40) tickSound(false); }
-    const m = nearest(dpos); DT.querySelectorAll("b").forEach(b => b.classList.toggle("on", +b.dataset.m === m));
-  }
-  function setRide(m) { if (m === minutes) return; minutes = m; put("paper-desk.trip.min", minutes); draw(); }
-  let dl = performance.now();
-  (function dialLoop(now) {
-    requestAnimationFrame(dialLoop); const dt = Math.min(.05, (now - dl) / 1000); dl = now;
-    if (dragging) return;
-    if (Math.abs(dvel) > 30) { dpos += dvel * dt; dvel *= Math.exp(-dt * 4.2); }          // coasting
-    else if (settleTo == null) { dvel = 0; settleTo = nearest(dpos); }
-    if (settleTo != null && Math.abs(dvel) <= 30) {                                        // easing into the notch
-      const goal = xOf(settleTo), d = goal - dpos; dpos += d * Math.min(1, dt * 14);
-      if (Math.abs(d) < .4) { dpos = goal; if (minutes !== settleTo) { tickSound(true); setRide(settleTo); } settleTo = null; dvel = 0; placeDial(); return; }
+
+  /* ═════════ 上车前这一页：照"听雨来信"写信页的做法（它的 app.js 里量来的数，代码重写） ═════════
+     · 天气：雪 / 雨 / 无（再点一次同一个图标就关掉），背景照片跟着换；画面里落雪或下雨，落到信纸上的那一下留一圈微光（雪是一朵小雪花）。
+     · 设置（第三个图标）：雪雨的大小、速度、密度，环境声音量，背景音乐（只听天气 / 轻钢琴 / 柔和氛围）和音量，触纸微光开关，试听声音。
+     · 信纸：打字头停在光标所在的那个字后面（横向位置 = 光标在信纸上的百分比，13%–86% 之间，空着时 25%），灯光从打字头往上照；
+       每打一个字（文字真的变了），打字头往下顿 2 px（0.12 秒），右边闪一下火花，"嗒"一声（声音开着时）。
+     · 灯光三根滑块：亮度（微光 / 柔光 / 明亮）、照射角度、照射范围；太阳按钮换成明亮信纸（米白，灯光不显示）。
+     · 声音：点信纸时自动开（除非自己关过）；雪是很轻的低沉风声，雨是沙沙的雨声，都是现场合成的，没有音频文件。
+     · 草稿：信纸上的字和这些设置存在这台设备上（paper-desk.trip.draft.v1），下次打开还在。 */
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DEF = { weather: "snow", size: 45, speed: 40, density: 45, ambient: 45, music: "none", musicVolume: 25, light: 65, spread: 144, reach: 160, daylight: false, impact: true };
+  const DRAFT = "paper-desk.trip.draft.v1";
+  let S = Object.assign({}, DEF), userMuted = false, composing = false, prevText = "";
+  { const d = get(DRAFT, null); if (d && typeof d === "object") { if (typeof d.text === "string") FREE.value = [...d.text].slice(0, 3000).join(""); if (d.settings) for (const k in DEF) if (typeof d.settings[k] === typeof DEF[k]) S[k] = d.settings[k]; userMuted = !!d.muted; } }
+  prevText = FREE.value;
+  const countChars = s => Array.from(s).length;
+  let saveT = 0;
+  function saveDraft() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(DRAFT, JSON.stringify({ text: FREE.value, settings: S, muted: userMuted })); $("#draftStatus").textContent = "草稿已留在此设备"; } catch { $("#draftStatus").textContent = "此浏览器无法保存草稿"; } }, 350); }
+  function refresh() {
+    BD.dataset.weather = S.weather; BD.classList.toggle("light-paper", S.daylight);
+    for (const k of ["size", "speed", "density", "ambient", "musicVolume", "light", "spread", "reach"]) {
+      $("#" + k).value = S[k];
+      $("#" + k + "-out").textContent = k === "light" ? (S.light < 35 ? "微光" : S.light > 75 ? "明亮" : "柔光") : S[k] + (k === "spread" ? "°" : "%");
     }
-    dpos = Math.max(0, Math.min(xOf(MAXM), dpos)); placeDial();
-  })(dl);
-  DIAL.addEventListener("pointerdown", e => { const b = e.target.closest("b"); if (b) { settleTo = +b.dataset.m; dvel = 0; return; }
-    dragging = true; DIAL.setPointerCapture(e.pointerId); lastX = e.clientX; lastT = performance.now(); dvel = 0; settleTo = null; });
-  DIAL.addEventListener("pointermove", e => { if (!dragging) return; const now = performance.now(), dx = e.clientX - lastX;
-    dpos = Math.max(-20, Math.min(xOf(MAXM) + 20, dpos - dx)); dvel = -dx / Math.max(.008, (now - lastT) / 1000) * .6 + dvel * .4; lastX = e.clientX; lastT = now; placeDial(); });
-  const drop = () => { if (!dragging) return; dragging = false; if (performance.now() - lastT > 80) dvel = 0; settleTo = null; };
-  DIAL.addEventListener("pointerup", drop); DIAL.addEventListener("pointercancel", drop);
-  DIAL.addEventListener("wheel", e => { e.preventDefault(); const i = RIDES.indexOf(nearest(dpos)) + (e.deltaY + e.deltaX > 0 ? 1 : -1); settleTo = RIDES[Math.max(0, Math.min(RIDES.length - 1, i))]; dvel = 0; }, { passive: false });
-  DIAL.addEventListener("keydown", e => { const s = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (!s) return; e.preventDefault();
-    const i = RIDES.indexOf(minutes) + s; settleTo = RIDES[Math.max(0, Math.min(RIDES.length - 1, i))]; dvel = 0; });
-  addEventListener("resize", placeDial);
+    $("#music").value = S.music; $("#impact").checked = S.impact; $("#daylight").setAttribute("aria-pressed", String(S.daylight));
+    BD.style.setProperty("--light", S.light / 100); BD.style.setProperty("--reach", S.reach / 100); BD.style.setProperty("--spread", S.spread / 2 + "%");
+    document.querySelectorAll("#board .weather-choice").forEach(b => { const on = b.dataset.weather === S.weather; b.classList.toggle("active", on); b.setAttribute("aria-pressed", String(on)); });
+    $("#weatherDesc").textContent = S.weather === "rain" ? "雨声落在窗边" : S.weather === "snow" ? "雪夜的微风，轻轻掠过" : "留一点安静";
+    sound.update();
+  }
+  // 信纸按 CSS zoom 缩着画：getBoundingClientRect、指针坐标是屏幕上的大小，offsetLeft、style 里的 px 是信纸自己的大小，差一个倍数 Z（没缩时 1）
+  const Z = () => { const r = PAPER.getBoundingClientRect().width, w = PAPER.offsetWidth; return r > 0 && w > 0 ? r / w : 1; };
+  function updateCarriage() {
+    if (BD.classList.contains("sent")) return;
+    const mirror = $("#caretMirror"); mirror.textContent = FREE.value.slice(0, FREE.selectionStart);
+    const mark = document.createElement("span"); mark.textContent = "​"; mirror.append(mark);
+    const area = $(".typing-area");
+    let x = (area.offsetLeft + mark.offsetLeft + 8) / PAPER.offsetWidth * 100;   // 都是信纸自己的大小，不受缩放影响
+    if (!FREE.value) x = 25; x = Math.max(13, Math.min(86, x));
+    BD.style.setProperty("--head-x", x + "%");
+  }
+  function updateText(play = true) {
+    if (composing) return;
+    let v = FREE.value;
+    if (countChars(v) > 3000) { const pos = FREE.selectionStart; v = [...v].slice(0, 3000).join(""); FREE.value = v; FREE.setSelectionRange(Math.min(pos, v.length), Math.min(pos, v.length)); }
+    $("#count").textContent = `${countChars(v)} / 3 000`;
+    if (play && v !== prevText) { sound.type(); const c = $("#carriage"); c.classList.remove("strike"); void c.offsetWidth; c.classList.add("strike"); }
+    prevText = v; updateCarriage(); saveDraft(); draw();
+  }
+  FREE.addEventListener("compositionstart", () => { composing = true; });
+  FREE.addEventListener("compositionend", () => { composing = false; updateText(); });
+  FREE.addEventListener("input", () => updateText());
+  ["keyup", "click", "scroll"].forEach(ev => FREE.addEventListener(ev, updateCarriage));
+  FREE.addEventListener("focus", () => { if (!userMuted) startSound(); });
+  document.querySelectorAll("#board .weather-choice").forEach(b => b.addEventListener("click", () => { S.weather = S.weather === b.dataset.weather ? "none" : b.dataset.weather; refresh(); parts = []; saveDraft(); if (!userMuted) startSound(); }));
+  for (const k of ["size", "speed", "density", "ambient", "musicVolume", "light", "spread", "reach"]) $("#" + k).addEventListener("input", e => { S[k] = +e.target.value; refresh(); saveDraft(); if (k === "density") parts = []; });
+  $("#music").addEventListener("change", e => { S.music = e.target.value; refresh(); sound.music(true); saveDraft(); if (!userMuted) startSound(); });
+  $("#impact").onchange = e => { S.impact = e.target.checked; saveDraft(); };
+  $("#daylight").onclick = () => { S.daylight = !S.daylight; refresh(); saveDraft(); };
+  const DLG = $("#tylDlg");
+  $("#settingsBtn").onclick = () => { DLG.showModal(); $("#settingsBtn").setAttribute("aria-expanded", "true"); };
+  $("#dlgClose").onclick = () => DLG.close();
+  DLG.addEventListener("click", e => { if (e.target !== DLG) return; const r = DLG.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) DLG.close(); });
+  DLG.addEventListener("close", () => $("#settingsBtn").setAttribute("aria-expanded", "false"));
 
-  /* ───────── picking a project: the typewriter types its name in, a clack a letter, and a little bell at the end ───────── */
-  let typing = null;
-  function keyClack() {
-    try {
-      ac2 = ac2 || new (window.AudioContext || window.webkitAudioContext)(); if (!wheelsOn) return;
-      const t0 = ac2.currentTime, n = Math.floor(ac2.sampleRate * .03), b = ac2.createBuffer(1, n, ac2.sampleRate), d = b.getChannelData(0);
-      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (Math.exp(-i / (n * .08)) + .35 * Math.exp(-Math.abs(i - n * .45) / (n * .05)));   // strike + the type bar landing
-      const o = ac2.createBufferSource(), f = ac2.createBiquadFilter(), g = ac2.createGain(); o.buffer = b; f.type = "bandpass"; f.frequency.value = 2400 + Math.random() * 900; f.Q.value = 1.1;
-      g.gain.value = .12; o.connect(f).connect(g).connect(ac2.destination); o.start(t0);
-    } catch {}
-  }
-  function bell() {
-    try { if (!ac2 || !wheelsOn) return; const t0 = ac2.currentTime, o = ac2.createOscillator(), g = ac2.createGain(); o.type = "sine"; o.frequency.value = 2350;
-      g.gain.setValueAtTime(.05, t0); g.gain.exponentialRampToValueAtTime(.0008, t0 + .9); o.connect(g).connect(ac2.destination); o.start(t0); o.stop(t0 + 1); } catch {}
-  }
-  function typeIn(t) {
-    clearInterval(typing); const chars = [...t.name]; let i = 0;
-    FREE.value = ""; pick = t; tasks.forEach(x => x.el.classList.toggle("on", x === t)); FREE.focus();
-    typing = setInterval(() => {
-      if (i >= chars.length) { clearInterval(typing); typing = null; bell(); draw(); return; }
-      FREE.value += chars[i++]; FREE.setSelectionRange(FREE.value.length, FREE.value.length); aimLoco(); keyClack(); if (i % 2) puff(1, false);
-    }, 75);
-  }
-  tasks.forEach(t => { t.el.onclick = () => typeIn(t); });
-  FREE.addEventListener("keydown", e => { if (e.key.length === 1 || e.key === "Backspace" || e.key === "Process") chuff(e.key === "Backspace" ? .5 : 1); });
-  let idle = 0;
-  function deck(dt) {
-    // the engine rolls to where it is wanted; the wheels turn with the distance
-    const tx = loco.leave ? loco.x + (loco.leave += dt * 900) * dt : loco.tx;
-    const dx = loco.leave ? (tx - loco.x) : (tx - loco.x) * (1 - Math.exp(-dt * 6));
-    loco.x += dx;
-    wheels.forEach(w => { const a = (loco.ang + dx / w.r * 180 / Math.PI) % 360; w.g.setAttribute("transform", `${w.t} rotate(${a.toFixed(1)})`); });
-    loco.ang = (loco.ang + dx / 14 * 180 / Math.PI) % 360;
-    const ra = loco.ang * Math.PI / 180, ox = Math.cos(ra) * 6, oy = Math.sin(ra) * 6;
-    $("#rod").setAttribute("d", `M${(110 + ox).toFixed(1)} ${(86 + oy).toFixed(1)}H${(142 + ox).toFixed(1)}`);
-    LOCO.style.left = loco.x + "px";
-    // the beam leaves from the headlamp
-    const lampX = loco.x, lampY = $(".mechanism").offsetTop - 22; $("#head").style.left = loco.x + "px";
-    BD.style.setProperty("--lx", lampX + "px"); BD.style.setProperty("--bh", lampY + "px");
-    if ((idle -= dt) < 0) { idle = 2.5 + Math.random() * 3; if (!loco.leave) puff(1, false); }
-    // steam
-    sg.setTransform(DPR, 0, 0, DPR, 0, 0); sg.clearRect(0, 0, SW, SH);
-    for (let i = puffs.length - 1; i >= 0; i--) {
-      const p = puffs[i]; p.life += dt; if (p.life > p.max) { puffs.splice(i, 1); continue; } if (p.life < 0) { const c = chimney(); p.x = c.x; p.y = c.y; continue; }
-      p.x += p.vx * dt; p.y += p.vy * dt; p.vy *= 1 - dt * .6; p.vx *= 1 - dt * .4; p.r += p.gr * dt;
-      sg.globalAlpha = p.a * (1 - p.life / p.max); sg.drawImage(PUFF, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-    }
-    sg.globalAlpha = 1;
-  }
-
-  /* ───────── the night behind: snowy mountains, dark pines, a lake ───────── */
-  function paintBg() {
-    const cv = $("#bgc"), d = DPR || 1, w = innerWidth, h = innerHeight; cv.width = w * d; cv.height = h * d;
-    const g = cv.getContext("2d"); g.scale(d, d);
-    const r = n => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
-    let sk = g.createLinearGradient(0, 0, 0, h);
-    if (DAY) { sk.addColorStop(0, "#9aabbf"); sk.addColorStop(.45, "#c3cedb"); sk.addColorStop(.62, "#d6dee7"); sk.addColorStop(1, "#8d9aaa"); }
-    else { sk.addColorStop(0, "#141b2a"); sk.addColorStop(.45, "#27344c"); sk.addColorStop(.62, "#34425a"); sk.addColorStop(1, "#0d141d"); }
-    g.fillStyle = sk; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 7; i++) { g.fillStyle = DAY ? `rgba(150,165,185,${.12 + r(i) * .1})` : `rgba(20,28,42,${.25 + r(i) * .2})`; g.beginPath(); g.ellipse(r(i * 3) * w, h * (.06 + r(i * 5) * .25), w * (.2 + r(i * 7) * .25), h * .035, 0, 0, 7); g.fill(); }
-    // far peaks, white at the top
-    const ridge = (base, amp, seed, step) => { const pts = []; let y = base; for (let x = -20; x <= w + 40; x += step) { y = base - Math.abs(Math.sin(x * .004 + seed) * amp) - r(x * .01 + seed) * amp * .35; pts.push([x, y]); } return pts; };
-    const peaks = (pts, top, fill) => { g.beginPath(); g.moveTo(-20, h); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(w + 40, h); g.closePath();
-      const mg = g.createLinearGradient(0, top, 0, top + h * .2); mg.addColorStop(0, DAY ? "#ffffff" : "#d6dde8"); mg.addColorStop(.35, DAY ? "#b9c4d2" : "#7d8aa0"); mg.addColorStop(1, DAY ? "#7d8b9d" : fill); g.fillStyle = mg; g.fill(); };
-    peaks(ridge(h * .58, h * .2, 1.3, 26), h * .36, "#26324a");
-    peaks(ridge(h * .64, h * .12, 4.1, 18), h * .5, "#1b2538");
-    // the lake
-    const lk = g.createLinearGradient(0, h * .74, 0, h); lk.addColorStop(0, DAY ? "#8e9db0" : "#1d2a3e"); lk.addColorStop(1, DAY ? "#5d6b7c" : "#0a1019"); g.fillStyle = lk; g.fillRect(0, h * .74, w, h * .26);
-    g.strokeStyle = "rgba(200,212,230,.06)"; for (let i = 0; i < 40; i++) { const y = h * (.76 + r(i * 9) * .22), x = r(i * 4) * w; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 30 + r(i) * 90, y); g.stroke(); }
-    // pines, big at the sides
-    const pine = (x, y, s, c, snow) => { g.fillStyle = c; g.beginPath(); g.moveTo(x, y - s * 3.2);
-      for (let k = 0; k < 6; k++) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.lineTo(x + ww, yy); g.lineTo(x + ww * .4, yy - s * .06); }
-      g.lineTo(x + s * .1, y); g.lineTo(x - s * .1, y); for (let k = 5; k >= 0; k--) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.lineTo(x - ww * .4, yy - s * .06); g.lineTo(x - ww, yy); } g.fill();
-      if (snow) { g.fillStyle = "rgba(220,228,238,.35)"; for (let k = 0; k < 6; k++) { const ww = s * (.25 + k * .17), yy = y - s * 3.2 + s * .5 * (k + 1); g.fillRect(x - ww * .7, yy - s * .1, ww * .9, s * .05); } } };
-    for (let i = 0; i < 60; i++) { const x = r(i * 1.7) * w, s = 6 + r(i * 2.3) * 8; pine(x, h * .74, s, DAY ? "#4a586b" : "#121b2a"); }
-    for (let i = 0; i < 26; i++) { const side = i % 2 ? 1 : 0, x = side ? w - r(i * 3.1) * w * .22 : r(i * 3.1) * w * .22, s = 20 + r(i * 5.3) * 46 * (1 - Math.min(x, w - x) / (w * .3)); pine(x, h * (.8 + r(i * 7) * .12), s, DAY ? "#2c3848" : "#0b111b", true); }
-    const sh = g.createLinearGradient(0, 0, 0, h); if (DAY) { g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(0, 0, w, h); return; } sh.addColorStop(0, "#0c131930"); sh.addColorStop(.6, "#10171442"); sh.addColorStop(1, "#0a110f77"); g.fillStyle = sh; g.fillRect(0, 0, w, h);
-  }
-  paintBg(); addEventListener("resize", paintBg);
-  draw(); loco.x = -80;
-
-  /* ───────── snow on the platform ───────── */
-  function snowfall(cv) {
-    const c = cv.getContext("2d"); let W, H, t = 0; const MAX = Math.round(45 * .75 + 10), SIZE = 45, SPEED = 40;
-    const fit = () => { W = cv.width = cv.clientWidth * DPR; H = cv.height = cv.clientHeight * DPR; };
-    fit(); addEventListener("resize", fit);
-    const flake = top => ({ x: Math.random() * W / DPR, y: top ? -30 : Math.random() * H / DPR, z: .35 + Math.random() * .85, drift: Math.random() * Math.PI * 2 });
-    const fl = Array.from({ length: MAX }, () => flake(false));
-    return dt => {
-      t += dt * 1000; const w = W / DPR, h = H / DPR;
-      c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h);
-      c.strokeStyle = "#eff6fa"; c.fillStyle = "#eef5fa"; c.lineWidth = .8;
-      for (let i = 0; i < fl.length; i++) {
-        const p = fl[i]; p.y += dt * (14 + SPEED * 1.15) * p.z; p.x += dt * (Math.sin(t * .0006 + p.drift) * 15 + 4) * p.z;
-        const size = (1.4 + SIZE * .06) * p.z; c.globalAlpha = .4 + p.z * .28; c.beginPath();
-        if (size > 3.3) { for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; c.moveTo(p.x - Math.cos(an) * size, p.y - Math.sin(an) * size); c.lineTo(p.x + Math.cos(an) * size, p.y + Math.sin(an) * size); } c.stroke(); }
-        else { c.arc(p.x, p.y, size * .65, 0, Math.PI * 2); c.fill(); }
-        if (p.y > h + 40 || p.x > w + 30) fl[i] = flake(true);
+  /* 声音：环境声 = 一段 6 秒的褐噪声循环，过低通（雨 1800 + 速度×16 Hz，雪 480 + 速度×3 Hz），音量 = 环境声音量 ×（雨 .65 / 雪 .28）；
+     打字声 = 三角波 185–265 Hz 在 40 ms 里降到 55 Hz，65 ms 消失；背景音乐 = 一串十六个音（钢琴每 1.15 秒一个、氛围每 2.4 秒一个） */
+  const sound = {
+    ctx: null, on: false, notes: [], next: 0, step: 0,
+    async start() {
+      if (!this.ctx) {
+        const A = window.AudioContext || window.webkitAudioContext; if (!A) throw Error("no audio");
+        const c = this.ctx = new A();
+        this.master = c.createGain(); this.master.gain.value = 0; this.master.connect(c.destination);
+        this.env = c.createGain(); this.env.connect(this.master); this.mus = c.createGain(); this.mus.connect(this.master);
+        const n = c.sampleRate * 6, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); let br = 0;
+        for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; br = (br + .02 * w) / 1.02; d[i] = br * 3.5 + w * .16; }
+        this.noise = b; const src = c.createBufferSource(); src.buffer = b; src.loop = true;
+        this.filter = c.createBiquadFilter(); this.filter.type = "lowpass"; src.connect(this.filter); this.filter.connect(this.env); src.start();
+        setInterval(() => { if (this.on && !document.hidden) this.music(); }, 500);
       }
-      c.globalAlpha = 1;
-    };
+      await this.ctx.resume(); this.on = true; this.master.gain.setTargetAtTime(.65, this.ctx.currentTime, .3); this.update(); this.music();
+    },
+    stop() { this.on = false; if (this.ctx) { this.master.gain.setTargetAtTime(0, this.ctx.currentTime, .12); this.clear(); } this.labels(); },
+    update() {
+      if (this.ctx) { const t = this.ctx.currentTime;
+        this.env.gain.setTargetAtTime(S.weather === "none" ? 0 : S.ambient / 100 * (S.weather === "rain" ? .65 : .28), t, .4);
+        this.filter.frequency.setTargetAtTime(S.weather === "rain" ? 1800 + S.speed * 16 : 480 + S.speed * 3, t, .5);
+        this.mus.gain.setTargetAtTime(S.music === "none" ? 0 : S.musicVolume / 100 * .6, t, .3); }
+      this.labels();
+    },
+    labels() { $("#audioLabel").textContent = this.on ? "声音已开启" : "开启声音"; $("#audioBtn").setAttribute("aria-pressed", String(this.on)); $("#settingsAudio").textContent = this.on ? "暂停声音" : "试听声音"; },
+    clear() { for (const n of this.notes) { try { n.stop(); } catch {} } this.notes = []; this.next = 0; },
+    music(reset) {
+      if (reset) { this.clear(); this.step = 0; }
+      if (!this.ctx || !this.on || S.music === "none") return;
+      const c = this.ctx; if (this.next > c.currentTime + .8) return;
+      const F = [261.63, 329.63, 392, 493.88, 440, 392, 329.63, 293.66, 220, 329.63, 392, 440, 329.63, 293.66, 261.63, 196], piano = S.music === "piano";
+      const f = F[this.step++ % F.length], t = Math.max(c.currentTime + .05, this.next), dur = piano ? 2.8 : 5.6;
+      const o = c.createOscillator(), ov = c.createOscillator(), g = c.createGain(), og = c.createGain();
+      o.type = "sine"; ov.type = piano ? "triangle" : "sine"; o.frequency.value = f; ov.frequency.value = f * (piano ? 2 : .5); og.gain.value = .1;
+      o.connect(g); ov.connect(og); og.connect(g); g.connect(this.mus);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(piano ? .26 : .12, t + (piano ? .018 : 1.1)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.start(t); ov.start(t); o.stop(t + dur + .05); ov.stop(t + dur + .05); this.notes.push(o, ov);
+      o.onended = () => { this.notes = this.notes.filter(n => n !== o && n !== ov); g.disconnect(); };
+      this.next = t + (piano ? 1.15 : 2.4);
+    },
+    type() {
+      if (!this.on || !this.ctx) return; const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(185 + Math.random() * 80, t); o.frequency.exponentialRampToValueAtTime(55, t + .04);
+      g.gain.setValueAtTime(.065, t); g.gain.exponentialRampToValueAtTime(.0001, t + .065); o.connect(g); g.connect(this.master); o.start(t); o.stop(t + .07); o.onended = () => g.disconnect();
+    },
+    paper() {
+      if (!this.on || !this.ctx) return; const c = this.ctx, g = c.createGain(), f = c.createBiquadFilter(), s = c.createBufferSource();
+      f.type = "highpass"; f.frequency.value = 1700; s.buffer = this.noise; s.connect(f); f.connect(g); g.connect(this.master);
+      const t = c.currentTime; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .15); g.gain.exponentialRampToValueAtTime(.001, t + .8); s.start(t); s.stop(t + .9);
+    },
+  };
+  async function startSound() { try { await sound.start(); sound.labels(); } catch {} }
+  async function toggleSound() { if (sound.on) { sound.stop(); userMuted = true; } else { userMuted = false; await startSound(); } saveDraft(); }
+  $("#audioBtn").onclick = toggleSound; $("#settingsAudio").onclick = toggleSound;
+
+  /* 雪、雨：整页一块画布；落到信纸上某一高度（每粒随机，信纸高度的 12%–77%，最低离底边 105 px）的那一下，在信纸上留一圈微光，
+     这粒从顶上重新落（两次微光至少隔 0.23 秒，信纸上同时最多 8 个） */
+  const WC = $("#weather"), wx = WC.getContext("2d");
+  let parts = [], W = 0, H = 0, lastF = 0, impactLast = 0;
+  function fitWeather() { W = innerWidth; H = innerHeight; const d = Math.min(devicePixelRatio || 1, 1.7); WC.width = W * d; WC.height = H * d; wx.setTransform(d, 0, 0, d, 0, 0); parts = []; fitWave(); updateCarriage(); }
+  const np = top => ({ x: Math.random() * W, y: top ? -30 : Math.random() * H, z: .35 + Math.random() * .85, drift: Math.random() * Math.PI * 2, target: .12 + Math.random() * .65 });
+  function addImpact(x, y) {
+    const L = $("#impacts"); if (!S.impact || document.hidden || L.children.length > 7) return;
+    const el = document.createElement("span"), z = Z(), size = 24 + S.size * .38; el.className = "impact" + (S.weather === "snow" ? " snow" : "");
+    el.style.left = x / z + "px"; el.style.top = y / z + "px"; el.style.width = el.style.height = size + "px";
+    L.append(el); el.addEventListener("animationend", () => el.remove(), { once: true }); setTimeout(() => el.remove(), 1400);
   }
-  // the braided cable: nine fine strands wound along the rail
-  const wave = $("#wave"), wc = wave.getContext("2d");
-  (function waves(time) {
-    if (BD.classList.contains("sent") || BD.classList.contains("gone")) return;
-    requestAnimationFrame(waves); if (document.hidden) return;
-    const ww = wave.clientWidth, wh = 100; if (wave.width !== ww * DPR) { wave.width = ww * DPR; wave.height = wh * DPR; }
-    wc.setTransform(DPR, 0, 0, DPR, 0, 0); wc.clearRect(0, 0, ww, wh); wc.lineWidth = .55; wc.strokeStyle = "#ccd1b4";
-    for (let n = 0; n < 9; n++) { wc.beginPath(); for (let x = 0; x < ww; x += 5) { const ph = x * .021 + time * .0004, amp = 11 + 9 * Math.sin(x * .016 + time * .0002), y = 50 + Math.sin(ph + n * .16) * amp * Math.sin(x * .007 + n * .04); x ? wc.lineTo(x, y) : wc.moveTo(x, y); } wc.stroke(); }
-  })(0);
-  const platSnow = snowfall($("#snow0"));
+  function weather(time) {
+    requestAnimationFrame(weather); if (document.hidden) return;
+    const dt = Math.min((time - lastF) / 1000 || .016, .05); lastF = time; wx.clearRect(0, 0, W, H);
+    if (BD.classList.contains("gone")) return;
+    if (S.weather !== "none" && S.density > 0 && !reduced) {
+      const max = Math.round(S.density * (S.weather === "rain" ? 1.4 : .75) + 10);
+      while (parts.length < max) parts.push(np()); if (parts.length > max) parts.length = max;
+      const snow = S.weather === "snow", onPaper = !BD.classList.contains("sent"), r = onPaper ? PAPER.getBoundingClientRect() : null, zz = Z();
+      for (let i = 0; i < parts.length; i++) {
+        const p = parts[i], oy = p.y;
+        p.y += dt * (snow ? 14 + S.speed * 1.15 : 220 + S.speed * 7) * p.z; p.x += dt * (snow ? Math.sin(time * .0006 + p.drift) * 15 + 4 : 14) * p.z;
+        const size = (snow ? 1.4 + S.size * .06 : .4 + S.size * .012) * p.z;
+        wx.globalAlpha = snow ? .4 + p.z * .28 : .12 + p.z * .17; wx.strokeStyle = snow ? "#eff6fa" : "#d9e8e5"; wx.fillStyle = "#eef5fa"; wx.lineWidth = snow ? .8 : size; wx.beginPath();
+        if (snow && size > 3.3) { for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; wx.moveTo(p.x - Math.cos(an) * size, p.y - Math.sin(an) * size); wx.lineTo(p.x + Math.cos(an) * size, p.y + Math.sin(an) * size); } wx.stroke(); }
+        else if (snow) { wx.arc(p.x, p.y, size * .65, 0, Math.PI * 2); wx.fill(); }
+        else { wx.moveTo(p.x, p.y); wx.lineTo(p.x - 2, p.y - (9 + S.size * .17) * p.z); wx.stroke(); }
+        if (r && p.x > r.left + 20 * zz && p.x < r.right - 20 * zz) {
+          const tg = r.top + Math.min(r.height * p.target, r.height - 105 * zz);
+          if (oy < tg && p.y >= tg && time - impactLast > 230) { addImpact(p.x - r.left, p.y - r.top); impactLast = time; parts[i] = np(true); continue; }
+        }
+        if (p.y > H + 40 || p.x > W + 30) parts[i] = np(true);
+      }
+      wx.globalAlpha = 1;
+    }
+    drawWave(time);
+  }
+  // 导轨上九股细线，慢慢扭动
+  const WV = $("#wave"), wv = WV.getContext("2d"); let ww = 0; const wh = 100;
+  function fitWave() { ww = PAPER.clientWidth; WV.width = ww * 1.5; WV.height = wh * 1.5; wv.setTransform(1.5, 0, 0, 1.5, 0, 0); }
+  function drawWave(time) {
+    if (BD.classList.contains("sent")) return;
+    wv.clearRect(0, 0, ww, wh); wv.lineWidth = .55; wv.strokeStyle = "#ccd1b4";
+    for (let n = 0; n < 9; n++) { wv.beginPath(); for (let x = 0; x < ww; x += 5) { const ph = x * .021 + (reduced ? 0 : time * .0004), amp = 11 + 9 * Math.sin(x * .016 + time * .0002), y = 50 + Math.sin(ph + n * .16) * amp * Math.sin(x * .007 + n * .04); x ? wv.lineTo(x, y) : wv.moveTo(x, y); } wv.stroke(); }
+  }
+  addEventListener("resize", fitWeather);
+  refresh(); updateText(false); fitWeather(); requestAnimationFrame(weather);
 
   /* Train motion state; the visible carriage is rendered exclusively by carriage.js. */
   let world = 0, speed = 0, target = 0;
@@ -609,9 +608,6 @@
   $("#sndT").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); wheelsIcon(); if (wheelsOn) audio(); if (rumble) rumble.g.gain.value = 0; };
   const wheelsIcon = () => { const b = $("#sndT"); b.innerHTML = wheelsOn ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>' : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>'; b.title = wheelsOn ? "车轮声" : "车轮声 · 关"; };
   wheelsIcon();
-  const sndB = () => { $("#sndB").innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${wheelsOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>`; $("#sndB").title = wheelsOn ? "声音：开" : "声音：关"; };
-  $("#sndB").onclick = () => { wheelsOn = !wheelsOn; put("paper-desk.trip.wheels", wheelsOn); sndB(); wheelsIcon(); if (wheelsOn) chuff(.6); };
-  sndB();
 
   /* ═════════ the trip ═════════
      The clock is the distance: 1 km a minute. A station every 5 km goes by without stopping and inks a stamp into the book on the
@@ -625,8 +621,8 @@
   const nm = k => nameAt(trip.off, k);
   function board() {
     if (trip) return;
-    const name = FREE.value.trim() || (pick ? pick.name : "");
-    trip = { v: 2, id: Math.random().toString(36).slice(2, 9), name, proj: name && pick && pick.name === name ? pick.proj || null : null, open: minutes === 5, minutes,
+    const name = tripName(), pick = pickOf(name);
+    trip = { v: 2, id: Math.random().toString(36).slice(2, 9), name, proj: pick ? pick.proj || null : null, open: minutes === 5, minutes,
       off: OFF, seat, no, start: Date.now(), unit: unitOf(minutes === 5 ? 5 : minutes), passed: 0, stamps: [], line: LINE };
     trip.stops = stopsFor(minutes);
     put(TRIP, trip);
@@ -634,13 +630,14 @@
     window.Sound && Sound.play("tab", { vol: .9 });
     fillTicket(TK, trip);
     // the engine lets off a cloud of steam and pulls away; the ticket comes up and is punched; then you're on board
-    puff(14, true); chuff(1.6); loco.leave = 1; FREE.blur();
+    // 打字头顺着导轨开走（声音开着时纸沙一声）；车票升起来、打孔；然后上车
+    sound.paper(); $("#carriage").classList.add("leave"); FREE.blur(); if (DLG.open) DLG.close();
     setTimeout(() => BD.classList.add("sent"), 700);
     setTimeout(() => Ticket.punch(TK), 1700);
     setTimeout(() => { BD.classList.add("gone"); ride(); }, 3000);
   }
   $("#go").onclick = board;
-  FREE.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) board(); });
+  FREE.addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.isComposing) { e.preventDefault(); board(); } });   // Enter 换行（同它），Ctrl / ⌘ + Enter 上车
 
   let riding = false, arrived = false, lastClack = 0, lineTotal = 0, stopping = null;
   function ride() {
@@ -738,8 +735,7 @@
     if (arrived) return;
     if (document.hidden) { last = now; requestAnimationFrame(frame); return; }
     const dt = Math.min(.05, (now - last) / 1000); last = now;
-    if (!riding) { platSnow(dt); deck(dt); }
-    else {
+    if (riding) {
       const km = kmNow(), k = Math.floor(km / KM);
       if (!arrived && !stopping) {
         // stations on the way go by at speed, each one stamped
