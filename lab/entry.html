@@ -545,13 +545,14 @@ const W = GOBO.W;
 /* ── 阳光参数（用户 2026-11-02）：全部集中在 L 里，地址栏可以逐项覆盖（如 ?area=0.4&sunK=4000），调节面板也改这一组 ──
    area   亮区占画面宽的比例（0.5 = 左边一半）       topY  亮区右上角那条斜边落在墙上的高度（m；画面上沿约 2.28）
    az/el  太阳方位角、仰角（度）                       turn  窗所在的墙绕竖轴转多少度（0 = 正侧墙）
-   pitch/slat  百叶片间距、每片挡光的高度（m）         ang   软阴影：太阳方向散开的半径（度），只管影子边缘软硬
+   pitch/tilt  百叶片间距（m）、百叶片斜的角度（度，0 = 平放；越大越顺着光斜、越透光，负的越挡光；实测 20 条纹清楚，40 只剩细线）   ang   太阳的视半径（度）：影子按距离变软的程度
    sun/sky/bounce  阳光、天光、反射光的强度             sunK/skyK  阳光、天光的色温（K）；0 = 原来的颜色（阳光纯白、天光窗光页的冷调）
    glow   高光溢出的强度                               dust  浮尘（1 开，0 关）
    refl   反光：亮墙反弹到物件暗面上的光               ao    闭塞阴影：物件根部、边缘一圈墙上的天光和反射光减弱多少
+   haze   光柱：窗和墙之间的空气被阳光照亮的强度（默认 0：正面看只是一层均匀的雾，见"光柱"那段）
    默认值的来由见下面"阳光像真的"那段。 */
-const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, slat: 0.055, ang: 0.21,
-  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
+const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, tilt: 20, ang: 0.21,
+  sun: 10, sky: 1.0, bounce: 1.2, sunK: 0, skyK: 0, glow: 0.12, dust: 1, refl: 0.6, ao: 0.35, haze: 0 };                  // 用户 2026-11-02 在调节面板里调好的一组；天光、反射光再降（反差 1.8 → 2.7 倍）
 const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
@@ -624,14 +625,12 @@ function buildWindow() {
   const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa);
   const X0 = -VIEW_W / 2 - 0.2, X1 = -VIEW_W / 2 + L.area * VIEW_W;
   const U0 = (X0 + W) / KX, U1 = Math.max(U0 + 0.05, (X1 + W) / KX), V1 = L.topY + KY * U1;
-  const CORD = U0 + (U1 - U0) / 3, CORD_W = 0.006;
-  const cols = [[U0, CORD - CORD_W / 2], [CORD + CORD_W / 2, U1]];             // 拉绳把每条缝分成左右两段
+  const CORD = U0 + (U1 - U0) / 3, CORD_W = 0.006, CHORD = L.pitch * 1.1;   // 百叶片宽（前沿到后沿）比间距略宽，平放时刚好叠住
+  // 反射光贴图用的近似窗洞：每片百叶在竖直方向大约挡住 宽 × sin(角度) + 2.5 mm 厚（真正的影子由下面 buildGobo 的立体薄片投出来）
+  const block = Math.min(L.pitch * 0.95, Math.max(0.0025, CHORD * Math.sin((40 - L.tilt) * deg) * 0.5 + 0.0025));   // 粗略：40° 时几乎全透，越小挡得越多
   GOBO.holes = []; GOBO.islands = [];
-  for (let v = 0; v + L.pitch <= V1 + 1e-9; v += L.pitch) {
-    const a = v + L.slat, b = v + L.pitch;                                  // 一片百叶挡住 v..a，a..b 是透光的缝
-    for (const [ua, ub] of cols) GOBO.holes.push([[ua, a], [ub, a], [ub, b], [ua, b]]);
-  }
-  Object.assign(WINDOW, { U0, U1, V1, KX, KY });
+  for (let v = 0; v + L.pitch <= V1 + 1e-9; v += L.pitch) GOBO.holes.push([[U0, v + block], [U1, v + block], [U1, v + L.pitch], [U0, v + L.pitch]]);
+  Object.assign(WINDOW, { U0, U1, V1, KX, KY, CORD, CORD_W, CHORD });
 }
 const NDIR = 1, BSIG = 0.5, WALL = "#f0f0ee";                         // 墙的软阴影交给 PCSS（见"影子按距离变软"），一遍就够
 /* ANG：墙上软阴影用的 48 个太阳方向散开的半径（度），只管影子边缘软硬，不影响亮度。窗光页原来是 0.5。
@@ -685,14 +684,22 @@ wall.position.set((WX0 + WX1) / 2, (WY0 + WY1) / 2, 0); wall.receiveShadow = tru
 /* 左墙的窗：只投影（不画出来）；改了阳光参数时整个重建 */
 const gobo = new THREE.Group(); scene.add(gobo);
 const goboMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+/* 百叶片是真的立体薄片（用户 2026-11-02，第 6 项）：窗框上开一个大窗洞（U0–U1 × 0–V1），洞里每隔 pitch 一片百叶，
+   宽 CHORD（前沿到后沿）、厚 2.5 mm，绕自己的长边斜 tilt 度；再加一根竖拉绳（6 mm 见方）。
+   这样每道光条的上、下两条边分别由前一片的后沿、后一片的前沿挡出来，两条边离墙远近不同，按"近硬远软"软硬就不一样；
+   太阳高度变了，从缝里漏过来的光条宽度也跟着变——都由阴影自动算出来。
+   窗框厚 4 mm（原来 3 cm：光斜着穿过时厚洞壁会挡掉一截）。 */
 function buildGobo() {
   gobo.children.slice().forEach(m => { m.geometry.dispose(); gobo.remove(m); });
+  gobo.rotation.set(0, L.turn * deg - Math.PI / 2, 0); gobo.position.set(-W, 0, 0);   // gobo 里的 x 轴 → 百叶片方向 (sin turn, 0, cos turn)，y 轴是高度
+  const { U0, U1, V1, CORD, CORD_W, CHORD } = WINDOW;
   const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
-  for (const h of GOBO.holes) { const q = new THREE.Path(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); sh.holes.push(q); }
-  // 厚 4 mm（原来 3 cm）：光斜着穿过窗时，厚的洞壁会挡掉一截，拉绳的影子被拉宽到 40 多 px、透光的缝也变窄（用户 2026-11-02：板上的光很奇怪）
-  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: false }), goboMat);
-  m.rotation.y = L.turn * deg - Math.PI / 2; m.position.set(-W, 0, 0);    // 形状的 x 轴 → 百叶片方向 (sin turn, 0, cos turn)
-  m.castShadow = true; gobo.add(m);
+  const hole = new THREE.Path(); hole.moveTo(U0, 0); hole.lineTo(U1, 0); hole.lineTo(U1, V1); hole.lineTo(U0, V1); hole.closePath(); sh.holes.push(hole);
+  const add = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, goboMat); m.position.set(x, y, z); m.rotation.x = rx; m.castShadow = true; gobo.add(m); };
+  add(new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: false }), 0, 0, -0.002);
+  // 叶片两头各比窗洞长 0.3 m（藏在窗框后面）：光斜着穿过窗，叶片和窗洞一样宽的话，靠窗洞两边的光会从叶片端头外面绕过去
+  for (let v = L.pitch / 2; v < V1; v += L.pitch) add(new THREE.BoxGeometry(U1 - U0 + 0.6, 0.0025, CHORD), (U0 + U1) / 2, v, 0, -L.tilt * deg);   // 负号：tilt 越大，叶片越顺着光斜，越透光
+  add(new THREE.BoxGeometry(CORD_W, V1, CORD_W), CORD, V1 / 2, 0);
 }
 buildGobo();
 
@@ -841,6 +848,38 @@ function bakeAO() {
   }
   outMat.uniforms.ao.value = rtAoA.texture; outMat.uniforms.aoAmt.value = L.ao;
 }
+/* 光柱（用户 2026-11-02，第 7 项，丁达尔效应）：空气里的浮尘被阳光照亮，窗和墙之间出现一道道光柱。
+   每个像素沿视线从墙（z = 0）往前走到窗所在的那面墙为止（再往前是屋外，不算），等距取 24 个点，
+   用阳光的阴影深度图查每个点在不在阳光里（百叶、窗框、物件挡住的点不算）；在阳光里的点占多少，就叠多少白色雾光（× haze）。
+   纯白、叠加在最后，不改色调。画完物件之后再画，用的是那时的阴影图（含百叶和物件）。
+   实测（2026-11-02）：正面看出不来一道道光柱，只是亮区蒙一层均匀的雾、反差被冲淡——要看出光柱，视线得顺着光片看过去，
+   可窗转了 63°（为了让条纹落在物件上会弯折），每条视线穿过好几片光和影子，平均成了雾。所以默认 0，面板里可以拉起来看。 */
+const hazeMat = new THREE.ShaderMaterial({
+  uniforms: { sm: { value: null }, smat: { value: new THREE.Matrix4() }, vMin: { value: new THREE.Vector2() }, vSize: { value: new THREE.Vector2() }, amt: { value: 0 }, wallX: { value: 3 }, tanTurn: { value: 1 } },
+  transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, toneMapped: false, vertexShader: VS,
+  fragmentShader: `#include <packing>
+    uniform sampler2D sm; uniform mat4 smat; uniform vec2 vMin, vSize; uniform float amt, wallX, tanTurn; varying vec2 v;
+    void main(){
+      vec2 xy = vMin + v * vSize;                                            // 这个像素在墙上的世界坐标
+      float zEnd = tanTurn > 0.001 ? min(1.6, (xy.x + wallX) / tanTurn) : 1.6;   // 走到窗所在那面墙为止
+      if (zEnd <= 0.0) discard;
+      float rot = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+      float lit = 0.0;
+      for (int i = 0; i < 24; i++) {
+        vec4 sc = smat * vec4(xy, (float(i) + rot) / 24.0 * zEnd, 1.0); sc.xyz /= sc.w;
+        if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0) continue;
+        lit += step(sc.z - 0.0005, unpackRGBAToDepth(texture2D(sm, sc.xy)));
+      }
+      gl_FragColor = vec4(vec3(lit / 24.0 * amt * zEnd / 1.6), 1.0);         // 空气越厚（离窗越远的像素走得越长）光柱越亮
+    }` });
+const hazeScene = quad(hazeMat);
+function drawHaze() {
+  if (L.haze <= 0 || !sun.shadow.map) return;
+  hazeMat.uniforms.sm.value = sun.shadow.map.texture; hazeMat.uniforms.smat.value.copy(sun.shadow.matrix);
+  hazeMat.uniforms.vMin.value.set(camera.left, camera.position.y + camera.bottom); hazeMat.uniforms.vSize.value.set(camera.right - camera.left, camera.top - camera.bottom);
+  hazeMat.uniforms.amt.value = L.haze; hazeMat.uniforms.wallX.value = W; hazeMat.uniforms.tanTurn.value = Math.tan(L.turn * deg);
+  renderer.autoClear = false; renderer.render(hazeScene, cam2); renderer.autoClear = true;
+}
 /* 反光（用户 2026-11-02，五大调子里的"反光"）：物件背光的一面会被旁边亮的墙照亮，暗面不是死黑，靠近亮墙的一侧更亮。
    高光溢出那张图（墙上的阳光大范围模糊）正好是"画面上每一处附近有多少亮墙"；物件的每个像素去这张图里查，补上这么多反光。
    光从墙那边来：朝墙的面（背面）全收，朝侧面的收一半，正对镜头的面不收（看的方向是 -z，所以权重 = 0.5 - 0.5 × 法线的 z）。 */
@@ -924,6 +963,7 @@ function render() {
   renderer.setRenderTarget(null); renderer.render(outScene, cam2);
   // ③
   wall.visible = false; renderer.autoClear = false; sun.shadow.needsUpdate = true; renderer.render(scene, camera); renderer.autoClear = true; wall.visible = true;
+  drawHaze();                                                             // 光柱叠在最上面
 }
 window.__scene3d = o => { off = o; render(); aim(); };
 
@@ -990,8 +1030,8 @@ if (new URLSearchParams(location.search).get("tune") === "1") {
   const GROUPS = [
     ["亮区", [["area", "面积（占画面宽）", 0.1, 1, 0.01], ["topY", "斜边高度 m", 0.8, 3.2, 0.01]]],
     ["窗户和太阳", [["turn", "窗墙朝向 °", 0, 70, 1], ["az", "太阳方位 °", 15, 70, 1], ["el", "太阳仰角 °", 10, 70, 1],
-                   ["pitch", "条纹间距 m", 0.06, 0.4, 0.005], ["slat", "每片挡光 m", 0.01, 0.3, 0.005], ["ang", "边缘软硬 °", 0, 0.6, 0.01]]],
-    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["refl", "反光", 0, 3, 0.05], ["ao", "闭塞阴影", 0, 1, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
+                   ["pitch", "条纹间距 m", 0.06, 0.4, 0.005], ["tilt", "百叶角度 °（越大越透光）", -30, 60, 1], ["ang", "边缘软硬 °", 0, 0.6, 0.01]]],
+    ["强度", [["sun", "阳光", 0, 20, 0.1], ["sky", "天光", 0, 4, 0.05], ["bounce", "反射光", 0, 6, 0.05], ["glow", "高光溢出", 0, 1, 0.01], ["refl", "反光", 0, 3, 0.05], ["ao", "闭塞阴影", 0, 1, 0.01], ["haze", "光柱", 0, 0.5, 0.01], ["dust", "浮尘（0/1）", 0, 1, 1]]],
   ];
   const fmt = (v, st) => st >= 1 ? String(Math.round(v)) : v.toFixed(st < 0.01 ? 3 : 2);
   const inputs = {};
