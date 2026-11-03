@@ -43,6 +43,7 @@
 <canvas id="gl"></canvas>
 <div id="strip"></div>
 <div id="zone" tabindex="0" role="slider" aria-label="页面"></div>
+<script src="../preload.js" defer></script>
 <script type="module">
 // 先等字体到位：细调轮里每格的宽度按文字实际宽度算
 await Promise.all(["500 19px", "500 20px", "600 15px"].map(f => document.fonts.load(f + " 'Sunghyun Sans'", "0123456789 JanFebMarAprMayJunJulAugSepOctNovDec"))).catch(() => {});

@@ -53,6 +53,20 @@
     });
 
     navigator.serviceWorker.addEventListener("controllerchange", requestWorkerPreload);
+    /* 新发布的 Service Worker 接管这一页时，自动刷新一次（用户 2026-11-02：刷新总是刷不到新提交）。
+       为什么要刷：这一页是旧的 Service Worker 给的，里面可能有旧文件；新的接管以后再取一遍才是新的。
+       只在打开这页时已经有 Service Worker 在管（hadController）才刷：第一次访问装上 Service Worker 不刷。
+       每页最多刷一次：刷之前在 sessionStorage 记下时间，10 秒内又来一次就不刷，免得来回刷。
+       例：发布了新模型 → 打开入口页（旧 Service Worker 给的页面）→ 浏览器发现 sw.js 变了，装上新的 → 接管 → 自动刷新 → 新模型。 */
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController) return;
+      let last = 0;
+      try { last = +sessionStorage.getItem("paper-desk-sw-reload") || 0; } catch (error) {}
+      if (Date.now() - last < 10000) return;
+      try { sessionStorage.setItem("paper-desk-sw-reload", String(Date.now())); } catch (error) {}
+      location.reload();
+    });
     navigator.serviceWorker.addEventListener("message", event => {
       const data = event.data;
       if (!data || data.type !== "SITE_PRELOAD_DONE") return;
@@ -74,7 +88,7 @@
 
   async function loadManifest() {
     const url = new URL("preload-manifest.json", BASE);
-    const response = await fetch(url.href, {cache:"force-cache"});
+    const response = await fetch(url.href, {cache:"no-cache"});
     if (!response.ok) throw new Error("preload-manifest.json: HTTP " + response.status);
     return response.json();
   }
@@ -98,7 +112,7 @@
             const response = await fetch(url.href, {
               mode:"same-origin",
               credentials:"same-origin",
-              cache:"force-cache"
+              cache:"no-cache"
             });
             if (!response.ok) throw new Error("HTTP " + response.status);
             try {
@@ -150,7 +164,7 @@
     const pages = data.fontPages || data.pages || [];
     const texts = await Promise.all(pages.map(async path => {
       try {
-        const response = await fetch(new URL(path, BASE).href, {cache:"force-cache"});
+        const response = await fetch(new URL(path, BASE).href, {cache:"no-cache"});
         if (!response.ok) return "";
         return extractPageText(await response.text());
       } catch (_) {

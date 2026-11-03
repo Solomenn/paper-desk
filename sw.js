@@ -181,48 +181,33 @@ self.addEventListener("message", event => {
   })());
 });
 
+/* 取文件（用户 2026-11-02：浏览器刷新总是刷不到新提交，要根治）：
+   站内的所有文件（页面、脚本、图片、模型、音效）一律"先问网络、断网才用缓存"，而且问网络时带 no-cache：
+   · no-cache = 浏览器自己的 HTTP 缓存里有也不直接用，先拿 ETag 去问服务器文件变了没有
+     （GitHub Pages 每个文件都给 max-age=600，不带 no-cache 的话，发布后 10 分钟内刷新拿到的还是旧的）；
+   · 没变：服务器回 304，只有几百字节，模型这种大文件不会重新下载；变了：下载新的，顺手存进缓存；
+   · 断网（fetch 失败）：用缓存里存的那份。
+   以前模型、音效是"缓存优先、永不过期"，改了模型（木柜刷漆、火车上色）浏览器还一直用旧的。
+   例：改了 locomotive.glb 并发布 → 刷新入口页 → 问服务器 → ETag 变了 → 下载新模型 → 看到新颜色。
+   站外只有 jsDelivr 上带版本号的字体（地址里写死版本，内容永远不变），仍然缓存优先。 */
+const fresh = request => request.mode === "navigate"
+  ? new Request(request.url, { cache: "no-cache", credentials: "same-origin" })   // 页面跳转的请求不能直接改 cache，照地址另建一个
+  : new Request(request, { cache: "no-cache" });
+
 self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
-  const scope = new URL(self.registration.scope);
+  const isPage = request.mode === "navigate" && inScope(url);
+  if (!isPage && !isCacheableRequest(request)) return;
 
-  if (
-    request.mode === "navigate" &&
-    url.origin === scope.origin &&
-    url.pathname.startsWith(scope.pathname)
-  ) {
-    const cachePromise = caches.open(CACHE_NAME);
-    const key = navigationKey(request);
-    const refreshPromise = cachePromise.then(cache =>
-      fetch(request).then(async response => {
-        if (response.status === 200) await cache.put(key, response.clone());
-        return response;
-      })
-    );
-
-    // Network first, so a new deploy shows on the next refresh; the cached page only when offline.
-    event.respondWith(refreshPromise.catch(() => cachePromise.then(cache => cache.match(key))));
+  if (!isPage && !inScope(url)) {                                          // jsDelivr 字体：缓存优先
+    event.respondWith(fetchAndCache(request));
     return;
   }
 
-  if (!isCacheableRequest(request)) return;
-
-  // The site's own code and pictures change between deploys: always try the network first, fall back to the cache offline.
-  // Fonts, sounds and other heavy files that never change stay cache-first.
-  if (inScope(url) && /\.(?:html|css|js|json|webp|png|jpe?g|svg)$/i.test(url.pathname)) {
-    event.respondWith(caches.open(CACHE_NAME).then(cache => fetch(request).then(response => {
-      if (response.status === 200) cache.put(request, response.clone()).catch(() => {});
-      return response;
-    }).catch(() => cache.match(request).then(c => c || Promise.reject(new Error("offline"))))));
-    return;
-  }
-
-  event.respondWith(
-    fetchAndCache(request).catch(async error => {
-      const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(request);
-      if (cached) return cached;
-      throw error;
-    })
-  );
+  const key = isPage ? navigationKey(request) : request;                   // 页面按"路径 + index.html"存，不带 ?at= 这些参数
+  event.respondWith(caches.open(CACHE_NAME).then(cache => fetch(fresh(request)).then(response => {
+    if (response.status === 200 && response.type !== "opaque") cache.put(key, response.clone()).catch(() => {});
+    return response;
+  }).catch(() => cache.match(key).then(c => c || Promise.reject(new Error("offline"))))));
 });
