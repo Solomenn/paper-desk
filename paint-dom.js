@@ -108,12 +108,13 @@ function paintLayers(g, cs, x, y, w, h, r, opt) {
     g.restore();
   }
 }
-// 预先加载要用到的 url() 背景图（data: 的 SVG 噪点图等）
-function preload(els) {
+// 要用到的 url() 背景图（data: 的 SVG 噪点图等）：先列出来（同步），再加载
+function urlsOf(els) {
   const urls = new Set();
   for (const el of els) for (const w of [null, "::before", "::after"]) { const bi = getComputedStyle(el, w).backgroundImage; if (bi && bi.includes("url(")) for (const L of splitTop(bi)) { const m = /^url\("?(.*?)"?\)$/.exec(L); if (m && !IMG.has(m[1])) urls.add(m[1]); } }
-  return Promise.all([...urls].map(u => new Promise(res => { const im = new Image(); im.onload = () => { IMG.set(u, im); res(); }; im.onerror = () => res(); im.src = u; })));
+  return [...urls];
 }
+const loadUrls = urls => Promise.all(urls.map(u => new Promise(res => { const im = new Image(); im.onload = () => { IMG.set(u, im); res(); }; im.onerror = () => res(); im.src = u; })));
 // 一个框：背景色、背景渐变、四条边
 function paintBox(g, cs, x, y, w, h, alpha, opt = {}) {
   if (w <= 0 || h <= 0) return;
@@ -294,13 +295,22 @@ export async function paintDOM(root, o = {}) {
   const W = Math.max(1, Math.round(R.width * scale)), H = Math.max(1, Math.round(R.height * scale));
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d"); g.scale(scale, scale);
+  const els = [root, ...root.querySelectorAll("*")], skipped = [];
+  /* 用到的 url() 背景图要先加载。分三步，量和画那一段一口气做完、中间不让出（2026-11-03 修：原来在"临时恢复网页版样子"之后才去等图片，
+     等的时候别的贴图画完把样子改了回去，软木板量到的是透明背景，贴图是空的）：
+     ① 恢复网页版样子 → 记下要哪些图 → 马上还原（同步）；② 等图片加载（这时页面是平常的样子）；③ 再恢复样子，量、画，最后还原。 */
+  if (!o.noUrl) {
+    if (o.before) o.before();
+    const urls = urlsOf(els);
+    if (o.after) o.after();
+    if (urls.length) {
+      flat.forEach((e, i) => { e.style.transform = keep[i][0]; });
+      await loadUrls(urls);
+      flat.forEach(e => { e.style.transform = "none"; }); Object.assign(R0, root.getBoundingClientRect().toJSON());
+    }
+  }
   if (o.before) o.before();                                              // 量之前：调用方临时恢复网页版的样子（同步做完再还原，中间不刷新画面，所以不闪）
   const jobs = [];
-  const els = [root, ...root.querySelectorAll("*")], skipped = [];
-  if (!o.noUrl) {                                                        // url() 背景图要先加载（加载时变形先恢复，免得页面上闪一下）
-    const need = els.some(el => [null, "::before", "::after"].some(w => (getComputedStyle(el, w).backgroundImage || "").includes("url(")));
-    if (need) { flat.forEach((e, i) => { e.style.transform = keep[i][0]; }); await preload(els); flat.forEach(e => { e.style.transform = "none"; }); Object.assign(R0, root.getBoundingClientRect().toJSON()); }
-  }
   for (const el of els) {
     if (skipped.some(s => s.contains(el))) continue;
     if (el !== root && o.skip && o.skip(el)) { skipped.push(el); continue; }

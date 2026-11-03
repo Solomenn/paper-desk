@@ -24,6 +24,7 @@ import { paintDOM } from "./paint-dom.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const chalkInner = $("#chalk .inner"), corkFrame = $("#cork .frame"), stage = $("#stage");
 const okGL = (() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
+const AMBIENT = 1.5;                                                     // 暗部提亮倍数（天光、反射光）
 if (chalkInner && corkFrame && stage && okGL) start();
 
 async function start() {
@@ -32,7 +33,8 @@ async function start() {
   const dust = Object.assign(document.createElement("canvas"), { id: "dust3d" });
   const film = Object.assign(document.createElement("div"), { id: "film3d" });
   document.body.prepend(canvas, dust, film);
-  const R = await createRoom3D({ canvas, base: "./", dust, film, beforeRender: place });
+  /* 光（用户 2026-11-03）：窗形用百叶窗之前那一版主页的拱窗（三扇半圆拱窗 + 横档），强度等参数照旧；暗部太暗，天光和反射光 × 1.5 */
+  const R = await createRoom3D({ canvas, base: "./", dust, film, beforeRender: place, window: "arch", ambient: AMBIENT });
   const { objects, addRefl } = R;
   R.renderer.localClippingEnabled = true;
   const SCALE = Math.min(2, devicePixelRatio || 1);
@@ -163,7 +165,7 @@ async function start() {
   async function paintPrint() {
     if (printing) return; printing = true; printDirty = false;
     try {
-      const cv = await paintDOM(chalkInner, { scale: SCALE, textOnly: true, skip: el => el.matches(".cards, .ledge, .add") });   // 栏里的卡单独做成 3D；空栏提示、拖动落点这些操作提示留在网页上
+      const cv = await paintDOM(chalkInner, { scale: SCALE, textOnly: true, skip: el => el.matches(".cards, .ledge, .add, .sunlit") });   // 栏里的卡单独做成 3D；空栏提示、拖动落点这些操作提示留在网页上
       const t = printMat.map; printMat.map = newTex(cv); printMat.needsUpdate = true; t?.dispose();
       if (ledgeEl) { const lv = await paintDOM(ledgeEl, { scale: SCALE }); const o = ledgeFront.map; ledgeFront.map = newTex(lv); ledgeFront.needsUpdate = true; o?.dispose(); }
       dirty = true;
@@ -172,8 +174,9 @@ async function start() {
   async function paintCork() {
     if (corking) return; corking = true; corkDirty = false;
     try {
-      // 网页版的软木和木框在 3D 开着时是透明的（body.b3d）；画贴图那一刻临时去掉 b3d、画完马上加回（同步，不闪）
-      const cv = await paintDOM(corkFrame, { scale: SCALE, skip: el => el.matches("#notes"), before: () => document.body.classList.remove("b3d"), after: () => document.body.classList.add("b3d") });
+      // 网页版的软木和木框在 3D 开着时是透明的（body.b3d）；画贴图那一刻临时去掉 b3d、画完马上加回（同步，不闪）。
+      // .sunlit 是 room.js 在没有 WebGL 时用的平面光（2D），去掉 b3d 时它会露出来，不能画进贴图
+      const cv = await paintDOM(corkFrame, { scale: SCALE, skip: el => el.matches("#notes, .sunlit"), before: () => document.body.classList.remove("b3d"), after: () => document.body.classList.add("b3d") });
       const t = newTex(cv), old = corkFront.map; corkFront.map = t; corkFront.needsUpdate = true; old?.dispose();
       bars.forEach(b => { b.front.map?.dispose(); b.front.map = t.clone(); b.front.needsUpdate = true; });   // 共用同一张图，各取一块（见 place）
       dirty = true;

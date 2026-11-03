@@ -8,10 +8,15 @@
      之后东西动了就 R.render()。 */
 import * as THREE from "three";
 
-export async function createRoom3D({ canvas, base = "", dust: dustCanvas = null, film: filmEl = null, beforeRender = null, onLayout = null } = {}) {
+/* 两个选项（2026-11-03，首页两块板那两页用；入口页不传，照旧）：
+   window: "blinds"（默认，百叶窗）或 "arch"（百叶窗之前的那一版：左墙上三扇半圆拱窗加一道横档，窗形在 lintex-light-gobo.json 里，
+           太阳方位、仰角用那一版的 GOBO.az / GOBO.el（35°、32°），窗墙不转（turn 0）；阳光、天光等强度和各项效果照旧用 L）；
+   ambient: 暗部亮度倍数，乘在天光 sky 和反射光 bounce 上（阳光不变）。默认 1。 */
+export async function createRoom3D({ canvas, base = "", dust: dustCanvas = null, film: filmEl = null, beforeRender = null, onLayout = null, window: WIN_KIND = "blinds", ambient = 1 } = {}) {
 const deg = Math.PI / 180;
 const GOBO = await (await fetch(base + "assets/objects/lintex-light-gobo.json")).json();
 const W = GOBO.W;
+const ARCH = { holes: GOBO.holes, islands: GOBO.islands || [] };          // 拱窗的窗洞和横档（buildWindow 在百叶窗模式下会把 GOBO.holes 换掉，这里先留一份）
 /* ── 阳光参数（用户 2026-11-02）：全部集中在 L 里，地址栏可以逐项覆盖（如 ?area=0.4&sunK=4000），调节面板也改这一组 ──
    area   亮区占画面宽的比例（0.5 = 左边一半）       topY  亮区右上角那条斜边落在墙上的高度（m；画面上沿约 2.28）
    az/el  太阳方位角、仰角（度）                       turn  窗所在的墙绕竖轴转多少度（0 = 正侧墙）
@@ -33,6 +38,8 @@ const L = { ...LIGHT_DEFAULT };
 /* 先读面板"保存"存进浏览器的值（localStorage，键 paper-desk.light.v1），再读地址栏：地址栏里有的以地址栏为准。 */
 try { const saved = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof saved[k] === "number") L[k] = saved[k]; } catch (e) {}
 { const q = new URLSearchParams(location.search); for (const k in L) if (q.get(k) !== null && q.get(k) !== "") L[k] = +q.get(k); }
+if (WIN_KIND === "arch") { L.az = GOBO.az; L.el = GOBO.el; L.turn = 0; L.leaves = 0; L.tau = 0; if (!L.hazeD) L.hazeD = 0.3; }   // 拱窗：窗形和太阳方向用那一版的；没有百叶片（百叶透光 tau 不用）；光柱只算墙前 30 cm
+if (ambient !== 1) { L.sky *= ambient; L.bounce *= ambient; }           // 暗部提亮：只放大天光和反射光
 window.__light = L;
 /* 阳光像真的（用户 2026-11-02 给了三张参考图：百叶窗照片、树影油画、胶片；逐项量了亮部/暗部的亮度 L*、色温 b*、饱和度 C*）：
    1. 反差：参考图亮/暗光量比 12–67 倍，我们只有 1.5 倍（暗部 L* 81，天光和反射光补得太多）。
@@ -97,6 +104,7 @@ const kelvin = K => {                                                     // 色
    例：area 0.5 → 亮区到画面正中（X = 0），U1 ≈ 1.72，V1 ≈ 3.43。 */
 const WINDOW = {};
 function buildWindow() {
+  if (WIN_KIND === "arch") { GOBO.holes = ARCH.holes; GOBO.islands = ARCH.islands; return; }   // 拱窗：窗洞形状固定（json 里），不按面积反推
   const ce = Math.cos(L.el * deg), se = Math.sin(L.el * deg), ca = Math.cos(L.az * deg), sa = Math.sin(L.az * deg), tr = L.turn * deg;
   const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa);
   const X0 = -VIEW_W / 2 - 0.2, X1 = -VIEW_W / 2 + L.area * VIEW_W;
@@ -200,6 +208,15 @@ function buildLeaves() {
    窗框厚 4 mm（原来 3 cm：光斜着穿过时厚洞壁会挡掉一截）。 */
 function buildGobo() {
   gobo.children.slice().forEach(m => { m.geometry.dispose(); gobo.remove(m); });
+  if (WIN_KIND === "arch") {                                             // 拱窗（百叶窗之前那一版，原样）：窗框挖出三个拱形窗洞，横档另做；厚 3 cm，竖在左墙上
+    gobo.rotation.set(0, -Math.PI / 2, 0); gobo.position.set(-W, 0, 0);
+    const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
+    for (const h of ARCH.holes) { const q = new THREE.Path(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); sh.holes.push(q); }
+    const add = shape => { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false }), goboMat); m.castShadow = true; gobo.add(m); };
+    add(sh);
+    for (const h of ARCH.islands) { const q = new THREE.Shape(); q.moveTo(h[0][0], h[0][1]); for (const t of h.slice(1)) q.lineTo(t[0], t[1]); q.closePath(); add(q); }
+    return;
+  }
   gobo.rotation.set(0, L.turn * deg - Math.PI / 2, 0); gobo.position.set(-W, 0, 0);   // gobo 里的 x 轴 → 百叶片方向 (sin turn, 0, cos turn)，y 轴是高度
   const { U0, U1, V1, CORD, CORD_W, CHORD } = WINDOW;
   const sh = new THREE.Shape(); sh.moveTo(-3, -5); sh.lineTo(GOBO.Z1, -5); sh.lineTo(GOBO.Z1, GOBO.Y1); sh.lineTo(-3, GOBO.Y1); sh.lineTo(-3, -5);
