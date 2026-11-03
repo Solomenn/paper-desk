@@ -623,6 +623,15 @@ const objects = new THREE.Group(); scene.add(objects);
 const slots = PAGES_3D.map(() => { const g = new THREE.Group(); objects.add(g); return g; });
 const loader = new GLTFLoader();
 const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光页）
+/* 两块板加厚（用户 2026-11-02：边缘要有体积，现在像纸片；影子的角度也很怪）。
+   导出的模型宽 2 m，玻璃板只有 4 mm 厚、布板 16 mm；缩到画面里 290 px 宽，厚度只剩 0.6 px 和 2.3 px：
+   转过去也看不见侧面，像纸片；板子其实转了 15°（往右到 35°），一边离墙远、一边离墙近，墙上的影子是斜的平行四边形，
+   可画面里看不出板子在转，影子就像没有来由。
+   厚度改成宽度的 12%（BOARD_DEPTH = 0.24 m，像绷在深框上的画布）：只在厚度方向（z）拉长，宽和高不变。
+   8% 时实测侧面只露 5–8 px，还是薄；12%：停在中间转 15° → 侧面约 9 px；往右转到 35° → 约 21 px；
+   墙上的影子往右下错开约 45 px（和条纹同一个方向）。 */
+const BOARD_DEPTH = 0.24;
+const thick = (g, t) => { g.scale(1, 1, BOARD_DEPTH / t); return g; };   // t：模型原来的厚度（m）
 const MODELS = {
   async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
     const src = (await loader.loadAsync("../assets/radio/t3.glb")).scene; src.updateMatrixWorld(true);
@@ -641,7 +650,7 @@ const MODELS = {
        原来只用补出来的法线（35° 以内的棱抹平），边上的倒角被抹平时把板面法线也拉歪了，平板被照得像曲面：
        转到 35° 时（太阳水平方向和墙约成 33°，板面已经背光）左边还亮、往右渐暗，条纹一路淡掉。
        改成平面法线后：板面朝着太阳时条纹清楚，和墙上一样；转过 33° 背光时整块均匀变暗，像真的板转过身。米色布板同样处理。 */
-    s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
+    s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = thick(normals(o.geometry), 0.004); } }); return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
   async loco() {                                                          // 火车头：yanix「Locomotive」
@@ -653,7 +662,7 @@ const MODELS = {
   async textile() {
     const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
     const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 平面法线，原因见上面玻璃板   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
-    s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
+    s.traverse(o => { if (o.isMesh) { o.geometry = thick(normals(o.geometry), 0.016); o.material = fabric; } }); return s;
   },
 };
 let PXM = 1;                                                              // 每米多少 CSS 像素（随窗口宽度变）
