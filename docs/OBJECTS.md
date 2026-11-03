@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | 白噪音 | Braun T3 收音机 | `assets/radio/t3.glb`，851 KB | Sketchfab「Radio T3」，ludwigangulodi，CC BY 4.0，`radio.html` 已署名 | 完成，作为标准 | 无 |
 | 卡册（并入各页和书架，见"已定"第 2 条） | sasshi 活页夹 | 没有模型文件，由 `binder/` 的引擎用代码生成 | qzz0518/sasshi，AGPL-3.0，已记入 `NOTICE.md` | 第一阶段已过关，线上 `/binder/` | 它有自己的渲染引擎和光；各页的活页夹和书架里的汇总怎么接，做到时再定 |
-| 项目 | LINTEX Silk Wall 浅蓝玻璃板 | `assets/objects/silk-wall-2000x1000.glb`，32 KB | 由 LINTEX 官网配置器下载的 OBJ 转换而来；已记入 `NOTICE.md` | 已在窗光实验页里使用 | 24 色还没定，暂用 `#b6d0d2`；官网下载模型的使用条款还没查明 |
+| 项目 | LINTEX Silk Wall 浅蓝玻璃板 | 入口页：`assets/objects/silk-wall-2000x1000-350.glb`，857 KB（官网配置器导出的整套：玻璃正面、背面彩色涂层、玻璃边、背板、导轨、磁铁；颜色 Silk Glass 350 Crisp，材质全用官方的）；窗光实验页：`assets/objects/silk-wall-2000x1000.glb`，32 KB（媒体库 41537M 的 OBJ，只有玻璃，材质在页面里自己定，为了不打乱那页按参考照片做的校准，没换） | 都来自 LINTEX 官网；已记入 `NOTICE.md` | 入口页（2026-11-03 换成配置器导出的整套）、窗光实验页 | 官网下载模型的使用条款还没查明 |
 | 便签 | LINTEX Textile Noticeboard 米灰织物板 | `assets/objects/textile-noticeboard-2005x1205.glb`，33 KB，**只在本地，没提交** | 同上，LINTEX 官网配置器；**未记入 `NOTICE.md`** | 没用在任何页面 | 面料系列和色号未定；织物质感要真实的织纹（法线贴图）；使用条款同上 |
 | 手账 | Bookshelf Short LOWPOLY（米白） | **仓库里没有**；改色后的 24.7 MB 版本只在 GPT 的本地预览包里 | Sketchfab，EFX，CC BY 4.0 | 外观已选定 | 需要那份文件，或重新下载原件再改色；24.7 MB 对网页太重，要压缩到几 MB |
 | 小票 | HQ3DMOD POS 小票机 | 没有 | 付费（US$19），未购买 | 只看过 Sketchfab 预览 | 买，或者自己建 |

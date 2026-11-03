@@ -66,7 +66,11 @@ the frame and table as free material (the views in those photos are his and are 
 
 ## LINTEX Silk Wall model (`assets/objects/silk-wall-2000x1000.glb`)
 
-- Converted from LINTEX's official Silk Wall 2000×1000 OBJ download (<https://lintex.com/products/silk-wall/>); used for the window-light lab.
+- Converted from LINTEX's official Silk Wall 2000×1000 OBJ download (article 41537M, <https://media.lintex.com/?product=silk-wall&type=3d>); glass only, no materials; used for the window-light lab.
+
+## LINTEX Silk Wall configured model (`assets/objects/silk-wall-2000x1000-350.glb`)
+
+- Exported from the LINTEX Silk Wall configurator (<https://lintex.com/products/silk-wall/#configurator>), 2000×1000, colour Silk Glass 350 Crisp; includes glass, painted back, edge, backplate, rails and magnets with LINTEX's materials. The illustrative wall screws are removed at load time. Used in `lab/entry.html`.
 
 ## LINTEX Textile Noticeboard model (`assets/objects/textile-noticeboard-2005x1205.glb`)
 

@@ -649,7 +649,8 @@ const NDIR = 1, BSIG = 0.5, WALL = "#f0f0ee";                         // 墙的�
    暗条一直漏进阳光，墙上暗条/亮条只有 230/245，物件身上（每帧只用一个太阳方向，边缘锐利）却是 165/235，同一束光两种样子。
    0.12° 糊开约 1.7 cm：墙上条纹和物件身上一样清楚，暗条真正暗下去。 */
 const YC = 1.5 - 3 * 2.536 / 1140, VIEW_W = 2.536;                          // 画面宽永远是 2.536 m，和窗光页一样
-const OFF_WALL = 0.012;
+const OFF_WALL = 0.012;                                                    // 物件背面离墙 12 mm（模型里自带安装件的不加，见 OFF_OF）
+const OFF_OF = { silk: 0 };                                               // 官方 Silk Wall 模型里已经有导轨、磁铁，模型的 z = 0 就是墙面
 let wallReady = false;                                                    // 墙的光照算好之前不画
 
 const canvas = document.getElementById("gl");
@@ -785,14 +786,14 @@ const MODELS = {
       const m = new THREE.Mesh(geo, cream); const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 55), edgeMat); e.renderOrder = 2; m.add(e); g.add(m); });
     return g;
   },
-  async silk() {                                                          // 浅蓝哑光玻璃（材质同窗光页）
-    const s = (await loader.loadAsync("../assets/objects/silk-wall-2000x1000.glb")).scene;
-    const glass = new THREE.MeshPhysicalMaterial({ color: "#b6d0d2", roughness: 0.8, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.3, ior: 1.5, flatShading: true });   // 清漆粗糙度 .75 → .3：玻璃表面有反光（高光）
-    /* flatShading：每个三角面用自己的平面法线（用户 2026-11-02：板上的条纹往右一点点淡掉，"你见过阴影是这样子的吗"）。
-       原来只用补出来的法线（35° 以内的棱抹平），边上的倒角被抹平时把板面法线也拉歪了，平板被照得像曲面：
-       转到 35° 时（太阳水平方向和墙约成 33°，板面已经背光）左边还亮、往右渐暗，条纹一路淡掉。
-       改成平面法线后：板面朝着太阳时条纹清楚，和墙上一样；转过 33° 背光时整块均匀变暗，像真的板转过身。米色布板同样处理。 */
-    s.traverse(o => { if (o.isMesh) { o.material = glass; o.geometry = normals(o.geometry); } }); return s;
+  async silk() {                                                          // 蓝色玻璃板：LINTEX 官网配置器导出的整套 Silk Wall（用户 2026-11-03）
+    /* 2000×1000，颜色 Silk Glass 350 Crisp，材质全用官方的（不再换成自己定的玻璃材质）：
+       hanging-board = 玻璃正面（4 mm，离墙 7.4–11.4 mm）、玻璃背面的彩色涂层、玻璃边、背板（离墙 1.9 mm）；
+       wall-hardware = 3 条钢导轨、3 个磁铁（贴着墙）；illustrative-wall-screws = 示意用的墙钉，往墙里钻 26 mm，看不见，
+       还会让"模型最靠墙的面"跑到墙里去，加载时去掉。模型自己的 z = 0 就是墙面，所以这块板不再额外离墙（见 OFF_OF）。 */
+    const s = (await loader.loadAsync("../assets/objects/silk-wall-2000x1000-350.glb")).scene;
+    const screws = s.getObjectByName("illustrative-wall-screws"); if (screws) screws.removeFromParent();
+    return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
   async loco() {                                                          // 火车头：yanix「Locomotive」
@@ -803,7 +804,9 @@ const MODELS = {
   async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
   async textile() {
     const s = (await loader.loadAsync("../assets/objects/textile-noticeboard-2005x1205.glb")).scene;
-    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 平面法线，原因见上面玻璃板   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
+    /* flatShading：每个三角面用自己的平面法线（用户 2026-11-02：板上的条纹往右一点点淡掉，"你见过阴影是这样子的吗"）。
+       导出的模型没有法线，补出来的法线（35° 以内的棱抹平）把边上的倒角抹平时，连带把板面法线拉歪，平板被照得像曲面，条纹一路淡掉。 */
+    const fabric = new THREE.MeshStandardMaterial({ color: "#C4BDB1", roughness: 0.95, flatShading: true });   // 导出模型里是深灰占位色；米灰面料色号未定，暂用 Oyster Shell
     s.traverse(o => { if (o.isMesh) { o.geometry = normals(o.geometry); o.material = fabric; } }); return s;
   },
 };
@@ -848,7 +851,7 @@ function sizeObjects() {                                                  // 窗
     const k = Math.min(WIDTH_PX / sideWidth(f, BASE * t), HEIGHT_PX / f.size.y, WIDEST_PX / widest) / PXM;
     // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm），高度让底边落在格子中心下方 BOTTOM_PX
     o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
-    g.userData.pivot.position.set(0, -BOTTOM_PX / PXM + f.size.y * k / 2, (f.c.z - f.zmin) * k + OFF_WALL); });
+    g.userData.pivot.position.set(0, -BOTTOM_PX / PXM + f.size.y * k / 2, (f.c.z - f.zmin) * k + (OFF_OF[PAGES_3D[i].model] ?? OFF_WALL)); });
 }
 PAGES_3D.forEach((p, i) => {
   if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
