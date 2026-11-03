@@ -22,31 +22,49 @@
     if (!$("#room")) document.body.insertAdjacentHTML("afterbegin", '<div class="desk" id="room" aria-hidden="true"><i class="boards"></i><i class="grain"></i><i class="win"></i><i class="lamp"></i><i class="stove"></i><i class="tooth"></i></div>');
     document.body.insertAdjacentHTML("beforeend", '<i class="cast shade" aria-hidden="true"></i><i class="cast glow" aria-hidden="true"></i>');
     setTheme(root.dataset.theme); root.classList.remove("theming");
-    // by day the morning sun comes through a window up and to the right and falls on what you're working on (the element
-    // marked [data-sunlit] — on the desk, the 在做 column): a patch in the window's shape, leaning with the light, with the
-    // window's bars (two panes across, three down) as clean shadow lines in it. Nothing else — the board stays quiet.
+    /* 首页两块板的阳光：和入口页（lab/entry.html）同一束百叶窗光（用户 2026-11-03："把两个板子的光照都统一——改成主页的光照"）。
+       原来是一块窗户形状的亮斑（两格三格的窗棂）照在"在做"那一栏 / 便签页左边 42%，现在换成入口页的百叶条纹，算法照搬：
+       · 参数：先读入口页面板"保存"进浏览器的值（paper-desk.light.v1），没有就用入口页的默认值（LIGHT_DEFAULT，改那边时这里一起改）；
+       · 范围：每块板左边 area（默认 68%）；亮区顶边是一条和条纹平行的斜边，亮区右上角落在离画面上沿 (2.28 - topY) m 处；
+       · 条纹：入口页里窗上的点 (u, v) 落到墙上是 X = -3 + KX·u、Y = v - KY·u，百叶片（v 固定）→ 斜率 -KY/KX 的斜线，
+         竖直方向每隔 pitch 一道；按入口页的比例换成像素（画面宽 = 2.536 m）。默认值算出来往右下斜约 22°，间距约画面宽的 6%；
+       · 暗条宽度：随百叶角度 tilt 变（实测入口页 tilt 20° 时暗条约占 40%），越大越透光；
+       · 拉绳：亮区宽 1/3 处一条细竖线；边缘：入口页的条纹边缘过渡约占周期的 22%，这里用同样的模糊。
+       亮度和混合方式仍是首页原来的（.cast.sun：soft-light、白天 0.7），不改色调。 */
+    const LIGHT_DEFAULT = { area: 0.68, topY: 1.94, az: 18, el: 32, turn: 63, pitch: 0.15, tilt: 20 };
+    const light = () => { const L = { ...LIGHT_DEFAULT }; try { const s = JSON.parse(localStorage.getItem("paper-desk.light.v1") || "{}"); for (const k in L) if (typeof s[k] === "number") L[k] = s[k]; } catch {} return L; };
     let sun = null, seen = "";
     function paint() {
-      const W = innerWidth, H = innerHeight;   // the [data-sunlit] element that is on screen (a value like "0.4" = only its left 40%)
-      const t = [...document.querySelectorAll("[data-sunlit]")].find(e => { const b = e.getBoundingClientRect(); return b.width > 40 && b.right > 0 && b.left < W; });
-      let r = t ? t.getBoundingClientRect() : null;
-      if (r && +t.dataset.sunlit) r = { left: r.left, right: r.left + r.width * +t.dataset.sunlit, top: r.top, bottom: r.bottom, width: r.width * +t.dataset.sunlit, height: r.height };
-      const key = r ? [r.left, r.top, r.width, r.height, W, H].map(Math.round).join() : "";
-      if (key === seen && (sun || !t)) return;                     // nothing moved: leave the light as it is
+      const W = innerWidth, H = innerHeight;   // 画面上那块标了 [data-sunlit] 的板（值 = 亮区占板宽的比例；空 = 用入口页的 area）
+      // 选在画面上露出最多的那一块（翻页时旁边那块会露出一条边，选"第一个在画面上的"会选错，光画到画面外面去）
+      const seenW = e => { const b = e.getBoundingClientRect(); return Math.max(0, Math.min(b.right, W) - Math.max(b.left, 0)); };
+      const t = [...document.querySelectorAll("[data-sunlit]")].sort((a, b) => seenW(b) - seenW(a)).find(e => seenW(e) > 40);
+      const r = t ? t.getBoundingClientRect() : null, L = light();
+      const key = r ? [r.left, r.top, r.width, r.height, W, H, JSON.stringify(L)].map(v => typeof v === "number" ? Math.round(v) : v).join() : "";
+      if (key === seen && (sun || !t)) return;                     // 没动：光照不变
       seen = key; if (sun) { sun.remove(); sun = null; }
       if (!t || r.width < 40 || r.right < 0 || r.left > W) return;
-      const top = r.top + 8, bot = r.bottom - 8, h = bot - top, lean = Math.min(h * .14, r.width * .22);
-      const x0 = r.left + 10, x1 = r.right - 10 - lean;                 // leaning right as it goes up, kept inside the column
-      const at = (u, v) => [x0 + (x1 - x0) * u + lean * (1 - v), top + h * v];   // u across, v down
-      const poly = pts => pts.map(([u, v]) => at(u, v).map(n => n.toFixed(1)).join(",")).join(" ");
-      const bw = Math.max(6, Math.min(12, r.width * .018));             // the bars' shadow width
-      const bars = [[.5, 0, .5, 1], [0, 1 / 3, 1, 1 / 3], [0, 2 / 3, 1, 2 / 3]].map(([u0, v0, u1, v1]) => {
-        const [ax, ay] = at(u0, v0), [bx, by] = at(u1, v1); return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#000" stroke-width="${bw}"/>`; }).join("");
+      const d = Math.PI / 180, tr = L.turn * d, ce = Math.cos(L.el * d), se = Math.sin(L.el * d), ca = Math.cos(L.az * d), sa = Math.sin(L.az * d);
+      const KX = Math.sin(tr) + Math.cos(tr) * ca / sa, KY = Math.cos(tr) * se / (ce * sa), slope = KY / KX;   // 屏幕上往右每 1 px，条纹往下 slope px
+      const PXM = W / 2.536, period = L.pitch * PXM;                    // 条纹竖直方向的间距（px）
+      const frac = +t.dataset.sunlit || L.area, x0 = r.left, x1 = r.left + r.width * frac;
+      const yTopR = r.top + (2.28 - L.topY) * PXM;                      // 亮区右上角
+      const topAt = x => yTopR - (x1 - x) * slope;                      // 亮区顶边：往左上升
+      const dark = Math.max(0.05, Math.min(0.95, 0.4 + (20 - L.tilt) * 0.015));
+      let bands = "";
+      for (let y = yTopR - (x1 - x0) * slope - period; y < r.bottom + period; y += period) {   // 每道暗条：从亮区左边到右边的一条斜带
+        const a = y + period * (1 - dark), b = y + period;
+        bands += `<polygon points="${x0 - 20},${(a - (x1 - x0 + 20) * 0).toFixed(1)} ${x1 + 20},${(a + (x1 - x0 + 40) * slope).toFixed(1)} ${x1 + 20},${(b + (x1 - x0 + 40) * slope).toFixed(1)} ${x0 - 20},${b.toFixed(1)}" fill="#000"/>`;
+      }
+      const cx = x0 + (x1 - x0) / 3;                                   // 拉绳
+      const blur = Math.max(1.5, period * 0.22 / 2.56);                // 边缘过渡约占周期 22%（10%–90%）
       document.body.insertAdjacentHTML("beforeend", `<svg class="cast sun" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
-        <filter id="room-sb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${W < 900 ? 2.5 : 4}"/></filter>
+        <filter id="room-sb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter>
+        <clipPath id="room-sc"><rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}"/></clipPath>
         <mask id="room-sm" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
-          <polygon points="${poly([[0, 0], [1, 0], [1, 1], [0, 1]])}" fill="#fff"/>${bars}</mask></defs>
-        <g filter="url(#room-sb)"><rect width="${W}" height="${H}" fill="#fffefa" mask="url(#room-sm)"/></g></svg>`);
+          <polygon points="${x0},${topAt(x0).toFixed(1)} ${x1},${yTopR.toFixed(1)} ${x1},${r.bottom} ${x0},${r.bottom}" fill="#fff"/>${bands}
+          <rect x="${(cx - 1.5).toFixed(1)}" y="${r.top}" width="3" height="${r.height}" fill="#000"/></mask></defs>
+        <g clip-path="url(#room-sc)"><g filter="url(#room-sb)"><rect width="${W}" height="${H}" fill="#fffefa" mask="url(#room-sm)"/></g></g></svg>`);
       sun = document.body.lastElementChild;
     }
     window.roomRelight = paint;
