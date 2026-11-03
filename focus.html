@@ -105,11 +105,10 @@
   html[data-theme="day"] #board input[type=range]::-webkit-slider-thumb { border-color: #77816d; background: #d2d6c2; }
   html[data-theme="day"] .foot { background: #bfc9d4e8; color: #4f5a66; } html[data-theme="day"] .foot .q { color: #4f5444; }
   html[data-theme="day"] #board .wordmark, html[data-theme="day"] #board .ibtn { color: #2f3a48; } html[data-theme="day"] .home { background: rgba(20,24,30,.22); }
-  /* ── the setting-off card in the same frosted glass and quiet type as the ride (one accent, #2f4f73) ── */
-  html[data-theme="day"] .paper { background: rgba(214, 223, 233, .72); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 0 0 .5px rgba(21, 35, 58, .14); }
-  html[data-theme="day"] .foot { background: rgba(244, 246, 248, .86); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
-    box-shadow: inset 0 1px 0 rgba(21, 35, 58, .08), 0 0 0 .5px rgba(21, 35, 58, .14), 0 18px 34px -18px rgba(21, 35, 58, .45); color: #5d6873; }
+  /* ── the setting-off card: paper by day too, like the night's（用户 2026-11-03：白天的从磨砂玻璃改回原来的纸质）——
+     上面那层淡蓝阴影里的纸（#d4dce6 → #ccd5df，带纸纹 .grain），底栏同色不透明；不透出后面的雪景 ── */
+  html[data-theme="day"] .paper { box-shadow: 0 -1px 0 #ffffff40, 0 15px 70px #1a2a3a2a; }
+  html[data-theme="day"] .foot { box-shadow: 0 18px 34px -18px rgba(21, 35, 58, .45); color: #5d6873; }
   html[data-theme="day"] .foot .q { color: #5d6873; } html[data-theme="day"] .foot .q:hover { color: #1c232b; }
   /* the lamp's light and spread keep their defaults; only the ride length is set here, across the whole width */
   .controls label:has(#light), .controls label:has(#spread) { display: none; }
@@ -229,6 +228,7 @@
     background: #1d221ecc; color: #e6e2c8; box-shadow: 0 0 0 1px #d8d2a838, 0 6px 18px #0006; backdrop-filter: blur(6px); }
   #dayBtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
   #dayBtn .moon, html[data-theme="day"] #dayBtn .sun { display: none; } html[data-theme="day"] #dayBtn .moon { display: block; }
+  body:has(#car.on) #dayBtn { display: none; }   /* 坐车时不显示：车厢和窗外只有白天那一套，切了也不变 */
   html[data-theme="day"] #dayBtn { background: #eef2f6dd; color: #2f3a48; box-shadow: 0 0 0 1px #2f3a4822, 0 6px 18px #0002; }
 </style>
 <script src="preload.js" defer></script>
@@ -292,15 +292,19 @@
   const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const TRIP = "paper-desk.trip.v1", TICKETS = "paper-desk.tickets.v1";
   // day or night, as on the desk (D switches it here too): a snowy day ride, or the night train
-  let DAY = true;   // day only for now
+  // 白天 / 黑夜的切换只在这一页（用户 2026-11-03："把黑夜页面的车票加回来，可以切换黑夜白天的 UI 加回来——仅仅车票页面"）；
+  // 其他页面仍然只有白天。记在这一页自己的键里，不影响别的页面
+  const THEME = "paper-desk.focus.theme.v1";
+  let DAY = get(THEME, "day") !== "night";
   document.documentElement.dataset.theme = DAY ? "day" : "night";
+  addEventListener("keydown", e => { if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey && !e.target.closest("input, textarea, [contenteditable]")) toggleDay(); });
   function toggleDay() {
-    DAY = !DAY; put("paper-desk.theme.v1", DAY ? "day" : "night"); document.documentElement.dataset.theme = DAY ? "day" : "night"; paintBg && paintBg();
+    DAY = !DAY; put(THEME, DAY ? "day" : "night"); document.documentElement.dataset.theme = DAY ? "day" : "night"; paintBg && paintBg();
     dispatchEvent(new Event("deskTheme"));
   }
   const dayBtn = document.createElement("button"); dayBtn.id = "dayBtn"; dayBtn.title = "白天 / 夜晚（D）";
   dayBtn.innerHTML = `<svg viewBox="0 0 24 24" class="sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" class="moon"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>`;
-  dayBtn.onclick = toggleDay;   // not shown: day only for now
+  dayBtn.onclick = toggleDay; document.body.appendChild(dayBtn);
   // the 雪国线: made-up stations through snow country, one every 5 km; the train runs at 60 km/h, so one every 5 minutes
   const STATIONS = ["白川口", "雪见", "霜原", "静川", "松风", "月岭", "冬木", "鹿鸣", "灯台寺", "银山", "汤泽", "风花", "星野", "寒川", "北原", "青柳", "苇原", "雾桥", "白桦", "新雪", "长冬", "野泽", "石打", "雪国"];
   const KM = 5;
