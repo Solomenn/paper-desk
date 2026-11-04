@@ -8,7 +8,7 @@
   /* 字体：Sunghyun Sans（SIL OFL 1.1，作者仓库原文件，见 assets/fonts/）——参考站用的就是它 */
   @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
   @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-SemiBold.woff2") format("woff2"); font-weight: 600; font-display: block; }
-  /* 纸桌入口（第四阶段实验）：切换条沿用 lab/strip.html 的复现，换成 6 个物件、一页一根刻度、不放文字；物件是同一束窗光下的 3D 模型。方向见 docs/ART-DIRECTION.md */
+  /* 纸桌入口（第四阶段实验）：切换条沿用 lab/strip.html 的复现，换成 7 个物件、一页一根刻度、不放文字；物件是同一束窗光下的 3D 模型。方向见 docs/ART-DIRECTION.md */
   html, body { margin: 0; height: 100%; background: #e6e9eb; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: "Sunghyun Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   /* 参考站尺寸不随窗口缩放；竖直位置随窗口高度变化，由脚本 place() 按实测表设置 */
   #strip { position: absolute; left: 0; top: 0; height: 900px; will-change: transform; }
@@ -68,7 +68,7 @@
 // 先等字体到位：细调轮里每格的宽度按文字实际宽度算
 await Promise.all(["500 19px", "500 20px", "600 15px"].map(f => document.fonts.load(f + " 'Sunghyun Sans'", "0123456789 JanFebMarAprMayJunJulAugSepOctNovDec"))).catch(() => {});
 /* ── 数据：日期序列照参考站（149 个地点，2025-12 → 2026-10），名字用占位 ── */
-/* 六个物件 = 六页；一页一根刻度。month/day 结构沿用复现代码：都算同一个"月"，所以没有月界分隔 */
+/* 七个物件 = 七页（第 7 个"雪国来信"是 2026-11-03 加的：放信封的木头信插）；一页一根刻度。month/day 结构沿用复现代码：都算同一个"月"，所以没有月界分隔 */
 const PAGES = [
   { name: "项目", href: "../index.html#board", model: "silk" },
   { name: "便签", href: "../index.html#notes", model: "textile" },
@@ -76,6 +76,7 @@ const PAGES = [
   { name: "白噪音", href: "../radio.html", model: "t3" },
   { name: "明信片", href: "../receipt.html", model: "boxes" },
   { name: "手账", href: "../journal.html", model: "shelf" },
+  { name: "雪国来信", href: "../letter.html", model: "organizer" },        // 写信那页（照听雨来信写信页还原的信纸，letter.html）
 ];
 const DATES = PAGES.map((p, i) => "P" + (i + 1) + " 1");                   // 每页算一个"月"：页与页之间有长分隔，跨页的咔声更重
 window.PAGES_3D = PAGES;
@@ -537,10 +538,11 @@ draw();
 } }
 </script>
 <script type="module">
-/* ── 3D：墙、百叶窗、太阳和所有光照效果在 ../room3d.js（2026-11-03 抽出来，首页也用同一份）；这里只管六个物件：
+/* ── 3D：墙、百叶窗、太阳和所有光照效果在 ../room3d.js（2026-11-03 抽出来，首页也用同一份）；这里只管七个物件：
    加载模型、缩放进格子、跟着切换条走和转、鼠标拿在手里，以及阳光调节面板 ── */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { createRoom3D } from "../room3d.js";
 const deg = Math.PI / 180;
@@ -555,6 +557,7 @@ const { L, LIGHT_DEFAULT, objects, addRefl, YC, VIEW_W, applyLight } = R, render
 /* 物件：各自缩放进 240 px 的格子，背面离墙 12 mm */
 const slots = PAGES_3D.map(() => { const g = new THREE.Group(); objects.add(g); return g; });
 const loader = new GLTFLoader();
+loader.setDRACOLoader(new DRACOLoader().setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/libs/draco/gltf/"));   // 信插的模型是 Draco 压缩的，要这个解码器
 const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光页）
 const MODELS = {
   async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线
@@ -581,6 +584,9 @@ const MODELS = {
     // 模型里车头朝右（+x）；绕竖轴转 −90°，让车头那一端朝着看的人（用户 2026-11-02：露车头，不露车身）
     const s = (await loader.loadAsync("../assets/objects/locomotive.glb")).scene; s.rotation.y = -Math.PI / 2; return s;
   },
+  /* 放信封的木头信插：BlenderKit「Wooden Organizer」（作者 Mobolaji_3D Dele-Adelodun，免费，Royalty Free 授权），用户 2026-11-03 选的。
+     真实尺寸 15 × 4 × 9.3 cm，木头信插里插着几封旧信封和明信片（贴着上世纪中叶的邮票、手写地址）；贴图 512 px，文件 100 KB，原样放，不改材质 */
+  async organizer() { return (await loader.loadAsync("../assets/objects/wooden-organizer.glb")).scene; },
   async boxes() { return (await loader.loadAsync("../assets/objects/postcard-boxes.glb")).scene; },    // 放明信片的盒子：Cozmoth「2 boxes」
   async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
   async textile() {                                                       // 米灰布面便签板：LINTEX 下载页的带材质模型（用户 2026-11-03 找到的 27829OMV）

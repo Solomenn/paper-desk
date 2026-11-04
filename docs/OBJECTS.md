@@ -1,4 +1,4 @@
-# 纸桌 · 七个物件盘点（第四阶段开工前，2026-11-02）
+# 纸桌 · 物件盘点（第四阶段开工前，2026-11-02）
 
 标准：T3（`radio.html`）的完成水准和设计语言，以及 `docs/ART-DIRECTION.md`。这一份只记现状和缺口，不改任何页面。
 
@@ -12,7 +12,8 @@
 | 便签 | LINTEX Textile Noticeboard 灰色织物板 | `assets/objects/textile-noticeboard-2500x1200-lth39.glb`，730 KB（LINTEX 下载页带材质的官方模型 27829OMV：2500 × 1200 × 16 mm，面料 Blazer Lite LTH39，官方颜色图、凹凸图、环境遮蔽图；用户 2026-11-03 找到） | LINTEX，已记入 `NOTICE.md` | 入口页的"便签"物件、首页便签页的板（2026-11-03 起） | 旧的 `textile-noticeboard-2005x1205.glb`（白模）已不用 |
 | 手账 | Bookshelf Short LOWPOLY（米白） | **仓库里没有**；改色后的 24.7 MB 版本只在 GPT 的本地预览包里 | Sketchfab，EFX，CC BY 4.0 | 外观已选定 | 需要那份文件，或重新下载原件再改色；24.7 MB 对网页太重，要压缩到几 MB |
 | 小票 | HQ3DMOD POS 小票机 | 没有 | 付费（US$19），未购买 | 只看过 Sketchfab 预览 | 买，或者自己建 |
-| 雪国线 | 小火车 | 没有 | — | 只有工具栏小图标 | 还没选型；要先找现代产品级的参考给你确认 |
+| 雪国线 | 火车头 | `assets/objects/locomotive.glb` | Sketchfab「Locomotive」，yanix，CC BY 4.0，入口页已署名 | 入口页在用 | 候车画面还没做（站台草图用户觉得像玩具，已撤） |
+| 雪国来信 | 木头信插（插着旧信封和明信片） | `assets/objects/wooden-organizer.glb`，100 KB（Draco 压缩，贴图 512 px） | BlenderKit「Wooden Organizer」，Mobolaji_3D Dele-Adelodun，免费，Royalty Free（不能把模型本身再分发；用户 2026-11-03 决定照样放进公开仓库） | 入口页第 7 格在用（2026-11-03） | — |
 
 ## 逐项说明
 
