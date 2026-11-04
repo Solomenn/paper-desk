@@ -188,7 +188,7 @@ self.addEventListener("message", event => {
    · 没变：服务器回 304，只有几百字节，模型这种大文件不会重新下载；变了：下载新的，顺手存进缓存；
    · 断网（fetch 失败）：用缓存里存的那份。
    以前模型、音效是"缓存优先、永不过期"，改了模型（木柜刷漆、火车上色）浏览器还一直用旧的。
-   例：改了 locomotive.glb 并发布 → 刷新入口页 → 问服务器 → ETag 变了 → 下载新模型 → 看到新颜色。
+   例：改了 postcard-boxes.glb 并发布 → 刷新入口页 → 问服务器 → ETag 变了 → 下载新模型 → 看到新颜色。
    站外只有 jsDelivr 上带版本号的字体（地址里写死版本，内容永远不变），仍然缓存优先。 */
 const fresh = request => request.mode === "navigate"
   ? new Request(request.url, { cache: "no-cache", credentials: "same-origin" })   // 页面跳转的请求不能直接改 cache，照地址另建一个

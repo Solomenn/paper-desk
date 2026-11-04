@@ -12,7 +12,7 @@
 | 便签 | LINTEX Textile Noticeboard 灰色织物板 | `assets/objects/textile-noticeboard-2500x1200-lth39.glb`，730 KB（LINTEX 下载页带材质的官方模型 27829OMV：2500 × 1200 × 16 mm，面料 Blazer Lite LTH39，官方颜色图、凹凸图、环境遮蔽图；用户 2026-11-03 找到） | LINTEX，已记入 `NOTICE.md` | 入口页的"便签"物件、首页便签页的板（2026-11-03 起） | 旧的 `textile-noticeboard-2005x1205.glb`（白模）已不用 |
 | 手账 | 入口页：一叠卡册（五本合上的卡册摞起来，2026-11-03）；手账页：米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`）当容器 | 卡册由 `binder/` 的代码生成（`/binder/shelf.js`）；书架 `assets/objects/wooden-shelf.glb` | 卡册同上一行；书架 Sketchfab，CC BY 4.0 | 已上线 | — （原来选的 EFX Bookshelf Short 没有采用） |
 | 小票 | HQ3DMOD POS 小票机 | 没有 | 付费（US$19），未购买 | 只看过 Sketchfab 预览 | 买，或者自己建 |
-| 雪国线 | 火车头 | `assets/objects/locomotive.glb` | Sketchfab「Locomotive」，yanix，CC BY 4.0，入口页已署名 | 入口页在用 | 候车画面还没做（站台草图用户觉得像玩具，已撤） |
+| 雪国线 | —（入口页不放这一格） | — | — | 2026-11-03 拿掉了火车头（`locomotive.glb` 已删）；雪国线从首页工具栏进 | 候车画面还没做 |
 | 雪国来信 | 木头信插（插着旧信封和明信片） | `assets/objects/wooden-organizer.glb`，100 KB（Draco 压缩，贴图 512 px） | BlenderKit「Wooden Organizer」，Mobolaji_3D Dele-Adelodun，免费，Royalty Free（不能把模型本身再分发；用户 2026-11-03 决定照样放进公开仓库） | 入口页第 7 格在用（2026-11-03） | — |
 
 ## 逐项说明

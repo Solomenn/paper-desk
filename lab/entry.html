@@ -8,7 +8,7 @@
   /* 字体：Sunghyun Sans（SIL OFL 1.1，作者仓库原文件，见 assets/fonts/）——参考站用的就是它 */
   @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: block; }
   @font-face { font-family: "Sunghyun Sans"; src: url("../assets/fonts/SunghyunSans-SemiBold.woff2") format("woff2"); font-weight: 600; font-display: block; }
-  /* 纸桌入口（第四阶段实验）：切换条沿用 lab/strip.html 的复现，换成 7 个物件、一页一根刻度、不放文字；物件是同一束窗光下的 3D 模型。方向见 docs/ART-DIRECTION.md */
+  /* 纸桌入口（第四阶段实验）：切换条沿用 lab/strip.html 的复现，换成 6 个物件、一页一根刻度、不放文字；物件是同一束窗光下的 3D 模型。方向见 docs/ART-DIRECTION.md */
   html, body { margin: 0; height: 100%; background: #e6e9eb; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: "Sunghyun Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   /* 参考站尺寸不随窗口缩放；竖直位置随窗口高度变化，由脚本 place() 按实测表设置 */
   #strip { position: absolute; left: 0; top: 0; height: 900px; will-change: transform; }
@@ -52,8 +52,7 @@
 </style>
 </head>
 <body>
-<span class="credit"><a href="https://sketchfab.com/3d-models/locomotive-d89f7d5a37ef43119e7b6c37b41c69cb" target="_blank" rel="noreferrer">Locomotive</a> · yanix ·
-  <a href="https://sketchfab.com/3d-models/2-boxes-3f920e8fd10c4664b5bd1dea3cf7606e" target="_blank" rel="noreferrer">2 boxes</a> · Cozmoth ·
+<span class="credit"><a href="https://sketchfab.com/3d-models/2-boxes-3f920e8fd10c4664b5bd1dea3cf7606e" target="_blank" rel="noreferrer">2 boxes</a> · Cozmoth ·
   <a href="https://sketchfab.com/3d-models/radio-t3-aad3d54384904cfc9b3df8791d254c5c" target="_blank" rel="noreferrer">T3</a> · ludwigangulodi ·
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
 <canvas id="gl"></canvas>
@@ -67,11 +66,10 @@
 // 先等字体到位：细调轮里每格的宽度按文字实际宽度算
 await Promise.all(["500 19px", "500 20px", "600 15px"].map(f => document.fonts.load(f + " 'Sunghyun Sans'", "0123456789 JanFebMarAprMayJunJulAugSepOctNovDec"))).catch(() => {});
 /* ── 数据：日期序列照参考站（149 个地点，2025-12 → 2026-10），名字用占位 ── */
-/* 七个物件 = 七页（第 7 个"雪国来信"是 2026-11-03 加的：放信封的木头信插）；一页一根刻度。month/day 结构沿用复现代码：都算同一个"月"，所以没有月界分隔 */
+/* 六个物件 = 六页（"雪国来信"是 2026-11-03 加的：放信封的木头信插；雪国线那格的火车头 2026-11-03 拿掉了，雪国线从首页工具栏进）；一页一根刻度。month/day 结构沿用复现代码：都算同一个"月"，所以没有月界分隔 */
 const PAGES = [
   { name: "项目", href: "../index.html#board", model: "silk" },
   { name: "便签", href: "../index.html#notes", model: "textile" },
-  { name: "雪国线", href: "../focus.html", model: "loco" },
   { name: "白噪音", href: "../radio.html", model: "t3" },
   { name: "明信片", href: "../receipt.html", model: "boxes" },
   { name: "手账", href: "../journal.html", model: "binders" },        // 一叠卡册（书架在手账页里，用户 2026-11-03）
@@ -89,14 +87,13 @@ const N = DATES.length, ITEM = 240, PITCH = ITEM + 100; window.PITCH_3D = PITCH;
    · 墙上一组（两块板）：每米 240 px。便签板 2.5 × 1.2 m → 600 × 288 px；项目板 2.0 × 1.0 m → 480 × 240 px。
    · 桌上一组（收音机、明信片盒、一叠卡册、信插）：每米 1100 px。一叠卡册（五本平放摞起来，按现在的卡数量）37.6 × 20.8 cm → 414 × 229 px，卡数变了厚度跟着变，3D 按实际量到的宽缩放；明信片盒（两只并排）26.4 × 11.4 cm → 290 × 125 px；收音机 T3 横放 15.2 × 8.2 cm → 167 × 90 px；
      信插 15.1 × 9.3 cm → 166 × 102 px。
-   · 火车头不按真实尺寸（之后会拿掉）：照旧，宽约 265 px。
    REAL 是每个物件真实的宽（米，单个物件），3D 部分按它缩放（模型自己的单位不一定是米，比如 T3 是毫米）。
    格子之间的距离跟着物件宽度变：相邻两个物件中心距 = 两个半宽 + 空隙 GAP 60 px，最少还是原来的格距 340 px。
    刻度尺不变（每页一段、等距）；切换条在尺子上的位置 s 换算成物件条上的位置时，在相邻两个物件之间按比例插值（stripX）。 */
 const PPM = { wall: 240, desk: 1100 };
 const REAL = { silk: [2.0, 1.0, "wall"], textile: [2.5, 1.2, "wall"], binders: [0.376, 0.208, "desk", 0.369], t3: [0.152, 0.082, "desk"], boxes: [0.264, 0.114, "desk"], organizer: [0.151, 0.093, "desk"] };
 const GAP = 60;
-const WPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][0] * PPM[REAL[p.model][2]] : 265);
+const WPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][0] * PPM[REAL[p.model][2]] : 290);   // 没有真实尺寸的（占位方块）按 290 px
 // 很深的物件（第 4 个数是进深，米）转起来侧面露出来会变宽：算间距时加上转到最斜（35° × 这个物件的转动幅度 0.25）时多出的那段
 const SIDE = PAGES.map(p => REAL[p.model] && REAL[p.model][3] ? REAL[p.model][3] * PPM[REAL[p.model][2]] * Math.sin(35 * 0.25 * Math.PI / 180) : 0);
 const HPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][1] * PPM[REAL[p.model][2]] : 160);
@@ -558,7 +555,7 @@ draw();
 } }
 </script>
 <script type="module">
-/* ── 3D：墙、百叶窗、太阳和所有光照效果在 ../room3d.js（2026-11-03 抽出来，首页也用同一份）；这里只管七个物件：
+/* ── 3D：墙、百叶窗、太阳和所有光照效果在 ../room3d.js（2026-11-03 抽出来，首页也用同一份）；这里只管六个物件：
    加载模型、缩放进格子、跟着切换条走和转、鼠标拿在手里，以及阳光调节面板 ── */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -601,10 +598,6 @@ const MODELS = {
     return s;
   },
   // 以下三个是用户选的 Sketchfab 模型（CC BY 4.0，右下角署名）：原样放，不改材质；贴图已压到 2K WebP（assets/objects/）
-  async loco() {                                                          // 火车头：yanix「Locomotive」
-    // 模型里车头朝右（+x）；绕竖轴转 −90°，让车头那一端朝着看的人（用户 2026-11-02：露车头，不露车身）
-    const s = (await loader.loadAsync("../assets/objects/locomotive.glb")).scene; s.rotation.y = -Math.PI / 2; return s;
-  },
   /* 放信封的木头信插：BlenderKit「Wooden Organizer」（作者 Mobolaji_3D Dele-Adelodun，免费，Royalty Free 授权），用户 2026-11-03 选的。
      真实尺寸 15 × 4 × 9.3 cm，木头信插里插着几封旧信封和明信片（贴着上世纪中叶的邮票、手写地址）；贴图 512 px，文件 100 KB，原样放，不改材质 */
   async organizer() { return (await loader.loadAsync("../assets/objects/wooden-organizer.glb")).scene; },
@@ -621,28 +614,25 @@ const MODELS = {
      基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"，总角度不超过 ±MAXYAW。
    只绕竖轴平着左右转，不俯视、不倾斜：竖线永远是竖的（用户 2026-11-02：斜着转，柜子看着要倒）。
    幅度不要夸张（用户 2026-11-02）：BASE 15°、PER 20°、MAXYAW 35°。
-   例：停在明信片盒子上 → 盒子转 15°；右边的一叠卡册离开一格，转 15° + 20° = 35°，露出左侧面；左边的火车头转 15° − 20° = −5°。
+   例：停在明信片盒子上 → 盒子转 15°；右边的一叠卡册离开一格，转 15° + 20° = 35°，露出左侧面；左边的收音机转 15° − 20° = −5°。
    物件绕自己的中心转（pivot），不绕墙面转，免得转进墙里。两个数可在地址里试：?base=15&per=20 */
 const Q = new URLSearchParams(location.search);
 const BASE = +(Q.get("base") ?? 15) * deg, PER = +(Q.get("per") ?? 20) * deg;
 const MAXYAW = 35 * deg;
 const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PITCH_3D / Math.tan(PER)))));
-/* 单个模型的转动幅度（用户 2026-11-02：火车的旋转幅度太大，缩小一点，直接放大火车）：转角 = 上面算出的角 × TURN。
-   火车头车身长，转到最斜时很宽，"最宽不超过 WIDEST_PX"那条把它压得很小；转角减半后最斜时窄了，那条放松，火车就大了。
-   例：火车头 TURN 0.5 → 停在中间转 7.5°，最多 17.5°；大小约是原来的 1.5 倍（停在中间宽约 265 px、高约 230 px）。 */
-/* 两块板（silk 蓝色玻璃板、textile 米色布板）转角 × 0.25（用户 2026-11-02：板子上的光很奇怪）：
+/* 单个模型的转动幅度：转角 = 上面算出的角 × TURN（没列出的 × 1）。
+   两块板（silk 蓝色玻璃板、textile 米色布板）转角 × 0.25（用户 2026-11-02：板子上的光很奇怪）：
    太阳方位 18° 时光几乎贴着墙扫过来，板子停在中间再转 15°，板面和光只剩约 3°，照得很暗、条纹也被拉斜，和墙上对不上；
    平的板子转起来本来也看不出多少立体感。× 0.25 后停在中间约 4°、最多约 9°。 */
 /* 一叠卡册也 × 0.25（2026-11-03）：卡册 37 cm 深，转到 35° 时侧面露出约 21 cm，压到旁边的盒子，侧面还露出一摞白色的板边和卡页；× 0.25 后最多约 9°。 */
-const TURN = { loco: 0.5, silk: 0.25, textile: 0.25, binders: 0.25 };
+const TURN = { silk: 0.25, textile: 0.25, binders: 0.25 };
 const turnOf = i => TURN[PAGES_3D[i].model] ?? 1;
-/* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）。
-   2026-11-03 起只有火车头还按下面这三条缩放；其他物件按真实尺寸（见切换条脚本里的 REAL、PPM），底边照旧对齐在同一条线上：
+/* 大小：2026-11-03 起物件都按真实尺寸（见切换条脚本里的 REAL、PPM）。下面这三条是之前"大小均匀"的缩法（用户 2026-11-02，照 pengzhe），
+   现在只给还没有模型、也没有真实尺寸的占位方块用：
    1. 侧影宽 = |宽·cos θ| + |厚·sin θ|（θ 是转角）。停在中间时（θ = BASE）的侧影宽缩放到 WIDTH_PX；
    2. 太高的再缩小，高不超过 HEIGHT_PX；
    3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX，免得压到邻格太多；
-   取三个里最小的缩放。例：火车头宽 2.8、厚 14.6、高 4.1 → 第 3 条最紧，停在中间约 245 px 宽、155 px 高，转到 35° 时 400 px 宽；
-   （书架、盒子原来也按这三条：书架高 360 px、盒子宽 290 px；2026-11-03 起改按真实尺寸。）
+   取三个里最小的缩放。
    所有物件的底边放在同一条线上：格子中心往下 BOTTOM_PX。 */
 const WIDTH_PX = 290, HEIGHT_PX = 360, WIDEST_PX = 400, BOTTOM_PX = 120;   // 用户 2026-11-02：放大模型（参考图楼宽约占格距 3/4）
 const sideWidth = (f, a) => Math.abs(f.size.x * Math.cos(a)) + Math.abs(f.size.z * Math.sin(a));
