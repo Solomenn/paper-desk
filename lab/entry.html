@@ -54,7 +54,6 @@
 <body>
 <span class="credit"><a href="https://sketchfab.com/3d-models/locomotive-d89f7d5a37ef43119e7b6c37b41c69cb" target="_blank" rel="noreferrer">Locomotive</a> · yanix ·
   <a href="https://sketchfab.com/3d-models/2-boxes-3f920e8fd10c4664b5bd1dea3cf7606e" target="_blank" rel="noreferrer">2 boxes</a> · Cozmoth ·
-  <a href="https://sketchfab.com/3d-models/wooden-shelf-67e718a0fc904487a9f735892d9834d3" target="_blank" rel="noreferrer">Wooden Shelf</a> · Vilson Pistori ·
   <a href="https://sketchfab.com/3d-models/radio-t3-aad3d54384904cfc9b3df8791d254c5c" target="_blank" rel="noreferrer">T3</a> · ludwigangulodi ·
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></span>
 <canvas id="gl"></canvas>
@@ -75,7 +74,7 @@ const PAGES = [
   { name: "雪国线", href: "../focus.html", model: "loco" },
   { name: "白噪音", href: "../radio.html", model: "t3" },
   { name: "明信片", href: "../receipt.html", model: "boxes" },
-  { name: "手账", href: "../journal.html", model: "shelf" },
+  { name: "手账", href: "../journal.html", model: "binders" },        // 一叠卡册（书架在手账页里，用户 2026-11-03）
   { name: "雪国来信", href: "../letter.html", model: "organizer" },        // 写信那页（照听雨来信写信页还原的信纸，letter.html）
 ];
 const DATES = PAGES.map((p, i) => "P" + (i + 1) + " 1");                   // 每页算一个"月"：页与页之间有长分隔，跨页的咔声更重
@@ -87,19 +86,21 @@ function place() { const h = innerHeight; document.getElementById("strip").style
 addEventListener("resize", place);
 const N = DATES.length, ITEM = 240, PITCH = ITEM + 100; window.PITCH_3D = PITCH;    // 格距 340 px（用户 2026-11-02：照参考图收紧间距；物件宽约 290，物件之间空约 50 px）
 /* 物件按真实尺寸缩小（用户 2026-11-03："按照实际真实尺寸比例缩小到 entry，不然一个尺寸有点像玩具"；选了"分两组，每组内部按真实比例"）：
-   · 墙上一组（两块板、书架）：每米 240 px。便签板 2.5 × 1.2 m → 600 × 288 px；项目板 2.0 × 1.0 m → 480 × 240 px；书架 0.83 × 1.85 m → 200 × 444 px。
-   · 桌上一组（收音机、明信片盒、信插）：每米 1100 px。明信片盒（两只并排）26.4 × 11.4 cm → 290 × 125 px；收音机 T3 横放 15.2 × 8.2 cm → 167 × 90 px；
+   · 墙上一组（两块板）：每米 240 px。便签板 2.5 × 1.2 m → 600 × 288 px；项目板 2.0 × 1.0 m → 480 × 240 px。
+   · 桌上一组（收音机、明信片盒、一叠卡册、信插）：每米 1100 px。一叠卡册（五本平放摞起来，按现在的卡数量）37.6 × 20.8 cm → 414 × 229 px，卡数变了厚度跟着变，3D 按实际量到的宽缩放；明信片盒（两只并排）26.4 × 11.4 cm → 290 × 125 px；收音机 T3 横放 15.2 × 8.2 cm → 167 × 90 px；
      信插 15.1 × 9.3 cm → 166 × 102 px。
    · 火车头不按真实尺寸（之后会拿掉）：照旧，宽约 265 px。
    REAL 是每个物件真实的宽（米，单个物件），3D 部分按它缩放（模型自己的单位不一定是米，比如 T3 是毫米）。
    格子之间的距离跟着物件宽度变：相邻两个物件中心距 = 两个半宽 + 空隙 GAP 60 px，最少还是原来的格距 340 px。
    刻度尺不变（每页一段、等距）；切换条在尺子上的位置 s 换算成物件条上的位置时，在相邻两个物件之间按比例插值（stripX）。 */
 const PPM = { wall: 240, desk: 1100 };
-const REAL = { silk: [2.0, 1.0, "wall"], textile: [2.5, 1.2, "wall"], shelf: [0.833, 1.849, "wall"], t3: [0.152, 0.082, "desk"], boxes: [0.264, 0.114, "desk"], organizer: [0.151, 0.093, "desk"] };
+const REAL = { silk: [2.0, 1.0, "wall"], textile: [2.5, 1.2, "wall"], binders: [0.376, 0.208, "desk", 0.369], t3: [0.152, 0.082, "desk"], boxes: [0.264, 0.114, "desk"], organizer: [0.151, 0.093, "desk"] };
 const GAP = 60;
 const WPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][0] * PPM[REAL[p.model][2]] : 265);
+// 很深的物件（第 4 个数是进深，米）转起来侧面露出来会变宽：算间距时加上转到最斜（35° × 这个物件的转动幅度 0.25）时多出的那段
+const SIDE = PAGES.map(p => REAL[p.model] && REAL[p.model][3] ? REAL[p.model][3] * PPM[REAL[p.model][2]] * Math.sin(35 * 0.25 * Math.PI / 180) : 0);
 const HPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][1] * PPM[REAL[p.model][2]] : 160);
-const XC = [0]; for (let i = 1; i < PAGES.length; i++) XC.push(XC[i - 1] + Math.max(PITCH, WPX[i - 1] / 2 + GAP + WPX[i] / 2));   // 每个物件中心在物件条上的位置
+const XC = [0]; for (let i = 1; i < PAGES.length; i++) XC.push(XC[i - 1] + Math.max(PITCH, WPX[i - 1] / 2 + SIDE[i - 1] + GAP + WPX[i] / 2 + SIDE[i]));   // 每个物件中心在物件条上的位置
 const stripX = sx => { const t = sx / PITCH, i = Math.max(0, Math.min(PAGES.length - 2, Math.floor(t))); return XC[i] + (t - i) * (XC[i + 1] - XC[i]); };   // 两头以外按两端那段的斜率外推
 Object.assign(window, { REAL_3D: REAL, PPM_3D: PPM, XC_3D: XC, WPX_3D: WPX, HPX_3D: HPX });
 const month = DATES.map(d => d.split(" ")[0]), day = DATES.map(d => +d.split(" ")[1]);
@@ -564,7 +565,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { createRoom3D } from "../room3d.js";
-import { dressSilk, dressTextile } from "../entry-boards.js";
+import { dressSilk, dressTextile, binderStack } from "../entry-boards.js";
 const deg = Math.PI / 180;
 while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));          // 等切换条脚本把页面列表准备好
 const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D, XC = window.XC_3D, WPX = window.WPX_3D, HPX = window.HPX_3D;
@@ -608,7 +609,7 @@ const MODELS = {
      真实尺寸 15 × 4 × 9.3 cm，木头信插里插着几封旧信封和明信片（贴着上世纪中叶的邮票、手写地址）；贴图 512 px，文件 100 KB，原样放，不改材质 */
   async organizer() { return (await loader.loadAsync("../assets/objects/wooden-organizer.glb")).scene; },
   async boxes() { return (await loader.loadAsync("../assets/objects/postcard-boxes.glb")).scene; },    // 放明信片的盒子：Cozmoth「2 boxes」
-  async shelf() { return (await loader.loadAsync("../assets/objects/wooden-shelf.glb")).scene; },     // 书架：Vilson Pistori「Wooden Shelf」
+  binders() { return binderStack(R); },                                   // 手账：五本卡册摞成一叠（../entry-boards.js）；书架留在手账页里当容器
   async textile() {                                                       // 米灰布面便签板：LINTEX 下载页的带材质模型（用户 2026-11-03 找到的 27829OMV）
     /* 2500 × 1200 mm、厚 16 mm，面料 Blazer Lite LTH39，材质全用官方的（颜色图、凹凸图、环境遮蔽图），模型自带法线。
        原来用的 2005 × 1205 白模没有材质，颜色是自己暂定的 Oyster Shell #C4BDB1，还要补法线、用 flatShading，现在都不用了。 */
@@ -620,7 +621,7 @@ const MODELS = {
      基础角度 BASE + atan(物件离画面中心的距离 / 视距)，视距取"离开一格（PITCH_3D）时多转 PER 度"，总角度不超过 ±MAXYAW。
    只绕竖轴平着左右转，不俯视、不倾斜：竖线永远是竖的（用户 2026-11-02：斜着转，柜子看着要倒）。
    幅度不要夸张（用户 2026-11-02）：BASE 15°、PER 20°、MAXYAW 35°。
-   例：停在明信片盒子上 → 盒子转 15°；右边的书架离开一格，转 15° + 20° = 35°，露出左侧面；左边的火车头转 15° − 20° = −5°。
+   例：停在明信片盒子上 → 盒子转 15°；右边的一叠卡册离开一格，转 15° + 20° = 35°，露出左侧面；左边的火车头转 15° − 20° = −5°。
    物件绕自己的中心转（pivot），不绕墙面转，免得转进墙里。两个数可在地址里试：?base=15&per=20 */
 const Q = new URLSearchParams(location.search);
 const BASE = +(Q.get("base") ?? 15) * deg, PER = +(Q.get("per") ?? 20) * deg;
@@ -632,7 +633,8 @@ const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PI
 /* 两块板（silk 蓝色玻璃板、textile 米色布板）转角 × 0.25（用户 2026-11-02：板子上的光很奇怪）：
    太阳方位 18° 时光几乎贴着墙扫过来，板子停在中间再转 15°，板面和光只剩约 3°，照得很暗、条纹也被拉斜，和墙上对不上；
    平的板子转起来本来也看不出多少立体感。× 0.25 后停在中间约 4°、最多约 9°。 */
-const TURN = { loco: 0.5, silk: 0.25, textile: 0.25 };
+/* 一叠卡册也 × 0.25（2026-11-03）：卡册 37 cm 深，转到 35° 时侧面露出约 21 cm，压到旁边的盒子，侧面还露出一摞白色的板边和卡页；× 0.25 后最多约 9°。 */
+const TURN = { loco: 0.5, silk: 0.25, textile: 0.25, binders: 0.25 };
 const turnOf = i => TURN[PAGES_3D[i].model] ?? 1;
 /* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）。
    2026-11-03 起只有火车头还按下面这三条缩放；其他物件按真实尺寸（见切换条脚本里的 REAL、PPM），底边照旧对齐在同一条线上：
@@ -640,7 +642,7 @@ const turnOf = i => TURN[PAGES_3D[i].model] ?? 1;
    2. 太高的再缩小，高不超过 HEIGHT_PX；
    3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX，免得压到邻格太多；
    取三个里最小的缩放。例：火车头宽 2.8、厚 14.6、高 4.1 → 第 3 条最紧，停在中间约 245 px 宽、155 px 高，转到 35° 时 400 px 宽；
-   书架宽 0.83、高 1.85 → 第 2 条最紧，高 360 px、宽约 175 px；盒子 → 第 1 条，宽 290 px。
+   （书架、盒子原来也按这三条：书架高 360 px、盒子宽 290 px；2026-11-03 起改按真实尺寸。）
    所有物件的底边放在同一条线上：格子中心往下 BOTTOM_PX。 */
 const WIDTH_PX = 290, HEIGHT_PX = 360, WIDEST_PX = 400, BOTTOM_PX = 120;   // 用户 2026-11-02：放大模型（参考图楼宽约占格距 3/4）
 const sideWidth = (f, a) => Math.abs(f.size.x * Math.cos(a)) + Math.abs(f.size.z * Math.sin(a));
@@ -655,7 +657,7 @@ function sizeObjects() {                                                  // 窗
   slots.forEach((g, i) => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, t = turnOf(i);   // 按这个模型自己的转角算宽度
     const widest = Math.max(sideWidth(f, MAXYAW * t), sideWidth(f, -MAXYAW * t));
     const real = window.REAL_3D[PAGES_3D[i].model];                      // 有真实尺寸的：按所在那组的每米像素数缩放（见切换条脚本里的 REAL、PPM）
-    const k = real ? real[0] * window.PPM_3D[real[2]] / (f.size.x * R.PXM)
+    const k = real ? (PAGES_3D[i].model === "binders" ? f.size.x : real[0]) * window.PPM_3D[real[2]] / (f.size.x * R.PXM)   // 卡册那叠本身就是米，按实际量到的宽
       : Math.min(WIDTH_PX / sideWidth(f, BASE * t), HEIGHT_PX / f.size.y, WIDEST_PX / widest) / R.PXM;
     // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm），高度让底边落在格子中心下方 BOTTOM_PX
     o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
@@ -690,7 +692,7 @@ window.__scene3d = o => { off = o; render(); aim(); };
            指针在右边 → 正面往右转；指针在下边 → 正面往下转。
      没指着：目标角度 = 0（回正）。
    角度用带一点回弹的弹簧跟上目标（HOLD_K 弹簧硬度、HOLD_DAMP 阻尼比，小于 1 就会稍稍冲过头再回来）。
-   例：鼠标从左往右扫过书架 → 书架先往左偏、再往右偏，最多 14°；鼠标移开 → 书架晃一下回到原来的角度。
+   例：鼠标从左往右扫过一叠卡册 → 它先往左偏、再往右偏，最多 14°；鼠标移开 → 书架晃一下回到原来的角度。
    只有还在转的时候才逐帧重画，停稳了就停。 */
 const HOLD_YAW = 14 * deg, HOLD_PITCH = 4 * deg, HOLD_K = 90, HOLD_DAMP = 0.62;
 const hold = PAGES_3D.map(() => ({ x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0 }));

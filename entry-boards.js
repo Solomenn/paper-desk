@@ -150,3 +150,67 @@ export function dressTextile(R, model) {
     }
   });
 }
+
+/* ════════ 手账：一叠卡册（用户 2026-11-03："书架之后直接换成卡册实体（叠一起的那种），书架点进去才能看到当容器"） ════════
+   五本合上的卡册平放摞成一叠，书脊朝外：项目、便签、明信片、车票四本和碎碎念。外壳和手账页书架上那五本是同一份代码
+   （/binder/ 构建出的 shelf.js：同样的封面颜色、材质、烫印、按卡数算的厚度、真实的板子尺寸），书脊烫印册名和卡数（同手账页）。
+   大的压在下面；每本左右错开几毫米、转一两度，像随手摞的。单位是米（真实尺寸），入口页按桌上一组的比例缩放。
+   点它照旧进手账页（书架在那里）。 */
+export async function binderStack(R) {
+  const THREE = R.THREE;
+  let lib = null;
+  for (const u of ["./binder/shelf.js", "./binder/dist/shelf.js"]) { try { lib = await import(u); break; } catch {} }
+  if (!lib) throw new Error("shelf.js 没找到");
+  const months = jotMonths();
+  const BOOKS = [
+    { tab: "proj", name: "项目卡册" }, { tab: "note", name: "便签卡册" }, { tab: "postcard", name: "明信片卡册" },
+    { tab: "ticket", name: "车票卡册" }, { tab: "jot", name: "碎碎念", journal: true },
+  ];
+  const stack = new THREE.Group(), items = [];
+  for (const B of BOOKS) {
+    let res; try { res = B.journal ? lib.closedJournal(Math.max(1, months)) : lib.closedBinder(B.tab); } catch (e) { console.error("卡册", B.tab, e); continue; }
+    const g = res.binder.group;
+    g.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => R.addRefl(m)); } });
+    g.scale.multiplyScalar(0.1);                                          // /binder/ 的单位是 10 cm：换成米
+    // 书脊转到朝外（+z）：看金属环在板宽（x）的哪一头（同 shelf3d.js）
+    g.updateMatrixWorld(true);
+    let bb = new THREE.Box3().setFromObject(g);
+    const sb = new THREE.Box3(); g.traverse(o => { if (o.isMesh && o.material === res.binder.steel) sb.expandByObject(o); });
+    const spinePlusX = sb.isEmpty() ? true : sb.getCenter(new THREE.Vector3()).x > bb.getCenter(new THREE.Vector3()).x;
+    g.rotation.y = spinePlusX ? -Math.PI / 2 : Math.PI / 2; g.updateMatrixWorld(true);
+    bb = new THREE.Box3().setFromObject(g); const size = bb.getSize(new THREE.Vector3());
+    g.position.sub(new THREE.Vector3(bb.min.x, bb.min.y, bb.max.z));   // 左、底、书脊面落在原点
+    const lay = new THREE.Group(); lay.add(g); lay.rotation.z = -Math.PI / 2; lay.position.y = size.x;   // 平放：竖放时 x∈[0,厚] y∈[0,高] → x∈[0,高] y∈[0,厚]
+    const holder = new THREE.Group(); holder.add(lay);
+    items.push({ B, res, holder, thick: size.x, height: size.y, depth: size.z, count: res.count ?? 0 });
+  }
+  items.sort((a, b) => b.height * b.depth - a.height * a.depth);       // 大的在下面
+  let y = 0, sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647 - 0.5;
+  for (const m of items) {
+    m.holder.position.set(-m.height / 2 + rnd() * 0.012, y, m.depth / 2); m.holder.rotation.y = rnd() * 0.05;   // 错开 ±6 mm、转 ±1.4°
+    stack.add(m.holder); y += m.thick + 0.0005;
+  }
+  // 书脊烫印：等字体到了再画（同手账页）
+  (async () => {
+    for (const m of items) {
+      const sub = m.B.journal ? `${months} 个月` : `${m.count} 张`;
+      try { await lib.fontsFor(m.res, [m.B.name, sub]); } catch (e) { console.warn("字体", e); }
+      const mesh = lib.spineFoil(m.res, m.B.name, sub, m.height * 0.8, m.thick * 0.7, true); if (!mesh) continue;
+      R.addRefl(mesh.material); mesh.position.set(m.height / 2, m.thick / 2, 0.0004); m.holder.add(mesh);
+      R.render();
+    }
+  })();
+  return stack;
+}
+
+/* 碎碎念有几个月（同手账页 journal.html：今年到这个月的每个月，加上更早有东西的月份）：那本的厚度和书脊上的"几个月" */
+export function jotMonths() {
+  const ks = new Set(), now = new Date();
+  for (let m = 1; m <= now.getMonth() + 1; m++) ks.add(`${now.getFullYear()}-${m}`);
+  const add = t => { if (!t) return; const d = new Date(t); if (!isNaN(d)) ks.add(`${d.getFullYear()}-${d.getMonth() + 1}`); };
+  (load("paper-desk.today.v1", []) || []).forEach(i => i && i.text && i.text.trim() && i.done && add(i.doneAt));
+  ((load("paper-desk.desk-tasks.v1", {}) || {}).done || []).forEach(t => add(t.doneAt));
+  (load("paper-desk.memos.v1", []) || []).concat(load("paper-desk.notes-archive.v1", []) || []).forEach(n => n && n.text && n.text.trim() && add(n.createdAt));
+  Object.keys(load("paper-desk.todaymemo.v1", {}) || {}).forEach(k => { const [y, m] = k.split("-").map(Number); if (y && m) ks.add(`${y}-${m}`); });
+  return ks.size;
+}
