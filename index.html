@@ -2586,7 +2586,7 @@
         x: Math.round(n.x), y: Math.round(n.y), a: +n.a.toFixed(4), pin: n.pin, folded: !!n.folded, bar: !!(n.bar || n.toBar), docked: inDrawer(n), dockedAt: n.dockedAt || 0,
         z: n.z, createdAt: n.createdAt,
       }));
-      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+      try { localStorage.setItem(KEY, JSON.stringify(data)); localStorage.setItem("paper-desk.memos.size.v1", JSON.stringify({ w: Math.round(W), h: Math.round(H) })); } catch {}   // 便签板的大小：入口页按它把便签缩到布板上
     }, 300);
   }
   function load() {

@@ -104,7 +104,7 @@ Blossom 690、Peaceful 360、Frank 540、Shy 120、Lonely 170、Cozy 450、Livel
 - **便签板：LINTEX Textile Noticeboard** — [官方产品页与 3D 配置器](https://lintex.com/products/textile-noticeboard/)。配置器可切换尺寸与面料；页面说明可导出 OBJ / GLB / STL。
 - 以上两个 LINTEX 产品页均带官方交互式 3D 配置器；浏览器中可用方向键旋转。当前已确认产品型号，但项目仓库尚未保存各自独立 GLB。
 
-共用：`room.css` / `room.js`（房间、字体、没有 WebGL 时的平面墙），`room3d.js`（3D 墙和百叶光，入口页和各页共用），`board3d.js`（首页两块板、项目卡、便签的 3D），`wall3d.js`（卡册、手账、小票的 3D 墙），`paint-dom.js`（把网页按排好的样子画成 3D 贴图），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
+共用：`room.css` / `room.js`（房间、字体、没有 WebGL 时的平面墙），`room3d.js`（3D 墙和百叶光，入口页和各页共用），`board3d.js`（首页两块板、项目卡、便签的 3D），`entry-boards.js`（入口页两块板上的项目卡和便签），`wall3d.js`（卡册、手账、小票的 3D 墙），`paint-dom.js`（把网页按排好的样子画成 3D 贴图），`sound.js`（音效），`ticket.js`（车票），`preload.js`（预加载）。
 
 ## 文档
 
@@ -134,6 +134,7 @@ python3 serve.py          # http://localhost:8000（换端口：python3 serve.py
 | `paper-desk.todaymemo.v1` | 每天的碎碎念 |
 | `paper-desk.desk-tasks.v1` | 项目卡（含累计专注分钟数）和做完的项目 |
 | `paper-desk.memos.v1` / `paper-desk.notes-archive.v1` | 便签板上的便签 / 归档的便签 |
+| `paper-desk.memos.size.v1` | 便签板的大小（网页像素），入口页按它把便签缩到布板上 |
 | `paper-desk.trip.v1` / `paper-desk.tickets.v1` | 当前行程 / 坐过的车票 |
 | `paper-desk.trip.min` · `.trip.wheels` · `.trip.lamp` | 雪国线：上次选的时长、车轮声开关、灯光设置 |
 | `paper-desk.receipts.v1` | 每天的小票 |

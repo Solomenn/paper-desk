@@ -86,13 +86,32 @@ function interp(xs, ys, x) { let i = 0; while (i < xs.length - 2 && x > xs[i + 1
 function place() { const h = innerHeight; document.getElementById("strip").style.top = (interp(VH, WHEN, h) - 214) + "px"; document.getElementById("zone").style.top = interp(VH, ZONE, h) + "px"; }
 addEventListener("resize", place);
 const N = DATES.length, ITEM = 240, PITCH = ITEM + 100; window.PITCH_3D = PITCH;    // 格距 340 px（用户 2026-11-02：照参考图收紧间距；物件宽约 290，物件之间空约 50 px）
+/* 物件按真实尺寸缩小（用户 2026-11-03："按照实际真实尺寸比例缩小到 entry，不然一个尺寸有点像玩具"；选了"分两组，每组内部按真实比例"）：
+   · 墙上一组（两块板、书架）：每米 240 px。便签板 2.5 × 1.2 m → 600 × 288 px；项目板 2.0 × 1.0 m → 480 × 240 px；书架 0.83 × 1.85 m → 200 × 444 px。
+   · 桌上一组（收音机、明信片盒、信插）：每米 1100 px。明信片盒（两只并排）26.4 × 11.4 cm → 290 × 125 px；收音机 T3 横放 15.2 × 8.2 cm → 167 × 90 px；
+     信插 15.1 × 9.3 cm → 166 × 102 px。
+   · 火车头不按真实尺寸（之后会拿掉）：照旧，宽约 265 px。
+   REAL 是每个物件真实的宽（米，单个物件），3D 部分按它缩放（模型自己的单位不一定是米，比如 T3 是毫米）。
+   格子之间的距离跟着物件宽度变：相邻两个物件中心距 = 两个半宽 + 空隙 GAP 60 px，最少还是原来的格距 340 px。
+   刻度尺不变（每页一段、等距）；切换条在尺子上的位置 s 换算成物件条上的位置时，在相邻两个物件之间按比例插值（stripX）。 */
+const PPM = { wall: 240, desk: 1100 };
+const REAL = { silk: [2.0, 1.0, "wall"], textile: [2.5, 1.2, "wall"], shelf: [0.833, 1.849, "wall"], t3: [0.152, 0.082, "desk"], boxes: [0.264, 0.114, "desk"], organizer: [0.151, 0.093, "desk"] };
+const GAP = 60;
+const WPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][0] * PPM[REAL[p.model][2]] : 265);
+const HPX = PAGES.map(p => REAL[p.model] ? REAL[p.model][1] * PPM[REAL[p.model][2]] : 160);
+const XC = [0]; for (let i = 1; i < PAGES.length; i++) XC.push(XC[i - 1] + Math.max(PITCH, WPX[i - 1] / 2 + GAP + WPX[i] / 2));   // 每个物件中心在物件条上的位置
+const stripX = sx => { const t = sx / PITCH, i = Math.max(0, Math.min(PAGES.length - 2, Math.floor(t))); return XC[i] + (t - i) * (XC[i + 1] - XC[i]); };   // 两头以外按两端那段的斜率外推
+Object.assign(window, { REAL_3D: REAL, PPM_3D: PPM, XC_3D: XC, WPX_3D: WPX, HPX_3D: HPX });
 const month = DATES.map(d => d.split(" ")[0]), day = DATES.map(d => +d.split(" ")[1]);
 
 /* ── 物件条 ── */
 const strip = document.getElementById("strip");
 DATES.forEach((d, i) => {
-  const el = document.createElement("div"); el.className = "it"; el.style.left = i * PITCH + "px";
+  const el = document.createElement("div"); el.className = "it"; el.style.left = XC[i] + "px";
   el.innerHTML = `<a class="art" href="${PAGES[i].href}" aria-label="${PAGES[i].name}"></a>`;   // 物件上下不放文字（用户 2026-11-02 定）；名字只给读屏
+  // 点的范围 = 物件在画面上占的那块（底边在格子中心下方 120 px，见 3D 部分 BOTTOM_PX）
+  const a = el.firstChild, w = Math.max(WPX[i], 120), h = Math.max(HPX[i], 120);
+  Object.assign(a.style, { left: (ITEM - w) / 2 + "px", width: w + "px", top: 285 + 120 + 120 - h + "px", height: h + "px" });
   strip.append(el);
 });
 
@@ -260,7 +279,7 @@ addEventListener("pointerdown", audio, { capture: true });
 const AT = Math.max(0, Math.min(N - 1, Math.round(+new URLSearchParams(location.search).get("at") || 0)));
 const S = { x: AT * PITCH, v: 0, free: false, g: null };
 // 3D 部分加载得比切换条晚，第一次画时先问这里：物件条现在的位置（和上面 __scene3d 收到的是同一个数）
-window.__stripOff = () => innerWidth / 2 - ITEM / 2 - S.x;
+window.__stripOff = () => innerWidth / 2 - ITEM / 2 - stripX(S.x);
 const F = { on: false, raw: 0, target: 0, wheel: false, samples: [], timer: 0 };   // 滚轮和拖动的自由移动（见下面"滚轮和拖动"）
 function glideAt(g, t) {
   const p = Math.min(1, Math.max(0, (t - g.t0) / g.dur)), p2 = p * p, p3 = p2 * p, m = g.v0 * g.dur;
@@ -465,8 +484,8 @@ function frame(now) {
   if (busy) requestAnimationFrame(frame); else running = false;
 }
 function draw() {
-  strip.style.transform = `translateX(${innerWidth / 2 - ITEM / 2 - S.x}px)`;
-  window.__scene3d?.(innerWidth / 2 - ITEM / 2 - S.x);                     // 3D 物件跟着物件条一起走
+  strip.style.transform = `translateX(${innerWidth / 2 - ITEM / 2 - stripX(S.x)}px)`;
+  window.__scene3d?.(innerWidth / 2 - ITEM / 2 - stripX(S.x));                     // 3D 物件跟着物件条一起走
   const Z = x => H.zoomAt + (x - H.zoomAt) * H.zoom;
   const marker = Lpos[cur], hot = H.inside && !H.fine ? unzoom(H.px) : null;
   // 细调：日子轮停在按下处，刻度整体平移，让当前地点对准轮心；轮心两侧 92 px 内的刻度隐去
@@ -545,9 +564,10 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { createRoom3D } from "../room3d.js";
+import { dressSilk, dressTextile } from "../entry-boards.js";
 const deg = Math.PI / 180;
 while (!window.PAGES_3D) await new Promise(r => setTimeout(r, 10));          // 等切换条脚本把页面列表准备好
-const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D;
+const PAGES_3D = window.PAGES_3D, PITCH_3D = window.PITCH_3D, XC = window.XC_3D, WPX = window.WPX_3D, HPX = window.HPX_3D;
 const OFF_WALL = 0.012;                                                    // 物件背面离墙 12 mm（模型里自带安装件的不加，见 OFF_OF）
 const OFF_OF = { silk: 0 };                                               // 官方 Silk Wall 模型里已经有导轨、磁铁，模型的 z = 0 就是墙面
 const R = await createRoom3D({ canvas: document.getElementById("gl"), base: "../", dust: document.getElementById("dust"), film: document.getElementById("film"),
@@ -614,7 +634,8 @@ const yawAt = dx => Math.max(-MAXYAW, Math.min(MAXYAW, BASE + Math.atan(dx / (PI
    平的板子转起来本来也看不出多少立体感。× 0.25 后停在中间约 4°、最多约 9°。 */
 const TURN = { loco: 0.5, silk: 0.25, textile: 0.25 };
 const turnOf = i => TURN[PAGES_3D[i].model] ?? 1;
-/* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）：
+/* 大小均匀、底边对齐（用户 2026-11-02，照 pengzhe：每栋楼差不多一样宽，高度随楼变，都站在同一条线上）。
+   2026-11-03 起只有火车头还按下面这三条缩放；其他物件按真实尺寸（见切换条脚本里的 REAL、PPM），底边照旧对齐在同一条线上：
    1. 侧影宽 = |宽·cos θ| + |厚·sin θ|（θ 是转角）。停在中间时（θ = BASE）的侧影宽缩放到 WIDTH_PX；
    2. 太高的再缩小，高不超过 HEIGHT_PX；
    3. 长东西转到最斜（θ = ±MAXYAW）时会变宽：最宽不超过 WIDEST_PX，免得压到邻格太多；
@@ -633,13 +654,20 @@ function fitInto(group, obj) {
 function sizeObjects() {                                                  // 窗口宽度变了，格子在世界里的大小也跟着变（R.PXM：每米多少 CSS 像素）
   slots.forEach((g, i) => { const o = g.userData.obj; if (!o) return; const f = o.userData.fit, t = turnOf(i);   // 按这个模型自己的转角算宽度
     const widest = Math.max(sideWidth(f, MAXYAW * t), sideWidth(f, -MAXYAW * t));
-    const k = Math.min(WIDTH_PX / sideWidth(f, BASE * t), HEIGHT_PX / f.size.y, WIDEST_PX / widest) / R.PXM;
+    const real = window.REAL_3D[PAGES_3D[i].model];                      // 有真实尺寸的：按所在那组的每米像素数缩放（见切换条脚本里的 REAL、PPM）
+    const k = real ? real[0] * window.PPM_3D[real[2]] / (f.size.x * R.PXM)
+      : Math.min(WIDTH_PX / sideWidth(f, BASE * t), HEIGHT_PX / f.size.y, WIDEST_PX / widest) / R.PXM;
     // 物件的中心放在 pivot 上；pivot 离墙 = 半个厚度 + 12 mm（不转时背面离墙 12 mm），高度让底边落在格子中心下方 BOTTOM_PX
     o.scale.setScalar(f.s0 * k); o.position.set(-f.c.x * k, -f.c.y * k, -f.c.z * k);
     g.userData.pivot.position.set(0, -BOTTOM_PX / R.PXM + f.size.y * k / 2, (f.c.z - f.zmin) * k + (OFF_OF[PAGES_3D[i].model] ?? OFF_WALL)); });
 }
+/* 两块板上放上真东西（用户 2026-11-03）：项目板上是首页的项目卡，便签板上是首页的便签（../entry-boards.js，读这个浏览器里存的同一份数据） */
+const DRESS = {
+  silk: o => { dressSilk(R, o); render(); },
+  textile: o => { dressTextile(R, o); render(); },
+};
 PAGES_3D.forEach((p, i) => {
-  if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => fitInto(slots[i], o)).catch(e => console.error(p.name, e));
+  if (p.model && MODELS[p.model]) MODELS[p.model]().then(o => { fitInto(slots[i], o); return DRESS[p.model]?.(o); }).catch(e => console.error(p.name, e));
   else fitInto(slots[i], new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.02), new THREE.MeshStandardMaterial({ color: "#dcdfe1", roughness: .9 })));   // 还没有模型：占位方块
 });
 
@@ -647,7 +675,7 @@ let off = window.__stripOff ? window.__stripOff() : innerWidth / 2 - 120;   // �
 function placeSlots() {
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120;   // 物件区中心的页面 y
   slots.forEach((g, i) => {
-    const dx = off + i * PITCH_3D + 120 - innerWidth / 2;                  // 这个物件离画面中心多远（CSS 像素，右边为正）
+    const dx = off + XC[i] + 120 - innerWidth / 2;                  // 这个物件离画面中心多远（CSS 像素，右边为正）
     g.position.set(dx / R.PXM, YC - (top - innerHeight / 2) / R.PXM, 0);
     // 转角 = 跟着切换条的角度 + 鼠标拿在手里的倾斜（hold）；"XYZ"：先左右转，再绕画面的横轴上下转，竖线保持竖直
     const pv = g.userData.pivot, h = hold[i]; if (pv) pv.rotation.set(h.x, yawAt(dx) * turnOf(i) + h.y, 0, "XYZ");
@@ -671,10 +699,10 @@ const clamp1 = v => Math.max(-1, Math.min(1, v));
 function aim() {
   const top = parseFloat(getComputedStyle(document.getElementById("strip")).top) + 285 + 120, base = top + BOTTOM_PX;   // 底边那条线的页面 y
   hold.forEach((h, i) => {
-    const cx = off + i * PITCH_3D + 120, cy = base - HEIGHT_PX / 2;
-    const on = mouse && Math.abs(mouse.x - cx) < PITCH_3D / 2 && mouse.y > base - HEIGHT_PX && mouse.y < base + 30;
-    h.ty = on ? clamp1((mouse.x - cx) / (PITCH_3D / 2)) * HOLD_YAW : 0;
-    h.tx = on ? clamp1((mouse.y - cy) / (HEIGHT_PX / 2)) * HOLD_PITCH : 0;
+    const cx = off + XC[i] + 120, hw = Math.max(PITCH_3D, WPX[i] + 60) / 2, ht = Math.max(HEIGHT_PX, HPX[i] + 20), cy = base - ht / 2;   // 指着的范围：至少原来一格，大的物件按它自己的宽高
+    const on = mouse && Math.abs(mouse.x - cx) < hw && mouse.y > base - ht && mouse.y < base + 30;
+    h.ty = on ? clamp1((mouse.x - cx) / hw) * HOLD_YAW : 0;
+    h.tx = on ? clamp1((mouse.y - cy) / (ht / 2)) * HOLD_PITCH : 0;
   });
   if (!holdRaf) { holdLast = performance.now(); holdRaf = requestAnimationFrame(holdStep); }
 }
