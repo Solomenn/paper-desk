@@ -119,6 +119,14 @@
   function setAmb(v) { amb = v; put(AKEY, amb); if (amb && on) startAmbient(); else stopAmbient(); dispatchEvent(new CustomEvent("deskSound", { detail: { on, amb } })); }
   // browsers only let sound start after a gesture
   addEventListener("pointerdown", () => { ctx(); if (on && amb) startAmbient(); }, { once: false, capture: true, passive: true });
+  /* 第一次按下才建 AudioContext（设备初始化要几十到上百毫秒），第一次播放才解码（也要几十毫秒）——这两笔正好卡在第一次拖动上。
+     声音开着时在页面空闲时先建好、先解一条，之后按下就有现成的 */
+  function warm() {
+    if (!on) return;
+    const c = ctx(); if (!c) return;
+    manifest.then(() => { const t = (takes("pickUp") || [])[0]; if (t) buffer(t.file); });
+  }
+  addEventListener("load", () => setTimeout(() => { if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 3000 }); else warm(); }, 1200));
   addEventListener("keydown", e => {
     const a = document.activeElement;
     if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable) || e.metaKey || e.ctrlKey || e.altKey) return;

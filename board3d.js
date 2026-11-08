@@ -118,26 +118,36 @@ async function start() {
     },
   };
   const items = new Map();                                               // 网页元素 → 3D 里的那张纸
-  function itemOf(el, kind) {
+  const texLive = t => { for (const o of items.values()) if (o.tex === t) return true; return false; };
+  function itemOf(el, kind, src) {
     const K = KIND[kind], planes = newPlanes();
-    const front = mat(new THREE.MeshStandardMaterial({ roughness: 0.92, bumpMap: paperBump, bumpScale: 0.15 }), planes);
-    const side = mat(new THREE.MeshStandardMaterial({ color: K.sideColor(el), roughness: 0.92 }), planes);
+    // 本来就是透明的通道（不透明度 1 时看起来和不透明一模一样）：拖起来要变 30% 透明时不用换着色器，免去第一次拖动时现场编译卡 1–2 秒
+    const front = mat(new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.92, bumpMap: paperBump, bumpScale: 0.15 }), planes);
+    const side = mat(new THREE.MeshStandardMaterial({ transparent: true, color: K.sideColor(el), roughness: 0.92 }), planes);
     const mesh = new THREE.Mesh(K.geo, [side, side, side, side, front, side]); mesh.castShadow = mesh.receiveShadow = true; objects.add(mesh);
-    const pin = kind === "card" ? new THREE.Mesh(sphere, mat(new THREE.MeshPhysicalMaterial({ roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 }), planes)) : null;
+    const pin = kind === "card" ? new THREE.Mesh(sphere, mat(new THREE.MeshPhysicalMaterial({ transparent: true, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 }), planes)) : null;
     if (pin) { pin.castShadow = pin.receiveShadow = true; objects.add(pin); }
     const it = { el, kind, K, mesh, pin, front, side, planes, tex: null, dirty: true, painting: false, editing: false };
+    // 拖动时的克隆卡（.ghost）和原卡长得一模一样：直接借原卡的贴图，不用再画一遍、再传一遍显卡（拖动第一帧省几十毫秒）
+    if (src && src.tex && !src.editing) { it.tex = src.tex; it.front.map = src.tex; it.front.needsUpdate = true; it.dirty = false; it.shared = true; }
     items.set(el, it); return it;
   }
-  function dropItem(it) { objects.remove(it.mesh); if (it.pin) { objects.remove(it.pin); it.pin.material.dispose(); } it.tex?.dispose(); it.front.dispose(); it.side.dispose(); items.delete(it.el); }
+  function dropItem(it) {
+    objects.remove(it.mesh); if (it.pin) { objects.remove(it.pin); it.pin.material.dispose(); }
+    const t = it.tex; items.delete(it.el); if (t && !texLive(t)) t.dispose();
+    it.front.dispose(); it.side.dispose();
+  }
   async function paintItem(it) {
-    if (it.painting) return; it.painting = true; it.dirty = false;
+    if (it.painting || it.shared) return; it.painting = true; it.dirty = false;
     try {
       const editing = it.K.editing(it.el), face = it.K.face(it.el); if (!face) return;
-      // 网页版在 3D 开着时是透明的（编辑时纸的背景也是透明的）：画的那一刻临时去掉 b3d、画完马上加回（同步，不闪）
+      // 网页版在 3D 开着时是透明的（编辑时纸的背景也是透明的）：编辑时画的那一刻临时去掉 b3d、画完马上加回（同步，不闪）。
+      // 平时不去掉：b3d 对 x3d 的透明 paintDOM 自己会忽略，去掉再戴回会让整页样式重算一遍，拖动时卡一下
       it.el.classList.toggle("edit3d", editing);
       const cv = await paintDOM(face, { scale: SCALE, noText: editing, flatten: it.K.flatten(it.el), skipPseudo: it.K.skipPseudo,
-        before: () => document.body.classList.remove("b3d"), after: () => document.body.classList.add("b3d") });
-      const t = newTex(cv); it.front.map = t; it.front.needsUpdate = true; it.tex?.dispose(); it.tex = t;   // 贴图大小会变：每次换一张新的
+        before: editing ? () => document.body.classList.remove("b3d") : null, after: editing ? () => document.body.classList.add("b3d") : null });
+      const t = newTex(cv), old = it.tex; it.front.map = t; it.front.needsUpdate = true; it.tex = t;   // 贴图大小会变：每次换一张新的
+      if (old && !texLive(old)) old.dispose();
       it.side.color.set(it.K.sideColor(it.el)); it.editing = editing; dirty = true;
     } finally { it.painting = false; }
   }
@@ -145,7 +155,7 @@ async function start() {
   const pins = new Map();
   function pinOf(el) {
     const planes = newPlanes();
-    const p = new THREE.Mesh(sphere, mat(new THREE.MeshPhysicalMaterial({ color: 0xcc5c42, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.1 }), planes));
+    const p = new THREE.Mesh(sphere, mat(new THREE.MeshPhysicalMaterial({ transparent: true, color: 0xcc5c42, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.1 }), planes));
     p.castShadow = p.receiveShadow = true; p.userData.planes = planes; objects.add(p); pins.set(el, p); return p;
   }
 
@@ -157,8 +167,19 @@ async function start() {
     if (host) { const it = items.get(host); if (it) it.dirty = true; }
     else if (el.closest("#chalk")) printDirty = true;
   };
-  new MutationObserver(ms => { for (const m of ms) markFrom(m.target); dirty = true; })
-    .observe($("#pages"), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class", "value"] });
+  // 拖动中会加上的类（抬起、克隆体、给 3D 让位的 x3d、编辑标记）：贴图不看它们，别为它们重画
+  const GESTURE = new Set(["lifted", "ghost", "x3d", "edit3d"]);
+  const keepClass = s => (s || "").split(/\s+/).filter(t => t && !GESTURE.has(t)).join(" ");
+  new MutationObserver(ms => {
+    for (const m of ms) {
+      const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (!el) continue;
+      // 拖动时插入/搬动落点占位（.cards 里）、栏的 over 高亮：只影响网页，不画进板子的贴图，不重画
+      if (!el.closest(".pcard, .mini, .note") && (el.closest(".cards") || el.classList.contains("lane"))) continue;
+      if (m.type === "attributes" && m.attributeName === "class" && keepClass(m.oldValue) === keepClass(el.getAttribute("class"))) continue;
+      markFrom(m.target); dirty = true;
+    }
+  }).observe($("#pages"), { subtree: true, childList: true, characterData: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "value"] });
   new MutationObserver(() => { dirty = true; }).observe(document.body, { childList: true });   // 拖动时的 .ghost、拿在手里的图钉挂在 body 上
   addEventListener("input", e => { markFrom(e.target); dirty = true; });
   addEventListener("focusin", e => markFrom(e.target)); addEventListener("focusout", e => setTimeout(() => markFrom(e.target), 0));
@@ -206,11 +227,11 @@ async function start() {
       const w = face.offsetWidth, h = face.offsetHeight, [a, s] = angleOf(el), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       const z = it.K.z0() + it.K.thick / 2 + 0.0002 + (ghost ? 0.03 : 0) + (it.kind === "note" ? liftOf(el) * 0.04 : 0);
       it.mesh.scale.set(wl(w * s), wl(h * s), 1); it.mesh.rotation.set(0, 0, -a); it.mesh.position.set(wx(cx), wy(cy), z);
-      const op = lifted ? 0.3 : 1; [it.front, it.side].forEach(x => { x.transparent = op < 1; x.opacity = op; });
+      const op = lifted ? 0.3 : 1; [it.front, it.side].forEach(x => { x.opacity = op; });
       const box = it.kind === "card" && !ghost && el.closest(".cards");
       setPlanes(it.planes, !outside, box ? box.getBoundingClientRect() : null);
       if (it.pin) {                                                      // 磁铁：大卡用 .grip 的位置，小卡在顶边正中往下 2 px（网页里是 ::before）
-        it.pin.material.color.set(getComputedStyle(el).getPropertyValue("--mg").trim() || "#c9573f"); it.pin.material.opacity = op; it.pin.material.transparent = op < 1;
+        it.pin.material.color.set(getComputedStyle(el).getPropertyValue("--mg").trim() || "#c9573f"); it.pin.material.opacity = op;
         const grip = el.classList.contains("pcard") && $(".grip", el);
         let px, py, pr;
         if (grip) { const g = grip.getBoundingClientRect(); px = g.left + g.width / 2; py = g.top + g.height / 2; pr = g.width / 2; }
@@ -242,10 +263,10 @@ async function start() {
     for (const el of [...$$("#chalk .pcard.inl, #chalk .mini"), ...$$("body > .pcard.ghost, body > .mini.ghost")]) now.set(el, "card");
     for (const el of $$(".note:not(.hidden)")) now.set(el, "note");
     for (const it of [...items.values()]) if (!now.has(it.el)) { dropItem(it); dirty = true; }
-    for (const [el, kind] of now) { if (!items.has(el)) { itemOf(el, kind); dirty = true; } const h = KIND[kind].hideEl(el); if (h) h.classList.add("x3d"); }
+    for (const [el, kind] of now) { if (!items.has(el)) { itemOf(el, kind, el._b3dSrc && items.get(el._b3dSrc)); dirty = true; } const h = KIND[kind].hideEl(el); if (h && !h.classList.contains("x3d")) h.classList.add("x3d"); }
     const pnow = new Set($$(".pin"));
     for (const [el, p] of [...pins]) if (!pnow.has(el)) { objects.remove(p); p.material.dispose(); pins.delete(el); dirty = true; }
-    for (const el of pnow) { if (!pins.has(el)) { pinOf(el); dirty = true; } el.classList.add("x3d"); }
+    for (const el of pnow) { if (!pins.has(el)) { pinOf(el); dirty = true; } if (!el.classList.contains("x3d")) el.classList.add("x3d"); }
   }
   function frame() {
     requestAnimationFrame(frame);

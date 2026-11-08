@@ -745,7 +745,7 @@
   body.b3d .note.editing .sheet.x3d { opacity: 1 !important; background: transparent !important; box-shadow: none !important; }
   body.b3d .note.editing .sheet.x3d::before, body.b3d .note.editing .sheet.x3d::after { display: none !important; }
 </style>
-<script src="sound.js"></script>
+<script src="sound.js?v=2"></script>
 <script src="preload.js" defer></script>
 <script src="radio-shell.js" defer></script>
 </head>
@@ -1524,7 +1524,7 @@
     const mv = ev => {
       if (!ghost) {
         if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
-        ghost = m.cloneNode(true); ghost.classList.add("ghost"); ghost.style.width = r.width + "px";
+        ghost = m.cloneNode(true); ghost.classList.add("ghost"); ghost.style.width = r.width + "px"; ghost._b3dSrc = m;   // 3D 里这张拖着的卡借原卡的贴图，不再画一遍
         document.body.appendChild(ghost); m.classList.add("lifted");
         slot = document.createElement("div"); slot.className = "slot";
       }
@@ -2642,6 +2642,6 @@
   requestAnimationFrame(frame);
 })();
 </script>
-<script type="module" src="board3d.js?v=5"></script>
+<script type="module" src="board3d.js?v=6"></script>
 </body>
 </html>
