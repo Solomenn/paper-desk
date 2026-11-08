@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>纸桌</title>
+<link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="room.css?v=15">
 <script src="room.js?v=14"></script>
 <script type="importmap">
@@ -12,6 +13,11 @@
   "three/addons/": "./vendor/three/addons/"
 } }
 </script>
+<link rel="modulepreload" href="./vendor/three/three.module.js">
+<link rel="modulepreload" href="./vendor/three/addons/loaders/GLTFLoader.js">
+<link rel="modulepreload" href="./vendor/three/addons/utils/BufferGeometryUtils.js">
+<link rel="modulepreload" href="room3d.js">
+<link rel="modulepreload" href="paint-dom.js">
 <style>
   :root {
     --ink: #2a323a;

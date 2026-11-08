@@ -263,9 +263,27 @@
       scheduled = false;
       startPreload();
     };
+    const idle = () => {
+      if ("requestIdleCallback" in window) requestIdleCallback(start, {timeout:4000});
+      else setTimeout(start, 1200);
+    };
 
-    if ("requestIdleCallback" in window) requestIdleCallback(start, {timeout:1200});
-    else setTimeout(start, 600);
+    /* 首访先让这一页的字体和 3D 下完，再在后台预载全站。
+       以前 DOMContentLoaded 后 1.2 秒就开始，和首屏抢带宽（2026-11-08：入口页 FCP 6.8 秒，其中 3.3 秒是预载）。
+       现在等 load 后再安静 8 秒，或用户开始操作后再等 2 秒。 */
+    let fired = false;
+    const fire = () => {
+      if (fired) return;
+      fired = true;
+      idle();
+    };
+    const onInput = () => setTimeout(fire, 2000);
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach(type => {
+      window.addEventListener(type, onInput, {once:true, passive:true});
+    });
+
+    if (document.readyState === "complete") setTimeout(fire, 8000);
+    else window.addEventListener("load", () => setTimeout(fire, 8000), {once:true});
   }
 
   if (document.readyState === "loading") {
