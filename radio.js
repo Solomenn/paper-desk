@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 const qs = s => document.querySelector(s);
@@ -248,7 +249,7 @@ function centerAndFit(obj) {
   return {box,size,center,scale:s};
 }
 async function loadModel() {
-  const loader=new GLTFLoader();
+  const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   try {
     const gltf=await loader.loadAsync("assets/radio/t3.glb");
     radioRoot.clear();

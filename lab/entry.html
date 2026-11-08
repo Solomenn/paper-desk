@@ -560,6 +560,7 @@ draw();
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { createRoom3D } from "../room3d.js";
 import { dressSilk, dressTextile, binderStack } from "../entry-boards.js";
@@ -574,8 +575,8 @@ const { L, LIGHT_DEFAULT, objects, addRefl, YC, VIEW_W, applyLight } = R, render
 
 /* 物件：各自缩放进 240 px 的格子，背面离墙 12 mm */
 const slots = PAGES_3D.map(() => { const g = new THREE.Group(); objects.add(g); return g; });
-const loader = new GLTFLoader();
-loader.setDRACOLoader(new DRACOLoader().setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/libs/draco/gltf/"));   // 信插的模型是 Draco 压缩的，要这个解码器
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+loader.setDRACOLoader(new DRACOLoader().setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/libs/draco/gltf/"));   // 信插的模型是 Draco 压缩的；Silk Wall、收音机是 Meshopt 压缩的
 const normals = g => toCreasedNormals(mergeVertices(g.clone().deleteAttribute("normal"), 1e-5), 35 * deg);   // LINTEX 导出的模型没有法线：补上（同窗光页）
 const MODELS = {
   async t3() {                                                            // 同 radio.html：烘进节点变换，竖着的转成横的，哑白材质加淡淡的棱线

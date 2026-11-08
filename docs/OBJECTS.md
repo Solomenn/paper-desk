@@ -6,10 +6,10 @@
 
 | 页面 | 物件 | 模型文件 | 来源和许可证 | 现状 | 缺口 |
 |---|---|---|---|---|---|
-| 白噪音 | Braun T3 收音机 | `assets/radio/t3.glb`，851 KB | Sketchfab「Radio T3」，ludwigangulodi，CC BY 4.0，`radio.html` 已署名 | 完成，作为标准 | 无 |
+| 白噪音 | Braun T3 收音机 | `assets/radio/t3.glb`，156 KB（2026-11-08 用 meshopt 压缩，外观不变） | Sketchfab「Radio T3」，ludwigangulodi，CC BY 4.0，`radio.html` 已署名 | 完成，作为标准 | 无 |
 | 卡册（并入各页和书架，见"已定"第 2 条） | sasshi 活页夹 | 没有模型文件，由 `binder/` 的引擎用代码生成 | qzz0518/sasshi，AGPL-3.0，已记入 `NOTICE.md` | 第一阶段已过关，线上 `/binder/` | 书架里的汇总已接上（2026-11-03）：`binder/src/shelf.ts` 单独构建成 `/binder/shelf.js`，手账页用它生成合上的卡册放进 3D 书架、用手账页自己的光；打开时还是 `/binder/` 自己的引擎和光 |
-| 项目 | LINTEX Silk Wall 浅蓝玻璃板 | 入口页：`assets/objects/silk-wall-2000x1000-350.glb`，857 KB（官网配置器导出的整套：玻璃正面、背面彩色涂层、玻璃边、背板、导轨、磁铁；颜色 Silk Glass 350 Crisp，材质全用官方的）；窗光实验页：`assets/objects/silk-wall-2000x1000.glb`，32 KB（媒体库 41537M 的 OBJ，只有玻璃，材质在页面里自己定，为了不打乱那页按参考照片做的校准，没换） | 都来自 LINTEX 官网；已记入 `NOTICE.md` | 入口页（2026-11-03 换成配置器导出的整套）、窗光实验页 | 官网下载模型的使用条款还没查明 |
-| 便签 | LINTEX Textile Noticeboard 灰色织物板 | `assets/objects/textile-noticeboard-2500x1200-lth39.glb`，730 KB（LINTEX 下载页带材质的官方模型 27829OMV：2500 × 1200 × 16 mm，面料 Blazer Lite LTH39，官方颜色图、凹凸图、环境遮蔽图；用户 2026-11-03 找到） | LINTEX，已记入 `NOTICE.md` | 入口页的"便签"物件、首页便签页的板（2026-11-03 起） | 旧的 `textile-noticeboard-2005x1205.glb`（白模）已不用 |
+| 项目 | LINTEX Silk Wall 浅蓝玻璃板 | 入口页：`assets/objects/silk-wall-2000x1000-350.glb`，177 KB（2026-11-08 用 meshopt 压缩，外观不变）（官网配置器导出的整套：玻璃正面、背面彩色涂层、玻璃边、背板、导轨、磁铁；颜色 Silk Glass 350 Crisp，材质全用官方的）；窗光实验页：`assets/objects/silk-wall-2000x1000.glb`，32 KB（媒体库 41537M 的 OBJ，只有玻璃，材质在页面里自己定，为了不打乱那页按参考照片做的校准，没换） | 都来自 LINTEX 官网；已记入 `NOTICE.md` | 入口页（2026-11-03 换成配置器导出的整套）、窗光实验页 | 官网下载模型的使用条款还没查明 |
+| 便签 | LINTEX Textile Noticeboard 灰色织物板 | `assets/objects/textile-noticeboard-2500x1200-lth39.glb`，730 KB（LINTEX 下载页带材质的官方模型 27829OMV：2500 × 1200 × 16 mm，面料 Blazer Lite LTH39，官方颜色图、凹凸图、环境遮蔽图；用户 2026-11-03 找到） | LINTEX，已记入 `NOTICE.md` | 入口页的"便签"物件、首页便签页的板（2026-11-03 起） | — |
 | 手账 | 入口页：一叠卡册（五本合上的卡册摞起来，2026-11-03）；手账页：米白书架（Vilson Pistori「Wooden Shelf」，`wooden-shelf.glb`）当容器 | 卡册由 `binder/` 的代码生成（`/binder/shelf.js`）；书架 `assets/objects/wooden-shelf.glb` | 卡册同上一行；书架 Sketchfab，CC BY 4.0 | 已上线 | — （原来选的 EFX Bookshelf Short 没有采用） |
 | 小票 | HQ3DMOD POS 小票机 | 没有 | 付费（US$19），未购买 | 只看过 Sketchfab 预览 | 买，或者自己建 |
 | 雪国线 | —（入口页不放这一格） | — | — | 2026-11-03 拿掉了火车头（`locomotive.glb` 已删）；雪国线从首页工具栏进 | 候车画面还没做 |
@@ -38,7 +38,6 @@
 - 约 2.9 万个面、4K PBR 贴图、22 个部件。外观要先对照 T3 的标准验收，再决定买不买。
 
 **小火车**
-- `assets/3d/cabin.glb` 是车厢内景（thomas.rynne，CC BY），不是火车外观，不能用。
 
 ## 已定（用户 2026-11-02）
 

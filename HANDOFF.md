@@ -63,7 +63,7 @@
 - 右下角按钮或 D 键，只这一页：白天车票后面是白天的雪林照片，黑夜是雪夜山湖。
 - 坐车时窗外：黑夜用那张雪夜山湖照片（`assets/tyl/snow-background.webp`），整张一起慢慢往后滑，接缝处用镜像接上；只有一张照片，分不出远近层次（白天的雪原是远近分层滑的）。车厢照片白天黑夜同一张。坐车时也能切换。
 
-### 行驶中（`carview.js`，ride.js 已不加载）
+### 行驶中（`carview.js`）
 - **车厢**：`assets/frame.webp`，1440×962。取同一博主六张窗景照片的中位数得到干净的窗框，去掉小红书水印，玻璃按圆角矩形镂空（博主说车窗和桌子是公用素材，窗外风景是他自己的，没有用）。窗框铺满屏幕，左右不渐隐。
 - **窗外**：用一张照片拆层，即 Poly Haven 的 “Passendorf Snow”（CC0，8K 全景），一望无际的雪原加阳光。按屏幕实际分辨率绘制，不再像素化放大；套了参考照片的滤镜（第七节）。
   - 天空和太阳完全按原照片，静止不动。
@@ -99,7 +99,7 @@
 - [ ] 替换借用的 `assets/tyl/*` 素材（听雨来信）。
 - [ ] 夜间模式（暂缓）。场景已定为白天。
 - [ ] **下一阶段的主线见第八节。**
-- [ ] 删除不再使用的旧文件：`assets/objects/textile-noticeboard-2005x1205.glb`（白模，2026-11-03 起不用）、`carriage.js`、`ride.js`、`assets/ride/`、`assets/cabin-day*`、`assets/3d/cabin.glb` 等。删之前先确认没有页面引用。
+- [x] 删除不再使用的旧文件（2026-11-08 完成，删前逐项 grep 确认无页面引用）：白模 `textile-noticeboard-2005x1205.glb`、`carriage.js`、`ride.js`、`assets/ride/`、`assets/cabin-day*`、`assets/3d/{cabin.glb,sky_day.hdr,snow_forest.jpg}`、`assets/train/champagne_castle_1*`、`assets/car.webp`、Fusion Pixel 字体、`tools/{pixelate,forest_px,ride_px}.py` 及其源图、旧版 three.js（r170 打包版和未压缩模块）。
 
 ## 六、技术备忘
 
@@ -108,7 +108,7 @@
 
 - 本地验证：在仓库目录运行 `python3 -m http.server`，再用 Playwright 截图。启动浏览器时带 `serviceWorkers:'block'`，打开页面用 `waitUntil:'commit'`。
 - 服务工作线程 `sw.js` 对 html、js、css 和图片走网络优先。改了脚本要在 `focus.html` 里给 `carview.js?v=N` 提升版本号，防止缓存。`room.css` 和 `room.js` 同理。
-- 素材授权都记在 `NOTICE.md`：Poly Haven 是 CC0；Fusion Pixel 字体是 OFL（目前已不用）；车窗照片按博主声明使用。
+- 素材授权都记在 `NOTICE.md`：Poly Haven 是 CC0；车窗照片按博主声明使用。
 
 ## 七、窗外滤镜和做法（2026-11-01）
 

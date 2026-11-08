@@ -21,6 +21,7 @@
   if (!document.getElementById("tk-style")) {
     if (!document.querySelector('link[href*="room.css"], link[href*="fonts.css"]')) {   // the faces, unless the page has them already
       const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "fonts.css"; document.head.appendChild(l);
+      const q = document.createElement("link"); q.rel = "stylesheet"; q.href = "fonts-slices.css"; q.media = "print"; q.onload = () => { q.media = "all"; }; document.head.appendChild(q);
     }
     const s = document.createElement("style"); s.id = "tk-style";
     s.textContent = `

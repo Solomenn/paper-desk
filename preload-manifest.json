@@ -27,7 +27,6 @@
     "500 16px \"Noto Sans SC\""
   ],
   "decodeImages": [
-    "assets/car.webp",
     "assets/snow-day.webp",
     "assets/tyl/mechanical-head.webp",
     "assets/tyl/snow-background.webp"
@@ -45,11 +44,11 @@
         "desk.html",
         "room.css",
         "fonts.css",
+        "fonts-slices.css",
         "room.js",
         "sound.js",
         "ticket.js",
         "preload.js",
-        "ride.js",
         "sounds/manifest.json",
         "radio.html",
         "radio.js",
@@ -61,7 +60,6 @@
       "name": "images",
       "concurrency": 3,
       "paths": [
-        "assets/car.webp",
         "assets/snow-day.webp",
         "assets/tyl/mechanical-head.webp",
         "assets/tyl/snow-background.webp"
@@ -121,17 +119,6 @@
         "sounds/tab-3.m4a",
         "sounds/zip-1.m4a",
         "sounds/zip-2.m4a"
-      ]
-    },
-    {
-      "name": "ride",
-      "concurrency": 2,
-      "paths": [
-        "ride.js",
-        "assets/ride/cabin.png",
-        "assets/ride/shade.png",
-        "assets/ride/glass.png",
-        "assets/ride/wood.png"
       ]
     }
   ]

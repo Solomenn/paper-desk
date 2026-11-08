@@ -18,6 +18,7 @@
    贴图由 paint-dom.js 按网页排好的样子一个字一个字画出来（不是截图）。没有 WebGL 时什么都不做，首页保持原样。 */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { createRoom3D } from "./room3d.js";
 import { paintDOM } from "./paint-dom.js";
 
@@ -52,11 +53,12 @@ async function start() {
   };
   const BOARD_PLANES = newPlanes();
   const mat = (m, planes = BOARD_PLANES) => { m.clippingPlanes = planes; m.clipShadows = true; addRefl(m); return m; };
+  const gltfLoader = () => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 
   /* ════════ 项目页的板 ════════ */
   const silk = new THREE.Group(); objects.add(silk);
   let silkFit = null;
-  new GLTFLoader().loadAsync("assets/objects/silk-wall-2000x1000-350.glb").then(g => {
+  gltfLoader().loadAsync("assets/objects/silk-wall-2000x1000-350.glb").then(g => {
     const s = g.scene; const screws = s.getObjectByName("illustrative-wall-screws"); if (screws) screws.removeFromParent();
     s.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => mat(m)); } });
     const box = new THREE.Box3().setFromObject(s);
@@ -77,7 +79,7 @@ async function start() {
      拉伸不等比时织纹会被拉扁：按拉伸比例反过来调贴图的重复次数，织纹保持原来的疏密和方向。 ════════ */
   const textile = new THREE.Group(); objects.add(textile);
   let texFit = null;
-  new GLTFLoader().loadAsync("assets/objects/textile-noticeboard-2500x1200-lth39.glb").then(g => {
+  gltfLoader().loadAsync("assets/objects/textile-noticeboard-2500x1200-lth39.glb").then(g => {
     const s = g.scene, maps = [];
     s.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
       mat(m); for (const k of ["map", "normalMap"]) if (m[k]) maps.push({ t: m[k], ry: m[k].repeat.y }); }); } });

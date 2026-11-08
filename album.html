@@ -232,12 +232,14 @@
   #empty, #pager, .title-pg .n, .title-pg .rule, .pno { display: none !important; }   /* no captions: the book shows what it holds */
   #empty { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 20; font-size: 12.5px; color: var(--on-wall2); letter-spacing: .08em; display: none; }
 </style>
+<link rel="stylesheet" href="fonts-slices.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="fonts.css">
+<noscript><link rel="stylesheet" href="fonts-slices.css"></noscript>
 <link rel="stylesheet" href="room.css?v=15">
 <script src="room.js?v=14"></script>
 <script type="importmap">
 { "imports": {
-  "three": "./vendor/three/three.module.js",
+  "three": "./vendor/three/three.module.min.js",
   "three/addons/": "./vendor/three/addons/"
 } }
 </script>

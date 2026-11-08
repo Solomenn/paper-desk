@@ -122,7 +122,11 @@ python3 serve.py          # http://localhost:8000（换端口：python3 serve.py
 
 `serve.py` 把 `.js` 的类型固定成 `text/javascript`（Windows 上 `python -m http.server` 可能把它报成 `text/plain`），并且不发缓存头，改完刷新就行。
 
-字体：`fonts.css` 先读本地 `vendor/fonts/`，没有就从 jsDelivr 取。本地目录不进 git，需要时运行 `tools/fetch_fonts.py` 下载。
+字体：`vendor/fonts/` 里的分片随仓库一起发布，`fonts-slices.css` 里仍保留 jsDelivr 作为备用地址。
+
+字体分两层加载：`fonts.css` 只有 7 条「首屏快取」规则（每个字重一个文件，覆盖页面实际用到的字），同步加载、体积小；
+`fonts-slices.css` 是全字集分片（699 条 `@font-face`，约 720 KB），用 `media="print"` 转 `all` 的方式异步加载，不挡首屏。
+首屏快取里没有的字（用户自己打的、其他页面的生僻字）仍由分片提供，字形完全一样。改了实际用到的字要重新生成，见 `tools/`。
 
 改了脚本或样式，记得给页面里的 `?v=N` 加一，避免服务工作线程（`sw.js`）和浏览器缓存旧文件。
 
