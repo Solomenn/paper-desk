@@ -18,6 +18,9 @@
 <link rel="modulepreload" href="./vendor/three/addons/utils/BufferGeometryUtils.js">
 <link rel="modulepreload" href="room3d.js">
 <link rel="modulepreload" href="paint-dom.js">
+<!-- 两块板的模型：以前要等 room3d 建好房间（软件渲染时要好几秒）才开始下载，3D 迟迟不出来。 -->
+<link rel="preload" href="assets/objects/silk-wall-2000x1000-350.glb" as="fetch" crossorigin>
+<link rel="preload" href="assets/objects/textile-noticeboard-2500x1200-lth39.glb" as="fetch" crossorigin>
 <style>
   :root {
     --ink: #2a323a;
