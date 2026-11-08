@@ -18,11 +18,23 @@
   }
   window.Theme = { get: () => root.dataset.theme, set: setTheme, toggle: () => setTheme(root.dataset.theme === "night" ? "day" : "night") };
 
+  /* 首页的 3D 用拱窗（board3d.js 给 room3d.js 的 window: "arch"）。3D 画好之前，平面墙也按拱窗画：
+     否则第一次进入、3D 还没出来时，先看到的是一墙百叶窗条纹，过几秒才跳成拱窗。
+     窗形和太阳方向读入口页导出的 assets/objects/lintex-light-gobo.json（和 room3d.js 同一份）。
+     只有首页在 room.js 之前设了 window.__archLight；卡册、手账、小票仍是百叶窗。 */
+  const ARCH_LIGHT = !!window.__archLight; let ARCH = null;
+  if (ARCH_LIGHT) fetch("assets/objects/lintex-light-gobo.json").then(r => r.json()).then(d => {
+    ARCH = d; if (window.roomRelight) window.roomRelight();
+  }).catch(() => {});
+
   const start = () => {
     if (!$("#room")) document.body.insertAdjacentHTML("afterbegin", '<div class="desk" id="room" aria-hidden="true"><i class="boards"></i><i class="grain"></i><i class="win"></i><i class="lamp"></i><i class="stove"></i><i class="tooth"></i></div>');
     document.body.insertAdjacentHTML("beforeend", '<i class="cast shade" aria-hidden="true"></i><i class="cast glow" aria-hidden="true"></i>');
     setTheme(root.dataset.theme); root.classList.remove("theming");
     /* 首页两块板和所有页面背景墙上的阳光：和入口页（lab/entry.html）同一束百叶窗光，1:1，不放大（用户 2026-11-03）。
+       首页例外（2026-11-09）：3D 用的是拱窗（board3d.js 的 window: "arch"），3D 出来之前的平面墙也画拱窗，
+       否则第一次进入会先看到百叶窗条纹、几秒后跳成拱窗；窗洞和横档来自 assets/objects/lintex-light-gobo.json，
+       和百叶窗条带用同一个仿射变换投到墙上。卡册、手账、小票仍是这一段说的百叶窗。
        ① "把两个板子的光照都统一——改成主页的光照"；② "两个板子不要和主页放大缩小统一了；统一改成主页那种光照；不用考虑位置了"。
        · 画面怎么对着墙：和入口页一样——画面宽 = 2.536 m，画面正中对着墙上 (0, YC)。所以条纹的粗细、间距、斜度、
          亮区在画面左边多少，都和入口页一模一样（1440×900 下条纹竖直间距约 85 px，亮区是画面左边 68%）。
@@ -42,6 +54,14 @@
     const VIEW_W = 2.536, WIN = 3, YC = 1.5 - 3 * 2.536 / 1140;           // YC：入口页画面正中对着的墙高（m）
     const read = (k, d) => { const o = { ...d }; try { const s = JSON.parse(localStorage.getItem(k) || "{}"); for (const i in o) if (s[i] !== undefined) o[i] = s[i]; } catch {} return o; };
     const f = x => +x.toFixed(5);
+    /* 拱窗：窗洞、横档是多边形，点同样是窗上的 (u, v)，和百叶窗条带用同一个仿射变换投到墙上。
+       turn 0、方位 35°、仰角 32°（room3d.js 的拱窗这么做）；窗洞外没有阳光。 */
+    const archOn = () => ARCH_LIGHT && !!ARCH;
+    const archL = L => archOn() ? { ...L, az: ARCH.az, el: ARCH.el, turn: 0 } : L;
+    const archShapes = (fillHole, fillIsland) => {
+      const poly = (h, fill) => `<path d="M${h.map(p => f(p[0]) + " " + f(p[1])).join("L")}Z" fill="${fill}"/>`;
+      return ARCH.holes.map(h => poly(h, fillHole)).join("") + (ARCH.islands || []).map(h => poly(h, fillIsland)).join("");
+    };
     // 窗、和"窗上 (u, v) → 屏幕像素"的变换；(ox, oy) = 画的那层的左上角在屏幕上的位置
     function geom(L, ox, oy) {
       const W = innerWidth, H = innerHeight, s = VIEW_W / W, d = Math.PI / 180, tr = L.turn * d;
@@ -59,17 +79,28 @@
       return o; };
     let n = 0;
     function paintBoard(el) {
-      const w = el.clientWidth, h = el.clientHeight, L = read("paper-desk.light.v1", LIGHT_DEFAULT);
+      const w = el.clientWidth, h = el.clientHeight, L = archL(read("paper-desk.light.v1", LIGHT_DEFAULT));
       // 这块板翻到眼前、停好时的左上角（翻页滑动中也按停好时算，光就跟着板一起滑）
       const r = el.getBoundingClientRect(), pg = el.closest(".page"), host = document.getElementById("pages");
       const pr = pg ? pg.getBoundingClientRect() : r, hl = host && host.parentElement ? host.parentElement.getBoundingClientRect().left : 0;
       const ox = pg ? hl + (r.left - pr.left) : r.left, oy = r.top;
-      const key = [w, h, Math.round(ox), Math.round(oy), innerWidth, innerHeight, JSON.stringify(L)].join("|");
+      const key = [w, h, Math.round(ox), Math.round(oy), innerWidth, innerHeight, ARCH ? "arch" : "blinds", JSON.stringify(L)].join("|");
       if (el._sunKey === key) return; el._sunKey = key;
       if (el._sun) { el._sun.remove(); el._sun = null; }
       if (w < 40 || h < 40) return;
-      const g = geom(L, ox, oy), dark = Math.max(0.05, Math.min(0.95, 0.49 + (20 - L.tilt) * 0.015));
-      const blur = Math.max(1, 0.088 * L.pitch / 2.56 / g.s), id = "sun" + (++n);   // 高斯：10%–90% 过渡 = 2.56 σ
+      if (ARCH_LIGHT && !ARCH) return;                                    // 拱窗数据还没到：先不画，免得闪一下百叶窗
+      const g = geom(L, ox, oy), id = "sun" + (++n);
+      if (archOn()) {
+        const blur = Math.max(1, 0.02 / g.s);
+        el.insertAdjacentHTML("beforeend", `<svg class="sunlit" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs>
+          <filter id="${id}b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter>
+          <mask id="${id}m" maskUnits="userSpaceOnUse" x="-100" y="-100" width="${w + 200}" height="${h + 200}"><g transform="matrix(${g.M})">
+            ${archShapes("#fff", "#000")}</g></mask></defs>
+          <g filter="url(#${id}b)"><rect x="-100" y="-100" width="${w + 200}" height="${h + 200}" fill="#fffefa" mask="url(#${id}m)"/></g></svg>`);
+        el._sun = el.lastElementChild; return;
+      }
+      const dark = Math.max(0.05, Math.min(0.95, 0.49 + (20 - L.tilt) * 0.015));
+      const blur = Math.max(1, 0.088 * L.pitch / 2.56 / g.s);            // 高斯：10%–90% 过渡 = 2.56 σ
       el.insertAdjacentHTML("beforeend", `<svg class="sunlit" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs>
         <filter id="${id}b" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter>
         <mask id="${id}m" maskUnits="userSpaceOnUse" x="-100" y="-100" width="${w + 200}" height="${h + 200}"><g transform="matrix(${g.M})">
@@ -82,18 +113,31 @@
     let wallKey = "";
     function paintWall() {
       const room = document.getElementById("room"); if (!room) return;
-      const W = innerWidth, H = innerHeight, L = read("paper-desk.light.v1", LIGHT_DEFAULT);
-      const key = [W, H, JSON.stringify(L)].join("|"); if (key === wallKey) return; wallKey = key;
-      const g = geom(L, 0, 0), blur = Math.max(1, 0.22 * L.pitch / 2.56 / g.s);
-      const svg = `<svg class="wall" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs>
+      const W = innerWidth, H = innerHeight, L = archL(read("paper-desk.light.v1", LIGHT_DEFAULT));
+      const key = [W, H, ARCH ? "arch" : "blinds", JSON.stringify(L)].join("|"); if (key === wallKey) return; wallKey = key;
+      const g = geom(L, 0, 0);
+      const head = (blur) => `<defs>
         <linearGradient id="wallg" gradientUnits="userSpaceOnUse" x1="${g.px(g.X1).toFixed(1)}" y1="0" x2="${g.px(g.X1 + 0.81).toFixed(1)}" y2="0">
           <stop offset="0" stop-color="${WALL_SHADE0}"/><stop offset="1" stop-color="${WALL_SHADE1}"/></linearGradient>
-        <clipPath id="wallc"><rect transform="matrix(${g.M})" x="${f(g.U0)}" y="0" width="${f(g.U1 - g.U0)}" height="${f(g.V1)}"/></clipPath>
-        <filter id="wallb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter></defs>
-        <rect width="${W}" height="${H}" fill="url(#wallg)"/>
-        <g filter="url(#wallb)"><g clip-path="url(#wallc)"><g transform="matrix(${g.M})">
-          <rect x="${f(g.U0 - 0.5)}" y="-1" width="${f(g.U1 - g.U0 + 1)}" height="${f(g.V1 + 2)}" fill="${WALL_LIT}"/>${bandsOf(g, L, 0.40, 0, WALL_BAND)}
-          <rect x="${f(g.CORD - 0.003)}" y="0" width="0.006" height="${f(g.V1)}" fill="${WALL_BAND}"/></g></g></g></svg>`;
+        <filter id="wallb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${blur.toFixed(1)}"/></filter></defs>`;
+      let svg;
+      if (archOn()) {
+        const blur = Math.max(1, 0.04 / g.s);                             // 窗离墙 3 m，影子边缘很软
+        svg = `<svg class="wall" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${head(blur)}
+          <rect width="${W}" height="${H}" fill="url(#wallg)"/>
+          <g filter="url(#wallb)"><g transform="matrix(${g.M})">${archShapes(WALL_LIT, WALL_BAND)}</g></g></svg>`;
+      } else if (ARCH_LIGHT) {                                            // 拱窗数据还没到：先只有底色，不画百叶窗
+        svg = `<svg class="wall" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${head(1)}
+          <rect width="${W}" height="${H}" fill="url(#wallg)"/></svg>`;
+      } else {
+        const blur = Math.max(1, 0.22 * L.pitch / 2.56 / g.s);
+        svg = `<svg class="wall" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${head(blur)}
+          <clipPath id="wallc"><rect transform="matrix(${g.M})" x="${f(g.U0)}" y="0" width="${f(g.U1 - g.U0)}" height="${f(g.V1)}"/></clipPath>
+          <rect width="${W}" height="${H}" fill="url(#wallg)"/>
+          <g filter="url(#wallb)"><g clip-path="url(#wallc)"><g transform="matrix(${g.M})">
+            <rect x="${f(g.U0 - 0.5)}" y="-1" width="${f(g.U1 - g.U0 + 1)}" height="${f(g.V1 + 2)}" fill="${WALL_LIT}"/>${bandsOf(g, L, 0.40, 0, WALL_BAND)}
+            <rect x="${f(g.CORD - 0.003)}" y="0" width="0.006" height="${f(g.V1)}" fill="${WALL_BAND}"/></g></g></g></svg>`;
+      }
       room.querySelectorAll("svg.wall").forEach(e => e.remove());
       room.insertAdjacentHTML("afterbegin", svg);                         // clipPath 里只能放形状，不能放 <g>：变换写在 rect 上
     }
